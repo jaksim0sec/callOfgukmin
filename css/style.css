@@ -376,7 +376,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .sheet.is-expanded{height:var(--sheet-large-height)}
  .sheet.is-middle{height:var(--sheet-middle-height);min-height:0}
  .sheet.is-minimized{height:var(--sheet-small-height)}
- .sheet.is-minimized:not(.is-dragging):not(.is-springing) .sheet-content{visibility:hidden}
+ /* Keep the content mounted and painted at every snap level; overflow stays clipped by the sheet. */
  .sheet.is-dragging{height:clamp(var(--sheet-small-height),var(--sheet-drag-height,var(--sheet-small-height)),var(--sheet-large-height));transition:none}
  .sheet.is-dragging .sheet-content{visibility:visible}
  .sheet.is-springing{height:clamp(var(--sheet-small-height),var(--sheet-motion-height,var(--sheet-small-height)),var(--sheet-large-height));transition:none}
