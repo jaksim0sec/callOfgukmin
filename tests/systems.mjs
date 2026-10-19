@@ -297,7 +297,7 @@ test('high-school major choices are annual, legacy exams remain loadable and ord
  assert.ok(content.events.some(e=>e.id==='high:whimoon-electives'));
 });
 
-test('everyday childhood decisions grant distinctive traits, leave a review stage and restore it on reload',()=>{
+test('everyday childhood decisions record temperament, leave a review stage and restore on reload',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
  const persona=P.generate();
  let e=D.create({persona,persist:p=>P.save(p)});
@@ -311,7 +311,7 @@ test('everyday childhood decisions grant distinctive traits, leave a review stag
  assert.equal(s.choice,null);
  assert.equal(s.reviewPending,true);
  assert.equal(s.runtime.turn,8);
- assert.ok(s.persona.traits.includes('호기심'));
+ assert.equal(s.persona.attributes.earlyTemperament,'cautious','small action records a memory, not an immediate permanent trait');
  assert.equal(e.resolve(token,selected.id),false);
  e=D.create({persona:P.load(),persist:p=>P.save(p)});
  assert.equal(e.snapshot().reviewPending,true);

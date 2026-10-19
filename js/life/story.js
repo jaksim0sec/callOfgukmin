@@ -42,7 +42,7 @@ function exam(stage,age,grade,at,name,type='school'){
  return selection(id,at,age+'세 · '+grade+'학년 '+name,'해당 시험에 얼마나 시간과 에너지를 투자할까?',
   efforts.map((effort,i)=>({
     id:'effort-'+i,label:effort.label,
-    effects:{stats:Object.fromEntries(Object.entries({study:effort.study,[score]:effort.score,stress:effort.stress,health:effort.health}).filter(([,value])=>value!==0))},
+    effects:{stats:{study:effort.study,...Object.fromEntries(Object.entries({[score]:effort.score,stress:effort.stress,health:effort.health}).filter(([,value])=>value!==0))}},
     detail:name+'을 치렀다. '+effort.outcome
   })),'한방 선택',{type:'exam',stage,grade,age,term:name,category:type});
 }
