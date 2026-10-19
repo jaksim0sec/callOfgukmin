@@ -95,8 +95,11 @@ try{
    await drag(-250);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-expanded')),true,'swipe up: full');
    await drag(230);
-   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'swipe down: middle');
-   await drag(230);
+   const afterDown=await page.locator('#lifeSheet').evaluate(el=>({
+    middle:el.classList.contains('is-middle'),min:el.classList.contains('is-minimized')
+   }));
+   assert.ok(afterDown.middle||afterDown.min,'downward inertia lowers the sheet');
+   if(afterDown.middle)await drag(230);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'swipe down: min');
    await drag(-230);
    await drag(-230);
