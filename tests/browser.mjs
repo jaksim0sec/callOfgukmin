@@ -46,6 +46,10 @@ try{
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').isVisible(),name==='desktop');
+  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no countdown while choosing');
+  assert.equal(await page.locator('#currentChoice .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
+  assert.equal(await page.locator('#currentChoice .daily-choice-prompt').textContent(),'어떻게 할까?');
+  assert.equal(await page.locator('#currentChoice .daily-choice-detail').count(),0);
   assert.equal(await page.locator('#currentChoice .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
   assert.ok(await page.locator('#currentChoice .daily-choice-effect').count()>0,'effects are previewed per choice');
   assert.ok(await page.locator('#currentChoice .daily-choice-effect .token-icon').count()>0,'shared SVG icons are visible');
@@ -118,7 +122,7 @@ try{
    const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
    return {poster:box('#playerPosterMount'),profile:box('.profile'),gauges:box('.gauges'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};
   });
-  assert.equal(layout.overflow,false);assert.ok(layout.log.height>30,'history remains readable');assert.ok(layout.progress.y>=layout.head.bottom-1,'progress follows log title');assert.ok(layout.action.bottom<=viewport.height+1,'actions stay within viewport');
+  assert.equal(layout.overflow,false);assert.ok(layout.log.height>30,'history remains readable');assert.ok(layout.progress.height===0||layout.progress.y>=layout.head.bottom-1,'conditional progress placement');assert.ok(layout.action.bottom<=viewport.height+1,'actions stay within viewport');
   if(name==='desktop'){assert.ok(Math.abs(layout.poster.width-layout.gauges.width)<1);assert.notEqual(layout.sheetPosition,'fixed');}else{assert.equal(layout.sheetPosition,'fixed');assert.ok(Math.abs(layout.sheet.bottom-viewport.height)<1);}
   await page.screenshot({path:`${artifacts}/${name}-completed.png`,fullPage:true});
   assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__playable__v1')),'legacy-browser-sentinel');

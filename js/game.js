@@ -250,9 +250,11 @@ function mount(root,navigate,content=global.GukminContent){
   text('turnLabel',demo?snapshot.runtime.turn+'턴 · 검증용 시간':'실제 생애 시연');
   $('action').hidden=!choice&&!reviewing;
   $('lifeSheet')?.classList.toggle('has-current-choice',!!choice||reviewing);
-  text('currentTitle',choice?.title||'');
-  text('nextChoiceLabel',reviewing?'결과 확인 · 다음 이야기':p?.waiting?'선택을 기다리는 중':p?.remaining!==null&&p?.remaining!==undefined?p.remaining+'턴 남음':demo?'예정된 선택 없음':'이야기 준비 중');
-  $('nextChoiceProgress').value=reviewing||p?.waiting?0:p?.value||0;
+  text('currentTitle',reviewing?'':choice?.title||'');
+  const showCountdown=!reviewing&&!choice&&Number.isFinite(p?.remaining)&&p.remaining>0;
+  $('choiceTiming').hidden=!showCountdown;
+  text('nextChoiceLabel',showCountdown?p.remaining+'턴 남음':reviewing?'다음 이야기로 진행':p?.waiting?'선택을 기다리는 중':demo?'예정된 선택 없음':'이야기 준비 중');
+  $('nextChoiceProgress').value=showCountdown?p.value||0:0;
   const current=$('currentChoice');current.replaceChildren();
   if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
@@ -261,7 +263,7 @@ function mount(root,navigate,content=global.GukminContent){
    current.append(el('p','review-kicker','선택 완료'));
    current.append(el('strong','review-title',last?.title||'지난 선택이 기록되었다'));
    if(last?.detail)current.append(el('p','review-detail',last.detail));
-   const next=el('button','continue-story','다음 이야기 보기  →');
+   const next=el('button','continue-story','다음으로  →');
    next.type='button';next.addEventListener('click',safely(()=>engine.run()));
    current.append(next);
    return;
@@ -277,7 +279,10 @@ function mount(root,navigate,content=global.GukminContent){
    }
    return;
   }
-  if(choice.body)current.append(el('p','daily-choice-story',choice.body));
+  const situation=el('section','daily-scenario');
+  situation.append(el('span','daily-scenario-kicker','지금 상황'),el('strong','daily-scenario-title',choice.title));
+  if(choice.body)situation.append(el('p','daily-choice-story',choice.body));
+  current.append(situation,el('p','daily-choice-prompt','어떻게 할까?'));
   const choices=el('div','inline-choices');
   choices.setAttribute('role','group');choices.setAttribute('aria-label','일상 선택지');
   const owner=engine;
@@ -287,8 +292,7 @@ function mount(root,navigate,content=global.GukminContent){
    const number=el('span','daily-choice-number',String(index+1).padStart(2,'0'));
    const textWrap=el('span','daily-choice-copy');
    textWrap.append(el('strong','daily-choice-title',option.label));
-   const detail=option.result?.history?.detail;
-   if(detail&&detail!==option.label)textWrap.append(el('small','daily-choice-detail',detail));
+   // Outcome narration is shown after the choice, not before it.
    if(option.available===false)textWrap.append(el('small','daily-choice-locked','현재 조건에서는 선택할 수 없음'));
    const indicators=el('span','daily-choice-effects');
    for(const [id,amount] of Object.entries(option.result?.effects?.stats||{})){
@@ -300,7 +304,7 @@ function mount(root,navigate,content=global.GukminContent){
      def.icon||'sparkle','daily-choice-effect metric-'+id+' '+(positive?'is-positive':'is-negative')
     ));
    }
-   textWrap.append(indicators);
+   if(indicators.childElementCount)textWrap.append(indicators);
    button.append(number,textWrap,el('span','daily-choice-chevron','›'));
    button.addEventListener('click',safely(()=>engine===owner?owner.resolve(choice.token,option.id):false));
    choices.append(button);

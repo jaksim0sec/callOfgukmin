@@ -321,12 +321,13 @@ test('turn-based allowance accrues after elementary enrollment, does not duplica
   s=e.snapshot();
  }
  assert.ok(s.persona.age>=8);
- assert.ok(s.persona.stats.allowance>initial,'pocket money grows after age 7');
- const atEight=s.persona.stats.allowance;
+ assert.equal(s.persona.stats.allowance,initial,'allowance is a stable income rate');
+ assert.ok(s.persona.stats.money>0,'allowance is credited to wallet');
+ const atEight=s.persona.stats.money;
  e=D.create({persona:P.load(),persist:p=>P.save(p)});
- assert.equal(e.snapshot().persona.stats.allowance,atEight);
+ assert.equal(e.snapshot().persona.stats.money,atEight,'reload does not double-pay');
  const already=e.snapshot().runtime.turn;
  e.run();
  assert.ok(e.snapshot().runtime.turn>=already);
- assert.equal(e.snapshot().persona.stats.allowance,atEight+(e.snapshot().runtime.turn-already)*P.wealthTiers.find(x=>x.id===persona.familyTier).allowance);
+ assert.equal(e.snapshot().persona.stats.money,atEight+(e.snapshot().runtime.turn-already)*initial);
 });

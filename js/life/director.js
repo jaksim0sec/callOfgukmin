@@ -52,7 +52,7 @@ function create({persona,persist,onChange}){
  const onTurn=(person,turn)=>{
   const phase=global.GukminPlayer.phaseOf(person);
   if(!tier||person.age<7||person.age>18||!['elementary','middle','high'].includes(phase))return null;
-  return {effects:{stats:{allowance:tier.allowance}}};
+  return {effects:{stats:{money:Number.isFinite(person.stats.allowance)?Math.max(0,person.stats.allowance):tier.allowance}}};
  };
  const timeline=global.GukminTimeline.create({...definitions,persona,persist,pauseAfterChoice:true,onTurn,
   onChange:s=>onChange?.(decorate(s))});
