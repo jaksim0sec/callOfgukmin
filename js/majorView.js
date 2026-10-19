@@ -26,6 +26,7 @@ function present({choice,resolve,root}){
  const p=choice.presentation||{};
  if(!['exam','school'].includes(p.type))return ()=>{};
  const isSchool=p.type==='school';
+ dialog.classList.toggle('is-exam',!isSchool);
  const body=make('div','life-modal-wrap '+(isSchool?'life-school-paper':'life-exam-paper'));
  const head=make('header','life-modal-head');
  head.append(make('span','life-modal-serial','국민의 부름 / '+(isSchool?'지원서':'학교 시험')),
@@ -139,6 +140,7 @@ function present({choice,resolve,root}){
   closed=true;dialog.removeEventListener('cancel',handleCancel);
   if(dialog.open)dialog.close();
   dialog.replaceChildren();
+  dialog.classList.remove('is-exam');
   reopen.remove();
  };
 }

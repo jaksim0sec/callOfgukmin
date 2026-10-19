@@ -7,7 +7,7 @@
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=life-stats-20261020">
+  <link rel="stylesheet" href="css/style.css?v=life-scenes-20261020">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -64,6 +64,10 @@
     </section>
   </div>
 </main>
+<div id="lifeCinematic" class="life-cinematic" hidden aria-label="인생 전환 연출">
+  <div id="lifeCinematicBody" class="life-cinematic-body"></div>
+  <button id="lifeCinematicDismiss" class="life-cinematic-dismiss" type="button">계속하기 →</button>
+</div>
 <dialog id="choiceDialog" aria-labelledby="modalTitle">
   <div class="modal-head"><span class="modal-kicker" id="kicker">서류 미리보기</span><button type="button" class="close" id="close" aria-label="닫기">×</button></div>
   <div class="modal-body"><h2 class="modal-title" id="modalTitle"></h2><p class="modal-story" id="modalStory"></p><div class="options" id="options"></div></div>
@@ -86,7 +90,7 @@
 <script src="js/life/high.js" defer></script>
 <script src="js/systemDemo.js" defer></script>
 <script src="js/statusView.js" defer></script>
-<script src="js/game.js?v=paid-choice-20261020" defer></script>
+<script src="js/game.js?v=life-scenes-20261020" defer></script>
 <script src="js/majorView.js" defer></script>
 <script src="js/boot.js" defer></script>
 </body>

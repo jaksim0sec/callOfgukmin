@@ -240,6 +240,8 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .life-submit{width:100%}
  .life-school-crest{width:2.65rem;height:2.8rem}
 }
+@keyframes life-paper-rise{from{opacity:.5;transform:translateY(2.5rem)}to{opacity:1;transform:translateY(0)}}
+.life-choice-dialog.is-exam[open]{animation:life-paper-rise .4s cubic-bezier(.22,.7,.25,1) both}
 @media(prefers-reduced-motion:reduce){.life-choice-dialog,.life-answer{animation:none!important;transition:none!important}}
 
 .life-school-crest img{display:block;width:100%;height:100%;object-fit:contain;border-radius:.25rem}
@@ -447,3 +449,26 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .sheet-content .action-area{padding:.7rem 1rem}
  .sheet-content .log{padding:0 1rem}
 }
+
+/* Cutscenes render current state only; they never change timeline or storage. */
+.life-cinematic{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:1.25rem;padding:1.5rem;background:radial-gradient(ellipse at 50% 36%,#393142 0%,#17131e 67%,#0b0a10 100%);color:#f5f0f7}
+.life-cinematic[hidden]{display:none}
+.life-cinematic-body{width:min(100%,34rem)}
+.life-cinematic-card{text-align:center;animation:life-milestone-appear .52s ease-out both}
+.life-cinematic-kicker{display:block;color:#bdaacb;font-size:.8rem;font-weight:750;letter-spacing:.2em;margin-bottom:1.4rem}
+.life-cinematic-title{font:normal clamp(2.5rem,10vw,4.3rem)/1.15 'Do Hyeon',sans-serif;margin:0}
+.life-cinematic-description{font-size:1rem;line-height:1.7;color:#c6b9d0;margin:1rem auto 0;max-width:27rem}
+.life-cinematic-dismiss{font-size:.8rem;background:none;border:0;color:#c2b5cb;padding:.75rem 1.5rem;min-height:2.7rem;cursor:pointer}
+.life-cinematic-dismiss:focus-visible{outline:.125rem solid #d9bcef;border-radius:.3rem}
+.life-cinematic-card.is-grade{background:#f5f0e6;color:#302c31;text-align:left;padding:2rem 1.8rem;border-radius:.3rem;box-shadow:0 1.5rem 4rem #0008}
+.is-grade .life-cinematic-kicker{color:#746d71;border-bottom:.125rem solid #575157;padding-bottom:.6rem;margin-bottom:1rem}
+.is-grade .life-cinematic-title{font-size:clamp(1.8rem,7vw,2.5rem)}
+.is-grade .life-cinematic-description{color:#6d656d;margin:.6rem 0 0}
+.life-cinematic-grade{display:flex;align-items:center;justify-content:center;gap:1.5rem;margin:1.4rem 0 1rem;font-size:1.3rem;color:#655f65}
+.life-cinematic-grade strong{font-size:2.5rem;color:#2f3d57}
+.life-cinematic-arrow{color:#9b879d}
+.life-cinematic-changes{font-size:.82rem;color:#625966;line-height:1.5}
+.life-cinematic-disclaimer{display:block;color:#877f85;border-top:.0625rem solid #d4ced0;padding-top:.65rem;margin-top:1rem;font-size:.68rem}
+@keyframes life-milestone-appear{from{opacity:0;transform:translateY(1.25rem)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.life-cinematic-card{animation:none!important}}

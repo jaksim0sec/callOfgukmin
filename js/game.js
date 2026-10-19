@@ -125,7 +125,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!global.confirm('현재 인물 정보를 초기화하고 다시 생성할까?'))return;
   const fresh=global.GukminPlayer.generate();
   if(!global.GukminPlayer.save(fresh))throw new Error('저장 실패');
-  clearMajor();persona=fresh;engine=null;snapshot=null;connectLife();render();
+  clearCinematics();clearMajor();persona=fresh;engine=null;snapshot=null;connectLife();render();
  }
  function openDialog(type,options,{title,body,kicker,commit}){
   selection=-1;dialogOptions=options;dialogCommit=commit;
@@ -187,7 +187,68 @@ function mount(root,navigate,content=global.GukminContent){
    text('systemError',error.message);$('systemError').hidden=false;console.error(error);
   }};
  }
- function onChange(s){snapshot=s;persona=s.persona;render();}
+ const cinematics=[],cinematic=$('lifeCinematic');
+ let cinematicTimer=null,cinematicShown=false;
+ const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ function nextCinematic(){
+  if(disposed||cinematicShown||!cinematics.length)return;
+  const scene=cinematics.shift();
+  cinematicShown=true;
+  const body=$('lifeCinematicBody');body.replaceChildren();
+  const card=el('section','life-cinematic-card'+(scene.kind==='grade'?' is-grade':''));
+  card.append(el('span','life-cinematic-kicker',scene.kind==='grade'?'학교 성적 통지표':'인생의 전환점'));
+  card.append(el('h2','life-cinematic-title',scene.title));
+  if(scene.detail)card.append(el('p','life-cinematic-description',scene.detail));
+  if(scene.kind==='grade'){
+   const row=el('div','life-cinematic-grade');
+   row.append(el('span','',scene.before),el('span','life-cinematic-arrow','→'),el('strong','',scene.after));
+   card.append(row);
+   if(scene.changes)card.append(el('p','life-cinematic-changes',scene.changes));
+   card.append(el('small','life-cinematic-disclaimer','게임 내 성적 · 공식 성적이 아님'));
+  }
+  body.append(card);cinematic.hidden=false;
+  cinematicTimer=global.setTimeout(hideCinematic,reduceMotion?850:2200);
+ }
+ function hideCinematic(){
+  if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
+  cinematic.hidden=true;cinematicShown=false;nextCinematic();
+ }
+ function clearCinematics(){
+  cinematics.length=0;
+  if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
+  cinematicShown=false;cinematic.hidden=true;
+ }
+ function queueCinematic(scene){if(verificationMode||!scene)return;cinematics.push(scene);nextCinematic();}
+ function onChange(s){
+  const before=snapshot?.persona||persona,choice=snapshot?.choice;
+  const added=s.persona.history.slice(before.history?.length||0);
+  snapshot=s;persona=s.persona;render();
+  if(s.runtime.contentId!==global.GukminDirector.contentId)return;
+  if(choice?.presentation?.type==='exam'&&s.reviewPending){
+   const id=choice.presentation.category==='mock'?'exam':'schoolScore',phase=global.GukminPlayer.phaseOf(before);
+   const old=global.GukminGrades.report(id,before.stats[id],phase).display;
+   const next=global.GukminGrades.report(id,s.persona.stats[id],phase).display;
+   const names={study:'학업',stress:'스트레스',health:'건강'};
+   const changes=Object.entries(names).map(([key,label])=>{
+    const delta=(s.persona.stats[key]??0)-(before.stats[key]??0);
+    return delta?label+' '+(delta>0?'+':'')+delta:'';
+   }).filter(Boolean).join(' · ');
+   queueCinematic({kind:'grade',title:choice.presentation.term||choice.title,
+    detail:choice.presentation.category==='mock'?'모의고사 결과':'내신 평가 결과',
+    before:old,after:next,changes});
+  }
+  if(choice?.presentation?.type==='school'&&s.reviewPending){
+   const school=global.GukminPlayer.schoolsOf(s.persona).find(item=>item.kind==='high'&&item.status==='enrolled');
+   queueCinematic({title:'고등학교 입학',detail:school?.name||'새로운 학교생활이 시작됐다.'});
+  }
+  const events={
+   'infant:school-entry':'초등학교 입학',
+   'elementary:middle-entry':'초등학교 졸업 · 중학교 입학',
+   'high:graduation':'고등학교 졸업'
+  };
+  for(const item of added)if(events[item.source])
+   queueCinematic({title:events[item.source],detail:item.detail});
+ }
  function connect(definition,freshSession=false){
   const source={...persona};
   if(freshSession)delete source.simulation;
@@ -204,7 +265,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!snapshot.reviewPending)engine.run();
  }
  function startDemo(){
-  clearMajor();
+  clearCinematics();clearMajor();
   connect(global.GukminSystemDemo.config(),true);
   engine.advance(0);
  }
@@ -302,6 +363,7 @@ function mount(root,navigate,content=global.GukminContent){
    [node,'pointerup',finishSheetDrag],
    [node,'pointercancel',e=>finishSheetDrag(e,true)]
   ]),
+  [$('lifeCinematicDismiss'),'click',hideCinematic],
   [$('resetGame'),'click',reset],
   [$('startSystemDemo'),'click',startDemo],
   [$('advanceTurn'),'click',()=>engine.advance(1)],
@@ -313,7 +375,7 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),dispose
