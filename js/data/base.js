@@ -71,7 +71,12 @@ const TRAIT_DEFS = {
   '리더십':{icon:'flag',description:'조직을 이끄는 선택에 영향을 주는 특성'},
   '언변':{icon:'speech',description:'면접·토론·연설에 영향을 주는 특성'},
   '친화력':{icon:'users',description:'다른 인물과의 관계 선택에 영향을 주는 특성'},
-  '미루는 습관':{icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'}
+  '미루는 습관':{icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'},
+  '호기심':{icon:'sparkle',description:'새로운 물건과 상황을 먼저 탐색하는 성격'},
+  '낯가림':{icon:'home',description:'처음 보는 사람 앞에서 조심스러워하는 성격'},
+  '고집':{icon:'flag',description:'마음먹은 일을 끝까지 시도하는 성격'},
+  '배려심':{icon:'heart',description:'타인의 감정과 순서를 신경 쓰는 성격'},
+  '느긋함':{icon:'hourglass',description:'서두르기보다 시간을 두고 행동하는 성격'}
 };
 
 const freezeCopy=value=>{

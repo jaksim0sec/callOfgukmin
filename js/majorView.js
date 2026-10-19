@@ -95,7 +95,7 @@ function present({choice,resolve,root}){
     copy.append(make('small','life-paper-estimate',before+' → '+after+' (게임 예상)'));
    }
   }
-  row.append(copy,make('span','life-answer-check','✓'));
+  row.append(copy,make('span','life-answer-seal','印'));
   row.setAttribute('aria-pressed','false');
   row.addEventListener('click',()=>{
    selected=option.id;confirm.disabled=false;

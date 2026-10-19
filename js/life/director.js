@@ -33,6 +33,7 @@ function create({persona,persist,onChange}){
  const definitions=content(persona);
  const choices=new Map(definitions.choices.map(c=>[c.id,c]));
  function decorate(raw){
+  if(raw.reviewPending)return {...raw,progress:{value:0,remaining:null,waiting:false,title:'선택 결과 확인'}};
   if(raw.choice)return {...raw,progress:{value:1,remaining:0,waiting:true,title:raw.choice.title}};
   const eligible=definitions.events.filter(event=>{
    const runtime=raw.runtime.events[event.id];
@@ -47,9 +48,17 @@ function create({persona,persist,onChange}){
   const elapsed=Math.max(0,raw.runtime.turn-(raw.runtime.progressStart||0));
   return {...raw,progress:{value:remain===0?1:elapsed/Math.max(1,elapsed+remain),remaining:remain,waiting:false,title:eligible.title}};
  }
- const timeline=global.GukminTimeline.create({...definitions,persona,persist,
+ const tier=global.GukminData.wealthTiers.find(t=>t.id===persona.familyTier);
+ const onTurn=(person,turn)=>{
+  const phase=global.GukminPlayer.phaseOf(person);
+  if(!tier||person.age<7||person.age>18||!['elementary','middle','high'].includes(phase))return null;
+  return {effects:{stats:{allowance:tier.allowance}}};
+ };
+ const timeline=global.GukminTimeline.create({...definitions,persona,persist,pauseAfterChoice:true,onTurn,
   onChange:s=>onChange?.(decorate(s))});
  function run(){
+   // The player explicitly reviews the last result before any further progress.
+   timeline.resume();
    // Execute current content, then only known one-shot events with reachable conditions.
    // Never advance a clock when no future content exists.
    timeline.advance(0);
@@ -71,7 +80,7 @@ function create({persona,persist,onChange}){
  return Object.freeze({
    snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
-   resolve:(token,optionId)=>{const result=timeline.resolve(token,optionId);if(result)run();return result;},
+   resolve:(token,optionId)=>timeline.resolve(token,optionId),
    apply:(id,result)=>{const applied=timeline.apply(id,result);if(applied)run();return applied;},
    run,active:()=>{const s=timeline.snapshot();return active(s.persona,s.runtime.turn);}
  });

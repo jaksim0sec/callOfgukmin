@@ -32,10 +32,14 @@ try{
   await page.locator('#enterGame').click();
   await page.locator('#birthIntro').waitFor({state:'visible'});
   assert.equal(await page.locator('#birthIntroName').textContent(),initial);
+  assert.equal(await page.locator('#birthIntroTitle').textContent(),'출생신고서');
+  assert.match(await page.locator('#birthIntroCountdown').textContent(),/초 후 출생/);
+  assert.ok((await page.locator('#birthIntroTrait .token-icon').count())>0);
+  assert.equal(await page.locator('#birthIntroProgress').getAttribute('max'),'10');
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').textContent(),'#2살');
-  assert.equal((await page.locator('#nextChoiceLabel').textContent()).trim(),'응답 대기');
+  assert.equal((await page.locator('#nextChoiceLabel').textContent()).trim(),'선택을 기다리는 중');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
@@ -44,6 +48,17 @@ try{
   assert.equal(await page.locator('#action').isVisible(),true);
   assert.equal(await page.locator('#currentChoice .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
   assert.ok(await page.locator('#currentChoice .daily-choice-effect').count()>0,'effects are previewed per choice');
+  assert.ok(await page.locator('#currentChoice .daily-choice-effect .token-icon').count()>0,'shared SVG icons are visible');
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
+  if(name!=='desktop'){
+   const old=await page.locator('#lifeSheet').boundingBox();
+   await page.locator('#sheetToggle').click();
+   await page.waitForTimeout(260);
+   const expanded=await page.locator('#lifeSheet').boundingBox();
+   assert.ok(expanded.height>old.height+20,'non-dismissable sheet expands');
+   await page.locator('#sheetToggle').click();
+   assert.equal(await page.locator('#lifeSheet').getAttribute('class'),'sheet has-current-choice');
+  }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
@@ -73,10 +88,10 @@ try{
   await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('.school-token-complete').waitFor();
   const layout=await page.evaluate(()=>{
    const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
-   return {poster:box('#playerPosterMount'),profile:box('.profile'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};
+   return {poster:box('#playerPosterMount'),profile:box('.profile'),gauges:box('.gauges'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};
   });
   assert.equal(layout.overflow,false);assert.ok(layout.log.height>30,'history remains readable');assert.ok(layout.progress.y>=layout.head.bottom-1,'progress follows log title');assert.ok(layout.action.bottom<=viewport.height+1,'actions stay within viewport');
-  if(name==='desktop'){assert.ok(Math.abs(layout.poster.width-layout.profile.width)<1);assert.notEqual(layout.sheetPosition,'fixed');}else{assert.equal(layout.sheetPosition,'fixed');assert.ok(Math.abs(layout.sheet.bottom-viewport.height)<1);}
+  if(name==='desktop'){assert.ok(Math.abs(layout.poster.width-layout.gauges.width)<1);assert.notEqual(layout.sheetPosition,'fixed');}else{assert.equal(layout.sheetPosition,'fixed');assert.ok(Math.abs(layout.sheet.bottom-viewport.height)<1);}
   await page.screenshot({path:`${artifacts}/${name}-completed.png`,fullPage:true});
   assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__playable__v1')),'legacy-browser-sentinel');
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#rerollPersona').click();const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(fresh.simulation,undefined);assert.equal(fresh.stats.money,0);
@@ -121,10 +136,12 @@ try{
    const s=GukminGame.session;
    for(let index=0;index<80;index++){
     const snap=s.snapshot(),choice=snap.choice;
+    if(snap.reviewPending){s.run();continue;}
     if(!choice||choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice?.id||null};
     const first=choice.options.find(o=>o.available);
     if(!first)throw new Error('No legal choice: '+choice.id);
     s.resolve(choice.token,first.id);
+    if(!s.snapshot().reviewPending)throw new Error('Choice review did not persist');
    }
    throw new Error('Life path did not reach '+target);
   },target);

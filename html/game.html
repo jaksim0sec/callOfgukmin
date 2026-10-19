@@ -14,28 +14,29 @@
   <div class="desktop-left">
     <section class="status" aria-label="인물 속성 스탯">
       <div class="player-poster-mount" id="playerPosterMount" aria-label="인물 포스터"></div>
-      <section class="block profile" aria-label="속성 스탯">
-        <div class="age-row"><strong class="age" id="age">#0살</strong><span class="job" id="job">아기</span></div>
-        <div class="profile-heading">속성 스탯</div>
-        <div class="attribute-list" id="attributeRows" aria-label="집안과 출생 정보"></div>
-        <div class="profile-heading school-heading">학력</div>
-        <div class="school-list" id="schools" aria-label="학교 토큰 이력"></div>
+      <section class="block gauges" aria-label="상태 스탯과 특성">
+        <div class="gauges-heading">상태 스탯</div>
+        <div class="gauges-list" id="gaugesList" aria-label="현재 활성 상태 스탯"></div>
+        <section class="trait-section" aria-label="특성">
+          <div class="trait-heading"><strong>특성</strong><span>버프 · 디버프</span></div>
+          <div class="traits" id="traits"></div>
+        </section>
       </section>
+
     </section>
   </div>
   <div class="desktop-right">
-    <section class="block gauges" aria-label="상태 스탯과 특성">
-      <div class="gauges-heading">상태 스탯</div>
-      <div class="gauges-list" id="gaugesList" aria-label="현재 활성 상태 스탯"></div>
-      <section class="trait-section" aria-label="특성">
-        <div class="trait-heading"><strong>특성</strong><span>버프 · 디버프</span></div>
-        <div class="traits" id="traits"></div>
-      </section>
+    <section class="block profile" aria-label="속성 스탯">
+      <div class="age-row"><strong class="age" id="age">#0살</strong><span class="job" id="job">아기</span></div>
+      <div class="profile-heading">속성 스탯</div>
+      <div class="attribute-list" id="attributeRows" aria-label="집안과 출생 정보"></div>
+      <div class="profile-heading school-heading">학력</div>
+      <div class="school-list" id="schools" aria-label="학교 토큰 이력"></div>
     </section>
-    <section class="sheet" aria-label="인생 기록 및 UI 시연">
-      <div class="sheet-grip" aria-hidden="true"></div>
+    <section class="sheet" id="lifeSheet" aria-label="인생 기록 및 현재 선택">
+      <button type="button" class="sheet-grip" id="sheetToggle" aria-label="인생 기록 시트 펼치기" aria-expanded="false"><span aria-hidden="true"></span></button>
       <div class="sheet-head">
-        <strong>인생 기록</strong>
+        <strong id="lifeHeadline">0살</strong>
         <button id="resetGame" class="mini-reset" type="button" aria-label="새 인물 생성" title="새 인물 생성">↻</button>
         <span class="chapter-meta"><span id="chapter">인물 생성</span><span class="mode-chip">생애</span></span>
       </div>
@@ -52,11 +53,13 @@
           <button type="button" class="text-action" id="previewParty">정당 투표지 검증</button>
         </div>
       </section>
-      <div class="log" id="log" role="log" aria-live="polite"></div>
       <p id="systemError" class="system-error" role="alert" hidden></p>
+      <div class="sheet-content" id="sheetContent">
       <div class="action-area" id="action" hidden>
         <div class="current-line"><span>현재 선택</span><strong id="currentTitle"></strong></div>
         <div id="currentChoice" class="current-choice" aria-live="polite"></div>
+      </div>
+      <div class="log" id="log" role="log" aria-live="polite"></div>
       </div>
     </section>
   </div>

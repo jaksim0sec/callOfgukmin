@@ -8,6 +8,7 @@
 ## 구조
 - `index.html`: GitHub Pages 루트 진입점, 대기 화면으로 리다이렉트만 수행. 세부 화면 DOM 금지.
 - `html/waiting.html`, `html/game.html`, `html/result.html`: 각 화면의 독립 HTML 문서(공통 JS/CSS 참조). 페이지 네비게이션으로 교체.
+- 생애 선택 결과는 저장되는 검토 대기 화면을 거친 후 다음 이야기로 넘어간다. 시트는 모바일에서 닫히지 않고 클릭으로만 펼쳐지며 내부 스크롤은 단일 영역.
 - `css/style.css`: 공통 스타일·모바일 바텀시트·선택 모달.
 - `js/poster.js`: 포스터 컴포넌트(`window.GukminPoster`).
 - `js/boot.js`: 각 화면의 초기화와 독립 페이지 간 이동. `fetch()`/HTML 조각 삽입 금지.

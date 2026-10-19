@@ -174,3 +174,10 @@ Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새�
 - 고교 진학 결과에는 schoolTrack과 schoolProgram 정의/값이 포함되어 현재 학교 유형과 확인된 개별 교육과정 조건으로 일상 사건이 실행된다.
 - 신규 고교 사건은 발생 턴에만 조건이 맞게 제한하여 이전 세이브에서 오래된 사건이 뒤늦게 재생되지 않게 한다. 기존 대기 중 시험 선택의 ID와 정의는 보존했다.
 - 스탯 수치는 원래 게임 정산/저장 계약 그대로이며, 예상 등급은 GukminGrades.report의 읽기 전용 결과다.
+
+
+## 리뷰 대기·턴 용돈 확장 (2026-10-19)
+
+- `GukminTimeline.create({pauseAfterChoice,onTurn})` 두 옵션은 기본적으로 꺼져 있다. pauseAfterChoice면 `resolve`가 선택을 정산하고 `runtime.awaitingContinuation` 상태로 멈춘다. `resume()`으로 단일 저장 트랜잭션 재개 후 `advance` 가능. 재진입·새로고침 중 대기 상태 유지. 진행 중 강제 `advance`는 거부.
+- `onTurn(persona,turn)`은 별도 정산 효과를 만들 수 있으며 `turn:<N>` ID로 해당 턴에 한 번 적용한다. 생애 관제탑은 초등 이후 용돈만 여기서 누적한다. 이전 공통 검증 모드는 영향받지 않는다.
+- 선택 결과를 확인하기 전에는 다음 이벤트를 자동 실행하지 않고, UI가 현재 `reviewPending` 플래그를 표시한다. 0~19세 사건·선택 ID 및 저장 키를 변경하지 않는다.

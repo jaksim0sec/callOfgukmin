@@ -33,24 +33,23 @@
 </main>
 <section class="birth-intro" id="birthIntro" role="dialog" aria-modal="true" aria-labelledby="birthIntroTitle" hidden>
   <div class="birth-intro-card">
-    <div class="birth-intro-head">
-      <span>국민의 부름</span><span>LIFE RECORD / 001</span>
-    </div>
+    <div class="birth-intro-head"><span>국민의 부름</span><span>신고 제 001호</span></div>
     <div class="birth-intro-emblem" aria-hidden="true">
-      <svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="1"/><circle cx="40" cy="40" r="27" stroke="currentColor" stroke-width=".7" stroke-dasharray="2 4"/><path d="M40 13V67M13 40H67" stroke="currentColor" stroke-width=".65"/><path d="m40 27 4 9 10 1-8 7 2 10-8-5-8 5 2-10-8-7 10-1z" fill="currentColor"/></svg>
+      <svg viewBox="0 0 80 80" fill="none"><circle cx="40" cy="40" r="34" stroke="currentColor" stroke-width="1"/><path d="M21 40h38M40 21v38" stroke="currentColor" stroke-width=".8"/><path d="m40 27 4 9 10 1-8 7 2 10-8-5-8 5 2-10-8-7 10-1z" fill="currentColor"/></svg>
     </div>
-    <p class="birth-intro-caption">출생 신고 · 첫 번째 기록</p>
-    <h2 id="birthIntroTitle">한 사람이<br>태어났습니다</h2>
-    <div class="birth-intro-identity">
-      <span>이름</span>
-      <strong id="birthIntroName"></strong>
-      <span>출생지 · 집안</span>
-      <p id="birthIntroBackground"></p>
-      <div class="birth-intro-trait" id="birthIntroTrait" aria-label="출생 배경 특성"></div>
+    <h2 id="birthIntroTitle">출생신고서</h2>
+    <dl class="birth-intro-identity">
+      <div class="birth-intro-field"><dt>이름</dt><dd id="birthIntroName"></dd></div>
+      <div class="birth-intro-field"><dt>출생지</dt><dd id="birthIntroBackground"></dd></div>
+      <div class="birth-intro-field"><dt>가정</dt><dd id="birthIntroFamily"></dd></div>
+      <div class="birth-intro-field"><dt>출생 계층</dt><dd><div class="birth-intro-trait" id="birthIntroTrait" aria-label="출생 배경 특성"></div></dd></div>
+    </dl>
+    <div class="birth-intro-timing">
+      <span id="birthIntroCountdown" aria-live="off">10초 후 출생</span>
+      <progress id="birthIntroProgress" max="10" value="0" aria-label="출생까지 남은 시간"></progress>
     </div>
-    <div class="birth-intro-foot"><span>모든 인생에는 시작이 있다</span><span>01 / ∞</span></div>
+    <button type="button" class="birth-intro-skip" id="birthIntroSkip">출생하기 <span aria-hidden="true">↗</span></button>
   </div>
-  <button type="button" class="birth-intro-skip" id="birthIntroSkip">건너뛰기 <span aria-hidden="true">↗</span></button>
 </section>
 <script src="js/poster.js" defer></script>
 <script src="js/data/base.js" defer></script>

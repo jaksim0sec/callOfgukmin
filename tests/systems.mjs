@@ -162,8 +162,12 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
   const option=choice.options.find(o=>o.id==='effort-2'&&o.available)||choice.options.find(o=>o.available);
   assert.ok(option,'at least one available option');
   engine.resolve(choice.token,option.id);
+  assert.equal(engine.snapshot().reviewPending,true,'result stays until continuing');
+  assert.equal(engine.snapshot().choice,null,'no immediate next decision');
   decisions++;
   if(decisions%4===0)engine=D.create({persona:P.load(),persist:p=>P.save(p)});
+  assert.equal(engine.snapshot().reviewPending,true,'review persists on reload');
+  engine.run();
  }
  const final=engine.snapshot();
  assert.equal(exams,12,'six middle-school papers and two annual high-school strategy decisions per grade');
@@ -279,4 +283,50 @@ test('high-school major choices are annual, legacy exams remain loadable and ord
   assert.ok(content.events.some(e=>e.id==='high:track-'+track));
  assert.ok(content.events.some(e=>e.id==='high:bdja-science'));
  assert.ok(content.events.some(e=>e.id==='high:whimoon-electives'));
+});
+
+test('everyday childhood decisions grant distinctive traits, leave a review stage and restore it on reload',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const persona=P.generate();
+ let e=D.create({persona,persist:p=>P.save(p)});
+ let s=e.run();
+ assert.equal(s.choice.id,'infant:home');
+ assert.equal(s.choice.options.length,3);
+ const selected=s.choice.options.find(x=>x.id==='choice-1');
+ const token=s.choice.token;
+ assert.equal(e.resolve(token,selected.id),true);
+ s=e.snapshot();
+ assert.equal(s.choice,null);
+ assert.equal(s.reviewPending,true);
+ assert.equal(s.runtime.turn,8);
+ assert.ok(s.persona.traits.includes('호기심'));
+ assert.equal(e.resolve(token,selected.id),false);
+ e=D.create({persona:P.load(),persist:p=>P.save(p)});
+ assert.equal(e.snapshot().reviewPending,true);
+ e.run();
+ assert.equal(e.snapshot().reviewPending,false);
+ assert.equal(e.snapshot().choice.id,'infant:play');
+});
+test('turn-based allowance accrues after elementary enrollment, does not duplicate on reload or during review',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const persona=P.generate();
+ let e=D.create({persona,persist:p=>P.save(p)});
+ let s=e.run();
+ const initial=persona.stats.allowance;
+ assert.equal(s.persona.stats.allowance,initial,'infancy cannot accrue allowance');
+ let loops=0;
+ while(s.persona.age<8&&loops++<12){
+  if(s.choice){const option=s.choice.options.find(x=>x.available);e.resolve(s.choice.token,option.id);}
+  if(e.snapshot().reviewPending)e.run();
+  s=e.snapshot();
+ }
+ assert.equal(s.persona.age,8);
+ assert.ok(s.persona.stats.allowance>initial,'pocket money grows after age 7');
+ const atEight=s.persona.stats.allowance;
+ e=D.create({persona:P.load(),persist:p=>P.save(p)});
+ assert.equal(e.snapshot().persona.stats.allowance,atEight);
+ const already=e.snapshot().runtime.turn;
+ e.run();
+ assert.ok(e.snapshot().runtime.turn>=already);
+ assert.equal(e.snapshot().persona.stats.allowance,atEight+(e.snapshot().runtime.turn-already)*P.wealthTiers.find(x=>x.id===persona.familyTier).allowance);
 });

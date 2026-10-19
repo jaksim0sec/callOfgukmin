@@ -4,7 +4,7 @@
 const P=global.GukminPlayer,E=global.GukminEffects;
 const clone=value=>JSON.parse(JSON.stringify(value));
 const EVENT_KINDS=Object.freeze({'소식 이벤트':null,'일상 이벤트':'일상 선택','한방 이벤트':'한방 선택'});
-function create({persona,events=[],choices=[],metrics={},traits={},attributes={},contentId='custom',persist=()=>true,onChange=()=>{}}){
+function create({persona,events=[],choices=[],metrics={},traits={},attributes={},contentId='custom',persist=()=>true,onChange=()=>{},pauseAfterChoice=false,onTurn=null}){
 
  function index(definitions,label){
   const map=new Map();
@@ -54,6 +54,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   if(e.every!==undefined)r.nextAt+=e.every;
  }
  function pump(s){
+  if(s.runtime.awaitingContinuation)return;
   for(const [id,e] of eventDefs){
    const r=s.runtime.events[id];
    if(r.status==='running'){finish(s,id);continue;}
@@ -71,6 +72,10 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   }
  }
  function periodic(s){
+  if(onTurn){
+   const result=onTurn(clone(s.persona),s.runtime.turn);
+   if(result)settlement(s,'turn:'+s.runtime.turn,result,'turn');
+  }
   const held=[...s.persona.traits];
   for(const t of held){
    const id=typeof t==='string'?t:t.name,rule=P.traitDefinition(id).periodic;
@@ -103,11 +108,12 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    const def=choiceDefs.get(current.choiceId);
    choice={...clone(def),...clone(current),options:def.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)}))};
   }
-  return {...clone(s),choice,progress:progress(s)};
+  return {...clone(s),choice,progress:progress(s),reviewPending:!!s.runtime.awaitingContinuation};
  }
  function advance(turns=1){
   if(!Number.isSafeInteger(turns)||turns<0||turns>10000)throw new Error('진행 턴은 0~10000 정수');
   return transact(s=>{
+   if(s.runtime.awaitingContinuation)return false;
    pump(s);
    for(let i=0;i<turns&&!blocking(s);i++){
     s.runtime.turn++;periodic(s);pump(s);
@@ -127,10 +133,18 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    delete s.runtime.events[r.eventId].waitingToken;
    finish(s,r.eventId);r.status='closed';r.closedAt=s.runtime.turn;
    if(def.progress!==false&&def.blocksTime!==false)s.runtime.progressStart=s.runtime.turn;
+   if(pauseAfterChoice)s.runtime.awaitingContinuation=true;
+   else pump(s);
+  });
+ }
+ function resume(){
+  return transact(s=>{
+   if(!s.runtime.awaitingContinuation)return false;
+   s.runtime.awaitingContinuation=false;
    pump(s);
   });
  }
- return Object.freeze({snapshot,advance,resolve,apply:(id,result)=>{
+ return Object.freeze({snapshot,advance,resolve,resume,apply:(id,result)=>{
   if(typeof id!=='string'||!id.trim())throw new Error('정산 ID 필요');
   return transact(s=>settlement(s,'external:'+id,result,'external:'+id));
  }});

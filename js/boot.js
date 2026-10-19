@@ -28,23 +28,25 @@ function initWaiting(){
  // Intro is a view-only transition. It does not advance turns or reroll the persona.
  const intro=document.getElementById('birthIntro');
  const introName=document.getElementById('birthIntroName');
+ const introFamily=document.getElementById('birthIntroFamily');
+ const countdown=document.getElementById('birthIntroCountdown');
+ const birthProgress=document.getElementById('birthIntroProgress');
  const introBackground=document.getElementById('birthIntroBackground');
  const skip=document.getElementById('birthIntroSkip');
  const introTrait=document.getElementById('birthIntroTrait');
- let introActive=false,introTimer=null;
+ let introActive=false,introTimer=null,introTick=null;
  function finishIntro(){
    if(!introActive)return;
    global.clearTimeout(introTimer);
+   global.clearInterval(introTick);
    navigate('game');
  }
  function beginIntro(){
    if(introActive)return;
-   if(global.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
-     navigate('game');return;
-   }
    const persona=player.ensure();
    introName.textContent=persona.name;
-   introBackground.textContent=persona.birthplace+' · '+persona.family;
+   introBackground.textContent=persona.birthplace;
+   introFamily.textContent=persona.family;
    const tier=player.wealthTiers.find(item=>item.id===persona.familyTier);
    introTrait.replaceChildren();
    if(tier)introTrait.append(global.GukminStatus.traitToken(tier.name));
@@ -53,7 +55,15 @@ function initWaiting(){
    intro.classList.add('is-playing');
    document.querySelector('.waiting-screen').inert=true;
    skip.focus({preventScroll:true});
-   introTimer=global.setTimeout(finishIntro,3000);
+   const duration=10000,start=global.performance.now();
+   function updateCountdown(){
+     const elapsed=Math.min(duration,global.performance.now()-start);
+     countdown.textContent=Math.max(0,Math.ceil((duration-elapsed)/1000))+'초 후 출생';
+     birthProgress.value=elapsed/1000;
+   }
+   updateCountdown();
+   introTick=global.setInterval(updateCountdown,100);
+   introTimer=global.setTimeout(finishIntro,duration);
  }
  document.getElementById('enterGame').addEventListener('click',beginIntro);
  skip.addEventListener('click',finishIntro);

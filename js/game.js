@@ -22,6 +22,13 @@ function el(tag,cls,value){
  if(value!==undefined)element.textContent=String(value);
  return element;
 }
+function lifeTitle(persona){
+ const age=persona.age,phase=global.GukminPlayer.phaseOf(persona);
+ if(phase==='elementary')return '초등학교 '+Math.max(1,age-6)+'학년';
+ if(phase==='middle')return '중학교 '+Math.max(1,age-12)+'학년';
+ if(phase==='high'&&age<=18)return '고등학교 '+Math.max(1,age-15)+'학년';
+ return global.GukminPlayer.phaseDefinition(phase).label;
+}
 function posterData(persona){
  return {
   color:persona.partyColor,partyName:persona.party,partyIcon:persona.partyIcon,
@@ -47,15 +54,15 @@ function mount(root,navigate,content=global.GukminContent){
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   global.GukminStatus.render(root,persona);
+  text('lifeHeadline',persona.age+'살');
   text('chapter',snapshot?.runtime.contentId===global.GukminSystemDemo.contentId
-    ? '기반 검증 · '+snapshot.runtime.turn+'턴'
-    : global.GukminPlayer.phaseDefinition(global.GukminPlayer.phaseOf(persona)).label);
+    ? '검증 · '+snapshot.runtime.turn+'턴' : lifeTitle(persona));
   const host=$('playerPosterMount'),data=posterData(persona);
   if(!host.firstElementChild)host.append(global.GukminPoster.create(data));
   else global.GukminPoster.update(host.firstElementChild,data);
   document.documentElement.style.setProperty('--party',persona.partyColor||'#677181');
   const log=$('log');log.replaceChildren();
-  for(const item of persona.history.filter(h=>h.display!=='hidden')){
+  for(const item of [...persona.history].filter(h=>h.display!=='hidden').reverse()){
    const article=el('article','record'),line=el('div','record-top');
    line.append(el('span','record-age','#'+item.age+'살'+(item.turn!==undefined?' · '+item.turn+'턴':'')),el('strong','',item.title));
    article.dataset.importance=item.importance||'normal';
@@ -145,7 +152,7 @@ function mount(root,navigate,content=global.GukminContent){
    persona,persist:s=>global.GukminPlayer.save(s),onChange
   });
   snapshot=engine.snapshot();persona=snapshot.persona;
-  engine.run();
+  if(!snapshot.reviewPending)engine.run();
  }
  function startDemo(){
   clearMajor();
@@ -155,17 +162,30 @@ function mount(root,navigate,content=global.GukminContent){
  function renderProgress(){
   if(disposed)return;
   const active=!!engine,choice=snapshot?.choice,p=snapshot?.progress;
+  const reviewing=!!snapshot?.reviewPending;
   const demo=snapshot?.runtime.contentId===global.GukminSystemDemo.contentId;
   $('startSystemDemo').hidden=!verificationMode||demo;
   $('advanceTurn').hidden=!verificationMode||!demo;
   $('advanceTurn').disabled=!!p?.waiting;
   text('turnLabel',demo?snapshot.runtime.turn+'턴 · 검증용 시간':'실제 생애 시연');
-  $('action').hidden=!choice;
+  $('action').hidden=!choice&&!reviewing;
+  $('lifeSheet')?.classList.toggle('has-current-choice',!!choice||reviewing);
   text('currentTitle',choice?.title||'');
-  text('nextChoiceLabel',p?.waiting?'응답 대기':p?.remaining!==null&&p?.remaining!==undefined?p.remaining+'턴 남음':demo?'예정된 선택 없음':'이야기 준비 중');
-  $('nextChoiceProgress').value=p?.value||0;
+  text('nextChoiceLabel',reviewing?'결과 확인 · 다음 이야기':p?.waiting?'선택을 기다리는 중':p?.remaining!==null&&p?.remaining!==undefined?p.remaining+'턴 남음':demo?'예정된 선택 없음':'이야기 준비 중');
+  $('nextChoiceProgress').value=reviewing||p?.waiting?0:p?.value||0;
   const current=$('currentChoice');current.replaceChildren();
+  if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
+  if(reviewing){
+   const last=persona.history.at(-1);
+   current.append(el('p','review-kicker','선택 완료'));
+   current.append(el('strong','review-title',last?.title||'지난 선택이 기록되었다'));
+   if(last?.detail)current.append(el('p','review-detail',last.detail));
+   const next=el('button','continue-story','다음 이야기 보기  →');
+   next.type='button';next.addEventListener('click',safely(()=>engine.run()));
+   current.append(next);
+   return;
+  }
   if(!choice)return;
   if(choice.layer==='한방 선택'){
    current.append(el('p','fine','한방 선택 응답 대기'));
@@ -194,8 +214,11 @@ function mount(root,navigate,content=global.GukminContent){
    for(const [id,amount] of Object.entries(option.result?.effects?.stats||{})){
     if(!Number.isFinite(amount)||amount===0)continue;
     const positive=id==='stress'?amount<0:amount>0;
-    indicators.append(el('span','daily-choice-effect '+(positive?'is-positive':'is-negative'),
-     (labels[id]||id)+' '+(amount>0?'+':'')+amount+(id==='allowance'||id==='money'?'원':'')));
+    const def=global.GukminPlayer.metricDefinition(id);
+    indicators.append(global.GukminStatus.pill(
+     (labels[id]||id)+' '+(amount>0?'+':'')+amount+(id==='allowance'||id==='money'?'원':''),
+     def.icon||'sparkle','daily-choice-effect metric-'+id+' '+(positive?'is-positive':'is-negative')
+    ));
    }
    textWrap.append(indicators);
    button.append(number,textWrap,el('span','daily-choice-chevron','›'));
@@ -210,6 +233,11 @@ function mount(root,navigate,content=global.GukminContent){
  refreshMounted=renderProgress;resetMajorPresentation=clearMajor;
 
  const subscriptions=[
+  [$('sheetToggle'),'click',()=>{
+    const sheet=$('lifeSheet'),expanded=sheet.classList.toggle('is-expanded');
+    $('sheetToggle').setAttribute('aria-expanded',String(expanded));
+    $('sheetToggle').setAttribute('aria-label',expanded?'인생 기록 시트 줄이기':'인생 기록 시트 펼치기');
+  }],
   [$('resetGame'),'click',reset],
   [$('startSystemDemo'),'click',startDemo],
   [$('advanceTurn'),'click',()=>engine.advance(1)],
@@ -224,7 +252,7 @@ function mount(root,navigate,content=global.GukminContent){
  function dispose(){if(disposed)return;disposed=true;clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
-  resolve:(token,id)=>requireEngine().resolve(token,id),apply:(id,result)=>requireEngine().apply(id,result),dispose
+  resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),dispose
  });
  render();
  return dispose;

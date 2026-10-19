@@ -3,11 +3,11 @@
 'use strict';
 const S=global.GukminStory;
 const scenes={
- soil:['살림살이를 함께 아낀다','가족의 지출이 빠듯하다. 함께할 방법을 찾는다.'],
- bronze:['평범한 가족의 주말','가족들과 동네에서 주말을 보낼 준비를 한다.'],
- silver:['새로운 체험활동','가족이 배움과 놀이를 계획한다.'],
- gold:['다양한 활동의 기회','가족이 준비해 준 놀이와 수업이 많다.'],
- diamond:['풍족하지만 바쁜 하루','물질적으로 풍족하지만 함께 보내는 시간은 한정되어 있다.']
+ soil:'집에서 물려받은 곰 인형을 발견했다.',
+ bronze:'소파 위에 작은 곰 인형이 놓여 있다.',
+ silver:'장난감 상자에서 곰 인형을 꺼냈다.',
+ gold:'가지런한 장난감 선반에 새 곰 인형이 있다.',
+ diamond:'넓은 놀이방에서 곰 인형이 눈에 띈다.'
 };
 global.GukminDirector.register({
  id:'infant',when:{phase:'infant'},
@@ -18,24 +18,24 @@ global.GukminDirector.register({
    {id:'infant:birth-registered',layer:'소식 이벤트',at:0,title:'출생 기록 확정'},
    S.notice('infant:age1',4,'첫돌을 맞았다','가족에게 익숙한 웃음과 표정이 생겼다.',{attributes:{age:1}}),
    S.notice('infant:age2',8,'두 살이 되었다','주변 세상을 알아가기 시작했다.',{attributes:{age:2}}),
-   S.selection('infant:home',8,scene[0],scene[1],[
-    {label:'가족과 함께 시간을 보낸다',effects:{stats:{relations:5,stress:-2}},detail:'함께하는 경험이 쌓였다.'},
-    {label:'혼자 놀이에 빠져든다',effects:{stats:{health:2,relations:1}},detail:'혼자 놀며 새로운 것을 발견했다.'},
-    {label:'조용히 쉬고 싶다',effects:{stats:{health:4,stress:-4}},detail:'충분히 쉬었다.'}
+   S.selection('infant:home',8,'곰 인형을 발견했다',scene,[
+    {label:'인형을 꼭 끌어안는다',effects:{stats:{relations:3,stress:-2},traits:{add:['낯가림']}},detail:'낯선 게 있으면 익숙한 인형을 찾는다.'},
+    {label:'인형의 귀와 꼬리를 만져 본다',effects:{stats:{health:2,relations:1},traits:{add:['호기심']}},detail:'새로운 물건은 꼭 만져 봐야 직성이 풀린다.'},
+    {label:'뺏겨도 다시 붙잡는다',effects:{stats:{relations:1,stress:2},traits:{add:['고집']}},detail:'하고 싶은 건 끝까지 고집해 본다.'}
    ]),
    S.notice('infant:age3',12,'어린이집과 동네 생활',local+'에서 친구들을 만나고 낯선 생활을 접한다.',{attributes:{age:3}}),
    S.notice('infant:age4',16,'네 살이 되었다','이제 친구들과 의견을 나눌 수 있다.',{attributes:{age:4}}),
-   S.selection('infant:play',16,'놀이터에서 함께 놀까?',local+' 놀이터에서 장난감을 함께 쓰자는 친구를 만난다.',[
-    {label:'차례를 정해서 함께 논다',effects:{stats:{relations:5,health:1}},detail:'친구와 약속을 지켰다.'},
-    {label:'먼저 친구에게 양보한다',effects:{stats:{relations:3,stress:1}},detail:'작은 배려를 배웠다.'},
-    {label:'다른 놀이를 찾아간다',effects:{stats:{health:3,relations:-1}},detail:'새로운 놀이에 집중했다.'}
+   S.selection('infant:play',16,'친구가 내 모래삽을 잡았다',local+' 놀이터에서 친구가 내 모래삽을 가져가려 한다.',[
+    {label:'같이 삽을 잡고 모래성을 만든다',effects:{stats:{relations:5,health:1},traits:{add:['배려심']}},detail:'함께 노니까 더 커다란 성을 만들 수 있었다.'},
+    {label:'엄마 뒤로 쏙 숨는다',effects:{stats:{relations:1,stress:-2},traits:{add:['낯가림']}},detail:'친구가 다가오면 잠깐 숨어서 지켜본다.'},
+    {label:'내 거라고 꼭 붙잡는다',effects:{stats:{health:2,relations:-1},traits:{add:['고집']}},detail:'내가 쓰던 물건은 쉽게 놓기 싫다.'}
    ]),
    S.notice('infant:age5',20,'다섯 살의 일상','친구들과 더 복잡한 놀이를 시작한다.',{attributes:{age:5}}),
    S.notice('infant:age6',24,'취학 준비','곧 초등학교에 들어간다.',{attributes:{age:6}}),
-   S.selection('infant:prepare',24,'학교 가기 전의 선택','학교생활을 어떻게 준비할까?',[
-    {label:'무료 도서관에서 책을 읽는다',effects:{stats:{relations:3,stress:-2}},detail:'책과 친해졌다.'},
-    {label:'가족과 학습 습관을 만든다',effects:{stats:{relations:2,stress:2}},detail:'차근차근 준비했다.'},
-    {label:'친구들과 실컷 놀아 둔다',effects:{stats:{relations:2,health:3}},detail:'친구와 추억을 쌓았다.'}
+   S.selection('infant:prepare',24,'내일은 처음 학교에 간다','가방을 싸다 보니 필통, 크레파스, 새 공책이 눈에 띈다.',[
+    {label:'공책 첫 장에 낙서를 한다',effects:{stats:{relations:1,health:2},traits:{add:['호기심']}},detail:'새 공책에는 무언가 그려 보고 싶었다.'},
+    {label:'필통 속 연필을 몇 번이나 세어 본다',effects:{stats:{relations:2,stress:1},traits:{add:['꼼꼼함']}},detail:'준비물은 빠짐없이 챙기고 싶다.'},
+    {label:'가방을 옆에 두고 일찍 잠든다',effects:{stats:{health:3,stress:-3},traits:{add:['느긋함']}},detail:'내일은 내일 생각하기로 했다.'}
    ]),
    S.notice('infant:school-entry',28,'초등학교 입학','지역 배정 초등학교에서 학교생활을 시작한다.',{
     attributes:{age:7,phase:'elementary',job:'초등학생'},
