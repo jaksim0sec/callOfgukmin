@@ -35,6 +35,7 @@ function present({choice,resolve,root}){
    (p.grade+'학년 · '+(p.category==='mock'?'모의고사':'정기고사')+' | 시험 대비에 투자할 노력을 선택하시오.'));
  const desc=make('p','life-modal-copy',choice.body);
  const options=make('div','life-modal-options');
+ let schoolSourceLink=null;
  const confirm=make('button','life-submit',isSchool?'선택한 학교에 지원':'선택한 준비 수준 확정');
  confirm.type='button';confirm.disabled=true;
  choice.options.forEach((option,index)=>{
@@ -43,6 +44,7 @@ function present({choice,resolve,root}){
   const letter=make('span','life-answer-letter',isSchool?'':String.fromCharCode(9312+index));
   if(isSchool){
    const crest=make('span','life-school-crest',option.school?.symbol||'學');
+   crest.title='공식 교표가 아닌 임시 식별 마크';
    if(option.school?.logoUrl){
     const image=make('img');
     image.src=option.school.logoUrl;image.alt=option.school.name+' 교표';
@@ -54,16 +56,23 @@ function present({choice,resolve,root}){
   const copy=make('span','life-answer-copy');
   copy.append(make('strong','',option.label));
   if(isSchool){
-   copy.append(make('small','',option.school?.kind==='foreign'?'외국어고 · 게임 내 성적 조건':
-     option.school?.kind==='gifted'?'영재학교 · 실제 별도 선발 전형':'일반고 · 지역 지원 후보'));
-   if(option.available===false)copy.append(make('small','life-requirement','현재 내신·학업 수치가 게임 내 지원 기준에 못 미침'));
-   else if(option.school?.kind==='foreign'||option.school?.kind==='gifted')copy.append(make('small','life-requirement','현실의 합격을 보장하지 않는 게임 조건'));
+   copy.append(make('small','',option.school?.typeLabel||'지역 학교 후보'));
+   const school=option.school||{};
+   if(school.minScore||school.minStudy){
+    copy.append(make('small','life-requirement',
+     '게임 지원 기준: 내신 '+school.minScore+' 이상 · 학업 '+school.minStudy+' 이상'));
+   }else copy.append(make('small','life-requirement','실제 일반고 배정은 해당 교육청 절차를 따름'));
+   if(option.available===false)copy.append(make('small','life-requirement','현재 게임 수치로는 선택할 수 없음'));
   }
   copy.append(effectList(option));
   row.append(copy,make('span','life-answer-check','✓'));
   row.setAttribute('aria-pressed','false');
   row.addEventListener('click',()=>{
    selected=option.id;confirm.disabled=false;
+   if(isSchool&&schoolSourceLink){
+    schoolSourceLink.href=option.school?.source||'https://hischool.go.kr/';
+    schoolSourceLink.textContent=option.school?.verified?'학교·전형 자료 열기 ↗':'고입정보포털에서 조회 ↗';
+   }
    [...options.children].forEach(el=>el.setAttribute('aria-pressed',String(el===row)));
   });
   options.append(row);
@@ -73,8 +82,8 @@ function present({choice,resolve,root}){
  footer.append(note,confirm);
  if(isSchool){
   const source=make('a','life-school-source','학교 정보 공시 검색 ↗');
-  source.href='https://www.schoolinfo.go.kr/Main.do';source.target='_blank';source.rel='noopener noreferrer';
-  footer.prepend(source);
+  source.href='https://hischool.go.kr/';source.target='_blank';source.rel='noopener noreferrer';
+  schoolSourceLink=source;footer.prepend(source);
  }
  body.append(head,title,sub,desc,options,footer);
  dialog.replaceChildren(body);

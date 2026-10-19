@@ -190,7 +190,9 @@ test('special-school game thresholds lock options until grade requirements hold'
  assert.equal(school.options.length,3);
  assert.equal(school.presentation.type,'school');
  assert.ok(school.options.find(o=>!o.when));
- assert.ok(school.options.some(o=>o.when?.stats?.schoolScore?.gte>=70));
+ assert.ok(school.options.every(o=>o.school.name&&o.school.typeLabel));
+ assert.ok(school.options.filter(o=>o.school.kind==='foreign'||o.school.kind==='gifted'||o.school.kind==='autonomous'||o.school.kind==='international')
+   .every(o=>o.when?.stats?.schoolScore?.gte>0));
  const exam=pack.choices.find(c=>c.id.startsWith('high:1:3월-모의고사'));
  assert.equal(exam.options.length,5);
  assert.equal(exam.presentation.type,'exam');
@@ -214,5 +216,37 @@ test('region catalogue and independent wealth presets generate tagged births',()
    const modifier=b.regionTags.reduce((sum,tag)=>sum+(c.GukminData.regionPresets[tag]?.relations||0),0);
    assert.equal(b.stats.relations,tier.relations+modifier);
    assert.equal(P.valid(P.load()||b),true);
+ }
+});
+
+test('school catalog distinguishes autonomous/gifted/foreign and local Gyeonggi cities',()=>{
+ const {c,P}=setup(),S=c.GukminSchools;
+ const person=P.generate();
+ for(const [city,first,advanced,kind] of [
+  ['성남시','분당중앙고등학교','성남외국어고등학교','foreign'],
+  ['수원시','영덕고등학교','수원외국어고등학교','foreign'],
+  ['고양시','백마고등학교','고양국제고등학교','international'],
+  ['평택시','현화고등학교','경기물류고등학교','vocational']
+ ]){
+  const sample={...person,birthplaceId:'경기도.'+city+'.테스트동',regionTags:['수도권']};
+  const options=S.options(sample);
+  assert.equal(options.length,3);
+  assert.equal(options[0].name,first);
+  assert.equal(options[2].name,advanced);
+  assert.equal(options[2].kind,kind);
+  assert.equal(options[2].verified,true);
+  assert.ok(options.every(x=>!x.logoUrl),'never use unrelated external logos');
+ }
+ for(const [region,name,expected] of [
+  ['seoul','휘문고등학교','autonomous'],
+  ['busan','해운대고등학교','autonomous'],
+  ['chungnam','북일고등학교','autonomous'],
+  ['gwangju','광주과학고등학교','gifted'],
+  ['sejong','세종과학예술영재학교','gifted']
+ ]){
+  const option=S.groups[region].find(x=>x.name===name);
+  assert.ok(option,name);
+  assert.equal(option.kind,expected);
+  assert.ok(option.minScore>0);
  }
 });

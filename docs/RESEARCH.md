@@ -82,3 +82,14 @@
 - [고입정보포털 자기주도학습전형](https://hischool.go.kr/study/data/index.do) — 실제 특별전형은 별도 학교별 기준이 필요함을 확인.
 
 주의: `js/data/schools.js`의 17개 지역 그룹×3 후보는 **시연용 실재 이름 표본**이다. 학교별 수업 난이도 수치 및 합격 가능성을 공식 지표로 단정하지 않고 게임용 `minScore/minStudy/load`만 별도로 명시했다. 주소별 배정, 성별, 2027학년도 학교별 모집, 학교 교표 및 일부 학교명 출처의 **전수 검증은 미완료**다. 이미지 URL 2건은 외부 공개 자산에 연결한 것으로 차후 공식 리소스 검증이 필요하다.
+
+## 2026-10-19 학교 유형·지역 후보 추가 검증
+
+- [고입정보포털의 2026 자율형사립고 목록](https://www.hischool.go.kr/study/enforce.jsp): 휘문고·해운대고·북일고를 일반고와 구분.
+- [경기도교육청 2026 공립 외고 운영 현황](https://www.goe.go.kr/resource/goe/na/bbs_2675/2026/01/963f27ea-ce76-43e1-a1fc-046fa78c3a1d.pdf): 성남외고·수원외고 확인.
+- [수원교육지원청 영통구 학교 목록](https://www.goesw.kr/goesw/cm/cntnts/cntntsView.do?cntntsId=3954&mi=19607): 영덕고·매탄고·수원외고 확인.
+- [평택 현화고 공식 홈페이지](https://hyeonhwa-h.goept.kr/), [평택 비전고 학교 공시](https://www.goept.kr/goept/ssm/scholStts/selectScholSttsList.do?mi=10245), [평택교육지원청 경기물류고 소개](https://www.goept.kr/goept/na/ntt/selectNttInfo.do?bbsId=10070&mi=10055&nttSn=2548226): 기존 출생 경기도 데이터의 평택시 후보에 대응하도록 업데이트.
+- [고양교육지원청 학교 목록](https://www.goegy.kr/goegy/ssm/scholStts/selectScholTblList.do?mi=22046): 추가 고양 표본의 고양동산고·고양국제고 확인.
+- [경기도교육청 고입 기본계획](https://www.goe.go.kr/goe/na/ntt/selectNttInfo.do?mi=10102&nttSn=1058069): 일반고/특성화고/외고·자사고 전형 구분 확인.
+
+실제 학교의 상징·로고는 별도 저작물이고 웹에 노출되었다고 재배포 허락을 받은 것이 아니다. 과거 비공식 타 사이트에서 핫링크했던 교표 2건은 제거했고, 검증된 재사용 조건이 확보되기 전까지 공식 교표 제공 완료라고 표기하지 않는다. 원문 교과과정·전형은 학교 또는 교육청 링크로 직접 안내한다.

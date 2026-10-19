@@ -133,8 +133,9 @@ try{
   assert.ok(box&&box.x>=-1&&box.x+box.width<=viewport.width+1,'exam within screen');
   await p.locator('#lifeDecisionDialog .life-answer').nth(2).click();
   await p.locator('#lifeDecisionDialog .life-submit').click();
-  assert.equal(await p.locator('#lifeDecisionDialog[open]').count(),0);
+  // Another exam may immediately open. Verify the previous decision closed, not the dialog.
   const beforeReload=await p.evaluate(()=>GukminGame.session.snapshot());
+  assert.equal(beforeReload.runtime.choices[examState.choice+':1'].status,'closed');
   await p.reload({waitUntil:'domcontentloaded'});
   const afterReload=await p.evaluate(()=>GukminGame.session.snapshot());
   assert.equal(afterReload.runtime.turn,beforeReload.runtime.turn,'restored turn');
@@ -146,6 +147,7 @@ try{
   const schoolBounds=await p.locator('#lifeDecisionDialog').boundingBox();
   assert.ok(schoolBounds&&schoolBounds.x>=-1&&schoolBounds.x+schoolBounds.width<=viewport.width+1,'school within screen');
   await p.locator('#lifeDecisionDialog .life-answer').first().click();
+  assert.ok((await p.locator('#lifeDecisionDialog .life-school-source').getAttribute('href')).startsWith('https://'));
   await p.locator('#lifeDecisionDialog .life-submit').click();
   const ended=await walk('nothing');
   assert.equal(ended.age,19);assert.equal(ended.turn,79);

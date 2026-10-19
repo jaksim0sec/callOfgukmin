@@ -22,7 +22,7 @@ global.GukminDirector.register({
      activate:{exam:45},
      stats:{stress:school.load*2,study:school.load}
     },
-    detail:school.name+'에 진학했다. 학교별 선발과 교육 과정은 실제와 다를 수 있다.',
+    detail:school.name+'에 진학했다. 실제 배정·전형 절차와 다르게 단순화한 게임 결과다.',
     historyTitle:school.name+' 입학'
    };
   });
@@ -44,6 +44,15 @@ global.GukminDirector.register({
     {id:'paid',label:'유료 보충 수업을 신청한다',when:{stats:{allowance:{gte:10000}}},effects:{stats:{study:7,allowance:-5000,stress:5}},detail:'유료 보충 수업에 시간을 투자했다.'}
    ]),
    S.notice('middle:age15',60,'중학교 3학년','고등학교 진학을 생각할 때가 왔다.',{attributes:{age:15}}),
+   S.selection('middle:admission-prep',60,'진학 준비와 가정의 지원',
+    family?'사교육비를 크게 쓰기는 어렵지만 공공 정보와 장학 안내를 이용할 수 있다.':'가족이 진로 선택을 상의하며 학교의 교육과정을 알아보고 있다.',[
+     {id:'public',label:'교육청·학교의 무료 진학 설명회를 찾아간다',
+      effects:{stats:{study:3,relations:2,stress:-1}},detail:'공개된 입학 자료를 직접 확인했다.'},
+     {id:'mentor',label:'담임 선생님과 상담한다',
+      effects:{stats:{study:2,relations:4,stress:-2}},detail:'현실적인 지원 방향을 함께 정리했다.'},
+     {id:'paid',label:'유료 진학 상담에 시간을 쓴다',when:{stats:{allowance:{gte:15000}}},
+      effects:{stats:{study:4,allowance:-6000,stress:3}},detail:'비용과 시간을 들여 상담을 받았다.'}
+    ]),
    S.exam('middle',15,3,61,'1학기 중간고사'),
    S.exam('middle',15,3,62,'1학기 기말고사'),
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
