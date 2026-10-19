@@ -375,3 +375,15 @@ test('paid academy everyday choice uses wallet, charges once and preserves allow
  assert.equal(engine.snapshot().persona.stats.money,0,'reloading cannot duplicate payment');
  assert.equal(engine.resolve(token,'academy'),false);
 });
+
+test('exam preludes announce middle and annual high assessments without replacing existing choices',()=>{
+ const {c,P}=setup(),s=c.GukminDirector.content(P.generate());
+ const preludes=s.events.filter(e=>e.id.startsWith('exam-prelude:'));
+ const classroom=s.events.filter(e=>e.id.startsWith('exam-classroom:'));
+ assert.equal(preludes.length,12);
+ assert.equal(classroom.length,12);
+ assert.ok(preludes.every(e=>e.layer==='소식 이벤트'&&e.when.all.some(w=>w.turn?.eq===e.at)));
+ assert.ok(preludes.every(e=>e.history.importance==='major'));
+ assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.stage==='middle').length,6);
+ assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.annual).length,6);
+});

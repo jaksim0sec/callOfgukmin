@@ -21,6 +21,9 @@ function choiceAt(id,at,title,body,options,when){
  x.event.when={all:[{turn:{eq:at}},...(when?[when]:[])]};
  return x;
 }
+function examWithPrelude(age,year,at,kind){
+ return [S.examPrelude('high',year,at,kind==='mock'?'모의고사':'내신 평가'),yearExam(age,year,at,kind)];
+}
 function yearExam(age,year,at,kind){
  const type=kind==='mock'?'모의고사':'내신',title=year+'학년 '+type+' 종합 준비';
  const x=S.exam('high',age,year,at,title,kind);
@@ -63,7 +66,7 @@ global.GukminDirector.register({
      {label:'친구에게 말을 걸고 같이 살펴본다',effects:{stats:{relations:4,stress:-2}},detail:'함께 적응하는 친구가 생겼다.'},
      {label:'내 일정부터 정리한다',effects:{stats:{study:3,stress:-2}},detail:'스스로 일정을 챙겼다.'}
     ]),
-   yearExam(16,1,65,'mock'),
+   examWithPrelude(16,1,65,'mock'),
    choiceAt('high:recover',65,'학교생활을 다시 조율한다',
     '시험과 여러 활동이 겹쳐 몸과 마음이 지쳤다. 부담을 나누고 쉬어 갈 방법을 찾자.',[
      {label:'상담 선생님과 학습량을 조정한다',effects:{stats:{stress:-27,health:5,relations:2}}},
@@ -77,7 +80,7 @@ global.GukminDirector.register({
      {label:'무리하지 않고 다음 교통편을 기다린다',effects:{stats:{health:2,stress:-3}},detail:'늦었지만 무리하지 않았다.'}
     ]),
    branches,
-   yearExam(16,1,68,'school'),
+   examWithPrelude(16,1,68,'school'),
    S.notice('high:age17',69,'고등학교 2학년','교과 선택과 진로, 친구 관계가 복잡해지기 시작했다.',{attributes:{age:17}}),
    choiceAt('high:career',69,'가까운 친구의 고민',
     '친구가 학교생활과 진로에 대한 불안을 털어놓았다. 어떻게 이야기를 이어갈까?',[
@@ -85,7 +88,7 @@ global.GukminDirector.register({
      {label:'담임이나 상담 선생님께 도움을 청하자고 제안한다',effects:{stats:{relations:4,stress:-1}},detail:'상담받을 수 있는 방법을 함께 살폈다.'},
      {label:'산책하면서 다른 이야기도 나눈다',effects:{stats:{relations:3,health:2,stress:-2}},detail:'조금 편안한 시간을 보냈다.'}
     ]),
-   yearExam(17,2,70,'mock'),
+   examWithPrelude(17,2,70,'mock'),
    choiceAt('high:electives',71,'선택과목 신청서를 다시 써야 한다',
     '원하던 과목이 개설되지 않거나 시간이 겹친다고 한다. 다른 수업 방식도 알아볼 수 있다.',[
      {label:'공동교육과정·온라인학교를 알아본다',effects:{stats:{study:4,stress:3}},detail:'학교 밖 연계 수업을 살펴봤다.'},
@@ -99,9 +102,9 @@ global.GukminDirector.register({
      {label:'조원의 사정을 확인한다',effects:{stats:{relations:6,stress:2}},detail:'사정을 이해하고 역할을 조정했다.'},
      {label:'교사에게 현재 진행 상황을 정확히 알린다',effects:{stats:{study:3,stress:1}},detail:'상황을 정리해 전달했다.'}
     ]),
-   yearExam(17,2,73,'school'),
+   examWithPrelude(17,2,73,'school'),
    S.notice('high:age18',74,'고등학교 3학년','졸업을 앞두고 있다. 공부뿐 아니라 사람들과의 시간도 중요해졌다.',{attributes:{age:18}}),
-   yearExam(18,3,75,'mock'),
+   examWithPrelude(18,3,75,'mock'),
    choiceAt('high:family-time',76,'주말에 온 가족의 연락',
     familyNeeds?'가족이 이번 주말 집안일을 도와 달라고 했다. 시험 준비도 신경 쓰인다.':'가족 모임과 계획해 둔 개인 일정이 겹친다.',[
      {label:'필요한 만큼 돕고 남은 시간에 공부한다',effects:{stats:{relations:5,study:1,stress:2}},detail:'가족과 시간을 나누었다.'},
@@ -114,7 +117,7 @@ global.GukminDirector.register({
      {label:'선생님께 진로에 관해 다시 물어본다',effects:{stats:{study:2,relations:2}},detail:'조언을 들었다.'},
      {label:'사진을 찍고 조용히 하루를 보낸다',effects:{stats:{health:2,stress:-3}},detail:'기억에 남을 하루였다.'}
     ]),
-   yearExam(18,3,78,'school'),
+   examWithPrelude(18,3,78,'school'),
    S.notice('high:graduation',79,'고등학교를 졸업했다',
     '시험과 관계, 선택한 과목과 기억이 남았다. 다음 인생 이야기는 준비 중이다.',{
      attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]

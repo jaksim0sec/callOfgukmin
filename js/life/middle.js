@@ -28,7 +28,9 @@ global.GukminDirector.register({
   });
   return {...S.pack(
    S.notice('middle:welcome',52,'중학교 첫 등교','과목별 시험과 수행평가가 시작된다.',{activate:{schoolScore:50}}),
+   S.examPrelude('middle',1,53,'1학기 중간고사'),
    S.exam('middle',13,1,53,'1학기 중간고사'),
+   S.examPrelude('middle',1,54,'1학기 기말고사'),
    S.exam('middle',13,1,54,'1학기 기말고사'),
    S.selection('middle:friends',55,'새로운 동아리 모집','수업 외에 함께할 활동을 찾는다.',[
     {label:'친구와 봉사 동아리에 참가한다',effects:{stats:{relations:6,stress:2}},detail:'봉사 활동을 통해 새로운 친구를 알게 됐다.'},
@@ -41,7 +43,9 @@ global.GukminDirector.register({
     {label:'친구와 산책하며 생각을 정리한다',effects:{stats:{stress:-18,health:4,relations:4}}}
    ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},stats:{stress:{gte:65}}}}},
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
+   S.examPrelude('middle',2,57,'1학기 중간고사'),
    S.exam('middle',14,2,57,'1학기 중간고사'),
+   S.examPrelude('middle',2,58,'1학기 기말고사'),
    S.exam('middle',14,2,58,'1학기 기말고사'),
    S.selection('middle:resources',59,'시험 대비 방법을 고른다',family?'유료 학원이 부담스럽다. 학교 프로그램도 이용할 수 있다.':'다양한 공부 방식 중 하나를 고를 수 있다.',[
     {id:'teacher',label:'학교 선생님에게 질문한다',effects:{stats:{study:5,relations:2,stress:1}},detail:'학교 수업에서 부족한 부분을 채웠다.'},
@@ -58,7 +62,9 @@ global.GukminDirector.register({
      {id:'paid',label:'유료 진학 상담에 시간을 쓴다',when:{stats:{money:{gte:6000}}},
       effects:{stats:{study:4,money:-6000,stress:3}},detail:'비용과 시간을 들여 상담을 받았다.'}
     ]),
+   S.examPrelude('middle',3,61,'1학기 중간고사'),
    S.exam('middle',15,3,61,'1학기 중간고사'),
+   S.examPrelude('middle',3,62,'1학기 기말고사'),
    S.exam('middle',15,3,62,'1학기 기말고사'),
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})

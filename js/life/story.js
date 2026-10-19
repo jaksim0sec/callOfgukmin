@@ -6,6 +6,12 @@ function notice(id,at,title,detail,effects={}){
  return {id,at,layer:'소식 이벤트',title,
   history:{title,detail},result:{effects}};
 }
+function examPrelude(stage,grade,at,term){
+ const key=stage+':'+grade+':'+at,when={turn:{eq:at-1}};
+ const first=notice('exam-prelude:'+key,at-1,'시험 기간이 다가옵니다',term+' 시험 일정이 안내되었다. 공부와 휴식을 어떻게 조절할지 생각할 시간이다.');
+ const second=notice('exam-classroom:'+key,at-1,'교실의 시험 준비 분위기','친구들이 시험 범위와 공부 방법을 서로 이야기한다.');
+ return [{...first,when,history:{...first.history,importance:'major'}},{...second,when}];
+}
 function selection(id,at,title,body,options,kind='일상 선택',presentation=null){
  return {
   event:{id,at,layer:kind==='한방 선택'?'한방 이벤트':'일상 이벤트',title,choice:id},
@@ -49,5 +55,5 @@ function pack(...parts){
  }
  return {events,choices};
 }
-global.GukminStory=Object.freeze({notice,selection,exam,pack});
+global.GukminStory=Object.freeze({notice,selection,exam,examPrelude,pack});
 })(window);
