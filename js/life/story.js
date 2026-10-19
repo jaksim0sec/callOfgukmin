@@ -21,19 +21,20 @@ function selection(id,at,title,body,options,kind='일상 선택',presentation=nu
     id:o.id||'choice-'+i,label:o.label,
     ...(o.when?{when:clone(o.when)}:{}),
     ...(o.school?{school:clone(o.school)}:{}),
-    result:{effects:clone(o.effects||{}),history:{title:o.historyTitle||title,detail:o.detail||o.label},
+    result:{effects:clone(o.effects||{}),history:{title:o.historyTitle||title,detail:o.detail??'결정이 기록되었다.'},
      ...(o.tags?{tags:clone(o.tags)}:{}),
      ...(o.conditional?{conditional:clone(o.conditional)}:{})}
    }))
   }
  };
 }
+// Changes describe sustained preparation, not a mood swing caused by clicking a button.
 const efforts=[
- {label:'아예 준비하지 않고 쉰다',study:-5,score:-8,stress:-5,health:3},
- {label:'최소한만 준비한다',study:0,score:-2,stress:-2,health:1},
- {label:'적당히 꾸준히 준비한다',study:3,score:4,stress:3,health:-1},
- {label:'계획을 세워 집중한다',study:7,score:8,stress:7,health:-3},
- {label:'거의 모든 시간을 투자한다',study:10,score:12,stress:13,health:-6}
+ {label:'시험범위를 놓쳤다',study:-2,score:-5,stress:0,health:0,outcome:'준비한 부분이 적어 빈칸이 눈에 띄었다.'},
+ {label:'중요한 개념만 훑었다',study:0,score:-2,stress:0,health:0,outcome:'익숙한 문제는 풀었지만 응용 문제에는 손이 멈췄다.'},
+ {label:'정해진 분량을 꾸준히 복습했다',study:2,score:3,stress:0,health:0,outcome:'복습한 범위에서는 실수가 줄었다.'},
+ {label:'기출문제와 오답을 정리했다',study:4,score:5,stress:1,health:0,outcome:'틀리던 유형을 마지막에 다시 확인할 수 있었다.'},
+ {label:'잠을 줄여 막판까지 몰아쳤다',study:5,score:7,stress:5,health:-2,outcome:'몇 문제를 더 풀었지만 수면 부족이 시험 끝까지 따라왔다.'}
 ];
 function exam(stage,age,grade,at,name,type='school'){
  const id=stage+':'+grade+':'+name.replaceAll(/[^a-zA-Z0-9가-힣]/g,'-');
@@ -41,9 +42,20 @@ function exam(stage,age,grade,at,name,type='school'){
  return selection(id,at,age+'세 · '+grade+'학년 '+name,'해당 시험에 얼마나 시간과 에너지를 투자할까?',
   efforts.map((effort,i)=>({
     id:'effort-'+i,label:effort.label,
-    effects:{stats:{study:effort.study,[score]:effort.score,stress:effort.stress,health:effort.health}},
-    detail:name+' 준비 수준을 선택했다. 학업과 컨디션의 변화가 기록됐다.'
+    effects:{stats:Object.fromEntries(Object.entries({study:effort.study,[score]:effort.score,stress:effort.stress,health:effort.health}).filter(([,value])=>value!==0))},
+    detail:name+'을 치렀다. '+effort.outcome
   })),'한방 선택',{type:'exam',stage,grade,age,term:name,category:type});
+}
+// Alternative scripts share one event ID. The timeline selects exactly one at opening.
+function branch(entry,scenarios){
+ if(!entry?.choice||!Array.isArray(scenarios)||!scenarios.length)throw new Error('시나리오 슬롯 정의 오류');
+ entry.choice.variants=scenarios.map(scenario=>{
+  const options=selection(entry.choice.id,entry.event.at,scenario.title||entry.choice.title,
+   scenario.body,scenario.options,entry.choice.layer).choice.options;
+  return {id:scenario.id,priority:scenario.priority||0,...(scenario.when?{when:clone(scenario.when)}:{}),
+   title:scenario.title||entry.choice.title,body:scenario.body,options};
+ });
+ return entry;
 }
 function pack(...parts){
  const events=[],choices=[];
@@ -55,5 +67,5 @@ function pack(...parts){
  }
  return {events,choices};
 }
-global.GukminStory=Object.freeze({notice,selection,exam,examPrelude,pack});
+global.GukminStory=Object.freeze({notice,selection,branch,exam,examPrelude,pack});
 })(window);

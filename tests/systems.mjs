@@ -503,3 +503,79 @@ test('legacy open choice without scenarioId keeps original labels and options',(
  assert.equal(loaded.snapshot().choice.options[0].id,'old');
  assert.equal(loaded.resolve('e:1','old'),true);
 });
+
+test('early behavior changes a later play scene without rerolling or immediate stress rewards',()=>{
+ const {c,P}=setup(),seed=P.generate(),D=c.GukminDirector;
+ const a=D.create({persona:plain(seed)});a.run();
+ assert.equal(a.snapshot().choice.id,'infant:home');
+ assert.ok(a.snapshot().choice.scenarioId);
+ a.resolve(a.snapshot().choice.token,'choice-0');a.run();
+ const curious=a.snapshot();
+ assert.equal(curious.choice.id,'infant:play');
+ assert.equal(curious.choice.scenarioId,'curious-play');
+ const before=curious.persona.stats.stress;
+ a.resolve(curious.choice.token,'choice-1');
+ assert.equal(a.snapshot().persona.stats.stress,before,'short cooperation does not cure accumulated stress');
+ const b=D.create({persona:plain(seed)});b.run();
+ b.resolve(b.snapshot().choice.token,'choice-1');b.run();
+ assert.equal(b.snapshot().choice.scenarioId,'cautious-play');
+ const c2=D.create({persona:plain(seed)});c2.run();
+ c2.resolve(c2.snapshot().choice.token,'choice-1');c2.run();
+ assert.equal(c2.snapshot().choice.scenarioId,b.snapshot().choice.scenarioId);
+});
+test('class election keeps original event ID and separates candidacy, victory and role end',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const p=P.generate();p.phase='elementary';p.age=11;p.stats.relations=60;
+ const engine=D.create({persona:p});
+ let s=engine.run(),guard=0;
+ while(s.choice?.id!=='elementary:representative'&&guard++<20){
+  assert.ok(s.choice);engine.resolve(s.choice.token,s.choice.options[0].id);s=engine.run();
+ }
+ assert.equal(s.choice?.id,'elementary:representative');
+ assert.ok(s.choice.scenarioId);
+ const token=s.choice.token;
+ assert.equal(engine.resolve(token,s.choice.options[0].id),true);
+ let after=engine.snapshot();
+ assert.equal(after.persona.attributes.classElection,'elected');
+ assert.ok(after.persona.roles.includes('반장'));
+ assert.equal(after.reviewPending,true);
+ assert.equal(engine.resolve(token,s.choice.options[0].id),false);
+ engine.run();
+ while(engine.snapshot().choice&&engine.snapshot().choice.id!=='middle:friends'&&guard++<40){
+  const next=engine.snapshot().choice;
+  engine.resolve(next.token,next.options.find(o=>o.available)?.id);engine.run();
+ }
+ assert.equal(engine.snapshot().persona.attributes.classElection,'elected');
+ assert.equal(engine.snapshot().persona.roles.includes('반장'),false,'role ends upon entering middle school');
+});
+test('high school first contact drives recurring character and different conflict',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const p=P.generate();p.age=16;p.phase='high';p.job='고등학생';
+ p.stats.relations=56;p.stats.schoolScore=55;p.stats.study=48;p.stats.exam=45;
+ p.attributes={schoolTrack:'general'};
+ const engine=D.create({persona:p});let s=engine.run(),count=0;
+ assert.equal(s.choice.id,'high:first-day');
+ assert.equal(s.choice.scenarioId,'first-social');
+ engine.resolve(s.choice.token,s.choice.options[0].id);s=engine.run();
+ assert.equal(s.persona.attributes.highPeer,'하린');
+ let career=false,teamwork=false;
+ while(s.choice&&count++<30){
+  if(s.choice.id==='high:career'){career=true;assert.match(s.choice.body,/최하린/);}
+  if(s.choice.id==='high:teamwork'){teamwork=true;assert.match(s.choice.body,/최하린/);}
+  engine.resolve(s.choice.token,s.choice.options.find(o=>o.available)?.id);s=engine.run();
+  if(teamwork)break;
+ }
+ assert.equal(career,true);assert.equal(teamwork,true);
+});
+test('every school-specific high route uses different real actions',()=>{
+ const {c,P}=setup(),content=c.GukminDirector.content(P.generate());
+ const selections=content.choices.filter(x=>x.id.startsWith('high:track-'));
+ assert.equal(selections.length,8);
+ const seen=new Set();
+ for(const choice of selections){
+  assert.equal(choice.variants.length,1);
+  const labels=choice.variants[0].options.map(x=>x.label).join(' / ');
+  assert.ok(!seen.has(labels),'school tracks must not share copy-pasted options');
+  seen.add(labels);
+ }
+});
