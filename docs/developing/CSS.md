@@ -43,3 +43,13 @@
 - PC 포스터와 하단 상태표의 `getBoundingClientRect().width` 값이 같아야 함.
 - 모바일 바텀시트는 `position:fixed`, 아래쪽에 위치해야 하며 PC에는 적용되지 않아야 함.
 - 현재 스토리라인/진행 로직은 비활성화된 UI 기반 시연. CSS 작업 중 게임 진행을 임의로 도입하지 않는다.
+
+## 5. 화면 3종과 학교·특성 토큰 (2026-10-19)
+
+- 화면 호스트: 루트 `index.html#app`. 화면별 HTML은 `html/waiting.html`, `html/game.html`, `html/result.html`. 모두 공통 `css/style.css`를 사용하나, 대기/결과는 `.waiting-screen`·`.result-screen` 접두 선택자로 독립 레이아웃을 소유한다.
+- 인게임 반응형 골격(`.game`, `.desktop-left`, `.desktop-right`, `.status`, `.sheet`)은 유지한다. PC 왼쪽 포스터/프로필 동일 너비, 모바일 고정 바텀시트는 여전히 필수 계약이다.
+- 속성 스탯은 `.attribute-list`·`.attribute-row`, 학교는 기존 `.school-list`·`.school-row`와 `.school-token`을 사용한다. **새 카드 컴포넌트 없음**. `.school-token-active`만 재학 강조, `.school-token-complete`는 졸업 톤.
+- 상태 스탯은 `.gauges-list`에 동적 항목을 넣는다. 기존 `.gauges`는 전체 박스 및 상단 라벨/하단 특성의 컨테이너. `.trait-section`은 프로그래스 아래에 위치한다.
+- 학교/특성/속성 토큰은 `.token-icon-pill`과 `.token-icon`을 공유하며, **알약 배경 + 내부 흰색 둥근 선 SVG 아이콘 + 이름**을 보존한다. 구체 색상과 활성 상태는 종류별 클래스로 구분.
+- PC 상태 내부는 2열, 모바일 760px 이하 4열·440px 이하 2열 기준을 상태 `.gauges-list`에 적용한다. `:root` 이외의 크기/간격은 `rem`/`em` 기준이다.
+- 새 화면은 뷰별 컨테이너에서만 레이아웃을 제어하며, 기존 게임 진행 코드를 CSS 작업과 함께 되살리지 않는다. 후속 폰트 크기·토큰 디자인 변경에도 **이 파일을 함께 검토·갱신**한다.

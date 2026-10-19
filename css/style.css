@@ -14,7 +14,7 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:0.125rem solid #
 .gk-poster[data-template=light]{background:#f0f0ed;color:#18232e}.gk-poster[data-template=light] .gk-poster-shade{background:linear-gradient(to top,#f0f0ed,transparent)}.gk-poster[data-template=minimal] .gk-portrait{inset:7% -20% 0 -5%}
 .profile{padding:clamp(0.9375rem,1.55vw,1.5rem);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#554b5b transparent}
 .age-row{display:flex;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:0.9375rem}.age{font:normal clamp(1.8125rem,3vw,2.8125rem)/1.1 'Do Hyeon',sans-serif}.job{color:#c7bdd0;font-size:0.875rem}
-.school-list{display:grid;gap:0.625rem}.school-row{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}.label{width:4.875rem;flex:none;color:#a69caa;font-size:0.8125rem}.token{display:inline-flex;align-items:center;gap:0.3125rem;border-radius:62.4375rem;background:#393242;color:#f8f7fa;font-size:0.75rem;font-weight:600;padding:0.3125rem 0.6875rem;max-width:100%}.traits{display:flex;flex-wrap:wrap;gap:0.4375rem;margin-top:1rem;padding-top:0.9375rem;border-top:0.0625rem solid #ffffff12}.token-trait{background:#453553;color:#fff}
+.school-list{display:grid;gap:0.625rem}.school-row{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}.label{width:4.875rem;flex:none;color:#a69caa;font-size:0.8125rem}.token{display:inline-flex;align-items:center;gap:0.3125rem;border-radius:62.4375rem;background:#393242;color:#f8f7fa;font-size:0.75rem;font-weight:600;padding:0.3125rem 0.6875rem;max-width:100%}.traits{display:flex;flex-wrap:wrap;gap:0.4375rem;align-items:center}.token-trait{background:#453553;color:#fff}
 .gauges{padding:clamp(1.0625rem,1.8vw,1.625rem)}.gauge{min-width:0}.gauge-label{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;font-size:0.9375rem;margin-bottom:0.5rem}.gauge-label b{font-size:0.875rem;color:#d8cbe3;font-weight:650}progress{appearance:none;width:100%;height:0.5625rem;display:block;background:#ffffff12;border:0;border-radius:0.5625rem;overflow:hidden}progress::-webkit-progress-bar{background:#ffffff12}progress::-webkit-progress-value{background:#bba0d4;border-radius:0.5625rem}progress::-moz-progress-bar{background:#bba0d4}.gauge-locked{opacity:.4}.spectrum{height:0.5625rem;border-radius:0.5625rem;background:linear-gradient(90deg,#466fc17a,#ffffff16,#b653687a);position:relative}.spectrum:after{content:'';width:0.25rem;height:1.0625rem;background:#e8def2;position:absolute;left:var(--pos,50%);top:-0.25rem;border-radius:0.1875rem}.ends{display:flex;justify-content:space-between;color:#a398af;font-size:0.6875rem;margin-top:0.3125rem}.resources{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.375rem 1rem;border-top:0.0625rem solid #ffffff10;padding-top:0.75rem;font-size:0.75rem;color:#a99cb2}.resources b{font-size:0.875rem;color:#f4eefa}.resources #economyHint{color:#817786;font-size:0.6875rem}
 .sheet{background:#111015;border:0.0625rem solid #ffffff14;border-radius:1.0625rem;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0}
 .sheet-grip{display:none}.sheet-head{display:flex;align-items:center;gap:0.625rem;min-height:4.0625em;padding:0.75rem 1.375rem;border-bottom:0.0625rem solid #ffffff10;flex:none}.sheet-head strong{font:normal 1.6875rem 'Do Hyeon',sans-serif}.mini-reset{border:0;border-radius:0.5rem;padding:0.25rem 0.4375rem;font-size:1.4375rem;color:#cbc0d4;background:#ffffff10}.chapter-meta{display:flex;align-items:center;gap:0.5625rem;margin-left:auto;color:#ad9eaf;font-size:0.8125rem}.mode-chip{background:#2d2833;padding:0.25rem 0.5625rem;border-radius:6.25rem;color:#d9cbe5;font-size:0.6875rem}
@@ -23,6 +23,85 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:0.125rem solid #
 dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;border:0.0625rem solid #695875;border-radius:1rem;background:#1b1621;color:#f1edf5;box-shadow:0 1.75rem 5rem #000a;overflow:hidden}dialog[open]{display:flex;flex-direction:column}dialog::backdrop{background:#040407bc;backdrop-filter:blur(0.4375rem)}.modal-head{display:flex;align-items:center;justify-content:space-between;flex:none;padding:0.8125rem 1.25rem;border-bottom:0.0625rem solid #ffffff1a}.modal-kicker{font-size:0.75rem;color:#c7a9db;font-weight:750}.close{border:0;background:#ffffff12;color:inherit;border-radius:50%;width:2.3125rem;height:2.3125rem;font-size:1.5rem;line-height:1}.modal-body{padding:1.3125rem;overflow-y:auto;flex:1;min-height:0;overscroll-behavior:contain}.modal-title{font:normal 2rem 'Do Hyeon',sans-serif;margin:0 0 0.5rem}.modal-story{font-size:0.875rem;color:#c0b4c9;margin:0 0 0.9375rem;line-height:1.7}.modal-foot{display:flex;align-items:center;justify-content:space-between;gap:0.625rem;flex:none;padding:0.875rem 1.25rem;border-top:0.0625rem solid #ffffff1b}.summary{font-size:0.75rem;color:#c4b0d2}.confirm{border:0;background:#d8c6e7;color:#281e31;border-radius:0.5rem;padding:0.6875rem 1.125rem;font-weight:850;min-height:2.6875em;white-space:nowrap}.confirm:disabled{opacity:.35}.options{display:grid;gap:0.5rem}.option{display:flex;align-items:center;gap:0.75rem;min-height:5.0625em;width:100%;border:0.0625rem solid #504159;border-radius:0.5625rem;background:#292332;color:inherit;text-align:left;padding:0.75rem}.option[aria-pressed=true]{border-color:#c4a4e0;background:#3b3046}.option-text{display:block;flex:1;min-width:0}.option strong{display:block;font-size:1.0625rem}.option small{display:block;color:#a89bad;font-size:0.75rem;margin-top:0.1875rem}.check{visibility:hidden;font-size:1.375rem}.option[aria-pressed=true] .check{visibility:visible}.choice-tags{display:flex;gap:0.3125rem;flex-wrap:wrap;margin-top:0.375rem}.choice-tags .token{font-size:0.6875rem}.crest{width:2.625rem;height:3.125rem;flex:none;display:grid;place-items:center;background:#9e8864;clip-path:polygon(0 0,100% 0,90% 70%,50% 100%,10% 70%);font:1.5625rem serif;color:#fff}
 .school-dialog{background:#f2ebdf;color:#29241f;border:0.0625rem solid #d2c1a9;border-radius:1.0625rem 1.0625rem 0 0;margin:auto auto 0;animation:sheet-rise .35s ease-out both}.school-dialog .modal-head,.school-dialog .modal-foot{border-color:#d3c5af}.school-dialog .modal-kicker{color:#8b7457}.school-dialog .close{color:#483e31;background:#e2d8c7}.school-dialog .modal-story{color:#766a59}.school-dialog .option{background:#fffcf7;border:0.0625rem solid #d1c4b4;color:#25211b;border-radius:0.375rem}.school-dialog .option[aria-pressed=true]{border:0.125rem solid #293951;background:#fff}.school-dialog .option small{color:#827767}.school-dialog .choice-tags .token{background:#e5e0d6;color:#514738}.school-dialog .summary{color:#756957}.school-dialog .confirm{background:#283c55;color:white}
 .ballot-dialog{background:#eee8dc;color:#28241f;border-color:#baa992}.ballot-dialog .modal-head,.ballot-dialog .modal-foot{border-color:#c1b49d}.ballot-dialog .modal-kicker,.ballot-dialog .summary{color:#726452}.ballot-dialog .close{color:#564d40;background:#00000010}.ballot-dialog .modal-story{color:#786e5e}.ballot-dialog .confirm{background:#2a2927;color:#fff}.ballot-paper{border:0.0625rem solid #877b68}.ballot-row{display:grid;grid-template-columns:3.0625rem 1fr 3.25rem;gap:0;align-items:center;border:0;border-bottom:0.0625rem solid #998b76;width:100%;min-height:4.75em;background:#f9f5ea;color:#30271e;padding:0;text-align:left}.ballot-row:last-child{border-bottom:0}.ballot-row[aria-pressed=true]{background:#f0e1c5}.ballot-no{height:100%;display:grid;place-items:center;font:bold 1.5625rem serif;border-right:0.0625rem solid #998b76}.ballot-party{display:flex;align-items:center;gap:0.5625rem;padding:0.5rem 0.8125rem}.ballot-party strong{font:normal 1.3125rem 'Do Hyeon',sans-serif}.ballot-party small{display:block;color:#8e8070;font-size:0.6875rem}.party-mark{--color:#486283;flex:none;width:1.9375rem;height:1.9375rem;display:grid;place-items:center;background:var(--color);color:#fff;font-size:1.25rem;border-radius:0.3125rem}.stamp-box{display:grid;place-items:center;border-left:0.0625rem solid #998b76;height:100%}.stamp{border:0.125rem solid #c74845;border-radius:50%;color:#c74845;width:1.875rem;height:1.875rem;display:grid;place-items:center;visibility:hidden}.ballot-row[aria-pressed=true] .stamp{visibility:visible}
+
+/* Three screens share a skin, but only the in-game screen owns the status panels. */
+#app{min-width:0;min-height:100dvh}
+.profile-heading,.gauges-heading{font-size:0.8125rem;color:#b7a7bf;font-weight:800;letter-spacing:.02em}
+.profile-heading{margin-bottom:0.625rem}
+.school-heading{margin-top:1rem}
+.attribute-list{display:grid;gap:0.5rem}
+.attribute-row{display:flex;align-items:center;gap:0.625rem;min-width:0;flex-wrap:wrap}
+.attribute-label{color:#a69caa;font-size:0.8125rem;min-width:4.875rem}
+.attribute-tokens,.school-tokens{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem;min-width:0;flex:1}
+.school-tokens{align-items:flex-start}
+.school-unset{color:#665d6c;font-size:0.75rem}
+.token-icon-pill{display:inline-flex;align-items:center;gap:0.35rem;color:#fff;white-space:normal;line-height:1.35;background:#403747;border:0.0625rem solid transparent;padding:0.35rem 0.5625rem}
+.token-icon{width:1.0625rem;height:1.0625rem;flex:none;color:#fff}
+.token-name{overflow-wrap:anywhere}
+.attribute-token{background:#44374d}
+.school-token{background:#3d3445;color:#d6ccdc;border-color:#ffffff14;transition:background .18s,border-color .18s}
+.school-token-complete{background:#34303a;color:#c0b7c7}
+.school-token-ended{background:#302d34;color:#a69caa}
+.school-token-active{background:#604473;color:#fff;border-color:#bea1d8;box-shadow:inset 0 0 0 0.0625rem #b99ad033}
+.school-active-dot{width:0.375rem;height:0.375rem;flex:none;border-radius:50%;background:#e7cbff;box-shadow:0 0 0 0.125rem #e7cbff22;margin-left:0.0625rem}
+.gauges-heading,.gauges-list,.trait-section{grid-column:1/-1;min-width:0}
+.gauges-heading{font-size:0.875rem;margin-bottom:-0.125rem}
+.gauges-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.875rem 1.75rem;min-width:0}
+.gauges-list .gauge{min-width:0}
+.gauge-currency{border-radius:0.5rem}
+.gauge-currency .gauge-label{margin-bottom:0}
+.gauge-currency .gauge-label b{color:#f1e4ff}
+.gauge-negative progress::-webkit-progress-value{background:#b58ca7}
+.gauge-negative progress::-moz-progress-bar{background:#b58ca7}
+.trait-section{margin-top:0.1875rem;padding-top:0.75rem;border-top:0.0625rem solid #ffffff17}
+.trait-heading{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;margin-bottom:0.5625rem}
+.trait-heading strong{font-size:0.875rem;color:#d8c9e2}
+.trait-heading span,.traits-empty{font-size:0.75rem;color:#8e8095}
+.token-trait{background:#4a3654;border-color:#66506e}
+.trait-negative{background:#59333e;border-color:#845462}
+.waiting-screen,.result-screen{width:min(100%,91.25rem);min-height:100dvh;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(18.75rem,.9fr);gap:clamp(1.5rem,5vw,5rem);align-items:center;padding:clamp(1.375rem,4vw,4.5rem)}
+.waiting-copy,.result-copy{max-width:44rem}
+.waiting-copy h1,.result-copy h1{font:normal clamp(3.75rem,8vw,7.5rem)/1.02 'Do Hyeon',system-ui,sans-serif;letter-spacing:-.025em;margin:0.875rem 0}
+.view-eyebrow{font-size:0.75rem;font-weight:800;letter-spacing:.17em;color:#bea1d8}
+.waiting-lede,.result-lede{font-size:clamp(1rem,2vw,1.375rem);color:#bbb1bf;max-width:29rem;line-height:1.65}
+.waiting-identity,.result-placeholder{margin:2rem 0;padding:1.375rem;background:#1b171f;border:0.0625rem solid #3d3345;border-radius:1rem;display:grid;gap:0.35rem}
+.waiting-identity-name,.result-placeholder strong{font-size:1.375rem;font-weight:850}
+.waiting-identity-detail,.result-placeholder p{font-size:0.875rem;color:#b4a4b8;margin:0;line-height:1.65}
+.waiting-actions{display:flex;gap:0.6875rem;flex-wrap:wrap}
+.primary-action,.secondary-action,.screen-error button{border:0;border-radius:0.625rem;min-height:3.25rem;padding:0.8125rem 1.25rem;font-weight:800}
+.primary-action,.screen-error button{background:#dfcfed;color:#271d2e;display:inline-flex;align-items:center;gap:1.375rem}
+.secondary-action{background:#302934;color:#e8d9ef;border:0.0625rem solid #65546c}
+.view-note{font-size:0.75rem;color:#94879b;margin:1.125rem 0}
+.text-action{border:0;background:transparent;color:#c8b4d6;font-size:0.8125rem;text-decoration:underline;text-underline-offset:0.25rem;padding:0.35rem 0}
+.back-action{margin-top:0.625rem}
+.waiting-visual,.result-visual{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:0.75rem}
+.waiting-poster-mount,.result-poster-mount{width:min(100%,25rem);height:min(34.375rem,67dvh);min-height:20rem;box-shadow:0 1.5rem 4rem #0008;border-radius:1rem;overflow:hidden}
+.waiting-visual-caption{font-size:0.75rem;color:#8f8298;text-align:center}
+.screen-error{min-height:100dvh;padding:3rem 1.25rem;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.screen-error h1{font:normal 2.75rem 'Do Hyeon',system-ui,sans-serif}
+.screen-error p{color:#b6a9bb}
+@media(max-width:47.5em){
+ .waiting-screen,.result-screen{grid-template-columns:1fr;gap:1.375rem;align-content:start;padding:2.5rem 1.125rem 3.5rem}
+ .waiting-copy h1,.result-copy h1{font-size:4.125rem}
+ .waiting-poster-mount,.result-poster-mount{width:min(100%,18rem);height:22.5rem;min-height:0}
+ .waiting-actions>*{flex:1}
+ .gauges-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:0.75rem 0.5625rem}
+ .attribute-label{min-width:3.5625rem;font-size:0.6875rem}
+ .school-unset{font-size:0.6875rem}
+ .profile-heading{margin-bottom:0.4375rem;font-size:0.75rem}
+ .school-heading{margin-top:0.6875rem}
+ .token-icon-pill{padding:0.25rem 0.4375rem;font-size:0.625rem}
+ .token-icon{width:0.875rem;height:0.875rem}
+ .trait-heading strong{font-size:0.8125rem}
+ .trait-heading span,.traits-empty{font-size:0.6875rem}
+}
+@media(max-width:27.5em){
+ .gauges-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .attribute-row{gap:0.25rem}
+ .attribute-label{min-width:3.1875rem}
+ .waiting-copy h1,.result-copy h1{font-size:3.625rem}
+}
+
 @keyframes sheet-rise{from{opacity:.6;transform:translateY(100%)}to{opacity:1;transform:translateY(0)}}
 @media(min-width:47.5625em){
  :root{font-size:15px}
@@ -46,7 +125,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .status{display:grid;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);gap:0.5rem;align-items:stretch}
  .player-poster-mount,.profile{height:clamp(12.125rem,41vw,16.5625rem)}.profile{padding:0.6875rem;overflow-y:auto}
  .gk-poster{font-size:.58rem;border-radius:0.9375rem}.gk-portrait{inset:8% -14% 0 12%}
- .age{font-size:clamp(1.5625rem,5vw,2.1875rem)}.age-row{margin-bottom:0.75rem}.job{font-size:0.6875rem}.school-list{gap:0.4375rem}.school-row{gap:0.3125rem}.label{font-size:0.6875rem;width:3.5625rem}.token{font-size:0.6875rem;padding:0.25rem 0.5rem}.traits{margin-top:0.6875rem;padding-top:0.625rem}
+ .age{font-size:clamp(1.5625rem,5vw,2.1875rem)}.age-row{margin-bottom:0.75rem}.job{font-size:0.6875rem}.school-list{gap:0.4375rem}.school-row{gap:0.3125rem}.label{font-size:0.6875rem;width:3.5625rem}.token{font-size:0.6875rem;padding:0.25rem 0.5rem}.traits{gap:0.375rem}
  .gauges{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0.6875rem 0.5625rem;margin-top:0.625rem;padding:0.875rem;min-height:8.875em}
  .gauge-label{font-size:0.625rem;flex-wrap:wrap;gap:0.0625rem}.gauge-label b{font-size:0.625rem}.gauges progress,.spectrum{height:0.4375rem}.gauge-locked{opacity:.38}.ends{font-size:0.5625rem}.resources{grid-column:1/-1;font-size:0.6875rem;padding-top:0.5rem}.resources b{font-size:0.6875rem}.resources #economyHint{font-size:0.5625rem}
  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:5;height:53dvh;min-height:16.25em;border-radius:1.3125rem 1.3125rem 0 0;border-color:#52415b;box-shadow:0 -1rem 3.125rem #0009;padding-bottom:env(safe-area-inset-bottom)}

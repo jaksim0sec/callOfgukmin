@@ -4,55 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0b0f">
-  <title>국민의 부름 — UI 기반 시연</title>
+  <title>국민의 부름</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
-<main class="game" aria-label="국민의 부름 UI 시연">
-  <div class="desktop-left">
-    <section class="status" aria-label="캐릭터 상태">
-      <div class="player-poster-mount" id="playerPosterMount" aria-label="인물 포스터"></div>
-      <section class="block profile" aria-label="학력 및 특성">
-        <div class="age-row"><strong class="age" id="age">#0살</strong><span class="job" id="job">아기</span></div>
-        <div class="school-list">
-          <div class="school-row"><span class="label">초등학교</span><span class="token" id="elementary">입학 전</span></div>
-          <div class="school-row"><span class="label">중학교</span><span class="token" id="middle">입학 전</span></div>
-          <div class="school-row"><span class="label">고등학교</span><span class="token" id="high">미정</span></div>
-          <div class="school-row"><span class="label">대학교</span><span class="token" id="uni">미정</span></div>
-        </div>
-        <div class="traits" id="traits" aria-label="보유 특성"></div>
-      </section>
-    </section>
-  </div>
-  <div class="desktop-right">
-    <section class="block gauges" aria-label="기본 능력치">
-      <div class="gauge"><div class="gauge-label"><span>정신부담</span><b id="stressText">0</b></div><progress id="stress" max="100" value="0" aria-label="정신부담"></progress></div>
-      <div class="gauge"><div class="gauge-label"><span>건강</span><b id="healthText">100</b></div><progress id="health" max="100" value="100" aria-label="건강"></progress></div>
-      <div class="gauge"><div class="gauge-label"><span id="studyLabel">성적</span><b id="studyText">0</b></div><progress id="study" max="100" value="0" aria-label="성적"></progress></div>
-      <div class="gauge"><div class="gauge-label"><span>말빨</span><b id="speechText">—</b></div><progress id="speech" max="100" value="0" aria-label="말빨"></progress></div>
-      <div class="gauge gauge-locked" id="supportBlock"><div class="gauge-label"><span>지지도</span><b id="supportText">미활성</b></div><progress id="support" max="100" value="0" aria-label="지지도"></progress></div>
-      <div class="gauge gauge-locked" id="politicsBlock"><div class="gauge-label"><span>정치 성향</span><b id="spectrumText">미활성</b></div><div class="spectrum" id="spectrum" role="img" aria-label="정치 활동 전에는 활성화되지 않음"></div><div class="ends"><span>좌</span><span>우</span></div></div>
-      <div class="resources"><span>개인 재산 <b id="money">0원</b></span><span id="economyHint">용돈·수입은 관련 상황에서 표시할 예정</span></div>
-    </section>
-    <section class="sheet" aria-label="인생 기록 및 UI 시연">
-      <div class="sheet-grip" aria-hidden="true"></div>
-      <div class="sheet-head"><strong>인생 기록</strong><button id="resetGame" class="mini-reset" type="button" aria-label="새 인물 생성" title="새 인물 생성">↻</button><span class="chapter-meta"><span id="chapter">인물 생성</span><span class="mode-chip">UI 시연</span></span></div>
-      <div class="log" id="log" role="log" aria-live="polite"></div>
-      <div class="action-area" id="action">
-        <div class="current-line"><span>현재 상태</span><strong>출생 직후 · 이야기 준비 중</strong></div>
-        <div class="preview-actions"><button type="button" class="preview-btn" id="previewSchool">진학 서류 UI <span>↗</span></button><button type="button" class="preview-btn secondary" id="previewParty">정당 투표지 UI <span>↗</span></button></div>
-        <p class="fine">지금은 UI 검토용입니다. 선택해도 시간·능력치·스토리는 진행되지 않습니다.</p>
-      </div>
-    </section>
-  </div>
-</main>
-<dialog id="choiceDialog" aria-labelledby="modalTitle">
-  <div class="modal-head"><span class="modal-kicker" id="kicker">서류 미리보기</span><button type="button" class="close" id="close" aria-label="닫기">×</button></div>
-  <div class="modal-body"><h2 class="modal-title" id="modalTitle"></h2><p class="modal-story" id="modalStory"></p><div class="options" id="options"></div></div>
-  <div class="modal-foot"><span class="summary" id="summary">항목을 선택하세요</span><button type="button" class="confirm" id="confirm" disabled>선택 확인</button></div>
-</dialog>
-<script src="./js/poster.js" defer></script>
-<script src="./js/game.js" defer></script>
+  <div id="app" aria-label="국민의 부름"></div>
+  <noscript>이 게임은 JavaScript가 필요합니다.</noscript>
+  <script src="./js/poster.js" defer></script>
+  <script src="./js/playerState.js" defer></script>
+  <script src="./js/statusView.js" defer></script>
+  <script src="./js/game.js" defer></script>
+  <script src="./js/boot.js" defer></script>
 </body>
 </html>
