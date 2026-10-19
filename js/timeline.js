@@ -4,6 +4,7 @@
 const P=global.GukminPlayer,E=global.GukminEffects;
 const clone=value=>JSON.parse(JSON.stringify(value));
 const outcomeState=persona=>({
+ age:persona.age,phase:persona.phase,
  stats:clone(persona.stats),traits:clone(persona.traits),
  schoolHistory:clone(P.schoolsOf(persona)),roles:clone(persona.roles||[])
 });
