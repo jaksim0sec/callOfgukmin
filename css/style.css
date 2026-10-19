@@ -359,6 +359,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .status>.gauges .trait-section{margin-top:.1rem}
  .sheet.has-current-choice{height:75dvh}
  .sheet.is-expanded{height:min(90dvh,calc(100dvh - 1rem))}
+ .sheet.is-middle{height:55dvh;min-height:0}
  .sheet.is-minimized{height:clamp(8.5rem,20dvh,12rem);min-height:0}
  .sheet.is-minimized .sheet-content{visibility:hidden}
  .sheet.is-dragging{transition:none;min-height:0}

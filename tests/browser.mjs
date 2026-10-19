@@ -56,8 +56,16 @@ try{
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#sheetToggle').click();
    await page.waitForTimeout(260);
+   const middle=await page.locator('#lifeSheet').boundingBox();
+   assert.ok(middle.height>old.height+50&&middle.height<viewport.height*.7,'tap opens middle');
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true);
+   await page.locator('#sheetToggle').click();
+   await page.waitForTimeout(260);
    const expanded=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(expanded.height>old.height+20,'grip tap opens the sheet');
+   assert.ok(expanded.height>middle.height+50,'second tap opens full');
+   await page.locator('#sheetToggle').click();
+   await page.waitForTimeout(260);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'third tap closes to min');
    const drag=async offset=>{
     const bounds=await page.locator('#sheetToggle').boundingBox();
     const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
@@ -65,13 +73,17 @@ try{
     await page.mouse.move(x,y+offset,{steps:8});await page.mouse.up();
     await page.waitForTimeout(260);
    };
-   await drag(220);
-   const minimized=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(minimized.height<expanded.height-40,'down drag minimizes');
-   await drag(-220);
-   const restored=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(restored.height>minimized.height+40,'up drag expands');
-   assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'true');
+   await drag(-230);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'swipe up: middle');
+   await drag(-250);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-expanded')),true,'swipe up: full');
+   await drag(230);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'swipe down: middle');
+   await drag(230);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'swipe down: min');
+   assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
+   await page.locator('#sheetToggle').click();
+   await page.waitForTimeout(260);
    assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
    assert.equal(await page.locator('.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
