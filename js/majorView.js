@@ -9,7 +9,7 @@ const make=(tag,cls,text)=>{
  if(text!==undefined)element.textContent=String(text);
  return element;
 };
-const notation={study:'학업',schoolScore:'내신',exam:'모의고사',stress:'정신병',health:'건강',relations:'관계',allowance:'용돈'};
+const notation={study:'학업',schoolScore:'내신',exam:'모의고사',stress:'스트레스',health:'건강',relations:'관계',allowance:'용돈',money:'재산'};
 function effectList(option){
  const stats=option.result?.effects?.stats||{};
  const span=make('span','life-effects');
@@ -78,11 +78,13 @@ function present({choice,resolve,root}){
   if(isSchool){
    copy.append(make('small','',option.school?.typeLabel||'지역 학교 후보'));
    const school=option.school||{};
-   if(school.minScore||school.minStudy){
+   const actual=global.GukminPlayer.load()?.stats?.schoolScore;
+   if(school.minScore){
+    const qualifies=Number.isFinite(actual)&&actual>=school.minScore;
     copy.append(make('small','life-requirement',
-     '게임 지원 기준: 내신 '+school.minScore+' 이상 · 학업 '+school.minStudy+' 이상'));
-   }else copy.append(make('small','life-requirement','실제 일반고 배정은 해당 교육청 절차를 따름'));
-   if(option.available===false)copy.append(make('small','life-requirement','현재 게임 수치로는 선택할 수 없음'));
+     '게임 내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
+   }else copy.append(make('small','life-requirement','게임 내 별도 성적 제한 없음'));
+   if(option.available===false)copy.append(make('small','life-requirement','게임 지원 조건을 충족하지 않음'));
   }
   copy.append(effectList(option));
   if(!isSchool&&global.GukminGrades){

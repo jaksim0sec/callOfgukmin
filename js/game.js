@@ -255,7 +255,7 @@ function mount(root,navigate,content=global.GukminContent){
   const choices=el('div','inline-choices');
   choices.setAttribute('role','group');choices.setAttribute('aria-label','일상 선택지');
   const owner=engine;
-  const labels={health:'건강',stress:'정신병',money:'재산',allowance:'용돈',study:'학업',schoolScore:'내신',exam:'모의고사',relations:'관계'};
+  const labels={health:'건강',stress:'스트레스',money:'재산',allowance:'용돈',study:'학업',schoolScore:'내신',exam:'모의고사',relations:'관계'};
   for(const [index,option] of choice.options.entries()){
    const button=el('button','inline-choice');button.type='button';button.disabled=!option.available;
    const number=el('span','daily-choice-number',String(index+1).padStart(2,'0'));

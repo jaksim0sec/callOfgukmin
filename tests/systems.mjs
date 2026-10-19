@@ -195,6 +195,18 @@ test('special-school game thresholds lock options until grade requirements hold'
  assert.equal(school.presentation.type,'school');
  assert.ok(school.options.find(o=>!o.when));
  assert.ok(school.options.every(o=>o.school.name&&o.school.typeLabel));
+ assert.ok(school.options.every(o=>!o.when?.stats?.study),'hidden study cannot lock visibly qualified applications');
+ const foreign=school.options.find(o=>o.school.minScore>0);
+ if(foreign){
+  const p=P.generate();
+  p.stats.schoolScore=foreign.school.minScore;p.stats.study=0;
+  assert.equal(c.GukminEffects.matches(p,foreign.when,63),true,'visible minimum score unlocks even with low hidden study');
+  p.stats.schoolScore--;
+  assert.equal(c.GukminEffects.matches(p,foreign.when,63),false,'a lower visible score locks');
+ }
+ const paid=pack.choices.find(c=>c.id==='middle:resources').options.find(o=>o.id==='paid');
+ assert.ok(paid.when.stats.money.gte>0&&paid.result.effects.stats.money<0);
+ assert.equal(paid.when.stats.allowance,undefined);
  assert.ok(school.options.filter(o=>o.school.kind==='foreign'||o.school.kind==='gifted'||o.school.kind==='autonomous'||o.school.kind==='international')
    .every(o=>o.when?.stats?.schoolScore?.gte>0));
  const exam=pack.choices.find(c=>c.id.startsWith('high:1:3월-모의고사'));

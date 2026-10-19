@@ -12,7 +12,7 @@ global.GukminDirector.register({
    return {
     id:school.id,label:school.name,
     school,
-    ...(qualifies?{when:{stats:{schoolScore:{gte:school.minScore},study:{gte:school.minStudy}}}}:{}),
+    ...(qualifies?{when:{stats:{schoolScore:{gte:school.minScore}}}}:{}),
     effects:{
      attributes:{age:16,phase:'high',job:'고등학생',schoolTrack:school.kind,schoolProgram:school.program},
      schools:[
@@ -35,18 +35,18 @@ global.GukminDirector.register({
     {label:'독서·토론 모임을 신청한다',effects:{stats:{study:4,stress:2}},detail:'토론과 발표 경험을 쌓았다.'},
     {label:'방과 후는 쉬기로 한다',effects:{stats:{health:3,stress:-5}},detail:'공부와 휴식의 균형을 잡았다.'}
    ]),
-   S.selection('middle:recover',55,'학교생활을 조절할 시간','시험과 활동이 겹치면서 피로가 쌓였다. 부담을 줄일 방법을 선택하자.',[
+   {...S.selection('middle:recover',55,'학교생활을 조절할 시간','시험과 활동이 겹치면서 피로가 쌓였다. 부담을 줄일 방법을 선택하자.',[
     {label:'담임·상담 선생님과 계획을 다시 잡는다',effects:{stats:{stress:-28,health:5,relations:2}}},
     {label:'과제를 나누어 하고 며칠 쉬어 간다',effects:{stats:{stress:-22,health:8,schoolScore:-1}}},
     {label:'친구와 산책하며 생각을 정리한다',effects:{stats:{stress:-18,health:4,relations:4}}}
-   ]),
+   ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},stats:{stress:{gte:65}}}}},
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
    S.exam('middle',14,2,57,'1학기 중간고사'),
    S.exam('middle',14,2,58,'1학기 기말고사'),
    S.selection('middle:resources',59,'시험 대비 방법을 고른다',family?'유료 학원이 부담스럽다. 학교 프로그램도 이용할 수 있다.':'다양한 공부 방식 중 하나를 고를 수 있다.',[
     {id:'teacher',label:'학교 선생님에게 질문한다',effects:{stats:{study:5,relations:2,stress:1}},detail:'학교 수업에서 부족한 부분을 채웠다.'},
     {id:'peer',label:'친구와 스터디를 연다',effects:{stats:{study:3,relations:4,stress:2}},detail:'서로의 약점을 도우며 공부했다.'},
-    {id:'paid',label:'유료 보충 수업을 신청한다',when:{stats:{allowance:{gte:10000}}},effects:{stats:{study:7,allowance:-5000,stress:5}},detail:'유료 보충 수업에 시간을 투자했다.'}
+    {id:'paid',label:'유료 보충 수업을 신청한다',when:{stats:{money:{gte:5000}}},effects:{stats:{study:7,money:-5000,stress:5}},detail:'유료 보충 수업에 시간을 투자했다.'}
    ]),
    S.notice('middle:age15',60,'중학교 3학년','고등학교 진학을 생각할 때가 왔다.',{attributes:{age:15}}),
    S.selection('middle:admission-prep',60,'진학 준비와 가정의 지원',
@@ -55,8 +55,8 @@ global.GukminDirector.register({
       effects:{stats:{study:3,relations:2,stress:-1}},detail:'공개된 입학 자료를 직접 확인했다.'},
      {id:'mentor',label:'담임 선생님과 상담한다',
       effects:{stats:{study:2,relations:4,stress:-2}},detail:'현실적인 지원 방향을 함께 정리했다.'},
-     {id:'paid',label:'유료 진학 상담에 시간을 쓴다',when:{stats:{allowance:{gte:15000}}},
-      effects:{stats:{study:4,allowance:-6000,stress:3}},detail:'비용과 시간을 들여 상담을 받았다.'}
+     {id:'paid',label:'유료 진학 상담에 시간을 쓴다',when:{stats:{money:{gte:6000}}},
+      effects:{stats:{study:4,money:-6000,stress:3}},detail:'비용과 시간을 들여 상담을 받았다.'}
     ]),
    S.exam('middle',15,3,61,'1학기 중간고사'),
    S.exam('middle',15,3,62,'1학기 기말고사'),
