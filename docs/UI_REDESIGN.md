@@ -71,3 +71,14 @@
 ### 이전 설계와의 차이
 
 v3는 **2차원 정치 스펙트럼** 및 기존 능력치를 상정했다. 신규 논의는 **좌우 1차원 정치 성향 + 8개 스탯** 안이다. 두 안을 임의로 합치지 않고 후속 협의에서 확정한다.
+
+
+## 공통 DOM 포스터 함수 (2026-10-19 반영)
+
+- 신규 `poster.js`가 `window.GukminPoster.create(data)`로 **HTMLElement를 반환**한다. 기존 요소는 `window.GukminPoster.update(element,data)`로 재사용·갱신한다.
+- 게임 `renderStatus()`는 직접 포스터의 각 DOM을 수정하지 않고 `#playerPosterMount`의 포스터 생성/갱신 함수만 사용한다.
+- 필드: `color`(HEX 정당색), `partyName`, `partyIcon`, `phrase`(상황별 상태 문구), `stage`(현재 단계/직업), `name`, `number`(후보 기호, 없으면 숨김), `imageSrc`(이미지 경로), `ageGroup`, `template`.
+- 배치: 상단 정당 로고·정당명/단계 → 중앙 이미지 → 하단 상태 문구 → 맨 아래 `기호 N번`과 큰 이름. 기호는 실제 후보가 된 단계에서만 표시.
+- 인물 이미지는 독립 `<img>` 슬롯에 `object-fit: contain; object-position: center bottom` 적용. `imageSrc`가 없거나 불러올 수 없으면 기존 익명 인물 컨셉의 SVG 실루엣으로 대체. 향후 8인 캐릭터/성장 연령별 자산 경로를 데이터에서 연결할 수 있다.
+- 색상은 `--poster-party`에서 적용하고 `solid`(기본 정당색 전면), `light`, `minimal` 구도 지원. 현재 게임은 `solid`를 사용한다.
+- 렌더러에서 사용자 문자열은 `textContent`로 쓰고 색상은 HEX만 허용한다.

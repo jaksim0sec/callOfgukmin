@@ -667,3 +667,30 @@ dialog .modal-head{flex:none}
 dialog .modal-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
 dialog .modal-foot{flex:none;background:inherit}
 @media (max-width:650px){dialog[open]{max-height:90dvh}}
+
+/* Game poster (shared DOM component, rendered by poster.js) */
+.player-poster-mount{min-width:0;align-self:stretch}
+.gk-poster{--poster-party:#687582;position:relative;overflow:hidden;isolation:isolate;container-type:inline-size;aspect-ratio:.73;min-height:275px;height:100%;border-radius:12px;background:var(--poster-party);color:#fff;font-family:'Do Hyeon',system-ui,sans-serif}
+.gk-poster:before{content:'';position:absolute;inset:0;background:linear-gradient(125deg,#ffffff27,transparent 50%);pointer-events:none}
+.gk-poster-head{position:absolute;z-index:4;top:5%;left:6%;right:6%;display:flex;align-items:center;justify-content:space-between;gap:4px;font-size:6cqw}
+.gk-poster-party{display:flex;align-items:center;gap:6px;min-width:0}
+.gk-poster-icon{display:grid;place-items:center;width:9cqw;height:9cqw;flex:none;border:1px solid currentColor;border-radius:50%;font-size:5cqw}
+.gk-poster-party-name{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.gk-poster-stage{font-size:4.7cqw;white-space:nowrap;opacity:.9}
+.gk-portrait{position:absolute;inset:11% -12% 0 0;z-index:1}
+.gk-portrait-image,.gk-portrait-placeholder{position:absolute;inset:0;width:100%;height:100%}
+.gk-portrait-image{object-fit:contain;object-position:center bottom}
+.gk-portrait-placeholder svg{width:100%;height:100%;object-fit:contain;object-position:center bottom}
+.gk-poster[data-age="child"] .gk-portrait-placeholder svg{transform:scale(.80);transform-origin:center bottom}
+.gk-poster-shade{position:absolute;z-index:2;inset:43% 0 0;background:linear-gradient(0deg,#080d17f0,transparent);pointer-events:none}
+.gk-poster-copy{position:absolute;z-index:3;bottom:5%;left:5%;right:4%;text-shadow:0 2px 8px #0008}
+.gk-poster-phrase{font-size:8.1cqw;line-height:1.2;letter-spacing:-.04em;overflow-wrap:anywhere}
+.gk-poster-identity{display:flex;align-items:baseline;gap:3%;white-space:nowrap;margin-top:3%}
+.gk-poster-number{font-size:7.5cqw;font-weight:900;line-height:1}
+.gk-poster-name{font-size:19cqw;font-weight:900;line-height:1.03;letter-spacing:-.09em}
+.gk-poster[data-template="light"]{background:#f0f0ec;color:#182333}
+.gk-poster[data-template="light"] .gk-poster-shade{background:linear-gradient(0deg,#f0f0ed,transparent)}
+.gk-poster[data-template="light"] .gk-poster-phrase,.gk-poster[data-template="light"] .gk-poster-number{color:var(--poster-party)}
+.gk-poster[data-template="minimal"] .gk-portrait{inset:8% -20% 0 -10%}
+@media(max-width:650px){.gk-poster{aspect-ratio:auto;height:190px;min-height:190px}.gk-portrait{inset:9% -16% 0 19%}.gk-poster-phrase{font-size:7.5cqw}.gk-poster-name{font-size:18cqw}}
+@media(min-width:651px) and (max-height:570px){.gk-poster{min-height:220px;height:220px}}

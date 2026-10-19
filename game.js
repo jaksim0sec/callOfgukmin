@@ -417,10 +417,19 @@ function renderStatus(){
  $('middle').textContent=state.age>=13?state.middle:'입학 전';
  $('high').textContent=state.high||'미정';$('uni').textContent=state.uni||'미정';
  $('traits').replaceChildren(...state.traits.slice(-11).map(t=>{const el=document.createElement('span');el.className='token';el.textContent=t;return el}));
- $('number').textContent=state.flags.primaryWon?String(state.partyIndex>=0?state.partyIndex+1:'無'):'—';
- $('party').textContent=state.party;$('motto').textContent=motto();$('role').textContent=nickname();$('posterName').textContent=state.name;
+ const posterData={
+  color:partyColor(),partyName:state.party,
+  partyIcon:state.partyIndex>=0?parties[state.partyIndex].mark:'◇',
+  phrase:nickname(),stage:state.job,name:state.name,
+  number:state.flags.primaryWon?(state.partyIndex>=0?state.partyIndex+1:'무'):null,
+  imageSrc:state.portraitSrc||null,
+  ageGroup:state.age>=45?'senior':state.age<17?'child':'adult',
+  template:'solid'
+ };
+ const mount=$('playerPosterMount');
+ if(!mount.firstElementChild)mount.append(GukminPoster.create(posterData));
+ else GukminPoster.update(mount.firstElementChild,posterData);
  document.documentElement.style.setProperty('--party',partyColor());
- $('portrait').setAttribute('data-age',state.age>=45?'senior':state.age<17?'youth':'adult');
  $('chapter').textContent=state.age<19?'성장기':state.age<30?'사회 진출':state.age<47?'정치 입문':'국민의 선택';
  if($('partyTrust')){$('partyTrust').hidden=state.partyIndex<0;$('partyTrust').textContent='당내 신뢰 '+state.loyalty+'%'}
 }
