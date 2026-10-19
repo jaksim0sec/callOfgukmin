@@ -21,7 +21,14 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
  for(const c of choiceDefs.values()){
   if(!['일상 선택','한방 선택'].includes(c.layer)||!Array.isArray(c.options)||!c.options.length)throw new Error('선택 정의 오류: '+c.id);
   index(c.options,'선택지');
-
+  if(c.variants){
+   if(!Array.isArray(c.variants))throw new Error('시나리오 정의 오류: '+c.id);
+   index(c.variants,'시나리오');
+   for(const variant of c.variants){
+    if(!Array.isArray(variant.options)||!variant.options.length)throw new Error('시나리오 선택지 오류: '+variant.id);
+    index(variant.options,'시나리오 선택지');
+   }
+  }
  }
  for(const e of eventDefs.values()){
   if(!Object.hasOwn(EVENT_KINDS,e.layer)||!Number.isSafeInteger(e.at??0)||(e.at??0)<0)throw new Error('이벤트 계층/시점 오류: '+e.id);
@@ -67,7 +74,13 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    if(e.choice){
     const token=`${id}:${r.count}`,c=choiceDefs.get(e.choice);
     r.waitingToken=token;
-    s.runtime.choices[token]={token,eventId:id,choiceId:c.id,layer:c.layer,status:'waiting',openedAt:s.runtime.turn};
+    // Resolve at the moment the slot opens, not when definitions were assembled.
+    // Store the ID in the existing choice runtime; an old waiting save without it
+    // intentionally continues to use its legacy, unbranched options.
+    const variant=[...(c.variants||[])].sort((a,b)=>(b.priority||0)-(a.priority||0))
+      .find(candidate=>E.matches(s.persona,candidate.when,s.runtime.turn));
+    s.runtime.choices[token]={token,eventId:id,choiceId:c.id,layer:c.layer,status:'waiting',
+      openedAt:s.runtime.turn,...(variant?{scenarioId:variant.id}:{})};
    }else finish(s,id);
   }
  }
@@ -106,7 +119,10 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   let choice=null;
   if(current){
    const def=choiceDefs.get(current.choiceId);
-   choice={...clone(def),...clone(current),options:def.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)}))};
+   const selected=(def.variants||[]).find(v=>v.id===current.scenarioId);
+   const presented={...clone(def),...(selected?clone(selected):{})};
+   delete presented.variants;delete presented.priority;delete presented.when;
+   choice={...presented,...clone(current),options:presented.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)}))};
   }
   return {...clone(s),choice,progress:progress(s),reviewPending:!!s.runtime.awaitingContinuation};
  }
@@ -124,7 +140,9 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   return transact(s=>{
    const r=s.runtime.choices[token];
    if(!r||r.status!=='waiting')return false;
-   const def=choiceDefs.get(r.choiceId),option=def.options.find(o=>o.id===optionId);
+   const def=choiceDefs.get(r.choiceId);
+   const selected=(def.variants||[]).find(v=>v.id===r.scenarioId);
+   const option=(selected?.options||def.options).find(o=>o.id===optionId);
    if(!option)throw new Error('등록되지 않은 선택지: '+optionId);
    if(!E.matches(s.persona,option.when,s.runtime.turn))throw new Error('선택 조건을 충족하지 않음');
    r.status='confirmed';r.optionId=optionId;

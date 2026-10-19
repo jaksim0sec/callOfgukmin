@@ -456,3 +456,50 @@ test('science-school lookup keeps all eight gifted institutions distinct from sc
   '인천과학예술영재학교','한국과학영재학교'])assert.equal(S.kindOf(name),'gifted',name);
  assert.equal(S.kindOf('경기북과학고등학교'),'science');
 });
+
+test('scenario slot chooses by priority at opening, saves the branch and never rerolls',()=>{
+ const {P,T}=setup(),seed=P.generate();
+ const cfg={contentId:'scenario-v1',attributes:{storyPath:{label:'경험 경로'}},
+  events:[{id:'class-election',at:2,layer:'일상 이벤트',title:'선거',choice:'class-election'}],
+  choices:[{id:'class-election',layer:'일상 선택',title:'선거',body:'기존 대기 세이브',options:[{id:'legacy',label:'기존'}],variants:[
+   {id:'past',priority:30,when:{attributes:{storyPath:'helped'}},body:'예전에 도와준 후보',options:[{id:'help',label:'함께 선거 운동',result:{effects:{stats:{relations:2}}}}]},
+   {id:'trait',priority:20,when:{traits:['리더십']},body:'친구의 추천',options:[{id:'run',label:'나간다'}]},
+   {id:'default',priority:0,body:'조용한 반',options:[{id:'vote',label:'투표한다'}]}
+  ]}]};
+ const one=T.create({...cfg,persona:plain(seed),persist:p=>P.save(p)});
+ one.apply('past',{effects:{attributes:{storyPath:'helped'},traits:{add:['리더십']}}});
+ one.advance(2);
+ let s=one.snapshot();
+ assert.equal(s.choice.scenarioId,'past');
+ assert.equal(s.choice.body,'예전에 도와준 후보');
+ const token=s.choice.token;
+ const twice=T.create({...cfg,persona:P.load(),persist:p=>P.save(p)});
+ assert.equal(twice.snapshot().choice.scenarioId,'past');
+ assert.equal(twice.snapshot().choice.token,token);
+ twice.apply('change',{effects:{attributes:{storyPath:'other'},traits:{remove:['리더십']}}});
+ assert.equal(twice.snapshot().choice.scenarioId,'past','opened story stays frozen');
+ assert.equal(twice.resolve(token,'help'),true);
+ assert.equal(twice.resolve(token,'help'),false);
+ assert.equal(twice.snapshot().persona.stats.relations,seed.stats.relations+2);
+ const traitSeed=plain(seed);traitSeed.traits.push('리더십');
+ const alt=T.create({...cfg,persona:traitSeed});alt.advance(2);
+ assert.equal(alt.snapshot().choice.scenarioId,'trait');
+ const base=T.create({...cfg,persona:plain(seed)});base.advance(2);
+ assert.equal(base.snapshot().choice.scenarioId,'default');
+ const again=T.create({...cfg,persona:plain(seed)});again.advance(2);
+ assert.equal(again.snapshot().choice.scenarioId,base.snapshot().choice.scenarioId);
+});
+test('legacy open choice without scenarioId keeps original labels and options',()=>{
+ const {P,T}=setup(),p=P.generate();
+ const cfg={contentId:'legacy-branch',events:[{id:'e',layer:'일상 이벤트',at:0,choice:'e'}],
+ choices:[{id:'e',layer:'일상 선택',options:[{id:'old',label:'기존 선택'}],variants:[
+ {id:'new',priority:0,options:[{id:'new',label:'새 선택'}]}
+ ]}]};
+ const old=T.create({...cfg,persona:p});old.advance(0);
+ const saved=plain(old.snapshot().persona);
+ saved.simulation=plain(old.snapshot().runtime);
+ delete saved.simulation.choices['e:1'].scenarioId;
+ const loaded=T.create({...cfg,persona:saved});
+ assert.equal(loaded.snapshot().choice.options[0].id,'old');
+ assert.equal(loaded.resolve('e:1','old'),true);
+});
