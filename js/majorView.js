@@ -9,7 +9,7 @@ const make=(tag,cls,text)=>{
  if(text!==undefined)element.textContent=String(text);
  return element;
 };
-const notation={study:'학업',schoolScore:'내신',exam:'모의고사',stress:'부담',health:'건강',relations:'관계',allowance:'용돈'};
+const notation={study:'학업',schoolScore:'내신',exam:'모의고사',stress:'정신병',health:'건강',relations:'관계',allowance:'용돈'};
 function effectList(option){
  const stats=option.result?.effects?.stats||{};
  const span=make('span','life-effects');

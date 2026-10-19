@@ -54,10 +54,16 @@ try{
    const old=await page.locator('#lifeSheet').boundingBox();
    await page.locator('#sheetToggle').click();
    await page.waitForTimeout(260);
-   const expanded=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(expanded.height>old.height+20,'non-dismissable sheet expands');
+   const minimized=await page.locator('#lifeSheet').boundingBox();
+   assert.ok(minimized.height<old.height-20,'non-dismissable sheet minimizes on first tap');
+   assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#sheetToggle').click();
-   assert.equal(await page.locator('#lifeSheet').getAttribute('class'),'sheet has-current-choice');
+   await page.waitForTimeout(260);
+   const expanded=await page.locator('#lifeSheet').boundingBox();
+   assert.ok(expanded.height>old.height+20,'minimized sheet expands again');
+   assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'true');
+   assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
+   assert.equal(await page.locator('.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});

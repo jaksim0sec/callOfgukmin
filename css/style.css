@@ -48,6 +48,8 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .gauges-heading{font-size:0.875rem;margin-bottom:-0.125rem}
 .gauges-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.875rem 1.75rem;min-width:0}
 .gauges-list .gauge{min-width:0}
+/* The first two values share a row; other gauges need clear hierarchy. */
+.gauges-list>.gauge:not(.metric-stress):not(.metric-health){grid-column:1/-1}
 .gauge-currency{border-radius:0.5rem}
 .gauge-currency .gauge-label{margin-bottom:0}
 .gauge-currency .gauge-label b{color:#f1e4ff}
@@ -357,6 +359,8 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .status>.gauges .trait-section{margin-top:.1rem}
  .sheet.has-current-choice{height:75dvh}
  .sheet.is-expanded{height:min(90dvh,calc(100dvh - 1rem))}
+ .sheet.is-minimized{height:clamp(8.5rem,20dvh,12rem);min-height:0}
+ .sheet.is-minimized .sheet-content{visibility:hidden}
  .sheet .log{min-height:3.5rem;flex:1 1 auto;overflow:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
  .sheet .action-area{flex:0 1 auto;max-height:calc(100% - 11.25rem);overflow:auto;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
  .sheet .action-area:not([hidden]){border-bottom:.0625rem solid #ffffff13}
