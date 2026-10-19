@@ -212,7 +212,7 @@ try{
   const schoolState=await walk('school');
   assert.equal(schoolState.age,15);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
-  assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),3);
+  assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),4);
   const schoolBounds=await p.locator('#lifeDecisionDialog').boundingBox();
   assert.ok(schoolBounds&&schoolBounds.x>=-1&&schoolBounds.x+schoolBounds.width<=viewport.width+1,'school within screen');
   await p.locator('#lifeDecisionDialog .life-answer').first().click();

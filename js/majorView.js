@@ -85,7 +85,21 @@ function present({choice,resolve,root}){
     copy.append(make('small','life-requirement',
      '게임 내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
    }else copy.append(make('small','life-requirement','게임 내 별도 성적 제한 없음'));
-   if(option.available===false)copy.append(make('small','life-requirement','게임 지원 조건을 충족하지 않음'));
+   if(school.distanceKm!==undefined){
+    copy.append(make('small','life-requirement',
+     school.schoolArea+' · 약 '+school.distanceKm+'km (출생 지역 기준 추정)'));
+    copy.append(make('small','life-requirement',
+     school.travelMode+' · 게임 이동/생활 비용 '+school.travelCost.toLocaleString('ko-KR')+'원'));
+    copy.append(make('small','life-requirement',
+     '현실의 타 지역 지원 자격은 별도 모집요강 확인 필요'));
+   }
+   if(option.available===false){
+    const wallet=global.GukminPlayer.load()?.stats?.money;
+    const reason=school.travelCost&&Number.isFinite(wallet)&&wallet<school.travelCost
+     ?'재산 '+wallet.toLocaleString('ko-KR')+'원 / 비용 '+school.travelCost.toLocaleString('ko-KR')+'원 필요'
+     :'게임 지원 조건을 충족하지 않음';
+    copy.append(make('small','life-requirement',reason));
+   }
   }
   copy.append(effectList(option));
   if(!isSchool&&global.GukminGrades){

@@ -12,7 +12,10 @@ global.GukminDirector.register({
    return {
     id:school.id,label:school.name,
     school,
-    ...(qualifies?{when:{stats:{schoolScore:{gte:school.minScore}}}}:{}),
+    ...(qualifies||school.travelCost?{when:{stats:{
+     ...(qualifies?{schoolScore:{gte:school.minScore}}:{}),
+     ...(school.travelCost?{money:{gte:school.travelCost}}:{})
+    }}}:{}),
     effects:{
      attributes:{age:16,phase:'high',job:'고등학생',schoolTrack:school.kind,schoolProgram:school.program},
      schools:[
@@ -20,7 +23,8 @@ global.GukminDirector.register({
       {id:school.id,kind:'high',name:school.name,status:'enrolled'}
      ],
      activate:{exam:45},
-     stats:{stress:school.load*2,study:school.load}
+     stats:{stress:school.load*2+(school.distanceKm>85?4:school.distanceKm>35?2:0),
+      study:school.load,...(school.travelCost?{money:-school.travelCost}:{})}
     },
     detail:school.name+'에 진학했다. 실제 배정·전형 절차와 다르게 단순화한 게임 결과다.',
     historyTitle:school.name+' 입학'

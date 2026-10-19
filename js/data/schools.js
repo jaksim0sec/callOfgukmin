@@ -93,13 +93,80 @@ function regionOf(persona){
  ['경상북도','gyeongbuk'],['경상남도','gyeongnam'],['제주특별자치도','jeju']];
  return (pairs.find(([prefix])=>id.startsWith(prefix))||[])[1]||'gyeonggi';
 }
+// A real-name 2026 science-school catalogue. Geographic points without an exact
+// verified school coordinate are approximate city anchors for game distance only.
+const scienceSites=Object.freeze([
+ ['한성과학고등학교','seoul','서울 서대문구',37.5760738,126.9525184,'school'],
+ ['세종과학고등학교','seoul','서울 구로구',37.4975694,126.8273518,'school'],
+ ['경기북과학고등학교','gyeonggi','경기 의정부시',37.76,127.02,'city'],
+ ['인천과학고등학교','incheon','인천 영종구',37.49,126.50,'city'],
+ ['인천진산과학고등학교','incheon','인천 부평구',37.5132725,126.743655,'school'],
+ ['부산과학고등학교','busan','부산 금정구',35.2635334,129.0825529,'school'],
+ ['부산일과학고등학교','busan','부산 사하구',35.08,128.97,'city'],
+ ['대구일과학고등학교','daegu','대구 동구',35.89,128.73,'city'],
+ ['대전동신과학고등학교','daejeon','대전 동구',36.32,127.47,'city'],
+ ['울산과학고등학교','ulsan','울산',35.54,129.31,'city'],
+ ['강원과학고등학교','gangwon','강원 원주시',37.35,127.95,'city'],
+ ['충북과학고등학교','chungbuk','충북 청주시',36.64,127.49,'city'],
+ ['충남과학고등학교','chungnam','충남 공주시',36.45,127.12,'city'],
+ ['전북과학고등학교','jeonbuk','전북 익산시',35.95,126.96,'city'],
+ ['전남과학고등학교','jeonnam','전남 나주시',35.03,126.71,'city'],
+ ['경북과학고등학교','gyeongbuk','경북 포항시',36.03,129.36,'city'],
+ ['경산과학고등학교','gyeongbuk','경북 경산시',35.82,128.74,'city'],
+ ['경남과학고등학교','gyeongnam','경남 진주시',35.18,128.10,'city'],
+ ['창원과학고등학교','gyeongnam','경남 창원시',35.22,128.68,'city'],
+ ['제주과학고등학교','jeju','제주 제주시',33.5,126.53,'city']
+]);
+const areaCenters=Object.freeze({
+ seoul:[37.56,126.98],busan:[35.18,129.07],daegu:[35.87,128.60],incheon:[37.46,126.70],
+ daejeon:[36.35,127.38],ulsan:[35.54,129.31],sejong:[36.50,127.27],gyeonggi:[37.41,127.13],
+ gangwon:[37.55,128.23],chungbuk:[36.64,127.49],chungnam:[36.60,126.80],
+ jeonbuk:[35.82,127.15],jeonnam:[34.82,126.50],gwangju:[35.16,126.85],
+ gyeongbuk:[36.58,128.51],gyeongnam:[35.23,128.70],jeju:[33.49,126.53]
+});
+const localCenters=Object.freeze({
+ '성남시':[37.42,127.12],'수원시':[37.26,127.03],'평택시':[36.99,127.11],
+ '천안시':[36.81,127.15],'아산시':[36.79,127.0],'태안군':[36.75,126.30],
+ '춘천시':[37.88,127.73],'강릉시':[37.75,128.90],'원주시':[37.35,127.95],
+ '청주시':[36.64,127.49],'충주시':[36.99,127.93],'제천시':[37.13,128.19],
+ '전주시':[35.82,127.15],'군산시':[35.97,126.74],'익산시':[35.95,126.96],
+ '포항시':[36.03,129.36],'경주시':[35.86,129.23],'구미시':[36.12,128.34],
+ '창원시':[35.23,128.70],'진주시':[35.18,128.10],'통영시':[34.85,128.43],
+ '제주시':[33.50,126.53],'서귀포시':[33.25,126.56],
+ '여수시':[34.76,127.66],'순천시':[34.95,127.49],'목포시':[34.81,126.39],
+ '강남구':[37.52,127.05],'송파구':[37.51,127.11],'마포구':[37.56,126.91],
+ '연수구':[37.41,126.68],'영종구':[37.49,126.51],'강화군':[37.75,126.49],
+ '해운대구':[35.16,129.16],'영도구':[35.09,129.07],'기장군':[35.25,129.22],
+ '광산구':[35.14,126.79],'서구':[35.15,126.89],'북구':[35.18,126.91]
+});
+function approxBirthPoint(persona){
+ const id=persona.birthplaceId||'',district=id.split('.')[1];
+ return localCenters[district]||areaCenters[regionOf(persona)]||areaCenters.gyeonggi;
+}
+function kmBetween(a,b){
+ const rad=Math.PI/180,dLat=(a[0]-b[0])*rad,dLon=(a[1]-b[1])*rad;
+ const h=Math.sin(dLat/2)**2+Math.cos(a[0]*rad)*Math.cos(b[0]*rad)*Math.sin(dLon/2)**2;
+ return Math.round(6371*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h)));
+}
+function nearestScience(persona){
+ const origin=approxBirthPoint(persona);
+ const matches=scienceSites.map((s,index)=>({s,index,km:kmBetween(origin,[s[3],s[4]])}))
+  .sort((a,b)=>a.km-b.km||a.index-b.index);
+ const {s,index,km}=matches[0];
+ const travelCost=km<=35?2500:km<=85?6500:20000;
+ return Object.freeze({...school('science-'+index,s[0],s[1]),travelCost,distanceKm:km,
+  travelMode:km<=35?'통학 중심':km<=85?'장거리 통학 가능':'기숙·거주 부담',
+  distanceKind:'지역 중심 추정',schoolArea:s[2],pointQuality:s[5]});
+}
 function options(persona){
  const region=regionOf(persona);
+ let local=[...schools[region]];
  if(region==='gyeonggi'){
   const key=Object.keys(localGyeonggi).find(key=>(persona.birthplaceId||'').includes(key));
-  if(key)return localGyeonggi[key].map((name,index)=>school('gyeonggi-'+key+'-'+index,name,region));
+  if(key)local=localGyeonggi[key].map((name,index)=>school('gyeonggi-'+key+'-'+index,name,region));
  }
- return [...schools[region]];
+ const nearby=nearestScience(persona);
+ return local.some(s=>s.name===nearby.name)?local:[...local,nearby];
 }
-global.GukminSchools=Object.freeze({groups:schools,regionOf,options,typeLabels,kindOf});
+global.GukminSchools=Object.freeze({groups:schools,regionOf,options,typeLabels,kindOf,nearestScience,scienceSites});
 })(window);

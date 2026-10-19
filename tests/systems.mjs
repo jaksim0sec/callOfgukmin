@@ -191,7 +191,7 @@ test('special-school game thresholds lock options until grade requirements hold'
  const persona=P.generate();
  const pack=D.content(persona);
  const school=pack.choices.find(c=>c.id==='middle:high-application');
- assert.equal(school.options.length,3);
+ assert.equal(school.options.length,4);
  assert.equal(school.presentation.type,'school');
  assert.ok(school.options.find(o=>!o.when));
  assert.ok(school.options.every(o=>o.school.name&&o.school.typeLabel));
@@ -395,4 +395,23 @@ test('science schools are distinct from gifted schools in the high-school track'
  assert.equal(S.kindOf('광주과학고등학교'),'gifted');
  assert.equal(S.kindOf('세종과학예술영재학교'),'gifted');
  assert.ok(S.typeLabels.science.includes('과학고'));
+});
+
+test('one nearest science high school is added with visible game costs and school-only score conditions',()=>{
+ const {c,P}=setup(),S=c.GukminSchools;
+ assert.equal(S.scienceSites.length,20);
+ for(const name of ['서울특별시.강남구.대치동','경기도.성남시.분당구','제주특별자치도.제주시.연동']){
+  const p=P.generate();p.birthplaceId=name;p.regionTags=[];
+  const candidates=S.options(p),science=candidates.filter(x=>x.kind==='science');
+  assert.equal(science.length,1,'exactly one science-school option');
+  assert.equal(candidates.length,4);
+  assert.ok(science[0].travelCost>0&&science[0].distanceKm>=0);
+  assert.equal(science[0].distanceKind,'지역 중심 추정');
+  const application=c.GukminDirector.content(p).choices.find(x=>x.id==='middle:high-application');
+  const option=application.options.find(x=>x.school.id===science[0].id);
+  assert.ok(option.when.stats.schoolScore.gte>0);
+  assert.equal(option.when.stats.money.gte,science[0].travelCost);
+  assert.equal(option.when.stats.study,undefined);
+  assert.equal(option.result.effects.stats.money,-science[0].travelCost);
+ }
 });

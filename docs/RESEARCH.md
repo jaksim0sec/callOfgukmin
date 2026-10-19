@@ -105,3 +105,11 @@
 - 휘문고 2026 입학생 교육과정 학점 배당표: https://www.whimoon.hs.kr/?action=SiteBoard&iBrdContNo=544&iBrdNo=6&module=Board&sBrdContRe=0&sMode=VIEW_FORM
 - 주의: 공식 학교 교육과정은 학생 성적 수준, 학내 분위기, 해당 학교 전체의 난이도/서열을 증명하지 않는다. 각 학교의 확인된 특색만 이벤트에서 참고하며 선호도나 성공 확률을 차등화하지 않는다.
 - 시험지 디자인은 공개된 한국 시험지의 문서 계층을 참고하되 원본 문항/기관 상징을 사용하지 않는다.
+
+## 2026-10-20 전국 과학고 소재지 및 지원 자격 주의
+
+- 전국 과학고 20개 학교명과 시도별 분류 참고: https://m.mbest.co.kr/exam/sci/v1/main.asp (민간 자료), https://www.data.go.kr/data/15021148/standard.do (공공데이터 학교 위치 표준), https://www.hischool.go.kr/ (고입정보포털).
+- 서울 과학계열 2개교·영재학교 구분: https://high-job.sen.go.kr/FUS/HT/010/040.do / 인천과학고·인천진산과학고 2027 모집: https://www.ice.go.kr/ice/na/ntt/selectNttInfo.do?bbsAllView=Y&bbsId=1618&mi=&nttSn=3372135
+- 경기북과학고 모집 관련 학교 자료: https://gbs-h.goeujb.kr/gbs-h/cm/cntnts/cntntsView.do?cntntsId=1707&mi=8790. 출신지와 재학·거주 요건이 바뀔 수 있으므로 타 지역 지원 자격을 일률적으로 보장하지 않는다.
+- 확인된 학교 건물 좌표 일부(공개 도로명주소 위치 서비스): 한성과학고 https://findby.co.kr/details/03732-114103000008-st-652beea34e0223ae1801e4c9 / 세종과학고 https://findby.co.kr/details/08258-115304148437-st-652b6b7d8c641f9e38a62032 / 인천진산과학고 https://findby.co.kr/details/21342-282373154006-st-652b451c8c641f9e389e8858 / 부산과학고 https://findby.co.kr/details/46235-264103006032-st-652b06788c641f9e388675f4
+- **미검증 부분:** 나머지 학교의 수치는 학교 정확 좌표가 아닌 시 단위 위치 추정값, 출생지 또한 중심값으로 추정. 거리 및 비용은 게임용이며 실제 통학 시간·기숙사 비용이나 공식 지원 요건이 아니다. 학교별 실제 전형/세부 위치 전수 검증이 필요하다.
