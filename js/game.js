@@ -36,6 +36,85 @@ function posterData(persona){
   imageSrc:persona.portraitSrc,ageGroup:persona.age>=19?'adult':'child',template:'solid'
  };
 }
+
+function createLifeSheetController(sheet,mobileSheet){
+ const grip=sheet.querySelector('#sheetToggle'),head=sheet.querySelector('.sheet-head');
+ const labels=['인생 기록 중간까지 펼치기','인생 기록 전체 펼치기','인생 기록 최소화'];
+ let level=0,drag=null,pendingFrame=0,lastDragAt=-Infinity;
+ function setLevel(next){
+  level=next;
+  sheet.classList.toggle('is-minimized',level===0);
+  sheet.classList.toggle('is-middle',level===1);
+  sheet.classList.toggle('is-expanded',level===2);
+  grip.setAttribute('aria-expanded',String(level!==0));
+  grip.setAttribute('aria-label',labels[level]);
+ }
+ // The supplied openSheet's directional snap: close becomes minimize.
+ function chooseLevel(start,delta){
+  if(start===0)return delta< -80?1:0;
+  if(start===1)return delta< -80?2:delta>90?0:1;
+  return delta>240?0:delta>60?1:2;
+ }
+ function startDrag(e){
+  if(!mobileSheet.matches||!e.isPrimary||e.button!==0||drag)return;
+  if(e.target.closest('button:not(#sheetToggle),a,input,select,textarea'))return;
+  drag={id:e.pointerId,target:e.currentTarget,startY:e.clientY,
+   startHeight:sheet.getBoundingClientRect().height,startLevel:level,delta:0,moved:false};
+  e.currentTarget.setPointerCapture(e.pointerId);
+ }
+ function paintDrag(){
+  pendingFrame=0;
+  if(drag)sheet.style.setProperty('--sheet-drag-height',String(drag.startHeight-drag.delta)+'px');
+ }
+ function onDrag(e){
+  if(!drag||e.pointerId!==drag.id)return;
+  drag.delta=e.clientY-drag.startY;
+  if(!drag.moved&&Math.abs(drag.delta)<8)return;
+  drag.moved=true;
+  sheet.classList.add('is-dragging');
+  if(!pendingFrame)pendingFrame=requestAnimationFrame(paintDrag);
+  if(e.cancelable)e.preventDefault();
+ }
+ function endDrag(e,cancelled=false){
+  if(!drag||e.pointerId!==drag.id)return;
+  const ended=drag;
+  if(pendingFrame)cancelAnimationFrame(pendingFrame);
+  pendingFrame=0;drag=null;
+  sheet.classList.remove('is-dragging');
+  sheet.style.removeProperty('--sheet-drag-height');
+  const delta=e.clientY-ended.startY;
+  setLevel(ended.moved&&!cancelled?chooseLevel(ended.startLevel,delta):ended.startLevel);
+  if(ended.moved)lastDragAt=performance.now();
+  if(ended.target.hasPointerCapture(e.pointerId))ended.target.releasePointerCapture(e.pointerId);
+ }
+ function tapGrip(){
+  if(!mobileSheet.matches||performance.now()-lastDragAt<180)return;
+  setLevel((level+1)%3);
+ }
+ function cancelDrag(e){endDrag(e,true);}
+ for(const target of [grip,head]){
+  target.addEventListener('pointerdown',startDrag);
+  target.addEventListener('pointermove',onDrag);
+  target.addEventListener('pointerup',endDrag);
+  target.addEventListener('pointercancel',cancelDrag);
+ }
+ grip.addEventListener('click',tapGrip);
+ setLevel(0);
+ return function disposeLifeSheet(){
+  if(pendingFrame)cancelAnimationFrame(pendingFrame);
+  if(drag?.target.hasPointerCapture(drag.id))drag.target.releasePointerCapture(drag.id);
+  drag=null;
+  sheet.style.removeProperty('--sheet-drag-height');
+  sheet.classList.remove('is-dragging');
+  for(const target of [grip,head]){
+   target.removeEventListener('pointerdown',startDrag);
+   target.removeEventListener('pointermove',onDrag);
+   target.removeEventListener('pointerup',endDrag);
+   target.removeEventListener('pointercancel',cancelDrag);
+  }
+  grip.removeEventListener('click',tapGrip);
+ };
+}
 let majorPresenter=null,refreshMounted=null,resetMajorPresentation=null,mountedSession=null;
 function registerMajorPresenter(presenter){
  if(presenter!==null&&typeof presenter!=='function')throw new Error('한방 선택 표시기는 함수여야 함');
@@ -46,55 +125,10 @@ function mount(root,navigate,content=global.GukminContent){
  mountedSession?.dispose();
  let disposed=false;
  const $=id=>root.querySelector('#'+id);
- const sheet=$('lifeSheet'),sheetGrip=$('sheetToggle');
+ const sheet=$('lifeSheet');
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
 
- let sheetLevel=0,drag=null,lastSheetDrag=0;
- const sheetHead=sheet.querySelector('.sheet-head');
- // Existing game DOM is permanent; CSS owns sheet heights and animation.
- function setSheetLevel(level){
-  sheetLevel=Math.max(0,Math.min(2,level));
-  sheet.classList.toggle('is-minimized',sheetLevel===0);
-  sheet.classList.toggle('is-middle',sheetLevel===1);
-  sheet.classList.toggle('is-expanded',sheetLevel===2);
-  sheetGrip.setAttribute('aria-expanded',String(sheetLevel!==0));
-  sheetGrip.setAttribute('aria-label',['인생 기록 중간까지 펼치기','인생 기록 전체 펼치기','인생 기록 최소화'][sheetLevel]);
- }
- setSheetLevel(0);
- function beginSheetDrag(e){
-  if(!mobileSheet.matches||!e.isPrimary||e.button!==0||drag||
-    e.target.closest('button:not(#sheetToggle),a,input,select,textarea'))return;
-  drag={pointer:e.pointerId,owner:e.currentTarget,startY:e.clientY,
-    startHeight:sheet.getBoundingClientRect().height,startLevel:sheetLevel,moved:false};
-  e.currentTarget.setPointerCapture(e.pointerId);
- }
- function moveSheetDrag(e){
-  if(!drag||e.pointerId!==drag.pointer)return;
-  const distance=e.clientY-drag.startY;
-  if(!drag.moved&&Math.abs(distance)<8)return;
-  drag.moved=true;
-  sheet.classList.add('is-dragging');
-  // A transient CSS variable is the only live positioning input.
-  sheet.style.setProperty('--sheet-drag-height',(drag.startHeight-distance)+'px');
-  if(e.cancelable)e.preventDefault();
- }
- function finishSheetDrag(e,cancel=false){
-  if(!drag||e.pointerId!==drag.pointer)return;
-  const {owner,startY,startLevel,moved,pointer}=drag;
-  let next=startLevel;
-  if(moved&&!cancel){
-   const delta=e.clientY-startY;
-   const threshold=Math.min(80,Math.max(48,global.innerHeight*.08));
-   if(delta<=-threshold)next=Math.min(2,startLevel+1);
-   else if(delta>=threshold)next=Math.max(0,startLevel-1);
-  }
-  drag=null;
-  sheet.classList.remove('is-dragging');
-  sheet.style.removeProperty('--sheet-drag-height');
-  setSheetLevel(next);
-  if(moved&&owner===sheetGrip)lastSheetDrag=Date.now();
-  if(owner.hasPointerCapture(pointer))owner.releasePointerCapture(pointer);
- }
+ const disposeLifeSheet=createLifeSheetController(sheet,mobileSheet);
  let persona=global.GukminPlayer.ensure();
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
@@ -353,16 +387,6 @@ function mount(root,navigate,content=global.GukminContent){
  refreshMounted=renderProgress;resetMajorPresentation=clearMajor;
 
  const subscriptions=[
-  [sheetGrip,'click',()=>{
-    if(!mobileSheet.matches||Date.now()-lastSheetDrag<180)return;
-    setSheetLevel((sheetLevel+1)%3);
-  }],
-  ...[sheetGrip,sheetHead].flatMap(node=>[
-   [node,'pointerdown',beginSheetDrag],
-   [node,'pointermove',moveSheetDrag],
-   [node,'pointerup',finishSheetDrag],
-   [node,'pointercancel',e=>finishSheetDrag(e,true)]
-  ]),
   [$('lifeCinematicDismiss'),'click',hideCinematic],
   [$('resetGame'),'click',reset],
   [$('startSystemDemo'),'click',startDemo],
@@ -375,7 +399,7 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;disposeLifeSheet();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),dispose
