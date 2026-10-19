@@ -65,6 +65,14 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .trait-aptitude-science{background:#285758;border-color:#5ca9a5}
 .trait-aptitude-arts{background:#693d62;border-color:#c585b4}
 .trait-aptitude-sports{background:#34583b;border-color:#82b58d}
+.token-school-kind{background:#35485b;border-color:#718ba4}
+.school-kind-science{background:#28545a;border-color:#70aeba}
+.school-kind-foreign{background:#434872;border-color:#959cd4}
+.school-kind-international{background:#37516a;border-color:#86a5c6}
+.school-kind-gifted{background:#584664;border-color:#aa8fca}
+.school-kind-vocational{background:#675037;border-color:#be996c}
+.school-kind-autonomous{background:#57456a;border-color:#a78cbe}
+.school-kind-autonomous-public{background:#465d5a;border-color:#87b5ad}
 .trait-tier-soil{background:#684731;border-color:#a47b55;color:#fff2e2}
 .trait-tier-bronze{background:#79513b;border-color:#b78361;color:#fff5eb}
 .trait-tier-silver{background:#55616d;border-color:#9caeba;color:#f6faff}

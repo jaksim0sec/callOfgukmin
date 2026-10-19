@@ -34,6 +34,7 @@ function kindOf(name){
  if(vocational.has(name))return 'vocational';
  if(autonomousPublic.has(name))return 'autonomous-public';
  if(autonomous.has(name))return 'autonomous';
+ if(name.includes('과학고등학교'))return 'science';
  if(name.includes('외국어고등학교'))return 'foreign';
  return 'general';
 }
@@ -41,6 +42,7 @@ const typeLabels=Object.freeze({
  general:'일반고 (게임 내 지역 배정 희망)',
  autonomous:'자율형 사립고 (개별 입학전형)',
  foreign:'외국어고 (개별 입학전형)',
+ science:'과학고 (과학계열 특수목적고)',
  international:'국제고 (개별 입학전형)',
  gifted:'영재학교 (별도 영재 선발)',
  vocational:'특성화고 (직업교육·별도 입학전형)',
@@ -48,18 +50,19 @@ const typeLabels=Object.freeze({
 });
 function school(id,name,region){
  const kind=kindOf(name);
- const minScore=kind==='gifted'?82:kind==='autonomous'?66:
+ const minScore=kind==='gifted'?82:kind==='science'?78:kind==='autonomous'?66:
    ['foreign','international'].includes(kind)?72:0;
- const minStudy=kind==='gifted'?78:kind==='autonomous'?55:
+ const minStudy=kind==='gifted'?78:kind==='science'?0:kind==='autonomous'?55:
    ['foreign','international'].includes(kind)?65:0;
  return Object.freeze({
   id,name,region,kind,minScore,minStudy,
   focus:kind==='foreign'?'외국어 중심':kind==='international'?'국제교류 중심':
     kind==='gifted'?'수학·과학 탐구 중심':
+    kind==='science'?'수학·과학 심화 탐구 중심':
     kind==='vocational'?'물류·산업 관련 직업교육':
     kind==='autonomous-public'?'학교별 특화 교육과정':'일반적인 교과 선택과 학교생활',
   // Game-only pace, never a factual rating of the school's quality/difficulty.
-  load:kind==='gifted'?3:['general','vocational','autonomous-public'].includes(kind)?1:2,
+  load:['gifted','science'].includes(kind)?3:['general','vocational','autonomous-public'].includes(kind)?1:2,
   symbol:name.replace(/고등학교$/,'').slice(0,2),
   // Named-program stories require a publicly documented school activity.
   program:name==='분당중앙고등학교'?'bdja-science':
@@ -98,5 +101,5 @@ function options(persona){
  }
  return [...schools[region]];
 }
-global.GukminSchools=Object.freeze({groups:schools,regionOf,options,typeLabels});
+global.GukminSchools=Object.freeze({groups:schools,regionOf,options,typeLabels,kindOf});
 })(window);

@@ -164,6 +164,19 @@ function showTraits(root,s){
     token.setAttribute('aria-label',name+(negative?' · 디버프':' · 특성'));
     traits.append(token);
   }
+  // Derived presentation only: schoolHistory stays the single source of school identity.
+  const enrolled=global.GukminPlayer.schoolsOf(s).find(r=>r.kind==='high'&&r.status==='enrolled');
+  if(enrolled){
+   const kind=global.GukminSchools.kindOf(enrolled.name);
+   const labels={science:'과학고',foreign:'외국어고',international:'국제고',gifted:'영재학교',
+    vocational:'특성화고',autonomous:'자율형 사립고','autonomous-public':'자율형 공립고'};
+   if(labels[kind]){
+    const token=pill(labels[kind],'graduation','token-trait token-school-kind school-kind-'+kind);
+    token.title=enrolled.name+' · 재학 중';
+    token.setAttribute('aria-label',enrolled.name+' 재학 중 · '+labels[kind]);
+    traits.append(token);
+   }
+  }
 }
 function render(root,persona){
   if(!root||!persona)return;

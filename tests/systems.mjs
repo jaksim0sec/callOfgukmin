@@ -291,7 +291,7 @@ test('high-school major choices are annual, legacy exams remain loadable and ord
  const legacy=content.events.filter(e=>e.id.startsWith('high:')&&e.when?.all?.some(rule=>rule.turn?.lte===-1));
  assert.equal(legacy.length,12);
  assert.ok(content.attributes.schoolTrack&&content.attributes.schoolProgram);
- for(const track of ['general','foreign','autonomous','gifted','vocational','international','autonomous-public'])
+ for(const track of ['general','foreign','autonomous','gifted','science','vocational','international','autonomous-public'])
   assert.ok(content.events.some(e=>e.id==='high:track-'+track));
  assert.ok(content.events.some(e=>e.id==='high:bdja-science'));
  assert.ok(content.events.some(e=>e.id==='high:whimoon-electives'));
@@ -386,4 +386,13 @@ test('exam preludes announce middle and annual high assessments without replacin
  assert.ok(preludes.every(e=>e.history.importance==='major'));
  assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.stage==='middle').length,6);
  assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.annual).length,6);
+});
+
+test('science schools are distinct from gifted schools in the high-school track',()=>{
+ const {c}=setup(),S=c.GukminSchools;
+ assert.equal(S.kindOf('세종과학고등학교'),'science');
+ assert.equal(S.kindOf('경기북과학고등학교'),'science');
+ assert.equal(S.kindOf('광주과학고등학교'),'gifted');
+ assert.equal(S.kindOf('세종과학예술영재학교'),'gifted');
+ assert.ok(S.typeLabels.science.includes('과학고'));
 });
