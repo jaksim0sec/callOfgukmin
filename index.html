@@ -12,7 +12,7 @@
 
 <body>
 <main class="game">
-  <section class="status" aria-label="인물 상태">
+  <div class="desktop-left"><section class="status" aria-label="인물 상태">
     <div id="playerPosterMount" class="player-poster-mount" aria-label="인물 포스터"></div>
 
     <section class="block" aria-label="학력과 특성">
@@ -39,6 +39,8 @@
       <div class="traits" id="traits"></div>
     </section>
 
+  </section></div>
+  <div class="desktop-right">
     <section class="block gauges" aria-label="능력치">
       <div class="gauge">
         <div class="gauge-label">
@@ -74,9 +76,7 @@
         <span>인맥 <b id="network"></b></span>
       </div>
     </section>
-  </section>
 
-  <section class="sheet" aria-label="인생 진행 메뉴">
     <div class="sheet-grip" aria-hidden="true"></div>
     <div class="sheet-head">
       <strong>인생 기록</strong><button id="resetGame" class="mini-reset" type="button" title="새 인생 시작">↻</button>
@@ -88,6 +88,7 @@
 
     <div class="action-area" id="action"></div>
   </section>
+  </div>
 </main>
 
 <!-- 시트와 별도로 뜨는 사건별 선택창 -->
