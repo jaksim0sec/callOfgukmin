@@ -211,7 +211,9 @@ function mount(root,navigate,content=global.GukminContent){
    const article=el('article','record'),line=el('div','record-top');
    line.append(el('span','record-age','#'+item.age+'살'+(item.turn!==undefined?' · '+item.turn+'턴':'')),el('strong','',item.title));
    article.dataset.importance=item.importance||'normal';
-   article.append(line,el('p','',item.detail));
+   const description=el('p','');
+   global.GukminMarkup.render(description,item.detail);
+   article.append(line,description);
    log.append(article);
   }
   renderProgress();
@@ -371,6 +373,7 @@ function mount(root,navigate,content=global.GukminContent){
    persona,persist:s=>global.GukminPlayer.save(s),onChange
   });
   snapshot=engine.snapshot();persona=snapshot.persona;
+  dailyUI.restore(snapshot);
   if(!snapshot.reviewPending)engine.run();
  }
  function startDemo(){
@@ -401,7 +404,7 @@ function mount(root,navigate,content=global.GukminContent){
    const last=persona.history.at(-1);
    current.append(el('p','review-kicker','선택 완료'));
    current.append(el('strong','review-title',last?.title||'지난 선택이 기록되었다'));
-   if(last?.detail)current.append(el('p','review-detail',last.detail));
+   if(last?.detail){const detail=el('p','review-detail');global.GukminMarkup.render(detail,last.detail);current.append(detail);}
    const next=el('button','continue-story','다음으로  →');
    next.type='button';next.addEventListener('click',safely(()=>engine.run()));
    current.append(next);

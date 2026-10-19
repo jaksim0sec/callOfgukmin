@@ -519,7 +519,8 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .daily-choice-dialog{width:min(33.5rem,calc(100% - 1.2rem));max-height:calc(100dvh - 1.3rem);
  margin:auto;padding:0;border:.0625rem solid #4a5360;border-radius:1rem;
  background:#1b1e24;color:#edf1f6;box-shadow:0 1.6rem 5rem #000c;overflow:hidden;flex-direction:column}
-.daily-choice-dialog::backdrop{background:#05070bbb;backdrop-filter:blur(.55rem)}
+.daily-choice-dialog::backdrop{background:#080b13c6;backdrop-filter:blur(.12rem)}
+@media(prefers-reduced-transparency:reduce){.daily-choice-dialog::backdrop{backdrop-filter:none}}
 .daily-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.7rem;
  padding:1rem 1.15rem .85rem;border-bottom:.0625rem solid #ffffff1a;flex:none}
 .daily-modal-head>div{min-width:0}
@@ -567,3 +568,10 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .sheet-head:has(.sheet-choice-resume:not([hidden])) #resetGame{display:none}}
 @media(prefers-reduced-motion:reduce){
  .daily-result-chip.token-icon-pill,.gauge.is-stat-updated .gauge-value{animation:none}}
+
+/* Story emphasis uses a single muted highlight; the text stays legible in the modal and saved history. */
+.daily-choice-story,.daily-result-lead,.record p,.review-detail{white-space:pre-line;overflow-wrap:anywhere}
+.daily-choice-dialog mark,.record p mark,.review-detail mark{
+ background:#d8b86632;color:inherit;border-radius:.15rem;padding:0 .08rem;box-decoration-break:clone
+}
+.daily-modal-body{touch-action:pan-y;-webkit-overflow-scrolling:touch}

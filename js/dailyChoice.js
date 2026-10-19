@@ -6,6 +6,21 @@ function el(tag,cls,text){
  const node=document.createElement(tag);if(cls)node.className=cls;
  if(text!==undefined)node.textContent=String(text);return node;
 }
+// Four supported inline marks only. Never parse story text as HTML.
+function renderRich(target,input){
+ const source=String(input??''),pattern=/\*\*([^*\n]+)\*\*|==([^=\n]+)==|~~([^~\n]+)~~|\*([^*\n]+)\*/g;
+ const fragment=document.createDocumentFragment();let pos=0,match;
+ while((match=pattern.exec(source))){
+  fragment.append(document.createTextNode(source.slice(pos,match.index)));
+  const tag=match[1]!==undefined?'strong':match[2]!==undefined?'mark':match[3]!==undefined?'del':'em';
+  const node=document.createElement(tag);
+  node.textContent=match[1]??match[2]??match[3]??match[4];
+  fragment.append(node);pos=pattern.lastIndex;
+ }
+ fragment.append(document.createTextNode(source.slice(pos)));
+ target.replaceChildren(fragment);return target;
+}
+function rich(tag,cls,text){return renderRich(el(tag,cls),text);}
 function differences(before,after){
  const result=[],phase=P.phaseOf(after);
  for(const [id,value] of Object.entries(after.stats||{})){
@@ -52,8 +67,12 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
  function open(){
   if((token===null&&!review)||dialog.open)return;
   folded=false;dialog.showModal();sync();
+  heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});
  }
- function fold(){folded=true;if(dialog.open)dialog.close();sync();}
+ function fold(){
+  folded=true;if(dialog.open)dialog.close();sync();
+  if(!resumeButton.hidden)resumeButton.focus({preventScroll:true});
+ }
  function reset(){if(dialog.open)dialog.close();body.replaceChildren();token=null;folded=false;review=false;delta=[];sync();}
  function cancel(event){event.preventDefault();fold();}
  function backdrop(event){
@@ -70,6 +89,13 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   if(choice?.layer!=='일상 선택'||!reviewPending)return;
   delta=differences(before,after);review=true;
  }
+ function restore(snapshot){
+  if(!snapshot?.reviewPending)return;
+  const last=Object.values(snapshot.runtime?.choices||{}).filter(item=>item.status==='closed').at(-1);
+  if(last?.layer!=='일상 선택')return;
+  token=last.token;review=true;folded=false;
+  delta=snapshot.runtime.reviewBefore?differences(snapshot.runtime.reviewBefore,snapshot.persona):[];
+ }
  function showChoice(choice,host,persona){
   if(token!==choice.token){token=choice.token;folded=false;review=false;delta=[];}
   heading.textContent=choice.title;body.replaceChildren();
@@ -80,7 +106,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   compact.append(reopen);host.append(compact);
   const situation=el('section','daily-scenario');
   situation.append(el('span','daily-scenario-kicker','지금 상황'),el('strong','daily-scenario-title',choice.title));
-  if(choice.body)situation.append(el('p','daily-choice-story',choice.body));
+  if(choice.body)situation.append(rich('p','daily-choice-story',choice.body));
   body.append(situation,el('p','daily-choice-prompt','어떻게 할까?'));
   const list=el('div','inline-choices');
   list.setAttribute('role','group');list.setAttribute('aria-label','일상 선택지');
@@ -88,7 +114,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
    const button=el('button','inline-choice');button.type='button';button.disabled=!option.available;
    const number=el('span','daily-choice-number',String(index+1).padStart(2,'0'));
    const text=el('span','daily-choice-copy');
-   text.append(el('strong','daily-choice-title',option.label));
+   text.append(rich('strong','daily-choice-title',option.label));
    if(option.available===false){
     const needed=option.when?.stats?.money?.gte,held=persona.stats.money;
     text.append(el('small','daily-choice-locked',
@@ -117,18 +143,21 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   body.replaceChildren();heading.textContent='선택 결과';
   const last=persona.history.at(-1);
   body.append(el('p','review-kicker','선택 완료'),el('strong','review-title',last?.title||'선택을 마쳤어'));
-  if(last?.detail)body.append(el('p','daily-result-lead',last.detail));
+  if(last?.detail)body.append(rich('p','daily-result-lead',last.detail));
   const list=el('div','daily-result-changes');
   for(const [i,item] of delta.entries()){
    const chip=S.pill(item.text,item.icon,'daily-result-chip impact-'+item.tone+(item.id?' metric-'+item.id:''));
    chip.style.animationDelay=Math.min(i,6)*.07+'s';list.append(chip);
   }
-  body.append(list.childElementCount?list:el('p','daily-result-lead','선택 결과가 기록됐어'));
+  body.append(list.childElementCount?list:el('p','daily-result-lead','수치 변화는 없고 선택 내용만 기록됐어'));
   const foot=el('div','daily-result-foot');
   const button=el('button','continue-story','다음 이야기 보기 →');button.type='button';
-  button.addEventListener('click',()=>{reset();proceed();});
+  button.addEventListener('click',()=>{button.disabled=true;reset();proceed();});
   foot.append(button);body.append(foot);
-  if(!folded)open();sync();
+  body.scrollTop=0;
+  if(!folded)open();
+  else sync();
+  if(dialog.open)heading.focus({preventScroll:true});
  }
  function highlight(root){
   for(const change of delta)if(change.id){
@@ -144,7 +173,8 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   collapseButton.removeEventListener('click',fold);resumeButton.removeEventListener('click',open);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }
- return Object.freeze({showChoice,showResult,capture,highlight,reset,dispose,isReview:()=>review});
+ return Object.freeze({showChoice,showResult,capture,restore,highlight,reset,dispose,isReview:()=>review});
 }
 global.GukminDailyChoice=Object.freeze({create});
+global.GukminMarkup=Object.freeze({render:renderRich});
 })(window);

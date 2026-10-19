@@ -579,3 +579,28 @@ test('every school-specific high route uses different real actions',()=>{
   seen.add(labels);
  }
 });
+
+test('review evidence survives reload and is cleared only after explicit continuation',()=>{
+ const {P,T}=setup(),persona=P.generate();
+ const cfg={contentId:'review-evidence',pauseAfterChoice:true,
+  choices:[{id:'review-choice',layer:'일상 선택',options:[{id:'one',label:'결정',result:{
+    effects:{stats:{money:12}},history:{title:'기록',detail:'12원을 실제로 받았다.'}
+  }}]}],
+  events:[{id:'review-event',layer:'일상 이벤트',at:0,title:'일상',choice:'review-choice'}],
+  persist:p=>P.save(p)};
+ let e=T.create({...cfg,persona});
+ e.advance(0);
+ e.resolve(e.snapshot().choice.token,'one');
+ let snapshot=e.snapshot();
+ assert.equal(snapshot.reviewPending,true);
+ assert.equal(snapshot.runtime.reviewBefore.stats.money,0);
+ assert.equal(snapshot.persona.stats.money,12);
+ e=T.create({...cfg,persona:P.load()});
+ snapshot=e.snapshot();
+ assert.equal(snapshot.reviewPending,true);
+ assert.equal(snapshot.runtime.reviewBefore.stats.money,0);
+ assert.equal(snapshot.persona.stats.money,12);
+ assert.equal(e.resume(),true);
+ assert.equal(e.snapshot().runtime.reviewBefore,undefined);
+ assert.equal(e.resume(),false);
+});

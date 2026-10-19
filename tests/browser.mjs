@@ -51,7 +51,17 @@ try{
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').textContent(),'어떻게 할까?');
   assert.equal(await page.locator('#dailyChoiceBody .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
-  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect').count()>0,'shared SVG icons are visible');
+  const escapedMarkup=await page.evaluate(()=>{
+   const root=document.createElement('p');
+   window.GukminMarkup.render(root,'<img src=x> **중요** *기울임* ~~삭제~~ ==형광==');
+   return {htmlImage:root.querySelector('img')!==null,strong:root.querySelector('strong')?.textContent,
+    em:root.querySelector('em')?.textContent,del:root.querySelector('del')?.textContent,mark:root.querySelector('mark')?.textContent};
+  });
+  assert.deepEqual(escapedMarkup,{htmlImage:false,strong:'중요',em:'기울임',del:'삭제',mark:'형광'},'story marks are parsed safely');
+  const shownEffects=await page.locator('#dailyChoiceBody .daily-choice-effect').count();
+  const realEffects=await page.evaluate(()=>window.GukminGame.session.snapshot().choice.options.reduce((sum,option)=>
+   sum+Object.values(option.result?.effects?.stats||{}).filter(Number.isFinite).filter(v=>v!==0).length,0));
+  assert.equal(shownEffects,realEffects,'preview never invents rewards when a narrative choice has no numeric effect');
   await page.locator('#dailyModalCollapse').click();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'modal collapses without settling');
   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'resume remains in sheet header');

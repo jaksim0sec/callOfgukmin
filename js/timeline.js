@@ -122,6 +122,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    const selected=(def.variants||[]).find(v=>v.id===current.scenarioId);
    const presented={...clone(def),...(selected?clone(selected):{})};
    delete presented.variants;delete presented.priority;delete presented.when;
+   presented.id=def.id; // Variant ID is stored separately, never replaces choice ID.
    choice={...presented,...clone(current),options:presented.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)}))};
   }
   return {...clone(s),choice,progress:progress(s),reviewPending:!!s.runtime.awaitingContinuation};
@@ -146,12 +147,21 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    if(!option)throw new Error('등록되지 않은 선택지: '+optionId);
    if(!E.matches(s.persona,option.when,s.runtime.turn))throw new Error('선택 조건을 충족하지 않음');
    r.status='confirmed';r.optionId=optionId;
+   // Only one review can be pending. Save its before-state until explicit resume
+   // so reload can show the real applied differences rather than guessed badges.
+   const reviewBefore=pauseAfterChoice?{
+    stats:clone(s.persona.stats),traits:clone(s.persona.traits),
+    schoolHistory:clone(P.schoolsOf(s.persona)),roles:clone(s.persona.roles||[])
+   }:null;
    settlement(s,`choice:${token}`,option.result||{},'choice:'+r.choiceId);
    r.status='settled';
    delete s.runtime.events[r.eventId].waitingToken;
    finish(s,r.eventId);r.status='closed';r.closedAt=s.runtime.turn;
    if(def.progress!==false&&def.blocksTime!==false)s.runtime.progressStart=s.runtime.turn;
-   if(pauseAfterChoice)s.runtime.awaitingContinuation=true;
+   if(pauseAfterChoice){
+    s.runtime.awaitingContinuation=true;
+    s.runtime.reviewBefore=reviewBefore;
+   }
    else pump(s);
   });
  }
@@ -159,6 +169,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   return transact(s=>{
    if(!s.runtime.awaitingContinuation)return false;
    s.runtime.awaitingContinuation=false;
+   delete s.runtime.reviewBefore;
    pump(s);
   });
  }
