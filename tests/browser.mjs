@@ -21,7 +21,7 @@ try{
  }
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
-  const context=await browser.newContext({viewport});const page=await context.newPage(),errors=[];
+  const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop'});const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
   page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
@@ -74,7 +74,9 @@ try{
     const bounds=await page.locator('#sheetToggle').boundingBox();
     const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
     await page.mouse.move(x,y);await page.mouse.down();
-    await page.mouse.move(x,y+offset,{steps:8});await page.mouse.up();
+    await page.mouse.move(x,y+offset,{steps:8});
+    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.style.height),'','CSS owns drag height');
+    await page.mouse.up();
     await page.waitForTimeout(260);
    };
    await drag(-230);
@@ -86,8 +88,21 @@ try{
    await drag(230);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'swipe down: min');
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
-   await page.locator('#sheetToggle').click();
-   await page.waitForTimeout(260);
+   const tapGrip=async()=>{
+    const b=await page.locator('#sheetToggle').boundingBox();
+    await page.touchscreen.tap(b.x+b.width/2,b.y+b.height/2);
+    await page.waitForTimeout(320);
+   };
+   await tapGrip();
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'touch advances once to middle');
+   await tapGrip();
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-expanded')),true,'touch advances once to full');
+   await tapGrip();
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'touch returns once to min');
+   await page.locator('#sheetToggle').focus();
+   await page.keyboard.press('Enter');
+   await page.waitForTimeout(320);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'keyboard advances to middle');
    assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
    assert.equal(await page.locator('.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
