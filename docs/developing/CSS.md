@@ -46,7 +46,7 @@
 
 ## 5. 화면 3종과 학교·특성 토큰 (2026-10-19)
 
-- 루트 `index.html`은 대기로 리다이렉트. `html/waiting.html`, `html/game.html`, `html/result.html`은 각각 공통 CSS를 `../css/style.css`로 불러오는 독립 문서. 모두 공통 `css/style.css`를 사용하나, 대기/결과는 `.waiting-screen`·`.result-screen` 접두 선택자로 독립 레이아웃을 소유한다.
+- 루트 `index.html`은 대기로 리다이렉트. `html/waiting.html`, `html/game.html`, `html/result.html`은 각각 `<base>`를 적용한 `css/style.css`로 공통 CSS를 불러오는 독립 문서. GitHub Pages에서는 `/callOfgukmin/css/style.css`, 로컬 개발에서는 상위 경로 기준. 모두 공통 `css/style.css`를 사용하나, 대기/결과는 `.waiting-screen`·`.result-screen` 접두 선택자로 독립 레이아웃을 소유한다.
 - 인게임 반응형 골격(`.game`, `.desktop-left`, `.desktop-right`, `.status`, `.sheet`)은 유지한다. PC 왼쪽 포스터/프로필 동일 너비, 모바일 고정 바텀시트는 여전히 필수 계약이다.
 - 속성 스탯은 `.attribute-list`·`.attribute-row`, 학교는 기존 `.school-list`·`.school-row`와 `.school-token`을 사용한다. **새 카드 컴포넌트 없음**. `.school-token-active`만 재학 강조, `.school-token-complete`는 졸업 톤.
 - 상태 스탯은 `.gauges-list`에 동적 항목을 넣는다. 기존 `.gauges`는 전체 박스 및 상단 라벨/하단 특성의 컨테이너. `.trait-section`은 프로그래스 아래에 위치한다.

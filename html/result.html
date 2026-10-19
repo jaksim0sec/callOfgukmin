@@ -6,7 +6,16 @@
   <meta name="theme-color" content="#0b0b0f">
   <title>국민의 부름 · 결과</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+  <script>
+    /* Canonical asset root on GitHub Pages; keep local development functional. */
+    const root = location.hostname === 'jaksim0sec.github.io'
+      ? '/callOfgukmin/'
+      : new URL('../', location.href).href;
+    const base = document.createElement('base');
+    base.href = root;
+    document.head.append(base);
+  </script>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-screen="result">
 <main class="result-screen" aria-label="게임 결과 화면">
@@ -25,10 +34,10 @@
     <span class="waiting-visual-caption">ENDING POSTER · PREVIEW ONLY</span>
   </div>
 </main>
-<script src="../js/poster.js" defer></script>
-<script src="../js/playerState.js" defer></script>
-<script src="../js/statusView.js" defer></script>
-<script src="../js/game.js" defer></script>
-<script src="../js/boot.js" defer></script>
+<script src="js/poster.js" defer></script>
+<script src="js/playerState.js" defer></script>
+<script src="js/statusView.js" defer></script>
+<script src="js/game.js" defer></script>
+<script src="js/boot.js" defer></script>
 </body>
 </html>

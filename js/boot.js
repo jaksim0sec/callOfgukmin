@@ -7,7 +7,7 @@ const PAGES=new Set(['waiting','game','result']);
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
- global.location.assign(new URL('./'+name+'.html',global.location.href).href);
+ global.location.assign(new URL('html/'+name+'.html',document.baseURI).href);
 }
 function renderPoster(target,persona,stage){
  const data=global.GukminGame.posterData(persona);
@@ -50,7 +50,7 @@ try{
  notice.setAttribute('role','alert');
  notice.textContent='화면 초기화 오류: '+(error instanceof Error?error.message:String(error))+' — 새로고침하거나 대기 화면으로 돌아가 줘.';
  const link=document.createElement('a');
- link.href='./waiting.html';link.textContent='대기 화면';
+ link.href='html/waiting.html';link.textContent='대기 화면';
  notice.append(link);
  document.body.replaceChildren(notice);
 }

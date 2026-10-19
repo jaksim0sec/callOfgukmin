@@ -18,7 +18,7 @@
 | `css/style.css` | 정적 세 화면 및 반응형·팝업·토큰 스타일 |
 | `tests/smoke.mjs` | 독립 HTML/JS 상대경로·구문·ID·CSS 단위와 fetch 제거 확인 |
 
-- `index.html` → `html/waiting.html` 리다이렉트. 각 `html/{waiting|game|result}.html`은 `<!doctype html>`이 있는 독립 문서이며 공통 JS/CSS를 `../` 상대경로로 불러온다. `boot.js`는 화면별 초기화와 페이지 네비게이션만 처리하며 `fetch()`를 사용하지 않는다.
+- `index.html` → `html/waiting.html` 리다이렉트. 각 `html/{waiting|game|result}.html`은 `<!doctype html>`이 있는 독립 문서이며 공통 JS/CSS는 `<base>`를 통해 Pages에서는 `/callOfgukmin/`를 기준으로, 로컬에서는 상위 폴더를 기준으로 불러온다. `boot.js`는 `document.baseURI`를 기준으로 페이지 네비게이션만 처리하며 `fetch()`를 사용하지 않는다. GitHub Pages의 절대 경로와 로컬 개발의 상대 경로를 구분한다.
 - 스크립트 순서: `poster.js`, `playerState.js`, `statusView.js`, `game.js`, `boot.js`. 일반 `defer` 스크립트, 번들러/외부 런타임 프레임워크 없음.
 - 독립 HTML 파일이므로 `fetch()` 없이 직접 페이지가 열린다. HTTP 정적 서버 권장: 루트에서 `python3 -m http.server 8000`. GitHub Pages 호스팅 경로는 루트 `index.html` 유지.
 - 초기 화면은 **대기**. 시작 클릭은 인게임으로 이동하지만 **스토리 시간은 진행시키지 않는다**. 결과 화면은 대기에서 테스트용으로만 접근.

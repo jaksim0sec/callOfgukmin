@@ -24,7 +24,7 @@ node tests/smoke.mjs
 python3 -m http.server 8000
 ```
 
-대기·인게임·결과 화면은 각각 HTML을 직접 열 수 있다. HTTP 정적 서버 또는 GitHub Pages에서 실행한다.
+대기·인게임·결과 화면은 각각 HTML을 직접 열 수 있다. Pages에서는 `/callOfgukmin/`를 기준 경로로 명시하여 CSS·JS를 로드한다. HTTP 정적 서버 또는 GitHub Pages에서 실행한다.
 
 - [AGENTS.md](./AGENTS.md): 개발 규칙
 - [docs 안내](./docs/README.md): 문서 분류

@@ -9,8 +9,8 @@ const exists=p=>existsSync(resolve(root,p));
 const errors=[];
 const entry=read('index.html');
 const screens=['waiting','game','result'];
-const scripts=['poster','playerState','statusView','game','boot'].map(x=>'../js/'+x+'.js');
-if(!entry.includes('href="./html/waiting.html"') || !entry.includes('location.replace('))
+const scripts=['poster','playerState','statusView','game','boot'].map(x=>'js/'+x+'.js');
+if(!entry.includes('href="/callOfgukmin/html/waiting.html"') || !entry.includes('location.replace('))
  errors.push('Root index does not redirect to waiting screen.');
 if(entry.includes('id="app"'))errors.push('Old fetch app host still present');
 const ids={
@@ -24,17 +24,18 @@ for(const screen of screens){
  const html=read(path);
  if(!/^<!doctype html>/i.test(html.trim()))errors.push('Not an independent HTML document: '+path);
  if(!html.includes('data-screen="'+screen+'"'))errors.push('Missing screen marker: '+path);
+ if(!html.includes("? '/callOfgukmin/'"))errors.push('Missing Pages canonical base URL: '+path);
  const matches=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(m=>m[1]);
  if(JSON.stringify(matches)!==JSON.stringify(scripts))errors.push('Script path/order incorrect: '+path);
- if(!html.includes('href="../css/style.css"'))errors.push('Missing CSS: '+path);
- for(const source of [...matches,'../css/style.css']){
-  const target=resolve(root,'html',source);
+ if(!html.includes('href="css/style.css"'))errors.push('Missing CSS: '+path);
+ for(const source of [...matches,'css/style.css']){
+  const target=resolve(root,source);
   if(!exists(target))errors.push('Missing asset '+source+' from '+path);
  }
  const idsSeen=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
  for(const id of ids[screen])if(!idsSeen.has(id))errors.push('Missing DOM element '+id+' in '+path);
 }
-for(const path of scripts.map(p=>p.replace('../',''))){
+for(const path of scripts){
  try{new vm.Script(read(path),{filename:path});}
  catch(e){errors.push('JavaScript syntax: '+path+' '+e.message);}
 }
