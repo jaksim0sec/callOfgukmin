@@ -29,7 +29,11 @@ try{
   await page.evaluate(()=>localStorage.setItem('callOfgukmin__playable__v1','legacy-browser-sentinel'));
   page.setDefaultTimeout(7000);
   const initial=await page.locator('#waitingName').textContent();assert.ok(initial.trim());
-  await page.locator('#enterGame').click();await page.locator('#playerPosterMount .gk-poster').waitFor();
+  await page.locator('#enterGame').click();
+  await page.locator('#birthIntro').waitFor({state:'visible'});
+  assert.equal(await page.locator('#birthIntroName').textContent(),initial);
+  await page.locator('#birthIntroSkip').click();
+  await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').textContent(),'#0살');
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').isVisible(),false);

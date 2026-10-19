@@ -25,7 +25,37 @@ function initWaiting(){
    background.textContent=s.birthplace+' · '+s.family;
    renderPoster(mount,s,'출생');
  }
- document.getElementById('enterGame').addEventListener('click',()=>navigate('game'));
+ // Intro is a view-only transition. It does not advance turns or reroll the persona.
+ const intro=document.getElementById('birthIntro');
+ const introName=document.getElementById('birthIntroName');
+ const introBackground=document.getElementById('birthIntroBackground');
+ const skip=document.getElementById('birthIntroSkip');
+ let introActive=false,introTimer=null;
+ function finishIntro(){
+   if(!introActive)return;
+   global.clearTimeout(introTimer);
+   navigate('game');
+ }
+ function beginIntro(){
+   if(introActive)return;
+   if(global.matchMedia?.('(prefers-reduced-motion: reduce)').matches){
+     navigate('game');return;
+   }
+   const persona=player.ensure();
+   introName.textContent=persona.name;
+   introBackground.textContent=persona.birthplace+' · '+persona.family;
+   introActive=true;
+   intro.hidden=false;
+   intro.classList.add('is-playing');
+   document.querySelector('.waiting-screen').inert=true;
+   skip.focus({preventScroll:true});
+   introTimer=global.setTimeout(finishIntro,3000);
+ }
+ document.getElementById('enterGame').addEventListener('click',beginIntro);
+ skip.addEventListener('click',finishIntro);
+ document.addEventListener('keydown',event=>{
+   if(introActive&&event.key==='Escape'){event.preventDefault();finishIntro();}
+ });
  document.getElementById('previewResult').addEventListener('click',()=>navigate('result'));
  document.getElementById('rerollPersona').addEventListener('click',()=>{
    player.save(player.generate());

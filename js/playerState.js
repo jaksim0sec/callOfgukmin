@@ -31,15 +31,32 @@ const METRIC_DEFS = {
   support:{label:'지지도',type:'progress'},
   awareness:{label:'인지도',type:'progress'}
 };
-const PHASE_METRICS = Object.freeze({
-  infant:['stress','health','money'],
-  elementary:['stress','health','money','allowance','relations'],
-  middle:['stress','health','money','allowance','relations','study'],
-  high:['stress','health','money','allowance','relations','schoolScore','exam'],
-  university:['stress','health','money','income','relations','support','awareness'],
-  adult:['stress','health','money','income','support','awareness'],
-  political:['stress','health','money','income','support','awareness']
+// This is a content-facing progression map, not a clock or a legal-age rule.
+// The college/adult overlap and the circumstances of each move remain story-owned.
+const LIFE_STAGES = Object.freeze([
+  {id:'infant',label:'출생·유년기',next:['elementary'],metrics:['stress','health','money']},
+  {id:'elementary',label:'초등학생',next:['middle'],metrics:['stress','health','money','allowance','relations']},
+  {id:'middle',label:'중학생',next:['high'],metrics:['stress','health','money','allowance','relations','study']},
+  {id:'high',label:'고등학생',next:['university','adult'],metrics:['stress','health','money','allowance','relations','schoolScore','exam']},
+  {id:'university',label:'대학생',next:['adult'],metrics:['stress','health','money','income','relations','support','awareness']},
+  {id:'adult',label:'사회생활',next:['political'],metrics:['stress','health','money','income','support','awareness']},
+  {id:'political',label:'정치활동',next:['adult'],metrics:['stress','health','money','income','support','awareness']}
+].map(stage=>Object.freeze({...stage,next:Object.freeze(stage.next),metrics:Object.freeze(stage.metrics)})));
+const PHASE_METRICS = Object.freeze(Object.fromEntries(LIFE_STAGES.map(stage=>[stage.id,stage.metrics])));
+const BIRTH_DEFAULTS = Object.freeze({
+  age:0,phase:'infant',job:'아기',traits:Object.freeze([]),
+  // Values are placeholders from the existing UI, NOT balanced game probabilities.
+  stats:Object.freeze({
+    stress:0,health:100,money:0,allowance:null,relations:null,study:null,
+    schoolScore:null,exam:null,income:null,support:null,awareness:null
+  })
 });
+function phaseDefinition(id){
+  const stage=LIFE_STAGES.find(item=>item.id===id);
+  if(!stage)throw new Error('등록되지 않은 생애 단계: '+id);
+  return stage;
+}
+function nextPhases(id){return [...phaseDefinition(id).next];}
 const TRAIT_DEFS = {
   '저축습관':{icon:'savings',description:'돈을 모으는 행동에 영향을 주는 특성'},
   '인내심':{icon:'hourglass',description:'장기간의 노력과 부담에 영향을 주는 특성'},
@@ -54,11 +71,11 @@ function generate() {
   const home=pick(HOMES);
   return {
     version:1,
-    name:pick(NAMES),age:0,phase:'infant',job:'아기',party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
+    name:pick(NAMES),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
     family:home.name,birthplace:home.place,description:home.description,
     school:{elementary:null,middle:null,high:null,uni:null},schoolHistory:[],
-    roles:[],traits:[],
-    stats:{stress:0,health:100,money:0,allowance:null,relations:null,study:null,schoolScore:null,exam:null,income:null,support:null,awareness:null},
+    roles:[],traits:[...BIRTH_DEFAULTS.traits],
+    stats:{...BIRTH_DEFAULTS.stats},
     history:[{age:0,title:'당신이 태어났다',detail:home.place+'에서 새로운 삶이 시작되었다.'},{age:0,title:'출생 배경',detail:home.description}],
     createdAt:new Date().toISOString()
   };
@@ -164,6 +181,7 @@ function schoolsOf(s) {
 }
 global.GukminPlayer=Object.freeze({
   storageKey:STORAGE_KEY,generate,valid,save,load,ensure,phaseOf,activeMetrics,schoolsOf,
+  lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   registerMetric,registerTrait,registerAttribute,metricDefinition,traitDefinition,attributeDefinition,hasTrait
 });

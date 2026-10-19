@@ -65,7 +65,7 @@ function apply(persona,result={},context={}){
   const def=P.attributeDefinition(id),old=def.custom?s.attributes[id]:s[id];
   if(id==='age'&&(!Number.isFinite(value)||value<0))throw new Error('나이 오류');
   if(id==='roles'&&!Array.isArray(value))throw new Error('역할 오류');
-  if(id==='phase'&&!['infant','elementary','middle','high','university','adult','political'].includes(value))throw new Error('생애 단계 오류');
+  if(id==='phase'&&!P.lifeStages.some(stage=>stage.id===value))throw new Error('생애 단계 오류');
   if(def.custom&&value!==null&&!(typeof value==='string'||typeof value==='boolean'||Number.isFinite(value)))throw new Error('속성 값 오류: '+id);
   if(!def.custom&&!['age','roles','number'].includes(id)&&value!==null&&typeof value!=='string')throw new Error('속성 값 오류: '+id);
   if(id==='partyColor'&&!/^#[0-9a-f]{6}$/i.test(value))throw new Error('정당색 오류');

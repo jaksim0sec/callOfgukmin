@@ -77,6 +77,33 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .waiting-visual,.result-visual{min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;gap:0.75rem}
 .waiting-poster-mount,.result-poster-mount{width:min(100%,25rem);height:min(34.375rem,67dvh);min-height:20rem;box-shadow:0 1.5rem 4rem #0008;border-radius:1rem;overflow:hidden}
 .waiting-visual-caption{font-size:0.75rem;color:#8f8298;text-align:center}
+/* The birth reveal belongs only to the waiting page and never changes game state. */
+.birth-intro{position:fixed;inset:0;z-index:50;display:grid;place-items:center;isolation:isolate;overflow:hidden;padding:clamp(1rem,4vw,3rem);background:radial-gradient(circle at 50% 45%,#32263e 0%,#121019 54%,#09090d 100%);color:#f7f0f8}
+.birth-intro::before{content:'';position:absolute;inset:-30%;z-index:-1;background:repeating-linear-gradient(90deg,transparent 0,transparent 3.5rem,#d5badc10 3.5625rem,transparent 3.625rem);transform:rotate(-12deg);animation:birth-grid 3s ease-out both}
+.birth-intro-card{width:min(100%,34rem);min-height:min(36rem,85dvh);padding:clamp(1.5rem,5vw,3rem);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center;border:0.0625rem solid #8a708e9c;background:linear-gradient(150deg,#2e2335f5,#17131ff5);box-shadow:0 2rem 7rem #000a;animation:birth-appear .75s cubic-bezier(.14,.8,.2,1) both}
+.birth-intro-card::before,.birth-intro-card::after{content:'';position:absolute;width:2.125rem;height:2.125rem;border-color:#d7bed9;opacity:.85}
+.birth-intro-card::before{top:.75rem;left:.75rem;border-top:.125rem solid;border-left:.125rem solid}
+.birth-intro-card::after{bottom:.75rem;right:.75rem;border-bottom:.125rem solid;border-right:.125rem solid}
+.birth-intro-head,.birth-intro-foot{width:100%;display:flex;align-items:center;justify-content:space-between;gap:1rem;font-size:.6875rem;letter-spacing:.12em;color:#bcb0c3}
+.birth-intro-head{position:absolute;left:0;right:0;top:1.75rem;padding:0 2.5rem}
+.birth-intro-foot{position:absolute;left:0;right:0;bottom:1.75rem;padding:0 2.5rem}
+.birth-intro-emblem{width:5.25rem;height:5.25rem;color:#d4bfdc;animation:birth-seal .85s .15s cubic-bezier(.12,.84,.23,1.2) both}
+.birth-intro-emblem svg{width:100%;height:100%}
+.birth-intro-caption{margin:1rem 0 .375rem;font-size:.75rem;font-weight:800;letter-spacing:.25em;color:#c2a7c9}
+.birth-intro h2{font:normal clamp(3rem,8vw,5.5rem)/1.05 'Do Hyeon',system-ui,sans-serif;letter-spacing:-.035em;margin:.625rem 0 1.875rem}
+.birth-intro-identity{width:min(100%,22rem);padding-top:1.125rem;border-top:.0625rem solid #79667c;display:grid;gap:.35rem;animation:birth-reveal .7s 1.05s both}
+.birth-intro-identity span{font-size:.6875rem;letter-spacing:.12em;color:#bdaac6}
+.birth-intro-identity strong{font-size:1.875rem;line-height:1.2}
+.birth-intro-identity p{margin:0 0 .625rem;overflow-wrap:anywhere;font-size:.875rem;color:#d4c5d8}
+.birth-intro-skip{position:absolute;right:clamp(1rem,3vw,2rem);bottom:clamp(1rem,3vw,2rem);border:.0625rem solid #b9a3c099;background:#1c1722c9;color:#f2e9f5;padding:.625rem 1rem;border-radius:2rem;z-index:1}
+.birth-intro-skip:hover{background:#3f3348}
+@keyframes birth-grid{from{opacity:0;transform:translateY(-4%) rotate(-12deg)}to{opacity:1;transform:translateY(0) rotate(-12deg)}}
+@keyframes birth-appear{from{opacity:0;transform:translateY(2rem) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes birth-seal{from{opacity:0;transform:scale(1.5) rotate(-25deg)}to{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes birth-reveal{from{opacity:0;transform:translateY(.8rem)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:47.5em){.birth-intro-card{min-height:min(35rem,82dvh)}.birth-intro-head,.birth-intro-foot{padding:0 2rem}.birth-intro-skip{bottom:max(1rem,env(safe-area-inset-bottom))}}
+@media(max-height:37.5em){.birth-intro-card{min-height:0;height:100%;padding:3rem 1rem}.birth-intro-emblem{width:3.25rem;height:3.25rem}.birth-intro h2{font-size:2.625rem;margin:.25rem 0 1rem}.birth-intro-identity{padding-top:.625rem}.birth-intro-skip{bottom:.375rem}}
+@media(prefers-reduced-motion:reduce){.birth-intro *,.birth-intro::before{animation:none!important}}
 .screen-error{min-height:100dvh;padding:3rem 1.25rem;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
 .screen-error h1{font:normal 2.75rem 'Do Hyeon',system-ui,sans-serif}
 .screen-error p{color:#b6a9bb}

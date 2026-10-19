@@ -14,7 +14,7 @@ if(!entry.includes('href="./html/waiting.html"') || !entry.includes('location.re
  errors.push('Root index does not redirect to waiting screen.');
 if(entry.includes('id="app"'))errors.push('Old fetch app host still present');
 const ids={
- waiting:['waitingName','waitingBackground','waitingPosterMount','enterGame','rerollPersona','previewResult'],
+ waiting:['waitingName','waitingBackground','waitingPosterMount','enterGame','rerollPersona','previewResult','birthIntro','birthIntroName','birthIntroBackground','birthIntroSkip'],
  game:['playerPosterMount','age','job','attributeRows','schools','gaugesList','traits','log','resetGame','previewSchool','previewParty','choiceDialog','modalTitle','options','summary','confirm','close','choiceTiming','nextChoiceProgress','currentChoice','startSystemDemo','advanceTurn'],
  result:['resultPosterMount','resultBack']
 };
@@ -48,7 +48,7 @@ const state=read('js/playerState.js');
 if(!state.includes('callOfgukmin__ui__v1'))errors.push('UI save key changed');
 const css=read('css/style.css').replaceAll(/:root\{font-size:(?:15|16)px\b/g,':root{font-size:ROOT');
 if(/\d+(?:\.\d+)?px\b/.test(css))errors.push('Non-root px in CSS');
-for(const selector of ['.school-token-active','.trait-section','.gauges-list','.waiting-screen','.result-screen']){
+for(const selector of ['.school-token-active','.trait-section','.gauges-list','.waiting-screen','.result-screen','.birth-intro']){
  if(!css.includes(selector))errors.push('Missing UI CSS: '+selector);
 }
 if(errors.length){console.error('Smoke FAIL:\n'+errors.map(x=>'- '+x).join('\n'));process.exitCode=1}

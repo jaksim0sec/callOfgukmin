@@ -97,3 +97,21 @@ test('graduating a legacy school adopts its ID and does not leave an obsolete en
 test('a reached choice deadline remains fully progressed at turn zero and for simultaneous choices',()=>{
  const {P,T}=setup();const choices=['a','b'].map(id=>({id,layer:'일상 선택',options:[{id:'ok',label:'확인'}]}));const events=choices.map(c=>({id:c.id,layer:'일상 이벤트',at:0,choice:c.id}));const engine=T.create({persona:P.generate(),events,choices});engine.advance(0);assert.equal(engine.snapshot().progress.value,1);engine.resolve(engine.snapshot().choice.token,'ok');assert.equal(engine.snapshot().progress.value,1);
 });
+
+test('birth defaults and stage routes are data-owned without triggering a clock or mutating defaults',()=>{
+ const {P,E}=setup(),birth=P.generate();
+ assert.deepEqual(plain(P.lifeStages.map(stage=>stage.id)),['infant','elementary','middle','high','university','adult','political']);
+ assert.deepEqual(plain(P.nextPhases('high')),['university','adult']);
+ assert.deepEqual(plain(P.nextPhases('political')),['adult']);
+ assert.throws(()=>P.phaseDefinition('unknown'),/생애 단계/);
+ assert.equal(birth.phase,'infant');assert.equal(birth.age,0);assert.equal(birth.job,'아기');
+ assert.deepEqual(plain(birth.stats),plain(P.birthDefaults.stats));
+ assert.deepEqual(plain(birth.traits),[]);
+ assert.deepEqual(plain(P.activeMetrics(birth).map(metric=>metric.id)),['stress','health','money']);
+ birth.stats.health=45;assert.equal(P.birthDefaults.stats.health,100);
+ const older=E.apply(birth,{effects:{attributes:{age:22}}});
+ assert.equal(older.phase,'infant','Changing age alone must not advance the stage');
+ const next=E.apply(birth,{effects:{attributes:{phase:'elementary'}}});
+ assert.equal(next.phase,'elementary');assert.equal(P.phaseOf(next),'elementary');
+ assert.throws(()=>E.apply(next,{effects:{attributes:{phase:'missing'}}}),/생애 단계/);
+});
