@@ -9,12 +9,12 @@ const exists=p=>existsSync(resolve(root,p));
 const errors=[];
 const entry=read('index.html');
 const screens=['waiting','game','result'];
-const scripts=['poster','data/base','playerState','effects','timeline','life/director','life/infant','systemDemo','statusView','game','boot'].map(x=>'js/'+x+'.js');
+const scripts=['poster','data/base','data/regions','playerState','effects','timeline','life/director','life/infant','systemDemo','statusView','game','boot'].map(x=>'js/'+x+'.js');
 if(!entry.includes('href="./html/waiting.html"') || !entry.includes('location.replace('))
  errors.push('Root index does not redirect to waiting screen.');
 if(entry.includes('id="app"'))errors.push('Old fetch app host still present');
 const ids={
- waiting:['waitingName','waitingBackground','waitingPosterMount','enterGame','rerollPersona','previewResult','birthIntro','birthIntroName','birthIntroBackground','birthIntroSkip'],
+ waiting:['waitingName','waitingBackground','waitingPosterMount','enterGame','rerollPersona','previewResult','birthIntro','birthIntroName','birthIntroBackground','birthIntroTrait','birthIntroSkip'],
  game:['playerPosterMount','age','job','attributeRows','schools','gaugesList','traits','log','resetGame','previewSchool','previewParty','choiceDialog','modalTitle','options','summary','confirm','close','choiceTiming','nextChoiceProgress','currentChoice','startSystemDemo','advanceTurn'],
  result:['resultPosterMount','resultBack']
 };

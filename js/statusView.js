@@ -116,6 +116,14 @@ function showMetrics(root,s){
     list.append(wrap);
   }
 }
+function traitToken(name,entry={}){
+ const def=global.GukminPlayer.traitDefinitions[name]||{};
+ const negative=entry.negative===true||def.negative===true;
+ const token=pill(name,entry.icon||def.icon||'sparkle','token-trait '+(negative?'trait-negative':'trait-positive')+(def.tier?' trait-tier-'+def.tier:''));
+ token.title=entry.description||def.description||name;
+ token.setAttribute('aria-label',name+(def.tier?' · 출생 배경':negative?' · 디버프':' · 특성'));
+ return token;
+}
 function showTraits(root,s){
   const traits=root.querySelector('#traits');traits.replaceChildren();
   const entries=Array.isArray(s.traits)?s.traits.filter(Boolean):[];
@@ -128,7 +136,7 @@ function showTraits(root,s){
     if(!name)continue;
     const def=global.GukminPlayer.traitDefinitions[name]||{};
     const negative=entry.negative===true||def.negative===true;
-    const token=pill(name,entry.icon||def.icon||'sparkle','token-trait '+(negative?'trait-negative':'trait-positive'));
+    const token=traitToken(name,entry);
     token.title=entry.description||def.description||name;
     token.setAttribute('aria-label',name+(negative?' · 디버프':' · 특성'));
     traits.append(token);
@@ -143,5 +151,5 @@ function render(root,persona){
   showMetrics(root,persona);
   showTraits(root,persona);
 }
-global.GukminStatus=Object.freeze({render,registerMetricRenderer});
+global.GukminStatus=Object.freeze({render,registerMetricRenderer,pill,traitToken});
 })(window);

@@ -30,6 +30,7 @@ function initWaiting(){
  const introName=document.getElementById('birthIntroName');
  const introBackground=document.getElementById('birthIntroBackground');
  const skip=document.getElementById('birthIntroSkip');
+ const introTrait=document.getElementById('birthIntroTrait');
  let introActive=false,introTimer=null;
  function finishIntro(){
    if(!introActive)return;
@@ -44,6 +45,9 @@ function initWaiting(){
    const persona=player.ensure();
    introName.textContent=persona.name;
    introBackground.textContent=persona.birthplace+' · '+persona.family;
+   const tier=player.wealthTiers.find(item=>item.id===persona.familyTier);
+   introTrait.replaceChildren();
+   if(tier)introTrait.append(global.GukminStatus.traitToken(tier.name));
    introActive=true;
    intro.hidden=false;
    intro.classList.add('is-playing');

@@ -19,16 +19,29 @@ function phaseDefinition(id){
 function nextPhases(id){return [...phaseDefinition(id).next];}
 const TRAIT_DEFS={...DATA.traits};
 const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+function weightedPick(tiers){
+ const sum=tiers.reduce((acc,tier)=>acc+tier.weight,0);
+ let draw=Math.random()*sum;
+ return tiers.find(tier=>(draw-=tier.weight)<0)||tiers.at(-1);
+}
+function birthContext(){
+ const home=pick(HOMES),region=pick(global.GukminRegions.all),tier=weightedPick(DATA.wealthTiers);
+ const stats={...BIRTH_DEFAULTS.stats,allowance:tier.allowance,relations:tier.relations};
+ for(const tag of region.tags){
+  for(const [id,delta] of Object.entries(DATA.regionPresets[tag]||{}))stats[id]+=delta;
+ }
+ return {home,region,tier,stats};
+}
 function generate() {
-  const home=pick(HOMES);
+  const {home,region,tier,stats}=birthContext();
   return {
     version:1,
     name:pick(NAMES),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
-    family:home.name,birthplace:home.place,description:home.description,
+    family:home.name,birthplace:region.label,birthplaceId:region.id,regionTags:[...region.tags],familyTier:tier.id,description:home.description,
     school:{elementary:null,middle:null,high:null,uni:null},schoolHistory:[],
-    roles:[],traits:[...BIRTH_DEFAULTS.traits],
-    stats:{...BIRTH_DEFAULTS.stats},
-    history:[{age:0,title:'당신이 태어났다',detail:home.place+'에서 새로운 삶이 시작되었다.'},{age:0,title:'출생 배경',detail:home.description}],
+    roles:[],traits:[tier.name,...BIRTH_DEFAULTS.traits],
+    stats,
+    history:[{age:0,title:'당신이 태어났다',detail:region.label+'에서 새로운 삶이 시작되었다.'},{age:0,title:'출생 배경',detail:home.description}],
     createdAt:new Date().toISOString()
   };
 }
@@ -43,6 +56,7 @@ function normalize(s) {
   copy.traits=s.traits.filter(t=>typeof t==='string'?t!==s.family:!!(t&&typeof t==='object'&&t.name!==s.family));
   copy.schoolHistory=Array.isArray(s.schoolHistory)?s.schoolHistory:[];
   copy.roles=Array.isArray(s.roles)?s.roles:[];
+  copy.regionTags=Array.isArray(s.regionTags)?s.regionTags:[];
   if(!PHASE_METRICS[copy.phase])delete copy.phase;
   return copy;
 }
@@ -135,6 +149,7 @@ global.GukminPlayer=Object.freeze({
   storageKey:STORAGE_KEY,generate,valid,save,load,ensure,phaseOf,activeMetrics,schoolsOf,
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
+  birthContext,wealthTiers:DATA.wealthTiers,
   registerMetric,registerTrait,registerAttribute,metricDefinition,traitDefinition,attributeDefinition,hasTrait
 });
 })(window);

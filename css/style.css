@@ -59,6 +59,12 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .trait-heading span,.traits-empty{font-size:0.75rem;color:#8e8095}
 .token-trait{background:#4a3654;border-color:#66506e}
 .trait-negative{background:#59333e;border-color:#845462}
+.trait-tier-soil{background:#684731;border-color:#a47b55;color:#fff2e2}
+.trait-tier-bronze{background:#79513b;border-color:#b78361;color:#fff5eb}
+.trait-tier-silver{background:#55616d;border-color:#9caeba;color:#f6faff}
+.trait-tier-gold{background:#8a6828;border-color:#d9ba6d;color:#fff8dd}
+.trait-tier-diamond{background:#326f89;border-color:#9de6f3;color:#effcff}
+.birth-intro-trait{display:flex;justify-content:center;align-items:center;margin-top:.375rem;min-height:2rem}
 .waiting-screen,.result-screen{width:min(100%,91.25rem);min-height:100dvh;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(18.75rem,.9fr);gap:clamp(1.5rem,5vw,5rem);align-items:center;padding:clamp(1.375rem,4vw,4.5rem)}
 .waiting-copy,.result-copy{max-width:44rem}
 .waiting-copy h1,.result-copy h1{font:normal clamp(3.75rem,8vw,7.5rem)/1.02 'Do Hyeon',system-ui,sans-serif;letter-spacing:-.025em;margin:0.875rem 0}

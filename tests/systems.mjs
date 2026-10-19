@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','playerState','effects','timeline','life/director','life/infant','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','playerState','effects','timeline','life/director','life/infant','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -105,8 +105,12 @@ test('birth defaults and stage routes are data-owned without triggering a clock 
  assert.deepEqual(plain(P.nextPhases('political')),['adult']);
  assert.throws(()=>P.phaseDefinition('unknown'),/생애 단계/);
  assert.equal(birth.phase,'infant');assert.equal(birth.age,0);assert.equal(birth.job,'아기');
- assert.deepEqual(plain(birth.stats),plain(P.birthDefaults.stats));
- assert.deepEqual(plain(birth.traits),[]);
+ assert.equal(birth.stats.health,P.birthDefaults.stats.health);
+ assert.equal(birth.stats.money,P.birthDefaults.stats.money);
+ assert.equal(Number.isFinite(birth.stats.allowance),true);
+ assert.equal(Number.isFinite(birth.stats.relations),true);
+ assert.equal(birth.traits.length,1);
+ assert.ok(P.wealthTiers.some(t=>t.name===birth.traits[0]));
  assert.deepEqual(plain(P.activeMetrics(birth).map(metric=>metric.id)),['stress','health','money']);
  birth.stats.health=45;assert.equal(P.birthDefaults.stats.health,100);
  const older=E.apply(birth,{effects:{attributes:{age:22}}});
@@ -151,4 +155,24 @@ test('director automatically advances only to registered future content and swit
  resumed.run();
  assert.equal(resumed.snapshot().runtime.events['school-entry'].count,1);
  assert.equal(resumed.snapshot().runtime.turn,2);
+});
+
+test('region catalogue and independent wealth presets generate tagged births',()=>{
+ const {c,P}=setup(),R=c.GukminRegions;
+ assert.equal(R.all.length,255);
+ assert.equal(new Set(R.all.map(region=>region.id)).size,255);
+ assert.ok(R.tagged('어촌').length>0);
+ for(let i=0;i<120;i++){
+   const b=P.generate(),region=R.find(b.birthplaceId);
+   assert.ok(region);
+   assert.equal(b.birthplace,region.label);
+   assert.deepEqual(plain(b.regionTags),plain(region.tags));
+   const tier=P.wealthTiers.find(t=>t.id===b.familyTier);
+   assert.ok(tier);
+   assert.ok(b.traits.includes(tier.name));
+   assert.equal(b.stats.allowance,tier.allowance);
+   const modifier=b.regionTags.reduce((sum,tag)=>sum+(c.GukminData.regionPresets[tag]?.relations||0),0);
+   assert.equal(b.stats.relations,tier.relations+modifier);
+   assert.equal(P.valid(P.load()||b),true);
+ }
 });

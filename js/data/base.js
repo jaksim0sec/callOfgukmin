@@ -47,7 +47,24 @@ const BIRTH_DEFAULTS = Object.freeze({
     schoolScore:null,exam:null,income:null,support:null,awareness:null
   })
 });
+const WEALTH_TIERS=[
+ {id:'soil',name:'흙수저',weight:34,allowance:2000,relations:45,icon:'home'},
+ {id:'bronze',name:'동수저',weight:31,allowance:6000,relations:48,icon:'home'},
+ {id:'silver',name:'은수저',weight:22,allowance:12000,relations:50,icon:'home'},
+ {id:'gold',name:'금수저',weight:10,allowance:25000,relations:52,icon:'home'},
+ {id:'diamond',name:'다이아수저',weight:3,allowance:45000,relations:55,icon:'sparkle'}
+];
+// Narrative starting-state modifiers, NOT real demographic statistics.
+const REGION_PRESETS={
+ '신도시':{relations:-2},'농촌':{relations:2},'섬':{relations:1},
+ '상업':{relations:1},'학군지':{relations:1}
+};
 const TRAIT_DEFS = {
+ '흙수저':{icon:'home',tier:'soil',description:'경제적 지원이 제한적인 출생 배경'},
+ '동수저':{icon:'home',tier:'bronze',description:'평범한 경제적 출생 배경'},
+ '은수저':{icon:'home',tier:'silver',description:'일정한 경제적 지원이 가능한 출생 배경'},
+ '금수저':{icon:'home',tier:'gold',description:'경제적으로 넉넉한 출생 배경'},
+ '다이아수저':{icon:'sparkle',tier:'diamond',description:'매우 풍족한 경제적 지원을 받는 출생 배경'},
   '저축습관':{icon:'savings',description:'돈을 모으는 행동에 영향을 주는 특성'},
   '인내심':{icon:'hourglass',description:'장기간의 노력과 부담에 영향을 주는 특성'},
   '꼼꼼함':{icon:'check',description:'서류와 학습의 세부 판정에 영향을 주는 특성'},
@@ -63,6 +80,7 @@ const freezeCopy=value=>{
 };
 global.GukminData=freezeCopy({
  names:NAMES,homes:HOMES,schoolKinds:SCHOOL_KINDS,
- metrics:METRIC_DEFS,stages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,traits:TRAIT_DEFS
+ metrics:METRIC_DEFS,stages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,traits:TRAIT_DEFS,
+ wealthTiers:WEALTH_TIERS,regionPresets:REGION_PRESETS
 });
 })(window);
