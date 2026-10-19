@@ -4,7 +4,7 @@
 
 ## 플레이
 
-- 진입점: 저장소 루트의 `index.html`. 외부 빌드 도구 없이 `index.html`, `style.css`, `game.js`만으로 동작.
+- 진입점: 저장소 루트의 `index.html`. 외부 빌드 도구 없이 `index.html`, `css/style.css`, `js/poster.js`, `js/game.js`로 동작.
 - 첫 장면은 **0살 출생**. 인생 기록에서 상황을 읽고 `시간을 넘긴다` 또는 `결정의 순간`을 눌러 진행.
 - **학교 선택**: 서류 느낌의 블러 배경/슬라이드 업 선택 팝업, 교표, 조건, 능력치 변경 토큰. 휘문고·병신고·이빨고 등의 학교 설정 및 지원 조건은 **게임 속 창작 수치**.
 - **직업 선택**: 명함형. **입당 선택**: 번호, 당명, 상징과 도장이 있는 가상 투표지.
@@ -26,14 +26,19 @@
 
 이 버전은 **시연을 작동시키는 기준점**입니다. 전체 게임의 완성판이 아닙니다. 핵심 서사는 아직 길이가 제한돼 있고, 사실적 선거 규칙과 복잡한 정치 관계망·직업군·특성 조건 등은 추가 논의가 필요합니다. 후속 작업에서도 네가 만든 UI를 기준으로 개선합니다.
 
-기존 `docs/GAME_DESIGN.md` 및 `docs/UI_REDESIGN.md`는 이전 v3 검토 기록입니다. 현재 구현 범위는 이 README를 기준으로 보세요.
+기존 v3 설계는 `docs/archive/`에 보존했습니다. 현재 구현 범위는 이 README를 기준으로 보세요.
 
 모든 정치적 정당·선거 결과·정치 성향 수치는 풍자 게임의 **허구**이며 실제 정치 정보나 여론조사를 나타내지 않습니다.
 
-## 게임 기획 문서
+## 개발 문서 및 실행
 
-- [출생 지역 분류 사전 — 지역·생활권·태그 255개](./docs/REGION_CATALOG.md)
-- [신규 8개 스탯 체계 논의안](./docs/STATS.md)
-- [기존 게임 설계 기록](./docs/GAME_DESIGN.md)
+- [AGENTS.md](./AGENTS.md): 코딩 에이전트 작업 규칙
+- [docs 문서 안내](./docs/README.md) · [실제 실행 구조](./docs/developing/RUNTIME.md)
+- [게임 비전](./docs/VISION.md)
+- [출생 지역 255개](./docs/notes/REGION_CATALOG.md) · [스탯 초안](./docs/notes/STATS.md) · [생애 진행 구상](./docs/notes/GAMEPLAY_IDEAS.md)
+- 이전 v3 설계·시연 검증은 [docs/archive](./docs/archive/)에 보관. 미확정 기획은 아직 게임에 구현되지 않았다.
 
-※ 출생 지역 분류 사전은 기획 참고자료이며 아직 게임에 구현되지 않았다.
+```sh
+node tests/smoke.mjs
+python3 -m http.server 8000
+```
