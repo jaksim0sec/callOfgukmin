@@ -16,7 +16,7 @@ const SCHOOL_KINDS = [
   {id:'uni',label:'대학교'}
 ];
 const METRIC_DEFS = {
-  stress:{label:'정신병',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
+  stress:{label:'스트레스',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
   health:{label:'건강',type:'progress',tone:'positive',icon:'heart',min:0,max:100},
   money:{label:'재산',type:'currency',icon:'savings'},
   allowance:{label:'용돈',type:'currency',icon:'coin'},
@@ -33,7 +33,7 @@ const METRIC_DEFS = {
 const LIFE_STAGES = Object.freeze([
   {id:'infant',label:'출생·유년기',next:['elementary'],metrics:['stress','health','money']},
   {id:'elementary',label:'초등학생',next:['middle'],metrics:['stress','health','money','allowance','relations']},
-  {id:'middle',label:'중학생',next:['high'],metrics:['stress','health','money','allowance','relations','study']},
+  {id:'middle',label:'중학생',next:['high'],metrics:['stress','health','money','allowance','relations','schoolScore']},
   {id:'high',label:'고등학생',next:['university','adult'],metrics:['stress','health','money','allowance','relations','schoolScore','exam']},
   {id:'university',label:'대학생',next:['adult'],metrics:['stress','health','money','income','relations','support','awareness']},
   {id:'adult',label:'사회생활',next:['political'],metrics:['stress','health','money','income','support','awareness']},
@@ -76,7 +76,15 @@ const TRAIT_DEFS = {
   '낯가림':{icon:'home',description:'처음 보는 사람 앞에서 조심스러워하는 성격'},
   '고집':{icon:'flag',description:'마음먹은 일을 끝까지 시도하는 성격'},
   '배려심':{icon:'heart',description:'타인의 감정과 순서를 신경 쓰는 성격'},
-  '느긋함':{icon:'hourglass',description:'서두르기보다 시간을 두고 행동하는 성격'}
+  '느긋함':{icon:'hourglass',description:'서두르기보다 시간을 두고 행동하는 성격'},
+  '관심-문과':{hidden:true,description:'인문·언어 분야의 탐색 기록'},
+  '관심-이과':{hidden:true,description:'과학·수학 분야의 탐색 기록'},
+  '관심-예체능':{hidden:true,description:'예술·공연 분야의 탐색 기록'},
+  '관심-체육':{hidden:true,description:'운동·체육 분야의 탐색 기록'},
+  '문과':{icon:'graduation',aptitude:'humanities',description:'읽기·토론·표현 활동에 관심을 발전시켰다.',modifiers:[{tags:['humanities'],stats:{schoolScore:{add:2}}}]},
+  '이과':{icon:'graduation',aptitude:'science',description:'과학·수학 탐구에 관심을 발전시켰다.',modifiers:[{tags:['science'],stats:{schoolScore:{add:2},study:{add:1}}}]},
+  '예체능':{icon:'graduation',aptitude:'arts',description:'예술·음악·공연 활동에 관심을 발전시켰다.',modifiers:[{tags:['arts'],stats:{relations:{add:2}}}]},
+  '체육':{icon:'graduation',aptitude:'sports',description:'운동과 체육 활동에 관심을 발전시켰다.',modifiers:[{tags:['sports'],stats:{health:{add:2}}}]}
 };
 
 const freezeCopy=value=>{

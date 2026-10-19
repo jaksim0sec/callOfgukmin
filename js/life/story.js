@@ -15,7 +15,9 @@ function selection(id,at,title,body,options,kind='일상 선택',presentation=nu
     id:o.id||'choice-'+i,label:o.label,
     ...(o.when?{when:clone(o.when)}:{}),
     ...(o.school?{school:clone(o.school)}:{}),
-    result:{effects:clone(o.effects||{}),history:{title:o.historyTitle||title,detail:o.detail||o.label}}
+    result:{effects:clone(o.effects||{}),history:{title:o.historyTitle||title,detail:o.detail||o.label},
+     ...(o.tags?{tags:clone(o.tags)}:{}),
+     ...(o.conditional?{conditional:clone(o.conditional)}:{})}
    }))
   }
  };

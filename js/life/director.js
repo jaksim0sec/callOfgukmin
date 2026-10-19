@@ -51,8 +51,21 @@ function create({persona,persist,onChange}){
  const tier=global.GukminData.wealthTiers.find(t=>t.id===persona.familyTier);
  const onTurn=(person,turn)=>{
   const phase=global.GukminPlayer.phaseOf(person);
-  if(!tier||person.age<7||person.age>18||!['elementary','middle','high'].includes(phase))return null;
-  return {effects:{stats:{money:Number.isFinite(person.stats.allowance)?Math.max(0,person.stats.allowance):tier.allowance}}};
+  const stats={};
+  if(tier&&person.age>=7&&person.age<=18&&['elementary','middle','high'].includes(phase))
+   stats.money=Number.isFinite(person.stats.allowance)?Math.max(0,person.stats.allowance):tier.allowance;
+  const pressure=person.stats.stress||0;
+  // Sustainable consequences: stress affects health and study, not a sudden game-over.
+  if(pressure>=70)stats.health=-1;
+  if(pressure>=90){
+   stats.health=-2;
+   if(phase==='middle'||phase==='high'){
+    stats.study=-1;
+    stats.schoolScore=-1;
+   }
+  }
+  if(person.stats.health<25&&pressure<90)stats.stress=1;
+  return Object.keys(stats).length?{effects:{stats}}:null;
  };
  const timeline=global.GukminTimeline.create({...definitions,persona,persist,pauseAfterChoice:true,onTurn,
   onChange:s=>onChange?.(decorate(s))});

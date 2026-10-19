@@ -64,6 +64,12 @@ global.GukminDirector.register({
      {label:'내 일정부터 정리한다',effects:{stats:{study:3,stress:-2}},detail:'스스로 일정을 챙겼다.'}
     ]),
    yearExam(16,1,65,'mock'),
+   choiceAt('high:recover',65,'학교생활을 다시 조율한다',
+    '시험과 여러 활동이 겹쳐 몸과 마음이 지쳤다. 부담을 나누고 쉬어 갈 방법을 찾자.',[
+     {label:'상담 선생님과 학습량을 조정한다',effects:{stats:{stress:-27,health:5,relations:2}}},
+     {label:'잠시 쉬고 남은 시험을 준비한다',effects:{stats:{stress:-21,health:9,schoolScore:-1}}},
+     {label:'가까운 사람에게 도움을 요청한다',effects:{stats:{stress:-19,health:4,relations:3}}}
+    ],{stats:{stress:{gte:75}}}),
    choiceAt('high:commute',66,'아침 등굣길, 교통편이 늦었다',
     countryside?'한 시간에 몇 번 없는 버스가 늦는다. 오늘 아침 조회에 늦을지도 모른다.':'갈아타는 버스가 늦어졌고 지각할 것 같다.',[
      {label:'담임에게 상황을 알리고 안전하게 이동한다',effects:{stats:{relations:2,stress:2}},detail:'지각 사유를 먼저 알렸다.'},

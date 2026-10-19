@@ -18,7 +18,8 @@ const ICONS=Object.freeze({
   book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Z"/><path d="M12 6v14"/>',
   chart:'<path d="M4 20V10m5 10V5m5 15v-8m5 8V3"/><path d="M2 21h20"/>',
   coin:'<circle cx="12" cy="12" r="9"/><path d="M9 9c0-2 6-2 6 0s-6 1-6 3 6 1 6 3-6 2-6 0m3-9v12"/>',
-  sparkle:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>'
+  sparkle:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',
+  graduation:'<path d="m2 9 10-5 10 5-10 5-10-5ZM6 11v5c3 3 9 3 12 0v-5M22 9v7"/>'
 });
 function node(tag,className,text){
   const el=document.createElement(tag);
@@ -102,6 +103,8 @@ function showMetrics(root,s){
  list.replaceChildren();
  const phase=global.GukminPlayer.phaseOf(s);
  for(const metric of global.GukminPlayer.activeMetrics(s)){
+  // Keep study internally for admissions and earlier saves; do not duplicate school grades.
+  if(metric.id==='study'&&(phase==='middle'||phase==='high'))continue;
   const wrap=node('div','gauge metric-'+metric.id);
   const line=node('div','gauge-label');
   const name=metric.id==='schoolScore'&&phase==='middle'?'교과 성취':metric.label;
@@ -127,7 +130,7 @@ function showMetrics(root,s){
    progress.setAttribute('aria-label',name);
    wrap.append(progress);
   }
-  if(result)wrap.append(node('small','gauge-grade-detail',result.detail));
+  // Grade methodology is available on hover; avoid repeating warning text under each gauge.
   if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);
   if(metric.type==='currency')wrap.classList.add('gauge-currency');
   if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
@@ -138,7 +141,7 @@ function showMetrics(root,s){
 function traitToken(name,entry={}){
  const def=global.GukminPlayer.traitDefinitions[name]||{};
  const negative=entry.negative===true||def.negative===true;
- const token=pill(name,entry.icon||def.icon||'sparkle','token-trait '+(negative?'trait-negative':'trait-positive')+(def.tier?' trait-tier-'+def.tier:''));
+ const token=pill(name,entry.icon||def.icon||'sparkle','token-trait '+(negative?'trait-negative':'trait-positive')+(def.tier?' trait-tier-'+def.tier:'')+(def.aptitude?' trait-aptitude-'+def.aptitude:''));
  token.title=entry.description||def.description||name;
  token.setAttribute('aria-label',name+(def.tier?' · 출생 배경':negative?' · 디버프':' · 특성'));
  return token;
@@ -154,6 +157,7 @@ function showTraits(root,s){
     const name=typeof entry==='string'?entry:entry.name;
     if(!name)continue;
     const def=global.GukminPlayer.traitDefinitions[name]||{};
+    if(def.hidden)continue;
     const negative=entry.negative===true||def.negative===true;
     const token=traitToken(name,entry);
     token.title=entry.description||def.description||name;

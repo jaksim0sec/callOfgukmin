@@ -35,6 +35,11 @@ global.GukminDirector.register({
     {label:'독서·토론 모임을 신청한다',effects:{stats:{study:4,stress:2}},detail:'토론과 발표 경험을 쌓았다.'},
     {label:'방과 후는 쉬기로 한다',effects:{stats:{health:3,stress:-5}},detail:'공부와 휴식의 균형을 잡았다.'}
    ]),
+   S.selection('middle:recover',55,'학교생활을 조절할 시간','시험과 활동이 겹치면서 피로가 쌓였다. 부담을 줄일 방법을 선택하자.',[
+    {label:'담임·상담 선생님과 계획을 다시 잡는다',effects:{stats:{stress:-28,health:5,relations:2}}},
+    {label:'과제를 나누어 하고 며칠 쉬어 간다',effects:{stats:{stress:-22,health:8,schoolScore:-1}}},
+    {label:'친구와 산책하며 생각을 정리한다',effects:{stats:{stress:-18,health:4,relations:4}}}
+   ]),
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
    S.exam('middle',14,2,57,'1학기 중간고사'),
    S.exam('middle',14,2,58,'1학기 기말고사'),
