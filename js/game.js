@@ -283,11 +283,12 @@ function mount(root,navigate,content=global.GukminContent){
   }};
  }
  const cinematics=[],cinematic=$('lifeCinematic');
- let cinematicTimer=null,cinematicShown=false;
+ let cinematicTimer=null,cinematicShown=false,currentCinematic=null;
  const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  function nextCinematic(){
   if(disposed||cinematicShown||!cinematics.length)return;
   const scene=cinematics.shift();
+  currentCinematic=scene;
   cinematicShown=true;
   const body=$('lifeCinematicBody');body.replaceChildren();
   const card=el('section','life-cinematic-card'+(scene.kind==='grade'?' is-grade':''));
@@ -302,16 +303,20 @@ function mount(root,navigate,content=global.GukminContent){
    card.append(el('small','life-cinematic-disclaimer','게임 내 성적 · 공식 성적이 아님'));
   }
   body.append(card);cinematic.hidden=false;
-  cinematicTimer=global.setTimeout(hideCinematic,reduceMotion?850:2200);
+  $('lifeCinematicDismiss').textContent=scene.kind==='grade'?'결과 확인하고 계속하기 →':'계속하기 →';
+  if(scene.kind!=='grade')cinematicTimer=global.setTimeout(hideCinematic,reduceMotion?850:2200);
  }
  function hideCinematic(){
   if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
-  cinematic.hidden=true;cinematicShown=false;nextCinematic();
+  const completed=currentCinematic;
+  currentCinematic=null;cinematic.hidden=true;cinematicShown=false;
+  if(completed?.kind==='grade'&&snapshot?.reviewPending)engine.run();
+  nextCinematic();
  }
  function clearCinematics(){
   cinematics.length=0;
   if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
-  cinematicShown=false;cinematic.hidden=true;
+  cinematicShown=false;currentCinematic=null;cinematic.hidden=true;
  }
  function queueCinematic(scene){if(verificationMode||!scene)return;cinematics.push(scene);nextCinematic();}
  function onChange(s){
