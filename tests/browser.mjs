@@ -72,6 +72,9 @@ try{
    await page.locator('#sheetToggle').click();
    await page.waitForTimeout(260);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'third tap closes to min');
+   assert.equal(await page.locator('#sheetContent').evaluate(el=>getComputedStyle(el).visibility),'visible','sheet content stays painted while minimized');
+   const persistentContent=await page.locator('#sheetContent').evaluate(el=>{el.dataset.sheetIdentity='persistent';return el;});
+   assert.equal(await page.locator('#sheetContent').getAttribute('data-sheet-identity'),'persistent','sheet content is not recreated');
    const drag=async offset=>{
     const bounds=await page.locator('#sheetToggle').boundingBox();
     const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
