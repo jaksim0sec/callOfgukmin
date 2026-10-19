@@ -240,30 +240,29 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 
 .life-school-crest img{display:block;width:100%;height:100%;object-fit:contain;border-radius:.25rem}
 
-/* Everyday decisions: vertical, full-width narrative cards instead of a flex row. */
-.inline-choices{display:flex;flex-direction:column;gap:.55rem;width:100%;align-items:stretch}
-.inline-choice{display:flex;align-items:center;text-align:left;gap:.75rem;flex:none;width:100%;min-width:0;
- padding:.8rem .875rem;border:.0625rem solid #55485e;border-radius:.75rem;background:#241e2b;
- color:#f8f2ff;min-height:4.25rem;transition:border-color .15s,background .15s}
-.inline-choice:hover:not(:disabled),.inline-choice:focus-visible{background:#42354e;border-color:#c6a4e6}
-.inline-choice:disabled{opacity:.46;cursor:not-allowed}
-.daily-scenario{padding:1rem 1.05rem;background:#302639;border-left:.2rem solid #c49fdc;border-radius:.45rem .8rem .8rem .45rem}
-.daily-scenario-kicker{display:block;color:#bda7ca;font-size:.67rem;font-weight:800;letter-spacing:.1em;margin-bottom:.5rem}
-.daily-scenario-title{display:block;font-size:1.12rem;line-height:1.4;color:#fff;font-weight:850}
-.daily-choice-story{font-size:.89rem;color:#e3d9e9;line-height:1.65;margin:.55rem 0 0}
-.daily-choice-prompt{font-size:.76rem;font-weight:800;color:#c3a5d6;margin:1rem 0 .45rem}
-.daily-choice-number{align-self:flex-start;flex:none;display:grid;place-items:center;width:2rem;height:2rem;
- font-size:.73rem;color:#d8c1ec;background:#544364;border:.0625rem solid #8b6c9e;border-radius:.5rem}
-.daily-choice-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:.27rem}
-.daily-choice-title{font-weight:800;font-size:.96rem;line-height:1.45}
-.daily-choice-detail{display:block;color:#a89bad;font-size:.7rem;line-height:1.45}
+/* Daily choices: calm typographic hierarchy, not nested cards. */
+.inline-choices{display:flex;flex-direction:column;gap:.25rem;width:100%;align-items:stretch}
+.inline-choice{display:flex;align-items:center;text-align:left;gap:.6rem;flex:none;width:100%;min-width:0;
+ padding:.85rem .9rem;border:0;border-bottom:.0625rem solid #ffffff15;border-radius:.35rem;background:transparent;
+ color:#f7f1f8;min-height:3.8rem;transition:background .15s}
+.inline-choice:hover:not(:disabled),.inline-choice:focus-visible{background:#ffffff0a;outline-offset:-.125rem}
+.inline-choice:active:not(:disabled){background:#ffffff12}
+.inline-choice:disabled{opacity:.4;cursor:not-allowed}
+.daily-scenario{padding:.15rem .1rem .95rem;background:none;border:0;border-bottom:.0625rem solid #ffffff20;border-radius:0}
+.daily-scenario-kicker{display:block;color:#bba2cd;font-size:.68rem;font-weight:750;letter-spacing:.08em;margin-bottom:.55rem}
+.daily-scenario-title{display:block;font-size:1.2rem;line-height:1.43;color:#fff;font-weight:850;letter-spacing:-.02em}
+.daily-choice-story{font-size:.9rem;color:#c8bfce;line-height:1.72;margin:.65rem 0 0}
+.daily-choice-prompt{font-size:.72rem;font-weight:800;color:#a996b8;margin:.9rem 0 .25rem}
+.daily-choice-number{align-self:flex-start;flex:none;display:block;width:1.3rem;padding-top:.12rem;
+ font-size:.76rem;color:#907c9f;background:none;border:0;border-radius:0;font-variant-numeric:tabular-nums}
+.daily-choice-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:.25rem}
+.daily-choice-title{font-weight:780;font-size:1rem;line-height:1.4}
+.daily-choice-detail{display:none}
 .daily-choice-locked{color:#ddabb0;font-size:.67rem}
-.daily-choice-effects{display:flex;gap:.25rem;flex-wrap:wrap;margin-top:.3rem;opacity:.78}
-.daily-choice-effect{border-radius:.375rem;padding:.15rem .38rem;font-size:.64rem;font-weight:700;
- background:#ffffff12;color:#e8e0ee}
-.daily-choice-effect.is-positive{background:#254e43;color:#a9f3ce}
-.daily-choice-effect.is-negative{background:#593743;color:#f4bac6}
-.daily-choice-chevron{flex:none;color:#a993bf;font-size:1.25rem;font-weight:700}
+.daily-choice-effects{display:flex;gap:.25rem .5rem;flex-wrap:wrap;margin-top:.12rem;opacity:.76}
+.daily-choice-effect{border:0;border-radius:0;padding:0;font-size:.62rem;font-weight:650;background:none;color:#b7aabe}
+.daily-choice-effect.is-positive,.daily-choice-effect.is-negative{background:none}
+.daily-choice-chevron{flex:none;color:#8c779d;font-size:1.12rem;font-weight:600}
 
 /* One semantic tint per metric; grades have unmistakably different hues. */
 .gauge{--gauge-color:#bba0d4}
@@ -329,12 +328,11 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .life-exam-paper .life-answer-check{color:#8e592a}
 
 @media(max-width:47.5em){
- .inline-choices{gap:.44rem}
- .inline-choice{min-height:3.7rem;padding:.65rem .7rem;gap:.5rem}
- .daily-choice-number{width:1.65rem;height:1.65rem;font-size:.63rem}
- .daily-choice-title{font-size:.91rem}
- .daily-choice-detail{font-size:.65rem}
- .daily-choice-effect{font-size:.57rem}
+ .inline-choices{gap:.25rem}
+ .inline-choice{min-height:3.55rem;padding:.82rem .25rem;gap:.55rem}
+ .daily-choice-number{width:1.35rem;font-size:.72rem}
+ .daily-choice-title{font-size:1rem}
+ .daily-choice-effect{font-size:.61rem}
  .gauge-metric-icon{width:.9rem;height:.9rem}
  .gauge-grade-detail{font-size:.56rem}
  .gauge.metric-schoolScore,.gauge.metric-exam{padding:.48rem}
@@ -373,16 +371,16 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .sheet .sheet-head{min-height:3.05rem}
  .sheet .choice-timing{padding:.35rem 1rem .5rem}
  .sheet .record:first-child{padding-top:.6rem}
- .sheet .inline-choice{min-height:3.45rem}
+ .sheet .inline-choice{min-height:3.55rem}
  .sheet-grip:focus-visible{outline-offset:-.25rem}
 }
 @media(prefers-reduced-motion:reduce){.sheet{transition:none!important}}
 /* Show the same symbol/palette in the effects and in the stat bar. */
-.daily-choice-effect.token-icon-pill{background:color-mix(in srgb,var(--gauge-color,#bba0d4) 24%,#1d1722);
- color:var(--gauge-color,#bba0d4);border-color:color-mix(in srgb,var(--gauge-color,#bba0d4) 50%,transparent);
- border-radius:.45rem;padding:.2rem .4rem;font-size:.66rem}
-.daily-choice-effect .token-icon{color:inherit;width:.82rem;height:.82rem}
-.daily-choice-effect.is-negative{box-shadow:inset 0 -.09rem #dd98a455}
+.daily-choice-effect.token-icon-pill{background:none;
+ color:color-mix(in srgb,var(--gauge-color,#bba0d4) 72%,#c2b6cb);
+ border:0;border-radius:0;padding:0;font-size:.61rem}
+.daily-choice-effect .token-icon{color:inherit;width:.78rem;height:.78rem}
+.daily-choice-effect.is-negative{box-shadow:none}
 .continue-story{display:block;border:.0625rem solid #b9a0c8;border-radius:.65rem;padding:.875rem 1rem;
  background:#523d62;color:#f8efff;font-weight:800;margin:.9rem 0 .15rem;width:100%;text-align:center}
 .continue-story:hover{background:#634974}
