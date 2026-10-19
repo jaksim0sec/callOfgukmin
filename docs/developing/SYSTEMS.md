@@ -190,3 +190,9 @@ Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새�
 `pauseAfterChoice` 모드에서 선택을 해소할 때 `runtime.reviewBefore`에 선택 직전 수치·특성·학교·역할 값을 선택적으로 저장하고 `awaitingContinuation`와 함께 복구한다. 새 리뷰 진행 상태를 만들지 않고 `resume()`에서 `reviewBefore`를 지운다. 과거 리뷰 세이브의 `reviewBefore` 누락은 허용하며 없는 효과를 추정하지 않는다. 데이터와 테스트 상세는 [STORY.md](STORY.md) 참조.
 
 `blocksTime:true`(또는 생략)인 일상·한방 선택은 하나가 대기 중인 동안 같은 턴의 뒤 이벤트·선택을 열지 않는다. 첫 선택의 리뷰가 끝난 뒤 다음 선택과 시나리오를 생성해 이전 결과를 분기 조건에 반영한다. `blocksTime:false` 사건은 뒤의 사건 진행을 막지 않는다. `awaitingContinuation` 중에는 이전 버전에서 이미 열려 있던 다른 선택도 `snapshot().choice`로 노출하지 않는다.
+
+## 선택 결과 이력 확장 (2026-10-20)
+
+- `resolve(token,optionId)`는 기존 `runtime.choices[token]` 항목에 선택적 `outcome`을 기록한다. `label`, `historyFrom`, `historyTo`, `before`, `after`는 선택이 확정된 시점의 실제 관찰값이다.
+- 결과 전/후 관찰값은 스탯·특성·학교·역할에 한정되며, 인생 기록에서 나중에 다시 열람해도 이후 턴의 변화를 잘못 표시하지 않도록 한다. `reviewBefore`와 `awaitingContinuation` 의미는 변경하지 않는다.
+- `risk`는 `GukminStory.selection`이 복사하는 선택적 콘텐츠 표시 필드이며 확률·조건 판정에는 관여하지 않는다. UI는 실제 정산 효과와 별도로 이를 미리 알 수 있는 부담으로 제시한다.

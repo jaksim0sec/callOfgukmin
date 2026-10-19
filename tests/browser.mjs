@@ -137,19 +137,23 @@ try{
    assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
-  // A paused life decision must survive an actual full page reload in the same modal.
+  // A confirmed life choice closes the dialog; its reply and effects persist in the log.
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().click();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'result remains open, never auto-closes');
-  assert.equal(await page.locator('#dailyChoiceBody .review-title').count(),1,'review is visible after settlement');
-  const reviewRecord=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
-  assert.equal(reviewRecord.simulation.awaitingContinuation,true,'review is persisted');
-  assert.ok(reviewRecord.simulation.reviewBefore,'before values are persisted');
-  await page.reload({waitUntil:'domcontentloaded'});
-  await page.locator('#dailyChoiceBody .review-title').waitFor();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'saved review automatically restores in dialog');
-  assert.equal(await page.locator('#dailyChoiceBody .continue-story').count(),1);
-  await page.locator('#dailyChoiceBody .continue-story').click();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'decision dialog closes on selection');
+   assert.equal(await page.locator('#log .record-choice').count(),1,'choice response is in life history');
+   assert.ok((await page.locator('#log .record-choice').textContent()).includes('내 선택'));
+   assert.equal(await page.locator('#action').evaluate(e=>e.hidden),true,'no duplicate result card');
+   const reviewRecord=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
+   assert.equal(reviewRecord.simulation.awaitingContinuation,true,'review is persisted');
+   assert.ok(reviewRecord.simulation.reviewBefore,'before values are persisted');
+   const outcome=Object.values(reviewRecord.simulation.choices).find(x=>x.outcome)?.outcome;
+   assert.ok(outcome?.label&&outcome.historyTo>=outcome.historyFrom,'settled reply is saved with its history range');
+   await page.reload({waitUntil:'domcontentloaded'});
+   await page.locator('#log .record-choice .continue-story').waitFor();
+   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'saved review restores in history, not a modal');
+   assert.equal(await page.locator('#log .record-choice .continue-story').count(),1);
+   await page.locator('#log .record-choice .continue-story').click();
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')).simulation.awaitingContinuation),false);
 
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});

@@ -61,8 +61,8 @@ function differences(before,after){
 function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed}){
  let token=null,folded=false,review=false,delta=[];
  function sync(){
-  resumeButton.hidden=!(token!==null||review)||dialog.open;
-  resumeButton.textContent=review?'결과 확인 · 열기':'선택 진행 중 · 열기';
+  resumeButton.hidden=token===null||review||dialog.open;
+  resumeButton.textContent='선택 진행 중 · 열기';
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
@@ -87,13 +87,15 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
  dialog.addEventListener('close',sync);
  function capture(before,after,choice,reviewPending){
   if(choice?.layer!=='일상 선택'||!reviewPending)return;
-  delta=differences(before,after);review=true;
+  delta=differences(before,after);review=true;folded=true;
+  if(dialog.open)dialog.close();
+  sync();
  }
  function restore(snapshot){
   if(!snapshot?.reviewPending)return;
   const last=Object.values(snapshot.runtime?.choices||{}).filter(item=>item.status==='closed').at(-1);
   if(last?.layer!=='일상 선택')return;
-  token=last.token;review=true;folded=false;
+  token=last.token;review=true;folded=true;
   delta=snapshot.runtime.reviewBefore?differences(snapshot.runtime.reviewBefore,snapshot.persona):[];
  }
  function showChoice(choice,host,persona){
@@ -131,6 +133,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
      'daily-choice-effect metric-'+id+' '+(good?'is-positive':'is-negative')));
    }
    if(indicators.childElementCount)text.append(indicators);
+   if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
    button.append(number,text,el('span','daily-choice-chevron','›'));
    button.addEventListener('click',()=>resolve(choice.token,option.id));
    list.append(button);
@@ -138,28 +141,10 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   body.append(list);
   if(!folded)open();sync();
  }
- function showResult(persona){
-  if(!review)return;
-  body.replaceChildren();heading.textContent='선택 결과';
-  const last=persona.history.at(-1);
-  body.append(el('p','review-kicker','선택 완료'),el('strong','review-title',last?.title||'선택을 마쳤어'));
-  if(last?.detail)body.append(rich('p','daily-result-lead',last.detail));
-  const list=el('div','daily-result-changes');
-  for(const [i,item] of delta.entries()){
-   const chip=S.pill(item.text,item.icon,'daily-result-chip impact-'+item.tone+(item.id?' metric-'+item.id:''));
-   chip.style.animationDelay=Math.min(i,6)*.07+'s';list.append(chip);
-  }
-  body.append(list.childElementCount?list:el('p','daily-result-lead','수치 변화는 없고 선택 내용만 기록됐어'));
-  const foot=el('div','daily-result-foot');
-  const button=el('button','continue-story','다음 이야기 보기 →');button.type='button';
-  button.addEventListener('click',()=>{button.disabled=true;reset();proceed();});
-  foot.append(button);body.append(foot);
-  body.scrollTop=0;
-  if(!folded)open();
-  else sync();
-  if(dialog.open)heading.focus({preventScroll:true});
+ function changesFor(outcome){
+  return outcome?.before&&outcome?.after?differences(outcome.before,outcome.after):review?delta:[];
  }
- function highlight(root){
+  function highlight(root){
   for(const change of delta)if(change.id){
    const gauge=root.querySelector('.metric-'+change.id);
    if(gauge){
@@ -173,7 +158,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   collapseButton.removeEventListener('click',fold);resumeButton.removeEventListener('click',open);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }
- return Object.freeze({showChoice,showResult,capture,restore,highlight,reset,dispose,isReview:()=>review});
+ return Object.freeze({showChoice,changesFor,capture,restore,highlight,reset,dispose,isReview:()=>review});
 }
 global.GukminDailyChoice=Object.freeze({create});
 global.GukminMarkup=Object.freeze({render:renderRich});

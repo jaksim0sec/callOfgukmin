@@ -20,6 +20,7 @@ function selection(id,at,title,body,options,kind='일상 선택',presentation=nu
    options:options.map((o,i)=>({
     id:o.id||'choice-'+i,label:o.label,
     ...(o.when?{when:clone(o.when)}:{}),
+    ...(o.risk?{risk:String(o.risk)}:{}),
     ...(o.school?{school:clone(o.school)}:{}),
     result:{effects:clone(o.effects||{}),history:{title:o.historyTitle||title,detail:o.detail??'결정이 기록되었다.'},
      ...(o.tags?{tags:clone(o.tags)}:{}),

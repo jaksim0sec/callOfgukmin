@@ -3,6 +3,10 @@
 'use strict';
 const P=global.GukminPlayer,E=global.GukminEffects;
 const clone=value=>JSON.parse(JSON.stringify(value));
+const outcomeState=persona=>({
+ stats:clone(persona.stats),traits:clone(persona.traits),
+ schoolHistory:clone(P.schoolsOf(persona)),roles:clone(persona.roles||[])
+});
 const EVENT_KINDS=Object.freeze({'소식 이벤트':null,'일상 이벤트':'일상 선택','한방 이벤트':'한방 선택'});
 function create({persona,events=[],choices=[],metrics={},traits={},attributes={},contentId='custom',persist=()=>true,onChange=()=>{},pauseAfterChoice=false,onTurn=null}){
 
@@ -152,11 +156,12 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    r.status='confirmed';r.optionId=optionId;
    // Only one review can be pending. Save its before-state until explicit resume
    // so reload can show the real applied differences rather than guessed badges.
-   const reviewBefore=pauseAfterChoice?{
-    stats:clone(s.persona.stats),traits:clone(s.persona.traits),
-    schoolHistory:clone(P.schoolsOf(s.persona)),roles:clone(s.persona.roles||[])
-   }:null;
+   const reviewBefore=pauseAfterChoice?outcomeState(s.persona):null;
+   const before=outcomeState(s.persona),historyFrom=s.persona.history.length;
    settlement(s,`choice:${token}`,option.result||{},'choice:'+r.choiceId);
+   // Preserve real settled deltas and the related log range after future turns.
+   r.outcome={label:option.label,historyFrom,historyTo:s.persona.history.length-1,
+    before,after:outcomeState(s.persona)};
    r.status='settled';
    delete s.runtime.events[r.eventId].waitingToken;
    finish(s,r.eventId);r.status='closed';r.closedAt=s.runtime.turn;

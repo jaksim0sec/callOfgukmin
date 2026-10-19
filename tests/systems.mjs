@@ -682,3 +682,33 @@ test('same-turn blocking decisions open sequentially, with the second scenario b
  alternate.resolve(alternate.snapshot().choice.token,'no');alternate.resume();
  assert.equal(alternate.snapshot().choice.scenarioId,'other','different past changes only this slot');
 });
+
+test('settled choice saves its observed outcome and reply without a second settlement',()=>{
+ const {P,T}=setup(),cfg=config(P);
+ let engine=T.create({...cfg,persona:P.generate(),persist:p=>P.save(p),pauseAfterChoice:true});
+ engine.advance(2);
+ const token=engine.snapshot().choice.token;
+ engine.resolve(token,'save');
+ let snap=engine.snapshot(),result=snap.runtime.choices[token].outcome;
+ assert.equal(result.label,'저축');
+ assert.equal(result.before.stats.health,100);
+ assert.equal(result.after.stats.health,95);
+ assert.equal(result.after.stats.money-result.before.stats.money,10);
+ assert.equal(snap.persona.history[result.historyFrom].title,'선택 결과');
+ assert.equal(result.historyTo,result.historyFrom);
+ engine=T.create({...cfg,persona:P.load(),pauseAfterChoice:true});
+ snap=engine.snapshot();
+ assert.deepEqual(plain(snap.runtime.choices[token].outcome),plain(result));
+ assert.equal(engine.resolve(token,'save'),false);
+ assert.equal(engine.resume(),true);
+ assert.equal(engine.snapshot().runtime.choices[token].outcome.after.stats.money,10);
+});
+test('elementary presentation choice previews its real costs and benefits',()=>{
+ const {c,P}=setup(),catalog=c.GukminDirector.content(P.generate());
+ const project=catalog.choices.find(x=>x.id==='elementary:project');
+ assert.ok(project);
+ assert.equal(project.options.length,3);
+ assert.ok(project.options.every(o=>o.risk),'all three routes show a concrete burden');
+ assert.deepEqual(plain(project.options.map(o=>o.result.effects.stats)),
+  [{study:1,stress:2},{relations:2,stress:1},{relations:-1,stress:1}]);
+});
