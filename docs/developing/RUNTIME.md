@@ -79,3 +79,10 @@
 
 - `.github/workflows/smoke.yml`의 기존 정적/시스템 작업과 **별도 browser 작업**이 Playwright+Chromium을 설치하여 `tests/browser.mjs`를 실행한다. 실패해도 PC/모바일 스크린샷 산출물을 GitHub Actions artifact로 남긴다.
 - 시연용 외부 `GukminContent` 모드와 기본 인생 연속 진행은 같은 브라우저 테스트 안에서 독립 BrowserContext로 검증한다. 선행 시험을 선택하자마자 다음 시험지 팝업이 열릴 수 있으므로 다이얼로그 존재 자체가 아니라 *이전 토큰이 closed*인지 확인한다.
+
+
+## 추가 데이터·UI 로드 (2026-10-19)
+
+- HTML 3개에서 data/schools.js 다음, playerState.js 전에 data/grades.js를 로드한다.
+- statusView.js는 기본 스탯 ID별 SVG/색을 부여하고 내신과 모의고사에 게임 예상 등급을 보인다.
+- 기존 79턴/19세 고교 졸업까지의 자동 진행과 저장 키는 그대로 유지한다. 신규 고교 학년별 시험은 6회이다.

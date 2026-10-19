@@ -26,15 +26,35 @@ function present({choice,resolve,root}){
  const p=choice.presentation||{};
  if(!['exam','school'].includes(p.type))return ()=>{};
  const isSchool=p.type==='school';
- const body=make('div','life-modal-wrap');
+ const body=make('div','life-modal-wrap '+(isSchool?'life-school-paper':'life-exam-paper'));
  const head=make('header','life-modal-head');
  head.append(make('span','life-modal-serial','국민의 부름 / '+(isSchool?'지원서':'학교 시험')),
    make('span','life-modal-serial',isSchool?'입학 지원':'NO. '+choice.eventId));
  const title=make('h2','life-modal-title',isSchool?'고등학교 입학 지원서':p.term||choice.title);
- const sub=make('p','life-modal-sub',isSchool?'현재 성적·거주 지역을 확인하고 진학 희망 학교를 고르시오.':
-   (p.grade+'학년 · '+(p.category==='mock'?'모의고사':'정기고사')+' | 시험 대비에 투자할 노력을 선택하시오.'));
+ const sub=make('p','life-modal-sub',isSchool?'거주지와 게임 내 지원 조건을 보고 희망 학교를 고르시오.':
+   (p.grade+'학년 · '+(p.category==='mock'?'모의고사 · 9등급 기준':'내신 · '+(p.stage==='middle'?'성취도 A–E':'5등급 기준'))));
  const desc=make('p','life-modal-copy',choice.body);
  const options=make('div','life-modal-options');
+ const formTop=make('div','life-paper-form');
+ const question=make('div','life-paper-question');
+ if(!isSchool){
+  const person=global.GukminPlayer.load();
+  const banner=make('div','life-paper-heading');
+  banner.append(make('span','life-paper-period','제 1 교시'),make('strong','life-paper-subject',
+   p.category==='mock'?'학업 종합 모의평가':'학년별 내신 종합평가'),
+   make('span','life-paper-page','1 / 1'));
+  const meta=make('div','life-paper-identification');
+  for(const [key,value] of [
+   ['학년',String(p.grade||'—')],['성명',person?.name||'학생'],['수험번호','□ □ □ □ □']
+  ]){
+   const cell=make('span','life-paper-cell');
+   cell.append(make('small','',key),make('b','',value));meta.append(cell);
+  }
+  formTop.append(banner,meta,make('p','life-paper-instruction',
+   '※ 다음 상황을 읽고, 자신의 생활 여건에 맞는 준비 전략 하나를 고르시오.'));
+  question.append(make('b','life-paper-question-number','1.'),
+   make('p','',p.annual?'한 학년 전체의 준비 강도를 선택하시오.':'이번 시험에 투자할 노력 수준을 선택하시오.'));
+ }
  let schoolSourceLink=null;
  const confirm=make('button','life-submit',isSchool?'선택한 학교에 지원':'선택한 준비 수준 확정');
  confirm.type='button';confirm.disabled=true;
@@ -65,6 +85,16 @@ function present({choice,resolve,root}){
    if(option.available===false)copy.append(make('small','life-requirement','현재 게임 수치로는 선택할 수 없음'));
   }
   copy.append(effectList(option));
+  if(!isSchool&&global.GukminGrades){
+   const metric=p.category==='mock'?'exam':'schoolScore';
+   const current=global.GukminPlayer.load()?.stats?.[metric];
+   const delta=option.result?.effects?.stats?.[metric];
+   if(Number.isFinite(current)&&Number.isFinite(delta)){
+    const before=global.GukminGrades.report(metric,current,p.stage||'high').display;
+    const after=global.GukminGrades.report(metric,current+delta,p.stage||'high').display;
+    copy.append(make('small','life-paper-estimate',before+' → '+after+' (게임 예상)'));
+   }
+  }
   row.append(copy,make('span','life-answer-check','✓'));
   row.setAttribute('aria-pressed','false');
   row.addEventListener('click',()=>{
@@ -78,14 +108,18 @@ function present({choice,resolve,root}){
   options.append(row);
  });
  const footer=make('footer','life-modal-foot');
- const note=make('p','',isSchool?'※ 학교 이름은 실제 자료를 참고합니다. 학교별 합격 가능성·수업 수준은 게임용 모형이며 실재 기준이 아닙니다. 공식 교표를 확보하지 않은 학교는 임시 문자 마크를 사용합니다.':'※ 효과는 선택 즉시 적용되고 저장됩니다. 긴 시간 공부할수록 체력·스트레스 부담도 커집니다.');
+ const note=make('p','',isSchool?'※ 실제 학교명은 참고 자료이며, 지원 자격과 합격 판정은 게임용 모형입니다.':'※ 정식 시험 문제가 아닌 게임 선택지입니다. 등급은 실제 석차·응시 결과가 아닌 게임 예상치입니다.');
  footer.append(note,confirm);
  if(isSchool){
   const source=make('a','life-school-source','학교 정보 공시 검색 ↗');
   source.href='https://hischool.go.kr/';source.target='_blank';source.rel='noopener noreferrer';
   schoolSourceLink=source;footer.prepend(source);
  }
- body.append(head,title,sub,desc,options,footer);
+ body.append(head);
+ if(!isSchool)body.append(formTop);
+ body.append(title,sub,desc);
+ if(!isSchool)body.append(question);
+ body.append(options,footer);
  dialog.replaceChildren(body);
  const reopen=make('button','inline-choice','📄 '+(isSchool?'진학 지원서 열기':'시험지 다시 열기'));
  reopen.type='button';root.querySelector('#currentChoice').append(reopen);

@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','data/regions','data/schools','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -166,7 +166,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
   if(decisions%4===0)engine=D.create({persona:P.load(),persist:p=>P.save(p)});
  }
  const final=engine.snapshot();
- assert.equal(exams,18,'six middle-school and twelve high-school examinations');
+ assert.equal(exams,12,'six middle-school papers and two annual high-school strategy decisions per grade');
  assert.equal(applications,1,'one school application');
  assert.ok(decisions>=25);
  assert.equal(final.persona.age,19);
@@ -249,4 +249,34 @@ test('school catalog distinguishes autonomous/gifted/foreign and local Gyeonggi 
   assert.equal(option.kind,expected);
   assert.ok(option.minScore>0);
  }
+});
+
+test('five-grade high-school and nine-grade mock estimates are different, labelled as approximations',()=>{
+ const {c}=setup(),G=c.GukminGrades;
+ assert.deepEqual(plain(G.bounds.high),[10,34,66,90,100]);
+ assert.deepEqual(plain(G.bounds.mock),[4,11,23,40,60,77,89,96,100]);
+ assert.equal(G.report('schoolScore',95,'high').display,'1등급');
+ assert.equal(G.report('schoolScore',89,'high').display,'2등급');
+ assert.equal(G.report('schoolScore',67,'high').display,'2등급');
+ assert.equal(G.report('schoolScore',65,'high').display,'3등급');
+ assert.equal(G.report('schoolScore',50,'middle').display,'E');
+ assert.equal(G.report('schoolScore',92,'middle').display,'A');
+ assert.equal(G.report('exam',95,'high').display,'2등급');
+ assert.equal(G.report('exam',96,'high').display,'1등급');
+ assert.ok(G.report('exam',80,'high').detail.includes('공식 성적 아님'));
+ assert.equal(G.report('exam',null,'high').display,'—');
+});
+test('high-school major choices are annual, legacy exams remain loadable and ordinary stories depend on school track',()=>{
+ const {c,P}=setup(),content=c.GukminDirector.content(P.generate());
+ const annual=content.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation?.annual);
+ assert.equal(annual.length,6);
+ assert.equal(annual.filter(x=>x.presentation.category==='mock').length,3);
+ assert.equal(annual.filter(x=>x.presentation.category==='school').length,3);
+ const legacy=content.events.filter(e=>e.id.startsWith('high:')&&e.when?.all?.some(rule=>rule.turn?.lte===-1));
+ assert.equal(legacy.length,12);
+ assert.ok(content.attributes.schoolTrack&&content.attributes.schoolProgram);
+ for(const track of ['general','foreign','autonomous','gifted','vocational','international','autonomous-public'])
+  assert.ok(content.events.some(e=>e.id==='high:track-'+track));
+ assert.ok(content.events.some(e=>e.id==='high:bdja-science'));
+ assert.ok(content.events.some(e=>e.id==='high:whimoon-electives'));
 });

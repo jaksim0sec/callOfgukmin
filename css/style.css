@@ -237,3 +237,107 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 @media(prefers-reduced-motion:reduce){.life-choice-dialog,.life-answer{animation:none!important;transition:none!important}}
 
 .life-school-crest img{display:block;width:100%;height:100%;object-fit:contain;border-radius:.25rem}
+
+/* Everyday decisions: vertical, full-width narrative cards instead of a flex row. */
+.inline-choices{display:flex;flex-direction:column;gap:.55rem;width:100%;align-items:stretch}
+.inline-choice{display:flex;align-items:center;text-align:left;gap:.75rem;flex:none;width:100%;min-width:0;
+ padding:.8rem .875rem;border:.0625rem solid #786a86;border-radius:.75rem;background:#332b3c;
+ color:#f8f2ff;min-height:4.25rem;transition:border-color .15s,background .15s}
+.inline-choice:hover:not(:disabled),.inline-choice:focus-visible{background:#42354e;border-color:#c6a4e6}
+.inline-choice:disabled{opacity:.46;cursor:not-allowed}
+.daily-choice-story{font-size:.82rem;color:#c6bdd0;line-height:1.55;margin:.35rem 0 .8rem}
+.daily-choice-number{align-self:flex-start;flex:none;display:grid;place-items:center;width:2rem;height:2rem;
+ font-size:.73rem;color:#d8c1ec;background:#544364;border:.0625rem solid #8b6c9e;border-radius:.5rem}
+.daily-choice-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:.27rem}
+.daily-choice-title{font-weight:730;font-size:.85rem;line-height:1.38}
+.daily-choice-detail{display:block;color:#a89bad;font-size:.7rem;line-height:1.45}
+.daily-choice-locked{color:#ddabb0;font-size:.67rem}
+.daily-choice-effects{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.15rem}
+.daily-choice-effect{border-radius:.375rem;padding:.15rem .38rem;font-size:.64rem;font-weight:700;
+ background:#ffffff12;color:#e8e0ee}
+.daily-choice-effect.is-positive{background:#254e43;color:#a9f3ce}
+.daily-choice-effect.is-negative{background:#593743;color:#f4bac6}
+.daily-choice-chevron{flex:none;color:#a993bf;font-size:1.25rem;font-weight:700}
+
+/* One semantic tint per metric; grades have unmistakably different hues. */
+.gauge{--gauge-color:#bba0d4}
+.metric-stress{--gauge-color:#e7949d}
+.metric-health{--gauge-color:#80d5aa}
+.metric-money,.metric-allowance,.metric-income{--gauge-color:#f3c77a}
+.metric-relations{--gauge-color:#d7a4f7}
+.metric-study{--gauge-color:#b7a1ec}
+.metric-schoolScore{--gauge-color:#85bcff}
+.metric-exam{--gauge-color:#f5b65e}
+.metric-support{--gauge-color:#83d5d8}
+.metric-awareness{--gauge-color:#e3bbf0}
+.gauge progress::-webkit-progress-value{background:var(--gauge-color)}
+.gauge progress::-moz-progress-bar{background:var(--gauge-color)}
+.gauge-label{align-items:flex-start;gap:.35rem}
+.gauge-title{display:inline-flex;align-items:center;gap:.38rem;min-width:0;line-height:1.3}
+.gauge-metric-icon{color:var(--gauge-color);width:1rem;height:1rem;flex:none}
+.gauge-name{font-weight:650;overflow-wrap:anywhere}
+.gauge-label .gauge-value{color:var(--gauge-color);text-align:right;white-space:nowrap;flex:none}
+.gauge-grade-detail{display:block;font-size:.59rem;color:#baaec5;margin-top:.38rem;line-height:1.3}
+.gauge.metric-schoolScore,.gauge.metric-exam{padding:.65rem .7rem;background:#ffffff07;
+ border:.0625rem solid #ffffff13;border-left:.2rem solid var(--gauge-color);border-radius:.65rem}
+.gauge.metric-schoolScore .gauge-label,.gauge.metric-exam .gauge-label{flex-wrap:wrap}
+.gauge.metric-schoolScore .gauge-grade-detail,.gauge.metric-exam .gauge-grade-detail{margin-top:.45rem}
+
+/* Realistic printed test handout: hierarchy, form cells, paper grain and OMR-style options. */
+.life-choice-dialog:has(.life-exam-paper){border-radius:.3rem;border-color:#d4cdc0;box-shadow:0 2rem 4.5rem #000c}
+.life-exam-paper{background:#fcfaf6;position:relative;color:#29272a;
+ background-image:repeating-linear-gradient(0deg,#32251c05 0,#32251c05 .0125rem,transparent .0125rem,transparent .3125rem);
+ font-family:'Nanum Gothic','Malgun Gothic',system-ui,sans-serif}
+.life-exam-paper .life-modal-head{margin-bottom:.65rem;border-bottom:.0625rem solid #817a74}
+.life-exam-paper .life-modal-title{text-align:center;font:750 1.25rem/1.3 'Nanum Gothic','Malgun Gothic',system-ui,sans-serif;
+ margin:.95rem 0 .3rem}
+.life-exam-paper .life-modal-sub{text-align:center;font-size:.76rem;margin-bottom:.6rem;color:#444}
+.life-exam-paper .life-modal-copy{font-size:.74rem;line-height:1.5;color:#504a46;margin-bottom:.55rem}
+.life-paper-form{border-top:.15rem solid #2f3136;border-bottom:.15rem solid #2f3136;padding:.55rem 0 .6rem;margin:.2rem 0}
+.life-paper-heading{display:flex;align-items:center;justify-content:space-between;gap:.5rem;text-align:center;
+ font-size:.76rem;color:#29272a}
+.life-paper-period{border:.0625rem solid #42434a;border-radius:2rem;padding:.2rem .55rem;font-weight:750;white-space:nowrap}
+.life-paper-subject{font-weight:850;font-size:1.02rem;letter-spacing:.025em}
+.life-paper-page{font-size:.72rem;color:#4c494b;white-space:nowrap}
+.life-paper-identification{display:grid;grid-template-columns:.7fr 1.2fr 1.8fr;border:.0625rem solid #69646b;
+ margin-top:.7rem;min-height:2.1rem}
+.life-paper-cell{display:flex;align-items:center;min-width:0;border-right:.0625rem solid #69646b}
+.life-paper-cell:last-child{border-right:0}
+.life-paper-cell small{font-size:.65rem;flex:none;background:#eeece9;padding:.5rem .4rem;border-right:.0625rem solid #aba5a5}
+.life-paper-cell b{font-size:.73rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 .5rem}
+.life-paper-instruction{margin:.55rem 0 0;font-size:.67rem;color:#605c5b}
+.life-paper-question{display:flex;align-items:baseline;gap:.45rem;margin:.15rem 0 .6rem;
+ padding:.65rem .2rem .55rem;border-top:.0625rem solid #8e8a89;border-bottom:.0625rem dotted #b4aead}
+.life-paper-question-number{font-size:1.15rem;flex:none;color:#181719}
+.life-paper-question p{margin:0;font-size:.84rem;font-weight:740;line-height:1.5}
+.life-exam-paper .life-modal-options{gap:0;padding:.1rem 0 .2rem}
+.life-exam-paper .life-answer{border:0;border-bottom:.0625rem solid #e4e0d9;border-radius:0;background:transparent;
+ padding:.75rem .35rem .7rem;min-height:3.5rem;color:#292727}
+.life-exam-paper .life-answer[aria-pressed=true]{background:#fff0d5;box-shadow:inset .2rem 0 #a16d33}
+.life-exam-paper .life-answer-letter{font-family:'Nanum Gothic','Malgun Gothic',system-ui,sans-serif;font-size:1.18rem;color:#353032}
+.life-exam-paper .life-answer-copy strong{font-size:.85rem;font-weight:760;color:#282629}
+.life-exam-paper .life-delta{border-radius:.25rem;font-size:.63rem}
+.life-paper-estimate{color:#55515a;font-size:.67rem;font-weight:730}
+.life-exam-paper .life-modal-foot{border-top:.14rem solid #494344}
+.life-exam-paper .life-submit{border-radius:.25rem;background:#30323a}
+.life-exam-paper .life-answer-check{color:#8e592a}
+
+@media(max-width:47.5em){
+ .inline-choices{gap:.44rem}
+ .inline-choice{min-height:3.7rem;padding:.65rem .7rem;gap:.5rem}
+ .daily-choice-number{width:1.65rem;height:1.65rem;font-size:.63rem}
+ .daily-choice-title{font-size:.78rem}
+ .daily-choice-detail{font-size:.65rem}
+ .daily-choice-effect{font-size:.59rem}
+ .gauge-metric-icon{width:.9rem;height:.9rem}
+ .gauge-grade-detail{font-size:.56rem}
+ .gauge.metric-schoolScore,.gauge.metric-exam{padding:.48rem}
+ .life-exam-paper .life-modal-title{font-size:1.03rem}
+ .life-paper-subject{font-size:.83rem}
+ .life-paper-identification{grid-template-columns:.7fr 1fr 1.4fr}
+ .life-paper-cell small{font-size:.58rem;padding:.4rem .25rem}
+ .life-paper-cell b{font-size:.61rem;padding:0 .3rem}
+ .life-paper-question p{font-size:.78rem}
+ .life-paper-instruction{font-size:.61rem}
+ .life-exam-paper .life-answer{padding:.57rem .25rem}
+}

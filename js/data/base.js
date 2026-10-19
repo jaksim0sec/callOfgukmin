@@ -16,17 +16,17 @@ const SCHOOL_KINDS = [
   {id:'uni',label:'대학교'}
 ];
 const METRIC_DEFS = {
-  stress:{label:'정신병',type:'progress',tone:'negative',min:0,max:100},
-  health:{label:'건강',type:'progress',tone:'positive',min:0,max:100},
-  money:{label:'재산',type:'currency'},
-  allowance:{label:'용돈',type:'currency'},
-  income:{label:'수입',type:'currency'},
-  relations:{label:'관계',type:'progress',min:0,max:100},
-  study:{label:'성적',type:'progress',min:0,max:100},
-  schoolScore:{label:'내신',type:'progress',min:0,max:100},
-  exam:{label:'모의고사',type:'progress',min:0,max:100},
-  support:{label:'지지도',type:'progress'},
-  awareness:{label:'인지도',type:'progress'}
+  stress:{label:'스트레스',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
+  health:{label:'건강',type:'progress',tone:'positive',icon:'heart',min:0,max:100},
+  money:{label:'재산',type:'currency',icon:'savings'},
+  allowance:{label:'용돈',type:'currency',icon:'coin'},
+  income:{label:'수입',type:'currency',icon:'coin'},
+  relations:{label:'관계',type:'progress',icon:'users',min:0,max:100},
+  study:{label:'학업 역량',type:'progress',icon:'book',min:0,max:100},
+  schoolScore:{label:'내신',type:'progress',icon:'school',gradeSystem:'five',min:0,max:100},
+  exam:{label:'모의고사',type:'progress',icon:'chart',gradeSystem:'nine',min:0,max:100},
+  support:{label:'지지도',type:'progress',icon:'flag'},
+  awareness:{label:'인지도',type:'progress',icon:'sparkle'}
 };
 // This is a content-facing progression map, not a clock or a legal-age rule.
 // The college/adult overlap and the circumstances of each move remain story-owned.

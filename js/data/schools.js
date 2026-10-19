@@ -61,6 +61,9 @@ function school(id,name,region){
   // Game-only pace, never a factual rating of the school's quality/difficulty.
   load:kind==='gifted'?3:['general','vocational','autonomous-public'].includes(kind)?1:2,
   symbol:name.replace(/고등학교$/,'').slice(0,2),
+  // Named-program stories require a publicly documented school activity.
+  program:name==='분당중앙고등학교'?'bdja-science':
+    name==='휘문고등학교'?'whimoon-electives':kind,
   source:checked[name]||'https://hischool.go.kr/',
   verified:Object.hasOwn(checked,name),
   logoUrl:null,typeLabel:typeLabels[kind]

@@ -42,6 +42,9 @@ try{
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').isVisible(),true);
+  assert.equal(await page.locator('#currentChoice .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
+  assert.ok(await page.locator('#currentChoice .daily-choice-effect').count()>0,'effects are previewed per choice');
+  assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
 
@@ -129,6 +132,8 @@ try{
   assert.equal(examState.age,13);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
   assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),5);
+  assert.equal(await p.locator('#lifeDecisionDialog .life-paper-identification').count(),1);
+  assert.equal(await p.locator('#lifeDecisionDialog .life-paper-question').count(),1);
   const box=await p.locator('#lifeDecisionDialog').boundingBox();
   assert.ok(box&&box.x>=-1&&box.x+box.width<=viewport.width+1,'exam within screen');
   await p.locator('#lifeDecisionDialog .life-answer').nth(2).click();
@@ -152,6 +157,8 @@ try{
   const ended=await walk('nothing');
   assert.equal(ended.age,19);assert.equal(ended.turn,79);
   assert.equal((await p.locator('#nextChoiceLabel').textContent()).trim(),'이야기 준비 중');
+  assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
+  assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);
   const schoolHistory=await p.evaluate(()=>GukminPlayer.schoolsOf(GukminGame.session.snapshot().persona).find(s=>s.kind==='high'));
   assert.equal(schoolHistory.status,'graduated');
   await p.screenshot({path:`${artifacts}/${name}-life-graduate.png`,fullPage:true});

@@ -177,12 +177,30 @@ function mount(root,navigate,content=global.GukminContent){
    }
    return;
   }
-  if(choice.body)current.append(el('p','fine',choice.body));
+  if(choice.body)current.append(el('p','daily-choice-story',choice.body));
   const choices=el('div','inline-choices');
+  choices.setAttribute('role','group');choices.setAttribute('aria-label','일상 선택지');
   const owner=engine;
-  for(const option of choice.options){
-   const button=el('button','inline-choice',option.label);button.type='button';button.disabled=!option.available;
-   button.addEventListener('click',safely(()=>engine===owner?owner.resolve(choice.token,option.id):false));choices.append(button);
+  const labels={health:'건강',stress:'스트레스',money:'재산',allowance:'용돈',study:'학업',schoolScore:'내신',exam:'모의고사',relations:'관계'};
+  for(const [index,option] of choice.options.entries()){
+   const button=el('button','inline-choice');button.type='button';button.disabled=!option.available;
+   const number=el('span','daily-choice-number',String(index+1).padStart(2,'0'));
+   const textWrap=el('span','daily-choice-copy');
+   textWrap.append(el('strong','daily-choice-title',option.label));
+   const detail=option.result?.history?.detail;
+   if(detail&&detail!==option.label)textWrap.append(el('small','daily-choice-detail',detail));
+   if(option.available===false)textWrap.append(el('small','daily-choice-locked','현재 조건에서는 선택할 수 없음'));
+   const indicators=el('span','daily-choice-effects');
+   for(const [id,amount] of Object.entries(option.result?.effects?.stats||{})){
+    if(!Number.isFinite(amount)||amount===0)continue;
+    const positive=id==='stress'?amount<0:amount>0;
+    indicators.append(el('span','daily-choice-effect '+(positive?'is-positive':'is-negative'),
+     (labels[id]||id)+' '+(amount>0?'+':'')+amount+(id==='allowance'||id==='money'?'원':'')));
+   }
+   textWrap.append(indicators);
+   button.append(number,textWrap,el('span','daily-choice-chevron','›'));
+   button.addEventListener('click',safely(()=>engine===owner?owner.resolve(choice.token,option.id):false));
+   choices.append(button);
   }
   current.append(choices);
  }

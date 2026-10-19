@@ -9,7 +9,7 @@ const exists=p=>existsSync(resolve(root,p));
 const errors=[];
 const entry=read('index.html');
 const screens=['waiting','game','result'];
-const scripts=['poster','data/base','data/regions','data/schools','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','systemDemo','statusView','game','majorView','boot'].map(x=>'js/'+x+'.js');
+const scripts=['poster','data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','systemDemo','statusView','game','majorView','boot'].map(x=>'js/'+x+'.js');
 if(!entry.includes('href="./html/waiting.html"') || !entry.includes('location.replace('))
  errors.push('Root index does not redirect to waiting screen.');
 if(entry.includes('id="app"'))errors.push('Old fetch app host still present');

@@ -93,3 +93,15 @@
 - [경기도교육청 고입 기본계획](https://www.goe.go.kr/goe/na/ntt/selectNttInfo.do?mi=10102&nttSn=1058069): 일반고/특성화고/외고·자사고 전형 구분 확인.
 
 실제 학교의 상징·로고는 별도 저작물이고 웹에 노출되었다고 재배포 허락을 받은 것이 아니다. 과거 비공식 타 사이트에서 핫링크했던 교표 2건은 제거했고, 검증된 재사용 조건이 확보되기 전까지 공식 교표 제공 완료라고 표기하지 않는다. 원문 교과과정·전형은 학교 또는 교육청 링크로 직접 안내한다.
+
+
+## 2026-10-19 추가 연구: 실제 교육제도와 학교별 차이
+
+- 교육부 확정 2028 대입 개편: https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=97551&lev=0 (고교 내신 5등급제).
+- 2025 수능 채점: https://m.korea.kr/news/policyNewsView.do?newsId=156664239 (수능형 상대평가 9등급 및 과목별 경계·절대평가 과목 예외).
+- 교육부 2026 고교학점제 지원 대책: https://www.moe.go.kr/boardCnts/viewRenew.do?boardID=294&boardSeq=105223&lev=0 (과목 선택 및 운영 조건).
+- 교육부 2026 학교생활기록 지침: https://star.moe.go.kr/web/contents/m20103.do?id=108056&schM=view (진로·동아리·공동교육과정 기록).
+- 분당중앙고 공식 교육과정: https://bdja-h.goesn.kr/bdja-h/na/ntt/selectNttList.do?bbsId=15825 와 https://bdja-h.goesn.kr/bdja-h/cm/cntnts/cntntsView.do?cntntsId=3911&mi=20704
+- 휘문고 2026 입학생 교육과정 학점 배당표: https://www.whimoon.hs.kr/?action=SiteBoard&iBrdContNo=544&iBrdNo=6&module=Board&sBrdContRe=0&sMode=VIEW_FORM
+- 주의: 공식 학교 교육과정은 학생 성적 수준, 학내 분위기, 해당 학교 전체의 난이도/서열을 증명하지 않는다. 각 학교의 확인된 특색만 이벤트에서 참고하며 선호도나 성공 확률을 차등화하지 않는다.
+- 시험지 디자인은 공개된 한국 시험지의 문서 계층을 참고하되 원본 문항/기관 상징을 사용하지 않는다.

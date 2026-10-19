@@ -13,6 +13,11 @@ const ICONS=Object.freeze({
   flag:'<path d="M5 22V3m0 2c4-3 9 3 14 0v11c-5 3-10-3-14 0"/>',
   speech:'<path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 10h8m-8 4h5"/>',
   clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
+  pulse:'<path d="M3 12h4l3-6 4 12 3-6h4"/><path d="M3 4v4m18 8v4"/>',
+  book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Z"/><path d="M12 6v14"/>',
+  chart:'<path d="M4 20V10m5 10V5m5 15v-8m5 8V3"/><path d="M2 21h20"/>',
+  coin:'<circle cx="12" cy="12" r="9"/><path d="M9 9c0-2 6-2 6 0s-6 1-6 3 6 1 6 3-6 2-6 0m3-9v12"/>',
   sparkle:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>'
 });
 function node(tag,className,text){
@@ -93,29 +98,43 @@ function showAttributes(root,s){
   }
 }
 function showMetrics(root,s){
-  const list=root.querySelector('#gaugesList');list.replaceChildren();
-  for(const metric of global.GukminPlayer.activeMetrics(s)){
-    const wrap=node('div','gauge metric-'+metric.id);
-    const line=node('div','gauge-label');
-    line.append(node('span','',metric.label));
-    const number=metric.value;
-    const formatted=Number.isFinite(number)?(metric.type==='currency'?Number(number).toLocaleString('ko-KR')+'원':String(number)):'—';
-    line.append(node('b','',formatted));
-    wrap.append(line);
-    if(metric.type==='progress'){
-      const progress=node('progress','');
-      const min=metric.min??0,max=metric.max??100;
-      progress.max=max-min;
-      progress.value=Number.isFinite(number)?Math.max(0,Math.min(max-min,number-min)):0;
-      progress.setAttribute('aria-label',metric.label);
-      wrap.append(progress);
-    }
-    if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);
-    if(metric.type==='currency')wrap.classList.add('gauge-currency');
-    if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
-    list.append(wrap);
+ const list=root.querySelector('#gaugesList');
+ list.replaceChildren();
+ const phase=global.GukminPlayer.phaseOf(s);
+ for(const metric of global.GukminPlayer.activeMetrics(s)){
+  const wrap=node('div','gauge metric-'+metric.id);
+  const line=node('div','gauge-label');
+  const name=metric.id==='schoolScore'&&phase==='middle'?'교과 성취':metric.label;
+  const left=node('span','gauge-title');
+  const glyph=icon(metric.icon||'sparkle');
+  glyph.classList.add('gauge-metric-icon');
+  left.append(glyph,node('span','gauge-name',name));
+  line.append(left);
+  const number=metric.value;
+  const graded=['schoolScore','exam'].includes(metric.id);
+  const result=graded?global.GukminGrades.report(metric.id,number,phase):null;
+  const formatted=result?result.display:Number.isFinite(number)?
+   metric.type==='currency'?Number(number).toLocaleString('ko-KR')+'원':String(number):'—';
+  const value=node('b','gauge-value',formatted);
+  if(result)value.title=result.detail;
+  line.append(value);
+  wrap.append(line);
+  if(metric.type==='progress'){
+   const progress=node('progress');
+   const min=metric.min??0,max=metric.max??100;
+   progress.max=max-min;
+   progress.value=Number.isFinite(number)?Math.max(0,Math.min(max-min,number-min)):0;
+   progress.setAttribute('aria-label',name);
+   wrap.append(progress);
   }
+  if(result)wrap.append(node('small','gauge-grade-detail',result.detail));
+  if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);
+  if(metric.type==='currency')wrap.classList.add('gauge-currency');
+  if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
+  list.append(wrap);
+ }
 }
+
 function traitToken(name,entry={}){
  const def=global.GukminPlayer.traitDefinitions[name]||{};
  const negative=entry.negative===true||def.negative===true;

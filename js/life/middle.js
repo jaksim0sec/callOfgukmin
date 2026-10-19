@@ -14,7 +14,7 @@ global.GukminDirector.register({
     school,
     ...(qualifies?{when:{stats:{schoolScore:{gte:school.minScore},study:{gte:school.minStudy}}}}:{}),
     effects:{
-     attributes:{age:16,phase:'high',job:'고등학생'},
+     attributes:{age:16,phase:'high',job:'고등학생',schoolTrack:school.kind,schoolProgram:school.program},
      schools:[
       {id:'local-middle',kind:'middle',name:'거주지 배정 중학교',status:'graduated'},
       {id:school.id,kind:'high',name:school.name,status:'enrolled'}
@@ -26,7 +26,7 @@ global.GukminDirector.register({
     historyTitle:school.name+' 입학'
    };
   });
-  return S.pack(
+  return {...S.pack(
    S.notice('middle:welcome',52,'중학교 첫 등교','과목별 시험과 수행평가가 시작된다.',{activate:{schoolScore:50}}),
    S.exam('middle',13,1,53,'1학기 중간고사'),
    S.exam('middle',13,1,54,'1학기 기말고사'),
@@ -57,7 +57,10 @@ global.GukminDirector.register({
    S.exam('middle',15,3,62,'1학기 기말고사'),
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
-  );
+  ),attributes:{
+   schoolTrack:{label:'고교 유형',hidden:true},
+   schoolProgram:{label:'학교 교육과정 유형',hidden:true}
+  }};
  }
 });
 })(window);
