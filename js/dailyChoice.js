@@ -54,7 +54,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   folded=false;dialog.showModal();sync();
  }
  function fold(){folded=true;if(dialog.open)dialog.close();sync();}
- function reset(){if(dialog.open)dialog.close();token=null;folded=false;review=false;delta=[];sync();}
+ function reset(){if(dialog.open)dialog.close();body.replaceChildren();token=null;folded=false;review=false;delta=[];sync();}
  function cancel(event){event.preventDefault();fold();}
  function backdrop(event){
   if(event.target!==dialog)return;

@@ -121,7 +121,7 @@ try{
    await page.waitForTimeout(320);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'keyboard advances to middle');
    assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'스트레스');
-   assert.equal(await page.locator('.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
+   assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
@@ -142,14 +142,14 @@ try{
   await page.locator('#dailyModalCollapse').click();
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
-  assert.match(await page.locator('.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.metric-health').textContent(),/95/);
+  assert.match(await page.locator('.gauge.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.gauge.metric-health').textContent(),/95/);
   assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
   // C–E: one event pack drives traits, periodic effect, schools and custom metric.
   assert.ok((await page.locator('#traits').textContent()).includes('검증용 저축습관'));
-  assert.equal(await page.locator('.metric-demoFocus').count(),1);
-  await page.locator('#advanceTurn').click();assert.equal(await page.locator('.school-token-active').count(),1);assert.match(await page.locator('.metric-demoFocus').textContent(),/3/);
+  assert.equal(await page.locator('.gauge.metric-demoFocus').count(),1);
+  await page.locator('#advanceTurn').click();assert.equal(await page.locator('.school-token-active').count(),1);assert.match(await page.locator('.gauge.metric-demoFocus').textContent(),/3/);
   await page.screenshot({path:`${artifacts}/${name}-school.png`,fullPage:true});
-  await page.locator('#advanceTurn').click();assert.match(await page.locator('.metric-money').textContent(),/10,100원/);assert.equal(await page.locator('.school-token-active').count(),0);assert.equal(await page.locator('.school-token-complete').count(),1);assert.equal(await page.locator('.metric-demoFocus').count(),0);
+  await page.locator('#advanceTurn').click();assert.match(await page.locator('.gauge.metric-money').textContent(),/10,100원/);assert.equal(await page.locator('.school-token-active').count(),0);assert.equal(await page.locator('.school-token-complete').count(),1);assert.equal(await page.locator('.gauge.metric-demoFocus').count(),0);
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(saved.simulation.turn,4);assert.equal(saved.metricHistory.at(-1).value,3);
   // F: restore data across independent pages; legacy save never touched.
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
@@ -261,7 +261,7 @@ try{
  await page.reload({waitUntil:'domcontentloaded'});
  assert.equal(await page.evaluate(()=>{const s=GukminGame.session;s.advance(10);return s.snapshot().runtime.turn;}),0);
  await page.evaluate(()=>{GukminGame.registerMajorPresenter(({choice,resolve})=>{window.majorTestChoice=choice;window.finishMajor=resolve;});window.finishMajor('accept');window.finishMajor('accept');});
- assert.match(await page.locator('.metric-money').textContent(),/7원/);assert.equal(await page.locator('dialog[open]').count(),0);console.log('PASS major adapter: wait, reload, no popup, callback settlement once');await context.close();
+ assert.match(await page.locator('.gauge.metric-money').textContent(),/7원/);assert.equal(await page.locator('dialog[open]').count(),0);console.log('PASS major adapter: wait, reload, no popup, callback settlement once');await context.close();
  const lifecycle=await browser.newContext();const lifecyclePage=await lifecycle.newPage();
  await lifecyclePage.addInitScript(()=>{window.GukminContent={contentId:'lifecycle-check',events:[{id:'major',layer:'한방 이벤트',at:0,title:'한방',choice:'major'}],choices:[{id:'major',layer:'한방 선택',options:[{id:'accept',label:'확인',result:{effects:{stats:{money:7}}}}]}]};});
  await lifecyclePage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});await lifecyclePage.locator('#currentChoice').waitFor();
