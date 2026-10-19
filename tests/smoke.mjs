@@ -19,8 +19,8 @@ for(const required of ['callOfgukmin__ui__v1','GukminPoster.create','GukminPoste
 for(const forbidden of ['function finishElection','function advanceAuto','function finish(','function decide(','function createSequence','callOfgukmin__playable__v1'])if(js.includes(forbidden))errors.push('Gameplay code still active: '+forbidden);
 
 const css = read('css/style.css');
-const fixedPx = css.replaceAll(/:root\\{font-size:(?:15|16)px;/g, ':root{');
-if (/\\d+(?:\\.\\d+)?px\\b/.test(fixedPx)) errors.push('Non-root fixed px found in CSS');
+const fixedPx = css.replaceAll(/:root\{font-size:(?:15|16)px;/g, ':root{');
+if (/\d+(?:\.\d+)?px\b/.test(fixedPx)) errors.push('Non-root fixed px found in CSS');
 for (const required of [':root{font-size:16px;', ':root{font-size:15px}', 'display:flex;flex-direction:column;align-items:stretch', '@media(max-width:47.5em)']) {
   if (!css.includes(required)) errors.push('Missing CSS layout contract: ' + required);
 }
