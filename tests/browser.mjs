@@ -47,12 +47,18 @@ try{
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').isVisible(),name==='desktop');
   assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no countdown while choosing');
-  assert.equal(await page.locator('#currentChoice .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
-  assert.equal(await page.locator('#currentChoice .daily-choice-prompt').textContent(),'어떻게 할까?');
-  assert.equal(await page.locator('#currentChoice .daily-choice-detail').count(),0);
-  assert.equal(await page.locator('#currentChoice .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
-  assert.ok(await page.locator('#currentChoice .daily-choice-effect').count()>0,'effects are previewed per choice');
-  assert.ok(await page.locator('#currentChoice .daily-choice-effect .token-icon').count()>0,'shared SVG icons are visible');
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'daily choice modal opens automatically');
+  assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
+  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').textContent(),'어떻게 할까?');
+  assert.equal(await page.locator('#dailyChoiceBody .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
+  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect').count()>0,'shared SVG icons are visible');
+  await page.locator('#dailyModalCollapse').click();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'modal collapses without settling');
+  assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'resume remains in sheet header');
+  await page.locator('#resumeDailyChoice').click();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'resumes without losing selection');
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'Escape collapses without choosing');
   assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
   if(name!=='desktop'){
    const old=await page.locator('#lifeSheet').boundingBox();
@@ -119,6 +125,7 @@ try{
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
+  if(await page.locator('#dailyChoiceDialog').isVisible())await page.locator('#dailyModalCollapse').click();
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
 
   for(const [button,kind] of [['previewSchool','school-dialog'],['previewParty','ballot-dialog']]){
@@ -130,8 +137,11 @@ try{
   // B: actual progress and choice UI; paused clock and persisted pending choice.
   assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0.5);
   await page.locator('#advanceTurn').click();assert.equal(await page.locator('#advanceTurn').isDisabled(),true);
-  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#currentChoice button').first().waitFor();
-  await page.locator('#currentChoice button').first().evaluate(b=>{b.click();b.click();});
+  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'saved pending choice auto-restores');
+  await page.locator('#dailyModalCollapse').click();
+  await page.locator('#resumeDailyChoice').click();
+  await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
   assert.match(await page.locator('.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.metric-health').textContent(),/95/);
   assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
   // C–E: one event pack drives traits, periodic effect, schools and custom metric.

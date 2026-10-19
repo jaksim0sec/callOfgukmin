@@ -7,7 +7,7 @@
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=always-mounted-sheet-20261020">
+  <link rel="stylesheet" href="css/style.css?v=daily-popup-20261020">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -37,6 +37,7 @@
       <button type="button" class="sheet-grip" id="sheetToggle" aria-label="인생 기록 시트 펼치기" aria-expanded="false"><span aria-hidden="true"></span></button>
       <div class="sheet-head">
         <strong id="lifeHeadline">0살</strong>
+        <button type="button" class="sheet-choice-resume" id="resumeDailyChoice" hidden>선택 진행 중 · 열기</button>
         <button id="resetGame" class="mini-reset" type="button" aria-label="새 인물 생성" title="새 인물 생성">↻</button>
         <span class="chapter-meta"><span id="chapter">인물 생성</span><span class="mode-chip">생애</span></span>
       </div>
@@ -73,6 +74,10 @@
   <div class="modal-body"><h2 class="modal-title" id="modalTitle"></h2><p class="modal-story" id="modalStory"></p><div class="options" id="options"></div></div>
   <div class="modal-foot"><span class="summary" id="summary">항목을 선택하세요</span><button type="button" class="confirm" id="confirm" disabled>선택 확인</button></div>
 </dialog>
+<dialog id="dailyChoiceDialog" class="daily-choice-dialog" aria-labelledby="dailyModalHeading">
+  <header class="daily-modal-head"><div><small>국민의 선택</small><h2 id="dailyModalHeading">어떻게 할까?</h2></div><button type="button" class="daily-modal-collapse" id="dailyModalCollapse">접기⌄</button></header>
+  <div class="daily-modal-body" id="dailyChoiceBody" aria-live="polite"></div>
+</dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
 <script src="js/poster.js" defer></script>
 <script src="js/data/base.js" defer></script>
@@ -90,7 +95,8 @@
 <script src="js/life/high.js" defer></script>
 <script src="js/systemDemo.js" defer></script>
 <script src="js/statusView.js" defer></script>
-<script src="js/game.js?v=inertia-sheet-20261020" defer></script>
+<script src="js/dailyChoice.js" defer></script>
+<script src="js/game.js?v=daily-popup-20261020" defer></script>
 <script src="js/majorView.js?v=science-20261020" defer></script>
 <script src="js/boot.js" defer></script>
 </body>

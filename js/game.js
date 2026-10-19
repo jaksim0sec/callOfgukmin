@@ -193,6 +193,7 @@ function mount(root,navigate,content=global.GukminContent){
  let persona=global.GukminPlayer.ensure();
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
+ let dailyUI=null;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
  $('systemTools').hidden=!verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
@@ -220,7 +221,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!global.confirm('현재 인물 정보를 초기화하고 다시 생성할까?'))return;
   const fresh=global.GukminPlayer.generate();
   if(!global.GukminPlayer.save(fresh))throw new Error('저장 실패');
-  clearCinematics();clearMajor();persona=fresh;engine=null;snapshot=null;connectLife();render();
+  clearCinematics();clearMajor();dailyUI.reset();persona=fresh;engine=null;snapshot=null;connectLife();render();
  }
  function openDialog(type,options,{title,body,kicker,commit}){
   selection=-1;dialogOptions=options;dialogCommit=commit;
@@ -282,6 +283,12 @@ function mount(root,navigate,content=global.GukminContent){
    text('systemError',error.message);$('systemError').hidden=false;console.error(error);
   }};
  }
+ dailyUI=global.GukminDailyChoice.create({
+  dialog:$('dailyChoiceDialog'),body:$('dailyChoiceBody'),heading:$('dailyModalHeading'),
+  collapseButton:$('dailyModalCollapse'),resumeButton:$('resumeDailyChoice'),
+  resolve:(token,id)=>safely(()=>engine.resolve(token,id))(),
+  proceed:()=>safely(()=>engine.run())()
+ });
  const cinematics=[],cinematic=$('lifeCinematic');
  let cinematicTimer=null,cinematicShown=false,currentCinematic=null;
  const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -322,7 +329,9 @@ function mount(root,navigate,content=global.GukminContent){
  function onChange(s){
   const before=snapshot?.persona||persona,choice=snapshot?.choice;
   const added=s.persona.history.slice(before.history?.length||0);
+  dailyUI.capture(before,s.persona,choice,s.reviewPending);
   snapshot=s;persona=s.persona;render();
+  if(s.reviewPending&&dailyUI.isReview())dailyUI.highlight(root);
   if(s.runtime.contentId!==global.GukminDirector.contentId)return;
   if(choice?.presentation?.type==='exam'&&s.reviewPending){
    const id=choice.presentation.category==='mock'?'exam':'schoolScore',phase=global.GukminPlayer.phaseOf(before);
@@ -365,7 +374,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!snapshot.reviewPending)engine.run();
  }
  function startDemo(){
-  clearCinematics();clearMajor();
+  dailyUI.reset();clearCinematics();clearMajor();
   connect(global.GukminSystemDemo.config(),true);
   engine.advance(0);
  }
@@ -396,10 +405,12 @@ function mount(root,navigate,content=global.GukminContent){
    const next=el('button','continue-story','다음으로  →');
    next.type='button';next.addEventListener('click',safely(()=>engine.run()));
    current.append(next);
+   if(dailyUI.isReview())dailyUI.showResult(persona);
    return;
   }
-  if(!choice)return;
+  if(!choice){dailyUI.reset();return;}
   if(choice.layer==='한방 선택'){
+   dailyUI.reset();
    current.append(el('p','fine','한방 선택 응답 대기'));
    if(majorPresenter&&presentedToken!==choice.token){
     presentedToken=choice.token;
@@ -409,43 +420,8 @@ function mount(root,navigate,content=global.GukminContent){
    }
    return;
   }
-  const situation=el('section','daily-scenario');
-  situation.append(el('span','daily-scenario-kicker','지금 상황'),el('strong','daily-scenario-title',choice.title));
-  if(choice.body)situation.append(el('p','daily-choice-story',choice.body));
-  current.append(situation,el('p','daily-choice-prompt','어떻게 할까?'));
-  const choices=el('div','inline-choices');
-  choices.setAttribute('role','group');choices.setAttribute('aria-label','일상 선택지');
-  const owner=engine;
-  const labels={health:'건강',stress:'스트레스',money:'재산',allowance:'용돈',study:'학업',schoolScore:'내신',exam:'모의고사',relations:'관계'};
-  for(const [index,option] of choice.options.entries()){
-   const button=el('button','inline-choice');button.type='button';button.disabled=!option.available;
-   const number=el('span','daily-choice-number',String(index+1).padStart(2,'0'));
-   const textWrap=el('span','daily-choice-copy');
-   textWrap.append(el('strong','daily-choice-title',option.label));
-   // Outcome narration is shown after the choice, not before it.
-   if(option.available===false){
-    const needed=option.when?.stats?.money?.gte,held=persona.stats.money;
-    textWrap.append(el('small','daily-choice-locked',
-     Number.isFinite(needed)&&Number.isFinite(held)
-      ?'재산 부족 · '+held.toLocaleString('ko-KR')+'원 / '+needed.toLocaleString('ko-KR')+'원 필요'
-      :'현재 조건에서는 선택할 수 없음'));
-   }
-   const indicators=el('span','daily-choice-effects');
-   for(const [id,amount] of Object.entries(option.result?.effects?.stats||{})){
-    if(!Number.isFinite(amount)||amount===0)continue;
-    const positive=id==='stress'?amount<0:amount>0;
-    const def=global.GukminPlayer.metricDefinition(id);
-    indicators.append(global.GukminStatus.pill(
-     (labels[id]||id)+' '+(amount>0?'+':'')+amount+(id==='allowance'||id==='money'?'원':''),
-     def.icon||'sparkle','daily-choice-effect metric-'+id+' '+(positive?'is-positive':'is-negative')
-    ));
-   }
-   if(indicators.childElementCount)textWrap.append(indicators);
-   button.append(number,textWrap,el('span','daily-choice-chevron','›'));
-   button.addEventListener('click',safely(()=>engine===owner?owner.resolve(choice.token,option.id):false));
-   choices.append(button);
-  }
-  current.append(choices);
+  dailyUI.showChoice(choice,current,persona);
+
  }
  if(persona.simulation?.contentId===global.GukminSystemDemo.contentId)connect(global.GukminSystemDemo.config());
  else if(content){connect(content);engine.advance(0);}
@@ -465,7 +441,7 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;disposeLifeSheet();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;dailyUI.dispose();disposeLifeSheet();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),dispose
