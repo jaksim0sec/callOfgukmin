@@ -19,7 +19,7 @@ try{
   base=`http://127.0.0.1:${port}/callOfgukmin/`;
   for(let i=0;i<50;i++){try{if((await fetch(base+'html/waiting.html')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  }
- browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+ browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
   const context=await browser.newContext({viewport});const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
@@ -104,6 +104,59 @@ try{
  assert.equal(await examPage.evaluate(()=>GukminGame.session.snapshot().runtime.choices['exam-view:1'].status),'closed');
  console.log('PASS exam paper presenter: five choices, commit, close');
  await examContext.close();
+
+
+ // Complete real game life through school on desktop and mobile using actual dialogs.
+ for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}]]){
+  const ctx=await browser.newContext({viewport});
+  const p=await ctx.newPage(),pageErrors=[];
+  p.on('pageerror',e=>pageErrors.push(e.message));
+  await p.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+  let start=await p.evaluate(()=>GukminGame.session.snapshot());
+  assert.equal(start.persona.age,2);
+  const walk=async target=>p.evaluate(target=>{
+   const s=GukminGame.session;
+   for(let index=0;index<80;index++){
+    const snap=s.snapshot(),choice=snap.choice;
+    if(!choice||choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice?.id||null};
+    const first=choice.options.find(o=>o.available);
+    if(!first)throw new Error('No legal choice: '+choice.id);
+    s.resolve(choice.token,first.id);
+   }
+   throw new Error('Life path did not reach '+target);
+  },target);
+  const examState=await walk('exam');
+  assert.equal(examState.age,13);
+  await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
+  assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),5);
+  const box=await p.locator('#lifeDecisionDialog').boundingBox();
+  assert.ok(box&&box.x>=-1&&box.x+box.width<=viewport.width+1,'exam within screen');
+  await p.locator('#lifeDecisionDialog .life-answer').nth(2).click();
+  await p.locator('#lifeDecisionDialog .life-submit').click();
+  assert.equal(await p.locator('#lifeDecisionDialog[open]').count(),0);
+  const beforeReload=await p.evaluate(()=>GukminGame.session.snapshot());
+  await p.reload({waitUntil:'domcontentloaded'});
+  const afterReload=await p.evaluate(()=>GukminGame.session.snapshot());
+  assert.equal(afterReload.runtime.turn,beforeReload.runtime.turn,'restored turn');
+  assert.equal(afterReload.persona.age,beforeReload.persona.age,'restored age');
+  const schoolState=await walk('school');
+  assert.equal(schoolState.age,15);
+  await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
+  assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),3);
+  const schoolBounds=await p.locator('#lifeDecisionDialog').boundingBox();
+  assert.ok(schoolBounds&&schoolBounds.x>=-1&&schoolBounds.x+schoolBounds.width<=viewport.width+1,'school within screen');
+  await p.locator('#lifeDecisionDialog .life-answer').first().click();
+  await p.locator('#lifeDecisionDialog .life-submit').click();
+  const ended=await walk('nothing');
+  assert.equal(ended.age,19);assert.equal(ended.turn,79);
+  assert.equal((await p.locator('#nextChoiceLabel').textContent()).trim(),'이야기 준비 중');
+  const schoolHistory=await p.evaluate(()=>GukminPlayer.schoolsOf(GukminGame.session.snapshot().persona).find(s=>s.kind==='high'));
+  assert.equal(schoolHistory.status,'graduated');
+  await p.screenshot({path:`${artifacts}/${name}-life-graduate.png`,fullPage:true});
+  assert.deepEqual(pageErrors,[]);
+  console.log('PASS real life '+name+': exam UI, school application, reload, age19 graduation');
+  await ctx.close();
+ }
 
  // A future major-choice popup can attach later; the infrastructure itself opens none.
  const context=await browser.newContext();const page=await context.newPage();
