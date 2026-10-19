@@ -45,7 +45,7 @@ try{
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
-  assert.equal(await page.locator('#action').isVisible(),true);
+  assert.equal(await page.locator('#action').isVisible(),name==='desktop');
   assert.equal(await page.locator('#currentChoice .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
   assert.ok(await page.locator('#currentChoice .daily-choice-effect').count()>0,'effects are previewed per choice');
   assert.ok(await page.locator('#currentChoice .daily-choice-effect .token-icon').count()>0,'shared SVG icons are visible');

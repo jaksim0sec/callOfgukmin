@@ -26,10 +26,10 @@ for(const screen of screens){
  if(!html.includes('data-screen="'+screen+'"'))errors.push('Missing screen marker: '+path);
  if(!html.includes('<base href="../">'))errors.push('Missing static asset base URL: '+path);
  const matches=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(m=>m[1]);
- if(JSON.stringify(matches)!==JSON.stringify(scripts))errors.push('Script path/order incorrect: '+path);
- if(!html.includes('href="css/style.css"'))errors.push('Missing CSS: '+path);
+ if(JSON.stringify(matches.map(s=>s.split('?')[0]))!==JSON.stringify(scripts))errors.push('Script path/order incorrect: '+path);
+ if(!html.includes('href="css/style.css"')&&!html.includes('href="css/style.css?'))errors.push('Missing CSS: '+path);
  for(const source of [...matches,'css/style.css']){
-  const target=resolve(root,source);
+  const target=resolve(root,source.split('?')[0]);
   if(!exists(target))errors.push('Missing asset '+source+' from '+path);
  }
  const idsSeen=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
