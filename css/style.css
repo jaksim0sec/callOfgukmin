@@ -482,3 +482,35 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .life-cinematic-disclaimer{display:block;color:#877f85;border-top:.0625rem solid #d4ced0;padding-top:.65rem;margin-top:1rem;font-size:.68rem}
 @keyframes life-milestone-appear{from{opacity:0;transform:translateY(1.25rem)}to{opacity:1;transform:translateY(0)}}
 @media(prefers-reduced-motion:reduce){.life-cinematic-card{animation:none!important}}
+
+/* Mobile height-aware choices and result documents. */
+@media(max-width:47.5em){
+ .sheet-content .action-area{padding:.7rem 1rem .85rem}
+ .daily-scenario{padding:.1rem 0 .65rem}
+ .daily-scenario-kicker{margin-bottom:.3rem}
+ .daily-scenario-title{font-size:1.1rem;line-height:1.3}
+ .daily-choice-story{font-size:.83rem;line-height:1.5;margin:.4rem 0 0}
+ .daily-choice-prompt{margin:.55rem 0 .15rem}
+ .inline-choice{min-height:3.55rem;padding:.6rem .15rem}
+ .daily-choice-effects{margin-top:0;gap:.15rem .4rem}
+ .life-choice-dialog{max-height:calc(100dvh - 1rem);overflow:hidden}
+ .life-modal-wrap{max-height:calc(100dvh - 1rem);padding:.85rem;overflow:hidden}
+ .life-modal-options{flex:1 1 auto;min-height:0;scrollbar-gutter:stable}
+ .life-modal-foot{flex:none;padding-top:.6rem;margin-top:.35rem}
+ .life-cinematic{padding:max(.7rem,env(safe-area-inset-top)) 1rem max(.8rem,env(safe-area-inset-bottom));gap:.7rem;overflow-y:auto;justify-content:safe center}
+ .life-cinematic-body{width:min(100%,29rem);flex:0 1 auto;min-height:0;overflow-y:auto}
+ .life-cinematic-card.is-grade{padding:1.25rem 1.1rem}
+ .life-cinematic-kicker{margin-bottom:.65rem}
+ .life-cinematic-description{margin-top:.6rem}
+ .life-cinematic-grade{margin:.8rem 0;gap:.8rem}
+ .life-cinematic-dismiss{flex:none;min-height:3.25rem;font-size:.9rem;font-weight:750;padding:.7rem 1rem;border:.0625rem solid #ffffff50;border-radius:.65rem;background:#ffffff12;color:#fff}
+}
+@media(max-width:47.5em) and (max-height:43.75em){
+ .life-modal-title{margin:.35rem 0 .1rem;font-size:1.35rem}
+ .life-modal-sub,.life-modal-copy{margin-bottom:.3rem}
+ .life-answer{min-height:3.25rem;padding:.45rem .55rem}
+ .life-exam-paper .life-answer{min-height:3rem;padding:.35rem .2rem}
+ .life-cinematic-title{font-size:clamp(1.65rem,7vw,2.6rem)}
+ .is-grade .life-cinematic-title{font-size:1.65rem}
+ .life-cinematic-grade strong{font-size:2rem}
+}
