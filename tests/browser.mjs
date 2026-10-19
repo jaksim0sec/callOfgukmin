@@ -45,7 +45,7 @@ try{
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
-  assert.equal(await page.locator('#action').isVisible(),name==='desktop');
+  assert.equal(await page.locator('#action').evaluate(e=>e.hidden),false,'compact decision status is mounted on all viewports');
   assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no countdown while choosing');
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'daily choice modal opens automatically');
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
