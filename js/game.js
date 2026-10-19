@@ -88,6 +88,30 @@ function mount(root,navigate,content=global.GukminContent){
   if(moved&&owner===sheetGrip)lastSheetDrag=Date.now();
   if(owner.hasPointerCapture(e.pointerId))owner.releasePointerCapture(e.pointerId);
  }
+ // Touch Events fallback for mobile browsers that cancel pointer gestures.
+ function touchStart(e){
+  if(!mobileSheet.matches||drag||!e.touches.length)return;
+  const t=e.touches[0];
+  drag={pointer:'touch',owner:e.currentTarget,y:t.clientY,height:sheet.getBoundingClientRect().height,expanded:!sheet.classList.contains('is-minimized'),moved:false};
+ }
+ function touchMove(e){
+  if(!drag||drag.pointer!=='touch'||!e.touches.length)return;
+  const y=e.touches[0].clientY,delta=y-drag.y;
+  if(Math.abs(delta)<8&&!drag.moved)return;
+  drag.moved=true;
+  sheet.classList.remove('is-minimized','is-expanded');
+  sheet.classList.add('is-dragging');
+  const minimum=8.5*parseFloat(global.getComputedStyle(document.documentElement).fontSize);
+  sheet.style.height=(100*Math.max(minimum,Math.min(global.innerHeight*.9,drag.height-delta))/global.innerHeight)+'dvh';
+  if(e.cancelable)e.preventDefault();
+ }
+ function touchEnd(e){
+  if(!drag||drag.pointer!=='touch')return;
+  const t=e.changedTouches[0],delta=(t?t.clientY:drag.y)-drag.y,moved=drag.moved;
+  drag=null;sheet.style.removeProperty('height');sheet.classList.remove('is-dragging');
+  setSheetExpanded(moved&&Math.abs(delta)>36?delta<0:!sheet.classList.contains('is-minimized'));
+  if(moved)lastSheetDrag=Date.now();
+ }
  let persona=global.GukminPlayer.ensure();
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
@@ -280,6 +304,12 @@ function mount(root,navigate,content=global.GukminContent){
     if(Date.now()-lastSheetDrag<350)return;
     setSheetExpanded(sheet.classList.contains('is-minimized'));
   }],
+  ...[sheetGrip,sheet.querySelector('.sheet-head')].flatMap(node=>[
+   [node,'touchstart',touchStart],
+   [node,'touchmove',touchMove],
+   [node,'touchend',touchEnd],
+   [node,'touchcancel',touchEnd],
+  ]),
   ...[sheetGrip,sheet.querySelector('.sheet-head')].flatMap(node=>[
    [node,'pointerdown',beginSheetDrag],
    [node,'pointermove',moveSheetDrag],
