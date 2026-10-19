@@ -415,3 +415,36 @@ test('one nearest science high school is added with visible game costs and schoo
   assert.equal(option.result.effects.stats.money,-science[0].travelCost);
  }
 });
+
+test('extreme student stress schedules non-blocking restorative rest without repeat settlement',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';
+ p.stats.stress=99;p.stats.study=45;p.stats.schoolScore=50;
+ const engine=D.create({persona:p,persist:x=>P.save(x)});
+ const first=engine.run(),items=first.persona.history.filter(x=>x.source==='wellness:high-pressure-rest');
+ assert.equal(items.length,1,'extreme stress triggers a restorative rest');
+ assert.ok(first.persona.stats.stress<95,'rest reduces stress');
+ assert.equal(first.runtime.events['wellness:high-pressure-rest'].count,1);
+ engine.run();
+ assert.equal(engine.snapshot().runtime.events['wellness:high-pressure-rest'].count,1,'no repeat without renewed high stress');
+});
+test('aptitude comes from repeated related activities and applies tagged modifiers',()=>{
+ const {c,P}=setup(),D=c.GukminDirector,E=c.GukminEffects;
+ const engine=D.create({persona:P.generate(),persist:p=>P.save(p)});
+ let s=engine.run();
+ for(let i=0;i<25&&s.choice?.id!=='elementary:interest-followup';i++){
+  assert.ok(s.choice);
+  const science=s.choice.id==='elementary:interest-exploration';
+  engine.resolve(s.choice.token,s.choice.options[science?1:0].id);
+  engine.run();s=engine.snapshot();
+ }
+ assert.equal(s.choice?.id,'elementary:interest-followup');
+ engine.resolve(s.choice.token,'choice-1');
+ const person=engine.snapshot().persona;
+ assert.ok(P.hasTrait(person,'이과'));
+ assert.ok(P.hasTrait(person,'관심-이과'));
+ assert.equal(P.traitDefinition('관심-이과').hidden,true);
+ const tagged=E.apply(person,{tags:['science'],effects:{stats:{schoolScore:3}}}).stats.schoolScore;
+ const plainEffect=E.apply(person,{tags:['sports'],effects:{stats:{schoolScore:3}}}).stats.schoolScore;
+ assert.equal(tagged,plainEffect+2);
+});

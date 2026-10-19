@@ -103,7 +103,7 @@ try{
    await page.keyboard.press('Enter');
    await page.waitForTimeout(320);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'keyboard advances to middle');
-   assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
+   assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'스트레스');
    assert.equal(await page.locator('.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');

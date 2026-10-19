@@ -27,6 +27,13 @@ function content(persona){
      pack.events.push({...clone(event),when:{all:[clone(op.when),clone(event.when||{})]}});
    }
  }
+ // A recurring non-blocking recovery event; deterministic, one settlement per occurrence.
+ pack.events.push({
+  id:'wellness:high-pressure-rest',at:0,every:1,layer:'소식 이벤트',title:'잠깐 쉬어가는 하루',
+  when:{age:{gte:7},stats:{stress:{gte:95}}},
+  history:{title:'회복을 위한 하루',detail:'무리한 일정을 잠시 줄이고 충분한 휴식을 취했다.',importance:'minor'},
+  result:{effects:{stats:{stress:-20,health:4,study:-1}}}
+ });
  return pack;
 }
 function create({persona,persist,onChange}){
