@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['playerState','effects','timeline','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','playerState','effects','timeline','life/director','life/infant','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -114,4 +114,41 @@ test('birth defaults and stage routes are data-owned without triggering a clock 
  const next=E.apply(birth,{effects:{attributes:{phase:'elementary'}}});
  assert.equal(next.phase,'elementary');assert.equal(P.phaseOf(next),'elementary');
  assert.throws(()=>E.apply(next,{effects:{attributes:{phase:'missing'}}}),/생애 단계/);
+});
+
+test('director consumes available birth content, stops without an invented clock and restores once',()=>{
+ const {c,P,storage}=setup(),D=c.GukminDirector;
+ const person=P.generate();
+ let run=D.create({persona:person,persist:p=>P.save(p)});
+ let s=run.run();
+ assert.equal(s.runtime.turn,0);
+ assert.equal(s.runtime.events['infant:birth-registered'].status,'completed');
+ assert.equal(s.choice,null);
+ assert.deepEqual(plain(run.active()),['infant']);
+ assert.equal(s.persona.history.length,person.history.length,'no duplicate birth records');
+ run=D.create({persona:P.load(),persist:p=>P.save(p)});
+ s=run.run();assert.equal(s.runtime.turn,0);
+ assert.equal(s.runtime.events['infant:birth-registered'].count,1);
+ assert.equal(storage.get('callOfgukmin__playable__v1'),'legacy-sentinel');
+});
+test('director automatically advances only to registered future content and switches life operators',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ D.register({id:'school',when:{phase:'elementary'},generate:()=>({events:[
+   {id:'school-entry',layer:'소식 이벤트',at:2,result:{history:{title:'입학 예고'}}}
+ ]})});
+ let saved=null;
+ const run=D.create({persona:P.generate(),persist:p=>{saved=p;return true;}});
+ run.run();
+ assert.equal(run.snapshot().runtime.turn,0,'no unrelated phase timer');
+ run.apply('phase-change',{effects:{attributes:{phase:'elementary'}}});
+ const s=run.snapshot();
+ assert.deepEqual(plain(run.active()),['school']);
+ assert.equal(s.runtime.turn,2);
+ assert.ok(s.persona.history.some(item=>item.title==='입학 예고'));
+ assert.equal(s.runtime.events['school-entry'].status,'completed');
+ assert.equal(s.persona.age,0,'no arbitrary age/time mapping');
+ const resumed=D.create({persona:saved});
+ resumed.run();
+ assert.equal(resumed.snapshot().runtime.events['school-entry'].count,1);
+ assert.equal(resumed.snapshot().runtime.turn,2);
 });

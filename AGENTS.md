@@ -11,9 +11,12 @@
 - `css/style.css`: 공통 스타일·모바일 바텀시트·선택 모달.
 - `js/poster.js`: 포스터 컴포넌트(`window.GukminPoster`).
 - `js/boot.js`: 각 화면의 초기화와 독립 페이지 간 이동. `fetch()`/HTML 조각 삽입 금지.
-- `js/playerState.js`: 인물 생성·저장·속성/상태/특성 정의·생애 단계별 표시 목록.
+- `js/data/base.js`: 기본 정적 데이터셋(이름·가정·스탯·생애 단계·특성). 생성/시간 로직 금지.
+- `js/playerState.js`: 인물 생성·저장·등록 정의·생애 단계별 표시 목록.
+- `js/life/director.js`: 생애 오퍼레이터 등록·현재 단계 조건 활성화·콘텐츠가 있는 지점까지만 자동 진행.
+- `js/life/infant.js`: 최초 출생 오퍼레이터. 다른 생애는 콘텐츠가 작성될 때만 추가.
 - `js/statusView.js`: 속성/학교 토큰과 상태 프로그래스·특성 SVG 토큰 렌더링.
-- `js/game.js`: 인게임 세션 상태 렌더·일상 선택·한방 UI 연결 및 검증 도구. 스토리·선거·엔딩을 임의로 재활성화하지 않는다.
+- `js/game.js`: 인게임 세션 상태 렌더·일상 선택·한방 UI 연결 및 검증 도구. 기본 생애 관제탑을 연결하되 미확정 스토리·선거·엔딩을 추가하지 않는다.
 - `js/effects.js`, `js/timeline.js`: 데이터 기반 공통 정산·이벤트·선택·턴/대기. 계약은 `docs/developing/SYSTEMS.md`.
 - `js/systemDemo.js`: 명시적 검증 콘텐츠. 기본 플레이 콘텐츠가 아님.
 - `tests/systems.mjs`, `tests/browser.mjs`: 정산/시간 및 실제 Chromium 통합 검증.
@@ -29,7 +32,7 @@
 2. 기획 중인 Claude/GPT 제안은 사용자가 확정하기 전까지 구현 계약으로 간주하지 않는다. 과거 v3 스탯/성향과 신규 기획을 임의로 섞지 않는다.
 3. 디렉터리는 책임, 파일명은 역할. `utils.js`, `misc.js`, `final2` 식 이름, 비어 있는 확장용 폴더·계층, 불필요한 라이브러리·서버·번들러를 도입하지 않는다.
 4. **CSS 변경 시 `docs/developing/CSS.md`를 작업 전에 반드시 읽고, CSS 변경사항을 같은 커밋에서 해당 문서에 함께 반영한다.** PC/모바일 분기를 구분하고 루트 외에는 `rem`/`em` 기준 단위를 사용한다.
-5. 대기·인게임·결과 HTML 책임을 분리하고, 포스터·선택 팝업·모바일 바텀시트를 보존한다. 옛 플레이 세이브를 삭제하거나 새 시연 세이브와 혼합하지 않는다. `poster.js → playerState.js → effects.js → timeline.js → systemDemo.js → statusView.js → game.js → boot.js` 로드 순서와 화면 마운트 생명주기를 지킨다.
+5. 대기·인게임·결과 HTML 책임을 분리하고, 포스터·선택 팝업·모바일 바텀시트를 보존한다. 옛 플레이 세이브를 삭제하거나 새 시연 세이브와 혼합하지 않는다. `poster.js → data/base.js → playerState.js → effects.js → timeline.js → life/director.js → life/infant.js → systemDemo.js → statusView.js → game.js → boot.js` 로드 순서와 화면 마운트 생명주기를 지킨다.
 6. 오류는 증상에 우회 코드를 덧대기 전에 호출·상태·원인을 확인한다. 개발 명세와 코드가 불일치하면 실제 구현과 기획을 구분해서 보고한다.
 7. 필요한 최소 변경 뒤 `node tests/smoke.mjs`, `node --test tests/systems.mjs`를 실행하고, PC·모바일 UI, 저장 복구, 선택 미리보기가 실제 게임 진행을 유발하지 않는지 확인한다. 확인하지 않은 테스트를 성공했다고 쓰지 않는다.
 8. 관련 수정은 가급적 한 커밋에 묶고, 불필요한 브랜치·PR·반복 배포를 만들지 않는다. 배포 설정 변경과 큰 리팩터링은 명확한 이유 없이 하지 않는다.

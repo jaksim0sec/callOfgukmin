@@ -47,7 +47,9 @@ function mount(root,navigate,content=global.GukminContent){
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   global.GukminStatus.render(root,persona);
-  text('chapter',snapshot?'기반 검증 · '+snapshot.runtime.turn+'턴':'기본 인물 정보');
+  text('chapter',snapshot?.runtime.contentId===global.GukminSystemDemo.contentId
+    ? '기반 검증 · '+snapshot.runtime.turn+'턴'
+    : global.GukminPlayer.phaseDefinition(global.GukminPlayer.phaseOf(persona)).label);
   const host=$('playerPosterMount'),data=posterData(persona);
   if(!host.firstElementChild)host.append(global.GukminPoster.create(data));
   else global.GukminPoster.update(host.firstElementChild,data);
@@ -67,7 +69,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!global.confirm('현재 인물 정보를 초기화하고 다시 생성할까?'))return;
   const fresh=global.GukminPlayer.generate();
   if(!global.GukminPlayer.save(fresh))throw new Error('저장 실패');
-  clearMajor();persona=fresh;engine=null;snapshot=null;render();
+  clearMajor();persona=fresh;engine=null;snapshot=null;connectLife();render();
  }
  function openDialog(type,options,{title,body,kicker,commit}){
   selection=-1;dialogOptions=options;dialogCommit=commit;
@@ -129,25 +131,38 @@ function mount(root,navigate,content=global.GukminContent){
    text('systemError',error.message);$('systemError').hidden=false;console.error(error);
   }};
  }
- function connect(definition){
+ function onChange(s){snapshot=s;persona=s.persona;render();}
+ function connect(definition,freshSession=false){
+  const source={...persona};
+  if(freshSession)delete source.simulation;
   engine=global.GukminTimeline.create({
-   ...definition,persona,persist:s=>global.GukminPlayer.save(s),
-   onChange:s=>{snapshot=s;persona=s.persona;render();}
+   ...definition,persona:source,persist:s=>global.GukminPlayer.save(s),onChange
   });
   snapshot=engine.snapshot();persona=snapshot.persona;
  }
+ function connectLife(){
+  engine=global.GukminDirector.create({
+   persona,persist:s=>global.GukminPlayer.save(s),onChange
+  });
+  snapshot=engine.snapshot();persona=snapshot.persona;
+  engine.run();
+ }
  function startDemo(){
-  connect(global.GukminSystemDemo.config());engine.advance(0);
+  clearMajor();
+  connect(global.GukminSystemDemo.config(),true);
+  engine.advance(0);
  }
  function renderProgress(){
   if(disposed)return;
   const active=!!engine,choice=snapshot?.choice,p=snapshot?.progress;
-  $('startSystemDemo').hidden=active;$('advanceTurn').hidden=!active;
+  const demo=snapshot?.runtime.contentId===global.GukminSystemDemo.contentId;
+  $('startSystemDemo').hidden=!verificationMode||demo;
+  $('advanceTurn').hidden=!verificationMode||!demo;
   $('advanceTurn').disabled=!!p?.waiting;
-  text('turnLabel',active?snapshot.runtime.turn+'턴 · 검증용 시간':'검증용 진행 · 실제 생애 콘텐츠 아님');
+  text('turnLabel',demo?snapshot.runtime.turn+'턴 · 검증용 시간':'실제 생애 시연');
   $('action').hidden=!choice;
   text('currentTitle',choice?.title||'');
-  text('nextChoiceLabel',p?.waiting?'응답 대기':p?.remaining!==null&&p?.remaining!==undefined?p.remaining+'턴 남음':active?'예정된 선택 없음':'이야기 준비 중');
+  text('nextChoiceLabel',p?.waiting?'응답 대기':p?.remaining!==null&&p?.remaining!==undefined?p.remaining+'턴 남음':demo?'예정된 선택 없음':'이야기 준비 중');
   $('nextChoiceProgress').value=p?.value||0;
   const current=$('currentChoice');current.replaceChildren();
   if(presentedToken!==choice?.token)clearMajor();
@@ -173,6 +188,7 @@ function mount(root,navigate,content=global.GukminContent){
  }
  if(persona.simulation?.contentId===global.GukminSystemDemo.contentId)connect(global.GukminSystemDemo.config());
  else if(content){connect(content);engine.advance(0);}
+ else connectLife();
  refreshMounted=renderProgress;resetMajorPresentation=clearMajor;
 
  const subscriptions=[
