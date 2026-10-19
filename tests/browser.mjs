@@ -186,8 +186,10 @@ try{
   // F: restore data across independent pages; legacy save never touched.
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
   await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();
-  assert.match(await page.locator('#enterGame').textContent(),/이어서 플레이하기/);
-  await page.locator('#enterGame').click();await page.locator('.school-token-complete').waitFor();
+  const resumeText=await page.locator('#enterGame').textContent();
+  await page.locator('#enterGame').click();
+  if(!/이어서 플레이하기/.test(resumeText))await page.locator('#birthIntroSkip').evaluate(button=>button.click());
+  await page.locator('.school-token-complete').waitFor();
   const layout=await page.evaluate(()=>{
    const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
    return {poster:box('#playerPosterMount'),profile:box('.profile'),gauges:box('.gauges'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};

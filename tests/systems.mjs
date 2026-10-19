@@ -205,8 +205,14 @@ test('special-school game thresholds lock options until grade requirements hold'
   assert.equal(c.GukminEffects.matches(p,foreign.when,63),false,'a lower visible score locks');
  }
  const paid=pack.choices.find(c=>c.id==='middle:resources').options.find(o=>o.id==='paid');
- assert.ok(paid.when.stats.money.gte>0&&paid.result.effects.stats.money<0);
- assert.equal(paid.when.stats.allowance,undefined);
+ if(['soil','bronze'].includes(persona.familyTier)){
+  assert.equal(paid.when.stats.money.gte,230000);
+  assert.equal(paid.result.effects.stats.money,-230000);
+  assert.equal(paid.when.stats.allowance,undefined);
+ }else{
+  assert.equal(paid.when,undefined,'family education costs must not debit personal wallet');
+  assert.equal(paid.result.effects.stats.money,undefined);
+ }
  assert.ok(school.options.filter(o=>o.school.kind==='foreign'||o.school.kind==='gifted'||o.school.kind==='autonomous'||o.school.kind==='international')
    .every(o=>o.when?.stats?.schoolScore?.gte>0));
  const exam=pack.choices.find(c=>c.id.startsWith('high:1:3월-모의고사'));
@@ -411,7 +417,7 @@ test('one nearest science high school is added with visible game costs and schoo
   const application=c.GukminDirector.content(p).choices.find(x=>x.id==='middle:high-application');
   const option=application.options.find(x=>x.school.id===science[0].id);
   assert.ok(option.when.stats.schoolScore.gte>0);
-  assert.ok(option.when.stats.study.gte>=65,'science school needs accumulated study');
+  assert.equal(option.when.stats.study,undefined,'hidden academic metric cannot lock a visibly qualified application');
   assert.equal(option.when.stats.money,undefined,'personal wallet cannot buy public-school admission');
   assert.equal(option.result.effects.stats.money,undefined,'transport estimate is not tuition');
   assert.ok(science[0].travelCost>=70000,'distance costs must use plausible KRW magnitude');

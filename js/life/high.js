@@ -57,8 +57,8 @@ global.GukminDirector.register({
    const notElite={not:{any:tracks.map(schoolTrack=>({attributes:{schoolTrack}}))}};
    const band=(from,until)=>({all:[notElite,{stats:{study:{gte:from}}},...(until?[{not:{stats:{study:{gte:until}}}}]:[])]});
    arrival.result.conditional=[
-    {when:{all:[{attributes:{schoolTrack:'science'}},{stats:{study:{gte:65}}}]},result:{effects:{stats:{exam:35}}}},
-    {when:{all:[{attributes:{schoolTrack:'gifted'}},{stats:{study:{gte:78}}}]},result:{effects:{stats:{exam:40}}}},
+    {when:{attributes:{schoolTrack:'science'}},result:{effects:{stats:{exam:35}}}},
+    {when:{attributes:{schoolTrack:'gifted'}},result:{effects:{stats:{exam:40}}}},
     {when:band(85,null),result:{effects:{stats:{exam:32}}}},
     {when:band(70,85),result:{effects:{stats:{exam:23}}}},
     {when:band(55,70),result:{effects:{stats:{exam:12}}}}

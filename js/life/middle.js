@@ -13,8 +13,7 @@ global.GukminDirector.register({
   const costStats=(amount,study)=>({...(study?{study}:{}),...(amount?{money:-amount}:{})});
   const receipt=amount=>amount?amount.toLocaleString('ko-KR')+'원을 개인 재산에서 냈다.':'수강료는 가족이 부담했다.';
   const proposals=candidates.map(school=>{
-   const requirements={...(school.minScore?{schoolScore:{gte:school.minScore}}:{}),
-    ...(school.minStudy?{study:{gte:school.minStudy}}:{})};
+   const requirements={...(school.minScore?{schoolScore:{gte:school.minScore}}:{})}; // Only visible score gates admission.
    return {id:school.id,label:school.name,school,
     ...(Object.keys(requirements).length?{when:{stats:requirements}}:{}),
     effects:{

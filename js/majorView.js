@@ -88,8 +88,7 @@ function present({choice,resolve,root}){
    if(school.minStudy){
     const study=global.GukminPlayer.load()?.stats?.study;
     copy.append(make('small','life-requirement',
-     '누적 학업 역량 '+(Number.isFinite(study)?study:'—')+' / 지원 기준 '+school.minStudy+' 이상'+
-     (Number.isFinite(study)&&study>=school.minStudy?' · 충족':' · 미달')));
+     '누적 학업 역량(참고) '+(Number.isFinite(study)?study:'—')+' · 학교 추천 수준 '+school.minStudy+' (지원 제한 아님)'));
    }
    if(school.distanceKm!==undefined){
     copy.append(make('small','life-requirement',
