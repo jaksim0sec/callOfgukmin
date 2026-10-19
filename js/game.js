@@ -46,6 +46,48 @@ function mount(root,navigate,content=global.GukminContent){
  mountedSession?.dispose();
  let disposed=false;
  const $=id=>root.querySelector('#'+id);
+ const sheet=$('lifeSheet'),sheetGrip=$('sheetToggle');
+ const mobileSheet=global.matchMedia('(max-width: 47.5em)');
+ let lastSheetDrag=0,drag=null;
+ // The sheet is visible but compact on mobile, even while a choice is waiting.
+ if(mobileSheet.matches)sheet.classList.add('is-minimized');
+ function setSheetExpanded(expanded){
+  sheet.classList.toggle('is-minimized',!expanded);
+  sheet.classList.toggle('is-expanded',expanded);
+  sheetGrip.setAttribute('aria-expanded',String(expanded));
+  sheetGrip.setAttribute('aria-label',expanded?'인생 기록 시트 최소화':'인생 기록 시트 펼치기');
+ }
+ function beginSheetDrag(e){
+  if(!mobileSheet.matches||!e.isPrimary||e.button!==0||drag||
+    e.target.closest('button:not(#sheetToggle),a,input'))return;
+  drag={pointer:e.pointerId,owner:e.currentTarget,y:e.clientY,
+    height:sheet.getBoundingClientRect().height,
+    expanded:!sheet.classList.contains('is-minimized'),moved:false};
+  e.currentTarget.setPointerCapture(e.pointerId);
+ }
+ function moveSheetDrag(e){
+  if(!drag||e.pointerId!==drag.pointer)return;
+  const delta=e.clientY-drag.y;
+  if(!drag.moved&&Math.abs(delta)<8)return;
+  drag.moved=true;
+  sheet.classList.remove('is-minimized','is-expanded');
+  sheet.classList.add('is-dragging');
+  const minimum=8.5*parseFloat(global.getComputedStyle(document.documentElement).fontSize);
+  const height=Math.max(minimum,Math.min(global.innerHeight*.9,drag.height-delta));
+  sheet.style.height=(100*height/global.innerHeight)+'dvh';
+  e.preventDefault();
+ }
+ function finishSheetDrag(e,cancel=false){
+  if(!drag||e.pointerId!==drag.pointer)return;
+  const {owner,y,moved,expanded}=drag;
+  drag=null;
+  sheet.style.removeProperty('height');
+  sheet.classList.remove('is-dragging');
+  const delta=e.clientY-y;
+  setSheetExpanded(cancel||!moved||Math.abs(delta)<36?expanded:delta<0);
+  if(moved&&owner===sheetGrip)lastSheetDrag=Date.now();
+  if(owner.hasPointerCapture(e.pointerId))owner.releasePointerCapture(e.pointerId);
+ }
  let persona=global.GukminPlayer.ensure();
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
@@ -233,13 +275,17 @@ function mount(root,navigate,content=global.GukminContent){
  refreshMounted=renderProgress;resetMajorPresentation=clearMajor;
 
  const subscriptions=[
-  [$('sheetToggle'),'click',()=>{
-    const sheet=$('lifeSheet'),collapsed=!sheet.classList.contains('is-minimized');
-    sheet.classList.toggle('is-minimized',collapsed);
-    sheet.classList.toggle('is-expanded',!collapsed);
-    $('sheetToggle').setAttribute('aria-expanded',String(!collapsed));
-    $('sheetToggle').setAttribute('aria-label',collapsed?'인생 기록 시트 펼치기':'인생 기록 시트 최소화');
+  [sheetGrip,'click',()=>{
+    // Dragging a button can generate a synthetic click after pointerup.
+    if(Date.now()-lastSheetDrag<350)return;
+    setSheetExpanded(sheet.classList.contains('is-minimized'));
   }],
+  ...[sheetGrip,sheet.querySelector('.sheet-head')].flatMap(node=>[
+   [node,'pointerdown',beginSheetDrag],
+   [node,'pointermove',moveSheetDrag],
+   [node,'pointerup',finishSheetDrag],
+   [node,'pointercancel',e=>finishSheetDrag(e,true)]
+  ]),
   [$('resetGame'),'click',reset],
   [$('startSystemDemo'),'click',startDemo],
   [$('advanceTurn'),'click',()=>engine.advance(1)],

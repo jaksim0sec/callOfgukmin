@@ -52,15 +52,25 @@ try{
   assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
   if(name!=='desktop'){
    const old=await page.locator('#lifeSheet').boundingBox();
-   await page.locator('#sheetToggle').click();
-   await page.waitForTimeout(260);
-   const minimized=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(minimized.height<old.height-20,'non-dismissable sheet minimizes on first tap');
+   assert.ok(old.height<viewport.height*.3,'sheet starts compact and does not cover most of the game');
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#sheetToggle').click();
    await page.waitForTimeout(260);
    const expanded=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(expanded.height>old.height+20,'minimized sheet expands again');
+   assert.ok(expanded.height>old.height+20,'grip tap opens the sheet');
+   const drag=async offset=>{
+    const bounds=await page.locator('#sheetToggle').boundingBox();
+    const x=bounds.x+bounds.width/2,y=bounds.y+bounds.height/2;
+    await page.mouse.move(x,y);await page.mouse.down();
+    await page.mouse.move(x,y+offset,{steps:8});await page.mouse.up();
+    await page.waitForTimeout(260);
+   };
+   await drag(220);
+   const minimized=await page.locator('#lifeSheet').boundingBox();
+   assert.ok(minimized.height<expanded.height-40,'down drag minimizes');
+   await drag(-220);
+   const restored=await page.locator('#lifeSheet').boundingBox();
+   assert.ok(restored.height>minimized.height+40,'up drag expands');
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'true');
    assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
    assert.equal(await page.locator('.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
