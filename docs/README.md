@@ -5,7 +5,8 @@
 | [VISION.md](VISION.md) | 방향성 | 어떤 게임을 만들지 |
 | [developing/RUNTIME.md](developing/RUNTIME.md) | 구현 사실 | 지금 실행되는 코드·경로·검증 |
 | [notes/GAMEPLAY_IDEAS.md](notes/GAMEPLAY_IDEAS.md) | 기획 메모 | 단계별 진행·선택 시스템(미확정) |
-| [notes/STATS.md](notes/STATS.md) | 기획 메모 | 차기 8개 스탯(미확정) |
+| [notes/PLAYER_STATE.md](notes/PLAYER_STATE.md) | **현재 결정된 구조** | 속성 스탯 · 상태 스탯 · 특성, 단계별 활성화 및 미정 사항 |
+| [notes/STATS.md](notes/STATS.md) | 이전 논의 | 과거 8스탯 제안. 현재 기준은 PLAYER_STATE 우선 |
 | [notes/REGION_CATALOG.md](notes/REGION_CATALOG.md) | 기획 데이터 | 출생지역 255개 후보·태그(미구현) |
 | [notes/UI_TOKENS.md](notes/UI_TOKENS.md) | 시각 기획 | SVG 스탯 토큰(미확정) |
 | [RESEARCH.md](RESEARCH.md) | 조사 | 실제 제도·출처. 최신성 별도 확인 |
