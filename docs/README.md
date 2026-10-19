@@ -4,6 +4,7 @@
 |---|---|---|
 | [VISION.md](VISION.md) | 방향성 | 어떤 게임을 만들지 |
 | [developing/RUNTIME.md](developing/RUNTIME.md) | 구현 사실 | 지금 실행되는 코드·경로·검증 |
+| [developing/CSS.md](developing/CSS.md) | **필수 CSS 작업 규칙** | 수정 전에 읽고 CSS 변경 때마다 동시 갱신 |
 | [notes/GAMEPLAY_IDEAS.md](notes/GAMEPLAY_IDEAS.md) | 기획 메모 | 단계별 진행·선택 시스템(미확정) |
 | [notes/PLAYER_STATE.md](notes/PLAYER_STATE.md) | **현재 결정된 구조** | 속성 스탯 · 상태 스탯 · 특성, 단계별 활성화 및 미정 사항 |
 | [notes/STATS.md](notes/STATS.md) | 이전 논의 | 과거 8스탯 제안. 현재 기준은 PLAYER_STATE 우선 |

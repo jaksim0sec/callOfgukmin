@@ -17,4 +17,11 @@ const js=read('js/game.js');
 for(const [,,id] of js.matchAll(/\$\(\s*(['"])([^'"]+)\1\s*\)/g))if(!ids.has(id))errors.push('JS reference missing DOM ID '+id);
 for(const required of ['callOfgukmin__ui__v1','GukminPoster.create','GukminPoster.update','function generate','function openPreview'])if(!js.includes(required))errors.push('Missing UI foundation '+required);
 for(const forbidden of ['function finishElection','function advanceAuto','function finish(','function decide(','function createSequence','callOfgukmin__playable__v1'])if(js.includes(forbidden))errors.push('Gameplay code still active: '+forbidden);
+
+const css = read('css/style.css');
+const fixedPx = css.replaceAll(/:root\\{font-size:(?:15|16)px;/g, ':root{');
+if (/\\d+(?:\\.\\d+)?px\\b/.test(fixedPx)) errors.push('Non-root fixed px found in CSS');
+for (const required of [':root{font-size:16px;', ':root{font-size:15px}', 'display:flex;flex-direction:column;align-items:stretch', '@media(max-width:47.5em)']) {
+  if (!css.includes(required)) errors.push('Missing CSS layout contract: ' + required);
+}
 if(errors.length){console.error('Smoke FAIL:\n'+[...new Set(errors)].map(e=>'- '+e).join('\n'));process.exitCode=1}else console.log('Smoke OK: resources, UI-only scripts, poster API, DOM IDs, no game engine.');
