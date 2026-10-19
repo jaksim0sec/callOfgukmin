@@ -262,7 +262,13 @@ function mount(root,navigate,content=global.GukminContent){
    const textWrap=el('span','daily-choice-copy');
    textWrap.append(el('strong','daily-choice-title',option.label));
    // Outcome narration is shown after the choice, not before it.
-   if(option.available===false)textWrap.append(el('small','daily-choice-locked','현재 조건에서는 선택할 수 없음'));
+   if(option.available===false){
+    const needed=option.when?.stats?.money?.gte,held=persona.stats.money;
+    textWrap.append(el('small','daily-choice-locked',
+     Number.isFinite(needed)&&Number.isFinite(held)
+      ?'재산 부족 · '+held.toLocaleString('ko-KR')+'원 / '+needed.toLocaleString('ko-KR')+'원 필요'
+      :'현재 조건에서는 선택할 수 없음'));
+   }
    const indicators=el('span','daily-choice-effects');
    for(const [id,amount] of Object.entries(option.result?.effects?.stats||{})){
     if(!Number.isFinite(amount)||amount===0)continue;

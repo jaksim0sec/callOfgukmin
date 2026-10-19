@@ -343,3 +343,35 @@ test('turn-based allowance accrues after elementary enrollment, does not duplica
  assert.ok(e.snapshot().runtime.turn>=already);
  assert.equal(e.snapshot().persona.stats.money,atEight+(e.snapshot().runtime.turn-already)*initial);
 });
+
+test('paid academy everyday choice uses wallet, charges once and preserves allowance',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const persona=P.generate();persona.familyTier='soil';persona.stats.allowance=2000;
+ let engine=D.create({persona,persist:p=>P.save(p)}),s=engine.run();
+ for(let attempt=0;attempt<30&&s.choice?.id!=='elementary:afterschool';attempt++){
+  if(s.choice)engine.resolve(s.choice.token,s.choice.options.find(o=>o.available).id);
+  if(engine.snapshot().reviewPending)engine.run();
+  s=engine.snapshot();
+ }
+ assert.equal(s.choice?.id,'elementary:afterschool');
+ const token=s.choice.token,academy=s.choice.options.find(o=>o.id==='academy');
+ assert.equal(academy.when.stats.money.gte,3000);
+ assert.equal(academy.when.stats.allowance,undefined,'income rate must not gate a purchase');
+ engine.apply('test:low-funds',{effects:{stats:{money:2999-s.persona.stats.money}}});
+ s=engine.snapshot();
+ assert.equal(s.choice.token,token);
+ assert.equal(s.choice.options.find(o=>o.id==='academy').available,false);
+ assert.throws(()=>engine.resolve(token,'academy'),/선택 조건/);
+ engine.apply('test:enough-funds',{effects:{stats:{money:1}}});
+ s=engine.snapshot();
+ assert.equal(s.persona.stats.money,3000);
+ assert.equal(s.choice.options.find(o=>o.id==='academy').available,true);
+ assert.equal(engine.resolve(token,'academy'),true);
+ s=engine.snapshot();
+ assert.equal(s.persona.stats.money,0);
+ assert.equal(s.persona.stats.allowance,2000);
+ assert.equal(s.reviewPending,true);
+ engine=D.create({persona:P.load(),persist:p=>P.save(p)});
+ assert.equal(engine.snapshot().persona.stats.money,0,'reloading cannot duplicate payment');
+ assert.equal(engine.resolve(token,'academy'),false);
+});
