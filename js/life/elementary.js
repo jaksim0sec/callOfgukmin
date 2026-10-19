@@ -24,6 +24,8 @@ global.GukminDirector.register({
   const region=persona.regionTags||[];
   const area=region.includes('어촌')?'갯벌 체험':region.includes('농촌')?'마을 행사':region.includes('산업')?'지역 진로 체험':'동네 문화 행사';
   const wealthy=['gold','diamond'].includes(persona.familyTier);
+   const funded=['silver','gold','diamond'].includes(persona.familyTier);
+   const fee=funded?0:160000;
   const stages=S.pack(
    S.notice('elementary:welcome',28,'처음 받은 교과서','읽기·쓰기·수학뿐 아니라 친구와 약속을 배우기 시작했다.',{activate:{study:45}}),
    S.branch(S.selection('elementary:friends',29,'급식실에서 친구를 만났다','친구가 자리에 앉아도 되냐고 묻는다.',[
@@ -58,6 +60,26 @@ global.GukminDirector.register({
     {label:'친구들과 운동을 해 본다',effects:{traits:{add:['관심-체육']}},tags:['sports']}
    ]),
    S.notice('elementary:age9',36,'초등학교 3학년','수업과 숙제가 점점 다양해진다.',{attributes:{age:9}}),
+    S.branch(S.selection('elementary:lunch',36,'급식 닭강정이 품절됐다',
+     '급식실에서 기다린 끝에 네 차례가 됐다. 그런데 ==닭강정은 양념만 남았다.== 앞줄 친구의 접시는 아직 수북하다.',[
+      {label:'배식량을 확인해 달라고 부탁한다',effects:{stats:{relations:1}},detail:'다음 날부터 적정량을 안내하는 종이가 붙었다. ~~닭강정은 여전히 없었다.~~'},
+      {label:'오늘은 다른 반찬을 먹는다',detail:'친구의 닭강정을 보고 잠깐 부러웠지만 오늘 점심은 그냥 먹었다.'}
+     ]),[
+      {id:'lunch-with-minseo',priority:10,when:{attributes:{friendRoute:'shared'}},
+       body:'민서가 빈 닭강정 통을 들여다본다. "야, 이거 ==양념만 남았는데?==" 앞줄 친구는 두 접시째 먹고 있다.',
+       options:[
+        {label:'민서와 함께 배식 기준을 건의한다',effects:{stats:{relations:2}},detail:'뒤에 줄 선 친구들도 고개를 끄덕였다. 다음 급식부터 양을 확인하기로 했다. ~~닭강정은 이미 다 먹혔다.~~'},
+        {label:'앞줄 친구에게 다음부터 적당히 받자고 말한다',effects:{stats:{relations:1}},detail:'친구가 미안하다며 다음엔 남기지 않겠다고 했다. 오늘 네 접시엔 닭강정이 없다.'},
+        {label:'그냥 다른 반찬을 먹는다',detail:'민서가 마지막 양념을 밥에 비볐다. 둘은 아무 말 없이 밥을 먹었다.'}
+       ]},
+      {id:'lunch-alone',priority:0,
+       body:'기다리던 닭강정은 다 떨어졌다. 뒤에서는 한숨이 나온다. ==오늘의 메뉴는 양념이었다.==',
+       options:[
+        {label:'선생님께 배식량이 부족했다고 건의한다',effects:{stats:{relations:1}},detail:'다음 식단부터 배식량을 먼저 확인하겠다는 답을 들었다.'},
+        {label:'앞사람에게 한마디 한다',risk:'서로 기분이 상할 수 있음',effects:{stats:{relations:-1}},detail:'앞사람은 왜 자신에게 화를 내냐고 했다. 배식 문제를 두고 친구와 다투고 말았다.'},
+        {label:'그냥 다른 반찬을 먹는다',detail:'배는 채웠다. 닭강정은 다음을 기약했다.'}
+       ]}
+     ]),
    {...S.selection('elementary:recover',30,'잠시 쉬어 갈 때','요즘 긴장과 피로가 쌓였다. 몸과 마음을 돌볼 방법을 정해 보자.',[
     {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-15,health:3}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
     {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-14,health:4,study:-2}},detail:'모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
@@ -67,7 +89,7 @@ global.GukminDirector.register({
     '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
     {id:'school',label:'학교 방과 후 교실에서 과제를 함께 풀기로 한다',effects:{stats:{study:3}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
     {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{stats:{study:2}},detail:'도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
-    {id:'academy',label:'유료 학원 수업에 등록한다',when:{stats:{money:{gte:3000}}},effects:{stats:{study:4,money:-3000}},detail:'수강료 3,000원을 실제로 냈다. 매주 같은 시간에 교재를 풀기 시작했다.'}
+    {id:'academy',label:'한 학기 방과 후 학원을 다닌다 (월 16만 원)',...(fee?{when:{stats:{money:{gte:fee}}}}:{}),effects:{stats:{study:4,...(fee?{money:-fee}:{})}},detail:fee?'첫 달 수강료 16만 원을 직접 냈다. 매주 교재를 풀었다.':'가족이 첫 달 수강료 16만 원을 부담했다. 매주 교재를 풀었다.'}
    ]),
    S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:10}}),
    S.selection('elementary:project',41,'우리 동네 발표에 생긴 빈칸',
@@ -119,8 +141,8 @@ global.GukminDirector.register({
     {id:'representative-followup',priority:35,when:{attributes:{classElection:'elected'}},
      body:'6학년 마지막 학급 회의에서 민서가 네게 감사 편지를 돌렸다. 반장으로 해낸 일도 있지만 끝내 해결하지 못한 일도 있다.',
      options:[
-      {label:'마지막 공지를 직접 정리해 나눠 준다',detail:'한 해 동안 모은 사진을 보며 공지를 썼다. 마지막 종이를 나눠 주고서야 일이 끝났다.'},
-      {label:'민서에게 회의 진행을 맡겨 본다',effects:{stats:{relations:1}},detail:'민서가 자리를 정리했고 너는 뒤에서 종이를 걷었다. 둘 다 마지막 종소리를 들었다.'}
+      {label:'지난 학기 학급 회의를 마무리하고 마지막 공지를 나눠 준다',effects:{traits:{add:['리더십']}},detail:'반장으로 여러 번 회의를 진행한 끝에 마지막 공지를 끝냈다. ==한 번 당선된 게 아니라 실제로 한 해를 맡아 본 경험==이 남았다.'},
+      {label:'민서에게 마지막 회의를 맡기고 뒤에서 돕는다',effects:{stats:{relations:1},traits:{add:['리더십']}},detail:'민서가 발표하고 너는 준비한 종이를 나눠 줬다. 그동안 혼자 하던 일을 나누는 법도 익혔다.'}
      ]},
     {id:'campaign-followup',priority:25,when:{attributes:{classElection:'supported'}},
      body:'지난 선거 때 함께 포스터를 붙이던 민서가 졸업앨범을 펼쳤다. 낙서 아래 네 이름도 작게 적혀 있다.',

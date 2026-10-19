@@ -56,7 +56,7 @@ function school(id,name,region){
  const kind=kindOf(name);
  const minScore=kind==='gifted'?82:kind==='science'?78:kind==='autonomous'?66:
    ['foreign','international'].includes(kind)?72:0;
- const minStudy=kind==='gifted'?78:kind==='science'?0:kind==='autonomous'?55:
+ const minStudy=kind==='gifted'?78:kind==='science'?65:kind==='autonomous'?55:
    ['foreign','international'].includes(kind)?65:0;
  return Object.freeze({
   id,name,region,kind,minScore,minStudy,
@@ -157,9 +157,10 @@ function nearestScience(persona){
  const matches=scienceSites.map((s,index)=>({s,index,km:kmBetween(origin,[s[3],s[4]])}))
   .sort((a,b)=>a.km-b.km||a.index-b.index);
  const {s,index,km}=matches[0];
- const travelCost=km<=35?2500:km<=85?6500:20000;
+ // A rough monthly transport/living estimate, NOT admission tuition or personal-wallet price.
+ const travelCost=km<=35?70000:km<=85?180000:450000;
  return Object.freeze({...school('science-'+index,s[0],s[1]),travelCost,distanceKm:km,
-  travelMode:km<=35?'통학 중심':km<=85?'장거리 통학 가능':'기숙·거주 부담',
+  travelMode:km<=35?'통학 가능권(추정)':km<=85?'장거리 이동 가능권(추정)':'원거리 · 기숙사 제공 여부 확인',
   distanceKind:'지역 중심 추정',schoolArea:s[2],pointQuality:s[5]});
 }
 function options(persona){

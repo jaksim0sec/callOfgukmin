@@ -49,6 +49,20 @@ global.GukminDirector.register({
  generate:persona=>{
   const countryside=persona.regionTags?.some(t=>['어촌','농촌','섬'].includes(t));
   const familyNeeds=['soil','bronze'].includes(persona.familyTier);
+   // The first mock score inherits accumulated study, not a flat 45 for every school.
+   const arrival=S.notice('high:welcome',64,'고등학교에 입학했다',
+    '고등학교 첫 시간표가 나왔다. 중학교 때 쌓아 온 기초는 그대로지만, 평가 방식은 달라졌다.',
+    {activate:{exam:45}});
+   const tracks=['science','gifted'];
+   const notElite={not:{any:tracks.map(schoolTrack=>({attributes:{schoolTrack}}))}};
+   const band=(from,until)=>({all:[notElite,{stats:{study:{gte:from}}},...(until?[{not:{stats:{study:{gte:until}}}}]:[])]});
+   arrival.result.conditional=[
+    {when:{all:[{attributes:{schoolTrack:'science'}},{stats:{study:{gte:65}}}]},result:{effects:{stats:{exam:35}}}},
+    {when:{all:[{attributes:{schoolTrack:'gifted'}},{stats:{study:{gte:78}}}]},result:{effects:{stats:{exam:40}}}},
+    {when:band(85,null),result:{effects:{stats:{exam:32}}}},
+    {when:band(70,85),result:{effects:{stats:{exam:23}}}},
+    {when:band(55,70),result:{effects:{stats:{exam:12}}}}
+   ];
   const branches=Object.entries(trackScenes).map(([track,[title,body]])=>S.branch(choiceAt(
    'high:track-'+track,67,title,body,actions,{attributes:{schoolTrack:track}}),[
     {id:'track-'+track,body,options:trackOptions[track]}
@@ -75,7 +89,7 @@ global.GukminDirector.register({
   ];
   const legacy=old.map(args=>{const x=S.exam('high',...args);x.event.when={turn:{lte:-1}};return x;});
   const stages=S.pack(
-   S.notice('high:welcome',64,'고등학교에 입학했다','진로 과목과 새로운 친구, 학교생활을 함께 시작한다.',{activate:{exam:45}}),
+   arrival,
    S.branch(choiceAt('high:first-day',64,'처음 본 학급 단체 채팅방',
     '누군가 과제 공지를 대신 정리해 줄 사람을 찾는다. 처음이라 더 눈치가 보인다.',[
      {label:'시간표와 제출 날짜를 확인해 공지해 준다',effects:{stats:{study:2,relations:5,stress:2}},detail:'반 친구들의 첫 인상이 좋아졌다.'},
@@ -108,11 +122,26 @@ global.GukminDirector.register({
      {label:'무리한 일정을 줄이고 실제로 며칠 휴식한다',effects:{stats:{stress:-12,health:4}},detail:'휴식 기간에는 밀린 일을 억지로 처리하지 않았다. 돌아와서 남은 과제부터 다시 순서를 잡았다.'},
      {label:'가족과 도움받을 수 있는 일과 없는 일을 나눠 본다',effects:{stats:{stress:-9,relations:1}},detail:'가족이 집안일 일부를 맡았다. 시험 걱정은 그대로지만 그동안 하던 일 하나는 내려놓을 수 있었다.'}
     ],{stats:{stress:{gte:75}}}),
-   choiceAt('high:commute',66,'지각할 것 같은 등굣길',
-    countryside?'동네 버스가 버스정류장에 오지 않는다. 다음 차는 시간이 한참 남았다. 조회까지는 십 분이다.':'버스가 길 중간에서 멈췄다. 단체방에는 조회 시작 문자가 연달아 올라온다.',[
-     {label:'담임에게 지연 상황을 먼저 알리고 안전하게 간다',detail:'담임이 상황을 확인했다. 늦었지만 뛰어들어가다 넘어지는 일은 없었다.'},
-     {label:'가족에게 다른 교통편을 알아봐 달라고 한다',detail:'차를 얻어 탈 수 있는지 알아봤지만 바로 가능한 방법은 없었다. 다음 버스를 타기로 했다.'},
-     {label:'다음 차를 기다리고 지각 사유를 직접 설명한다',detail:'교문 앞에서 시간을 확인했다. 사정을 설명하자 지각 기록을 검토하겠다고 했다.'}
+   S.branch(choiceAt('high:commute',66,'아침부터 꼬인 학교 일정',
+    '조회 시간까지 얼마 남지 않았다. 무엇부터 처리할까?',[
+     {label:'다음 교통편을 알아보고 이동한다',detail:'뛰어봐야 길이 줄지는 않는다. 지각 사유를 정확히 적어 제출했다.'},
+     {label:'같은 동네 친구와 이동 방법을 찾는다',effects:{stats:{relations:1}},detail:'함께 갈 수 있는 버스를 찾아 탔다. 조회에는 늦었지만 혼자는 아니었다.'}
+    ]),[
+     {id:'morning-lab',priority:30,when:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]},
+      title:'아침 탐구실에 빠진 안전 고글',
+      body:'실습 시작까지 7분. 조원들이 실험실 앞에 모였다. 그런데 네 고글이 안 보인다. ==가방 밑바닥에는 교과서만 있다.==',
+      options:[
+       {label:'담당 선생님에게 말하고 여분 보호구를 확인한다',effects:{stats:{relations:1}},detail:'실험실에 여분이 있었다. 선생님은 기록부에 장비 대여를 적고 들어오라고 했다.'},
+       {label:'기숙사나 사물함에 두었는지 확인하고 돌아온다',risk:'실습 시작을 놓칠 수 있음',effects:{stats:{stress:2}},detail:'사물함에 고글이 있었다. 조금 늦게 합류했지만 안전 수칙을 지킬 수 있었다.'},
+       {label:'오늘은 직접 실험 대신 기록 담당을 맡는다',effects:{stats:{study:1}},detail:'조원이 실험했고 너는 측정값을 정리했다. 신경 쓰였던 오차 하나를 찾아냈다.'}
+      ]},
+     {id:'morning-commute',priority:0,title:'등교 버스를 놓쳤다',
+      body:countryside?'아침 버스가 막 떠났다. ==다음 배차는 25분 뒤.== 지각은 거의 확정이다.':'길 건너편에서 학교 가는 버스가 출발했다. ==교문 닫히기까지 10분.== 다음 차는 12분 뒤다.',
+      options:[
+       {label:'다음 차를 타고 지각 사유를 설명한다',detail:'결국 늦었다. 출결 담당 선생님이 교통 상황을 확인했고, 너는 바로 교실로 올라갔다.'},
+       {label:'가족에게 태워 줄 수 있는지 묻는다',risk:'가족의 일정이 바뀔 수 있음',effects:{stats:{relations:1}},detail:'가족이 근처까지만 데려다줄 수 있었다. ==다음번엔 알람을 일찍 맞추라는 말==을 세 번 들었다.'},
+       {label:'같이 놓친 친구와 우회 노선을 찾는다',effects:{stats:{relations:1}},detail:'지도에선 더 빠르다더니 두 정거장을 더 걸었다. 지각은 했지만 다음번 갈아탈 길은 알아냈다.'}
+      ]}
     ]),
    branches,
    examWithPrelude(16,1,68,'school'),
@@ -146,11 +175,27 @@ global.GukminDirector.register({
    ]}
  ]),
    examWithPrelude(17,2,70,'mock'),
-   choiceAt('high:electives',71,'신청한 선택과목이 사라졌다',
-    '신청자가 부족해 희망 과목이 폐강됐다. 다른 과목을 고르라는 안내문에는 ==오늘 오후까지==라고 적혀 있다.',[
-     {label:'공동교육과정에서 같은 과목을 열었는지 찾아본다',detail:'연계 수업은 있었지만 이동 시간이 길었다. 신청 조건을 먼저 확인했다.'},
-     {label:'교사와 이수 조건을 대조해 비슷한 과목을 고른다',detail:'대체 과목의 단원표를 비교했다. 관심 분야와 완전히 같지는 않았다.'},
-     {label:'빈 시간을 활용할 수 있는 다른 선택과목을 찾는다',detail:'희망 순위는 달라졌지만 시간표는 완성됐다. 다음 학기에 듣고 싶은 과목을 적어 뒀다.'}
+   S.branch(choiceAt('high:electives',71,'신청한 선택과목이 사라졌다',
+    '신청자가 부족한 과목이 폐강 위기다. 희망표를 다시 작성해야 한다.',[
+     {label:'학교 밖 공동교육과정을 알아본다',effects:{attributes:{electiveRoute:'shared'}},detail:'수업을 들을 수 있는 학교를 찾았지만 이동 시간이 문제였다. 상담을 예약했다.'},
+     {label:'교내 대체 과목을 골라 시간표를 확정한다',effects:{attributes:{electiveRoute:'alternate'}},detail:'원래 과목은 포기했지만 비슷한 단원을 배울 수 있었다.'},
+     {label:'같이 듣고 싶은 학생들을 모아 재개설을 요청한다',effects:{attributes:{electiveRoute:'petition'},stats:{relations:2}},detail:'==신청자가 늘어 재검토에 들어갔다.== 아직 개설 확정은 아니다. ~~이제 공부할 일만 남았다.~~'}
+    ]),[
+     {id:'research-slot',priority:30,when:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]},
+      title:'선택 탐구의 실험실 예약이 취소됐다',
+      body:'학기 탐구 주제는 이미 정했는데 공동 실험실 예약이 취소됐다. ==발표까지 2주.== 다른 조도 장비가 필요하다.',
+      options:[
+       {label:'공용 장비 사용 시간을 조원들과 재배정한다',effects:{attributes:{electiveRoute:'shared'},stats:{relations:1}},detail:'다섯 조가 시간표를 고쳤다. 새벽까지 기다릴 필요는 없게 됐다.'},
+       {label:'실험 규모를 줄이고 검증 가능한 질문 하나만 남긴다',effects:{attributes:{electiveRoute:'alternate'},stats:{study:1}},detail:'제목은 덜 거창해졌다. ==대신 결론은 네가 직접 검증할 수 있다.=='},
+       {label:'지도교사와 대체 실험실을 찾는다',effects:{attributes:{electiveRoute:'petition'}},detail:'다른 연구실 빈 시간이 나왔다. 지도교사는 안전교육을 먼저 다시 받으라고 했다.'}
+      ]},
+     {id:'regular-elective',priority:0,
+      body:'다음 학기 희망 과목 신청 결과가 나왔다. 그런데 신청 인원이 부족해 ==개설이 어려울 수 있다==는 공지가 붙었다.',
+      options:[
+       {label:'학교 밖 공동교육과정에서 같은 과목을 찾아본다',effects:{attributes:{electiveRoute:'shared'}},detail:'다른 학교에 강좌가 있었다. 통학 일정과 이수 조건을 확인했다.'},
+       {label:'교내 대체 과목으로 변경한다',effects:{attributes:{electiveRoute:'alternate'}},detail:'관심 분야가 조금 달라졌지만 시간표는 완성됐다.'},
+       {label:'친구들을 모아 개설을 요청한다',effects:{attributes:{electiveRoute:'petition'},stats:{relations:2}},detail:'==신청자가 늘어 과목 개설을 다시 검토하기로 했다.== ~~이제 수업을 들어야 한다.~~'}
+      ]}
     ]),
    unique,
    S.branch(choiceAt('high:teamwork',72,'수행평가 전날, 조원 연락이 끊겼다',
@@ -236,7 +281,7 @@ global.GukminDirector.register({
     }),
    legacy
   );
-  return {...stages,attributes:{highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true}}};
+  return {...stages,attributes:{highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }
 });
 })(window);

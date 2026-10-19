@@ -4,10 +4,13 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
+const RELEASE='story-balance-20261020';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
- global.location.assign(new URL('html/'+name+'.html',document.baseURI).href);
+ const url=new URL('html/'+name+'.html',document.baseURI);
+ url.searchParams.set('v',RELEASE);
+ global.location.assign(url.href);
 }
 function renderPoster(target,persona,stage){
  const data=global.GukminGame.posterData(persona);
@@ -19,11 +22,18 @@ function initWaiting(){
  const name=document.getElementById('waitingName');
  const background=document.getElementById('waitingBackground');
  const mount=document.getElementById('waitingPosterMount');
+ const start=document.getElementById('enterGame'),reroll=document.getElementById('rerollPersona');
+ const note=document.getElementById('waitingSaveNotice');
+ const progressed=p=>!!(p.simulation||p.age>0);
  function show(){
    const s=player.ensure();
    name.textContent=s.name;
    background.textContent=s.birthplace+' · '+s.family;
-   renderPoster(mount,s,'출생');
+   const saved=progressed(s);
+   start.textContent=saved?'이어서 플레이하기 →':'인생 시작하기 →';
+   reroll.textContent=saved?'새 인생 시작하기 (기록 초기화)':'새 출생 배경 뽑기';
+   note.textContent=saved?'기존 선택 기록을 이어서 플레이 중. 새 스토리를 처음부터 경험하려면 새 인생을 시작해.':'선택에 따라 다른 사건이 벌어지는 인생 이야기.';
+   renderPoster(mount,s,saved?'진행 중':'출생');
  }
  // Intro is a view-only transition. It does not advance turns or reroll the persona.
  const intro=document.getElementById('birthIntro');
@@ -44,6 +54,7 @@ function initWaiting(){
  function beginIntro(){
    if(introActive)return;
    const persona=player.ensure();
+   if(progressed(persona)){navigate('game');return;}
    introName.textContent=persona.name;
    introBackground.textContent=persona.birthplace;
    introFamily.textContent=persona.family;
@@ -71,8 +82,9 @@ function initWaiting(){
    if(introActive&&event.key==='Escape'){event.preventDefault();finishIntro();}
  });
  document.getElementById('previewResult').addEventListener('click',()=>navigate('result'));
- document.getElementById('rerollPersona').addEventListener('click',()=>{
-   player.save(player.generate());
+ reroll.addEventListener('click',()=>{
+   if(progressed(player.ensure())&&!global.confirm('이 인생의 선택·사건 기록을 모두 초기화하고 다시 시작할까?'))return;
+   if(!player.save(player.generate()))throw new Error('새 인생 저장 실패');
    show();
  });
  show();

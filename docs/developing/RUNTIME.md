@@ -106,3 +106,7 @@
 오퍼레이터가 런타임 이전에 반환하는 스토리 정의에는 조건부 `variants` 후보가 포함될 수 있으나, 실제 후보의 `scenarioId`는 `timeline.pump()`의 이벤트 시작 순간 저장된다. 새로고침 시 기존 시나리오를 계속 쓰고 구 저장 선택은 `choiceId`에 연결된 원래 옵션을 유지한다. `contentId`, 저장 키, `simulation.version` 불변.
 
 `GukminDailyChoice.restore(snapshot)`는 일상 선택의 저장된 `awaitingContinuation` 리뷰와 `reviewBefore`를 복원한다. 기록·결과 마크업은 `GukminMarkup.render` 안전 DOM 전용. 상세 제약은 [STORY.md](STORY.md) 참조.
+
+## 2026-10-20 스토리·가격 판본 전환
+- 세 화면의 게임 스크립트와 CSS URL, 루트 대기 이동에 `?v=story-balance-20261020`를 붙였다. 이전 버전의 브라우저 캐시가 최근 분기를 숨기지 않도록 한다.
+- 대기 화면은 이미 진행한 저장 인물을 확인해 `이어서 플레이하기`와 `새 인생 시작하기 (기록 초기화)`를 구분한다. 새 인생은 확인 후 생성하며, 기존 기록은 사용자가 초기화하기 전까지 보존한다. 이전에 완료한 이벤트는 코드가 바뀌어도 소급 재실행되지 않는다.

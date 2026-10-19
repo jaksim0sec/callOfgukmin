@@ -59,7 +59,15 @@ global.GukminDirector.register({
       {label:'다 쓰고 나서 빌려주기로 한다',effects:{stats:{relations:1}},detail:'성의 벽을 다 쌓자 삽을 건넸다. 친구는 고맙다며 다른 모양을 만들었다.'},
       {label:'선생님에게 차례를 정해 달라고 한다',detail:'선생님이 모래삽 순서를 정했다. 이제 누가 먼저 쓰는지 헷갈릴 일은 없었다.'}
      ]},
-    {id:'territory-play',priority:0,
+    {id:'block-disaster',priority:25,when:{attributes:{earlyTemperament:'stubborn'}},
+      title:'블록 탑이 무너진 날',
+      body:'친구가 팔꿈치로 블록 탑을 무너뜨렸다. ==마지막 한 층만 남았는데.== "아, 미안! 다시 만들자!" ~~그럼 네가 10분 쌓아 보든가.~~',
+      options:[
+       {label:'"야, 너 때문에 망했잖아!"라며 화낸다',effects:{stats:{relations:-2}},detail:'친구는 웃음을 멈추고 다른 쪽으로 갔다. 탑을 다시 쌓는 사람은 너 혼자였다.'},
+       {label:'화가 남았지만 친구와 다시 쌓는다',effects:{stats:{relations:2},traits:{add:['배려심']}},detail:'친구가 블록을 주워 왔다. "이번엔 내가 밑에 쌓을게." ==다시 만든 탑이 조금 더 높았다.=='},
+       {label:'남은 블록을 챙겨 다른 곳으로 간다',detail:'친구는 손을 거뒀고 너는 구석에서 새 탑을 쌓았다.'}
+      ]},
+     {id:'territory-play',priority:0,
      body:'친구가 네 모래탑을 건드려 꼭대기가 무너졌다. 친구는 남은 모래를 보며 같이 고치자고 한다.',
      options:[
       {label:'화가 난 채로 친구와 다시 쌓는다',effects:{stats:{relations:1}},detail:'친구가 모래를 주워 왔다. ==아직 화는 나지만== 둘은 다시 쌓기 시작했다.'},

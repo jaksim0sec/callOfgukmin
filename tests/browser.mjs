@@ -185,7 +185,9 @@ try{
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(saved.simulation.turn,4);assert.equal(saved.metricHistory.at(-1).value,3);
   // F: restore data across independent pages; legacy save never touched.
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
-  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('#birthIntroSkip').evaluate(button=>button.click());await page.locator('.school-token-complete').waitFor();
+  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();
+  assert.match(await page.locator('#enterGame').textContent(),/이어서 플레이하기/);
+  await page.locator('#enterGame').click();await page.locator('.school-token-complete').waitFor();
   const layout=await page.evaluate(()=>{
    const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
    return {poster:box('#playerPosterMount'),profile:box('.profile'),gauges:box('.gauges'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};
@@ -194,9 +196,38 @@ try{
   if(name==='desktop'){assert.ok(Math.abs(layout.poster.width-layout.gauges.width)<1);assert.notEqual(layout.sheetPosition,'fixed');}else{assert.equal(layout.sheetPosition,'fixed');assert.ok(Math.abs(layout.sheet.bottom-viewport.height)<1);}
   await page.screenshot({path:`${artifacts}/${name}-completed.png`,fullPage:true});
   assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__playable__v1')),'legacy-browser-sentinel');
-  await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#rerollPersona').click();const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(fresh.simulation,undefined);assert.equal(fresh.stats.money,0);
+  await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
+  page.once('dialog',dialog=>dialog.accept());await page.locator('#rerollPersona').click();const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(fresh.simulation,undefined);assert.equal(fresh.stats.money,0);
   assert.deepEqual(errors,[]);console.log(`PASS ${name}: A–F, reload, previews, save preservation, layout`);await context.close();
  }
+
+ // Saved game visibility: continuing must not silently restart, resetting must be confirmed.
+ const recall=await browser.newContext({viewport:{width:390,height:844}});
+ const recallPage=await recall.newPage();
+ await recallPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+ const original=await recallPage.evaluate(()=>{const s=GukminGame.session.snapshot();return {turn:s.runtime.turn,token:s.choice?.token};});
+ await recallPage.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
+ assert.match(await recallPage.locator('#enterGame').textContent(),/이어서 플레이하기/);
+ assert.match(await recallPage.locator('#rerollPersona').textContent(),/기록 초기화/);
+ recallPage.once('dialog',dialog=>dialog.dismiss());
+ await recallPage.locator('#rerollPersona').click();
+ await recallPage.locator('#enterGame').click();
+ await recallPage.locator('#playerPosterMount .gk-poster').waitFor();
+ const restored=await recallPage.evaluate(()=>GukminGame.session.snapshot());
+ assert.equal(restored.runtime.turn,original.turn);
+ assert.equal(restored.choice?.token,original.token);
+ await recallPage.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
+ recallPage.once('dialog',dialog=>dialog.accept());
+ await recallPage.locator('#rerollPersona').click();
+ assert.match(await recallPage.locator('#enterGame').textContent(),/인생 시작하기/);
+ await recallPage.locator('#enterGame').click();
+ await recallPage.locator('#birthIntro').waitFor({state:'visible'});
+ await recallPage.locator('#birthIntroSkip').evaluate(button=>button.click());
+ await recallPage.locator('#dailyChoiceDialog').waitFor({state:'visible'});
+ const newStory=await recallPage.evaluate(()=>GukminGame.session.snapshot().choice.scenarioId);
+ assert.ok(newStory,'replaying must open the updated deterministic storyline');
+ await recall.close();
+ console.log('PASS saved life: visible replay action, confirmed restart, new branching storyline');
 
  // The built-in exam presenter uses a paper-style modal and settles through the same timeline.
  const examContext=await browser.newContext();

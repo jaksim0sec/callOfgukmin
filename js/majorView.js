@@ -84,32 +84,37 @@ function present({choice,resolve,root}){
     const qualifies=Number.isFinite(actual)&&actual>=school.minScore;
     copy.append(make('small','life-requirement',
      '게임 내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
-   }else copy.append(make('small','life-requirement','게임 내 별도 성적 제한 없음'));
+   }else copy.append(make('small','life-requirement','게임 내 별도 내신 제한 없음'));
+   if(school.minStudy){
+    const study=global.GukminPlayer.load()?.stats?.study;
+    copy.append(make('small','life-requirement',
+     '누적 학업 역량 '+(Number.isFinite(study)?study:'—')+' / 지원 기준 '+school.minStudy+' 이상'+
+     (Number.isFinite(study)&&study>=school.minStudy?' · 충족':' · 미달')));
+   }
    if(school.distanceKm!==undefined){
     copy.append(make('small','life-requirement',
      school.schoolArea+' · 약 '+school.distanceKm+'km (출생 지역 기준 추정)'));
     copy.append(make('small','life-requirement',
-     school.travelMode+' · 게임 이동/생활 비용 '+school.travelCost.toLocaleString('ko-KR')+'원'));
+     school.travelMode+' · 월 교통·생활비 예시 약 '+school.travelCost.toLocaleString('ko-KR')+'원 (입학금 아님)'));
     copy.append(make('small','life-requirement',
      '현실의 타 지역 지원 자격은 별도 모집요강 확인 필요'));
    }
    if(option.available===false){
-    const wallet=global.GukminPlayer.load()?.stats?.money;
-    const reason=school.travelCost&&Number.isFinite(wallet)&&wallet<school.travelCost
-     ?'재산 '+wallet.toLocaleString('ko-KR')+'원 / 비용 '+school.travelCost.toLocaleString('ko-KR')+'원 필요'
-     :'게임 지원 조건을 충족하지 않음';
-    copy.append(make('small','life-requirement',reason));
+    copy.append(make('small','life-requirement','현재 학업 조건을 충족하지 않음 · 해당 학교의 공식 입학 기준은 아님'));
    }
   }
   copy.append(effectList(option));
   if(!isSchool&&global.GukminGrades){
    const metric=p.category==='mock'?'exam':'schoolScore';
-   const current=global.GukminPlayer.load()?.stats?.[metric];
-   const delta=option.result?.effects?.stats?.[metric];
-   if(Number.isFinite(current)&&Number.isFinite(delta)){
+   const candidate=global.GukminPlayer.load();
+   const current=candidate?.stats?.[metric];
+   if(Number.isFinite(current)){
+    // Preview the same modifiers and conditional learning bonuses as real settlement.
+    const projection=global.GukminEffects.apply(candidate,option.result,
+      {turn:candidate.simulation?.turn||0,source:'estimate'});
     const before=global.GukminGrades.report(metric,current,p.stage||'high').display;
-    const after=global.GukminGrades.report(metric,current+delta,p.stage||'high').display;
-    copy.append(make('small','life-paper-estimate',before+' → '+after+' (게임 예상)'));
+    const after=global.GukminGrades.report(metric,projection.stats[metric],p.stage||'high').display;
+    copy.append(make('small','life-paper-estimate',before+' → '+after+' (게임 예상 · 누적 학업 포함)'));
    }
   }
   row.append(copy,make('span','life-answer-seal','印'));

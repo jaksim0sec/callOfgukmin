@@ -355,16 +355,16 @@ test('paid academy everyday choice uses wallet, charges once and preserves allow
  }
  assert.equal(s.choice?.id,'elementary:afterschool');
  const token=s.choice.token,academy=s.choice.options.find(o=>o.id==='academy');
- assert.equal(academy.when.stats.money.gte,3000);
+ assert.equal(academy.when.stats.money.gte,160000);
  assert.equal(academy.when.stats.allowance,undefined,'income rate must not gate a purchase');
- engine.apply('test:low-funds',{effects:{stats:{money:2999-s.persona.stats.money}}});
+ engine.apply('test:low-funds',{effects:{stats:{money:159999-s.persona.stats.money}}});
  s=engine.snapshot();
  assert.equal(s.choice.token,token);
  assert.equal(s.choice.options.find(o=>o.id==='academy').available,false);
  assert.throws(()=>engine.resolve(token,'academy'),/선택 조건/);
  engine.apply('test:enough-funds',{effects:{stats:{money:1}}});
  s=engine.snapshot();
- assert.equal(s.persona.stats.money,3000);
+ assert.equal(s.persona.stats.money,160000);
  assert.equal(s.choice.options.find(o=>o.id==='academy').available,true);
  assert.equal(engine.resolve(token,'academy'),true);
  s=engine.snapshot();
@@ -411,12 +411,50 @@ test('one nearest science high school is added with visible game costs and schoo
   const application=c.GukminDirector.content(p).choices.find(x=>x.id==='middle:high-application');
   const option=application.options.find(x=>x.school.id===science[0].id);
   assert.ok(option.when.stats.schoolScore.gte>0);
-  assert.equal(option.when.stats.money.gte,science[0].travelCost);
-  assert.equal(option.when.stats.study,undefined);
-  assert.equal(option.result.effects.stats.money,-science[0].travelCost);
+  assert.ok(option.when.stats.study.gte>=65,'science school needs accumulated study');
+  assert.equal(option.when.stats.money,undefined,'personal wallet cannot buy public-school admission');
+  assert.equal(option.result.effects.stats.money,undefined,'transport estimate is not tuition');
+  assert.ok(science[0].travelCost>=70000,'distance costs must use plausible KRW magnitude');
  }
 });
 
+test('school entry starts mock assessment from accumulated study instead of a universal 45',()=>{
+ const {c,P}=setup(),D=c.GukminDirector,Grades=c.GukminGrades;
+ const p=P.generate();p.phase='high';p.age=16;p.stats.study=75;p.stats.schoolScore=80;p.attributes={schoolTrack:'science'};
+ const e=D.create({persona:p});const s=e.run();
+ assert.equal(s.persona.stats.exam,80);
+ assert.ok(Number.parseInt(Grades.report('exam',s.persona.stats.exam,'high').display,10)<=3);
+ const normal=P.generate();normal.phase='high';normal.age=16;normal.stats.study=58;normal.stats.schoolScore=60;
+ normal.attributes={schoolTrack:'general'};
+ const lower=D.create({persona:normal}).run();
+ assert.ok(s.persona.stats.exam>lower.persona.stats.exam,'real preparation separates the cohorts');
+});
+test('every exam strategy offers a different tangible tradeoff and academic history matters',()=>{
+ const {c,P}=setup(),Story=c.GukminStory,Effects=c.GukminEffects;
+ const choice=Story.exam('high',17,2,70,'학기 모의고사','mock').choice;
+ const sample=P.generate();sample.age=17;sample.phase='high';sample.stats.study=80;sample.stats.exam=60;
+ const results=choice.options.map(opt=>Effects.apply(sample,opt.result).stats);
+ assert.equal(results.length,5);
+ assert.ok(results[0].health>sample.stats.health-1&&results[0].stress<=sample.stats.stress,'resting is not a dead choice');
+ assert.ok(results[1].exam>sample.stats.exam&&results[1].study>sample.stats.study,'short review offers an academic upside');
+ assert.ok(results[2].exam>results[1].exam&&results[3].exam>results[2].exam);
+ assert.ok(results[4].health<results[3].health,'intensive strategy pays a cost');
+ assert.ok(results[2].exam>=sample.stats.exam+7,'strong baseline earns assessment bonus');
+});
+test('story traits remain obtainable from sustained actions and modify the next assessment',()=>{
+ const {c,P}=setup(),Story=c.GukminStory,Effects=c.GukminEffects,D=c.GukminDirector;
+ const content=D.content(P.generate());
+ const candidate=content.choices.find(x=>x.id==='middle:resources').variants.find(x=>x.id==='lab-study').options[0];
+ assert.ok(candidate.result.effects.traits.add.includes('꼼꼼함'));
+ const elected=content.choices.find(x=>x.id==='elementary:graduation').variants.find(x=>x.id==='representative-followup').options[0];
+ assert.ok(elected.result.effects.traits.add.includes('리더십'));
+ const person=P.generate();person.stats.study=65;person.stats.exam=55;person.traits.push('꼼꼼함');
+ const exam=Story.exam('high',16,1,65,'3월 모의고사','mock').choice.options[2];
+ const modified=Effects.apply(person,exam.result).stats.exam;
+ person.traits=person.traits.filter(t=>t!=='꼼꼼함');
+ const plain=Effects.apply(person,exam.result).stats.exam;
+ assert.equal(modified-plain,2);
+});
 test('extreme student stress schedules non-blocking restorative rest without repeat settlement',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
  const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';

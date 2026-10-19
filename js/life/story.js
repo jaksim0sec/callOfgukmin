@@ -30,20 +30,25 @@ function selection(id,at,title,body,options,kind='일상 선택',presentation=nu
  };
 }
 // Changes describe sustained preparation, not a mood swing caused by clicking a button.
+// Different preparation plans trade confidence, energy and scores.
 const efforts=[
- {label:'시험범위를 놓쳤다',study:-2,score:-5,stress:0,health:0,outcome:'준비한 부분이 적어 빈칸이 눈에 띄었다.'},
- {label:'중요한 개념만 훑었다',study:0,score:-2,stress:0,health:0,outcome:'익숙한 문제는 풀었지만 응용 문제에는 손이 멈췄다.'},
- {label:'정해진 분량을 꾸준히 복습했다',study:2,score:3,stress:0,health:0,outcome:'복습한 범위에서는 실수가 줄었다.'},
- {label:'기출문제와 오답을 정리했다',study:4,score:5,stress:1,health:0,outcome:'틀리던 유형을 마지막에 다시 확인할 수 있었다.'},
- {label:'잠을 줄여 막판까지 몰아쳤다',study:5,score:7,stress:5,health:-2,outcome:'몇 문제를 더 풀었지만 수면 부족이 시험 끝까지 따라왔다.'}
+ {label:'이번엔 공부를 줄이고 쉬는 시간을 확보한다',study:-1,score:-2,stress:-4,health:3,outcome:'풀지 못한 문제도 있었지만 컨디션을 회복했다. 다음 시험 준비를 정리했다.'},
+ {label:'핵심 개념만 짧게 복습하고 일찍 잔다',study:1,score:1,stress:-2,health:1,outcome:'기본 문제에서 실수를 줄였다. 낯선 유형은 다음 계획에 남겼다.'},
+ {label:'한 달 동안 계획대로 꾸준히 복습한다',study:2,score:3,stress:0,health:0,outcome:'복습한 유형에선 실수가 줄었다. 어려운 문제는 끝까지 고민했다.'},
+ {label:'기출문제와 오답을 집중적으로 정리한다',study:3,score:5,stress:2,health:0,outcome:'오답을 다시 풀면서 실수를 잡았다. 다른 과목을 위한 시간은 줄었다.'},
+ {label:'남은 기간 공부량을 크게 늘린다',study:4,score:6,stress:6,health:-2,outcome:'준비한 문제는 많이 맞혔다. 대신 다른 일정은 취소했고 피로가 쌓였다.'}
 ];
 function exam(stage,age,grade,at,name,type='school'){
  const id=stage+':'+grade+':'+name.replaceAll(/[^a-zA-Z0-9가-힣]/g,'-');
  const score=type==='mock'?'exam':'schoolScore';
  return selection(id,at,age+'세 · '+grade+'학년 '+name,'해당 시험에 얼마나 시간과 에너지를 투자할까?',
   efforts.map((effort,i)=>({
-    id:'effort-'+i,label:effort.label,
+    id:'effort-'+i,label:effort.label,tags:['assessment'],
     effects:{stats:{study:effort.study,...Object.fromEntries(Object.entries({[score]:effort.score,stress:effort.stress,health:effort.health}).filter(([,value])=>value!==0))}},
+    conditional:[
+     {when:{stats:{study:{gte:80}}},result:{effects:{stats:{[score]:4}}}},
+     {when:{all:[{stats:{study:{gte:60}}},{not:{stats:{study:{gte:80}}}}]},result:{effects:{stats:{[score]:2}}}}
+    ],
     detail:name+'을 치렀다. '+effort.outcome
   })),'한방 선택',{type:'exam',stage,grade,age,term:name,category:type});
 }
