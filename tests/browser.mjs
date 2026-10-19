@@ -137,6 +137,21 @@ try{
    assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
+  // A paused life decision must survive an actual full page reload in the same modal.
+  await page.locator('#resumeDailyChoice').click();
+  await page.locator('#dailyChoiceBody .inline-choice').first().click();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'result remains open, never auto-closes');
+  assert.equal(await page.locator('#dailyChoiceBody .review-title').count(),1,'review is visible after settlement');
+  const reviewRecord=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
+  assert.equal(reviewRecord.simulation.awaitingContinuation,true,'review is persisted');
+  assert.ok(reviewRecord.simulation.reviewBefore,'before values are persisted');
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.locator('#dailyChoiceBody .review-title').waitFor();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'saved review automatically restores in dialog');
+  assert.equal(await page.locator('#dailyChoiceBody .continue-story').count(),1);
+  await page.locator('#dailyChoiceBody .continue-story').click();
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')).simulation.awaitingContinuation),false);
+
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
   if(await page.locator('#dailyChoiceDialog').isVisible())await page.locator('#dailyModalCollapse').click();
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
@@ -166,7 +181,7 @@ try{
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(saved.simulation.turn,4);assert.equal(saved.metricHistory.at(-1).value,3);
   // F: restore data across independent pages; legacy save never touched.
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
-  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('#birthIntroSkip').click();await page.locator('.school-token-complete').waitFor();
+  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('#birthIntroSkip').evaluate(button=>button.click());await page.locator('.school-token-complete').waitFor();
   const layout=await page.evaluate(()=>{
    const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
    return {poster:box('#playerPosterMount'),profile:box('.profile'),gauges:box('.gauges'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};

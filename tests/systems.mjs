@@ -382,6 +382,7 @@ test('exam preludes announce middle and annual high assessments without replacin
  const classroom=s.events.filter(e=>e.id.startsWith('exam-classroom:'));
  assert.equal(preludes.length,12);
  assert.equal(classroom.length,12);
+ assert.ok(classroom.every(e=>e.history.display==='hidden'),'repetitive classroom notes remain addressable for old saves but do not clutter history');
  assert.ok(preludes.every(e=>e.layer==='소식 이벤트'&&e.when.all.some(w=>w.turn?.eq===e.at)));
  assert.ok(preludes.every(e=>e.history.importance==='major'));
  assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.stage==='middle').length,6);
@@ -603,4 +604,39 @@ test('review evidence survives reload and is cleared only after explicit continu
  assert.equal(e.resume(),true);
  assert.equal(e.snapshot().runtime.reviewBefore,undefined);
  assert.equal(e.resume(),false);
+});
+
+test('pre-exam strategy is a deterministic preparatory memory, not a scored CSAT',()=>{
+ const {c,P}=setup(),D=c.GukminDirector,p=P.generate();
+ p.age=18;p.phase='high';p.stats.exam=74;p.stats.schoolScore=52;p.stats.study=55;
+ p.attributes={schoolTrack:'general'};
+ p.schoolHistory=[{id:'test-high',name:'검증 고등학교',kind:'high',status:'enrolled'}];
+ const eng=D.create({persona:p});let s=eng.run(),steps=0;
+ while(s.choice?.id!=='high:csat-strategy'&&steps++<55){
+  assert.ok(s.choice,'pre-exam choice is reachable before graduation');
+  eng.resolve(s.choice.token,s.choice.options.find(x=>x.available)?.id);
+  s=eng.run();
+ }
+ assert.equal(s.choice?.id,'high:csat-strategy');
+ assert.equal(s.choice.scenarioId,'csat-mock-strength');
+ assert.equal(s.persona.age,18);
+ const before={exam:s.persona.stats.exam,schoolScore:s.persona.stats.schoolScore};
+ eng.resolve(s.choice.token,s.choice.options[1].id);
+ const after=eng.snapshot();
+ assert.deepEqual({exam:after.persona.stats.exam,schoolScore:after.persona.stats.schoolScore},before,'choosing a future study direction cannot retroactively alter grades');
+ assert.equal(after.persona.attributes.preExamStrategy,'exam');
+ assert.equal(after.reviewPending,true);
+});
+test('brief frustration and ordinary communication do not create unearned medical or academic rewards',()=>{
+ const {c,P}=setup(),content=c.GukminDirector.content(P.generate());
+ for(const id of ['infant:prepare','high:commute','high:electives','high:graduation-photo']){
+  const cdef=content.choices.find(x=>x.id===id);
+  assert.ok(cdef,id);
+  for(const o of cdef.options){
+   const deltas=o.result?.effects?.stats||{};
+   assert.equal(deltas.health,undefined,id+' should not reward conversations with physical health');
+   assert.equal(deltas.stress,undefined,id+' should not pretend temporary relief cures accumulated stress');
+   assert.equal(deltas.schoolScore,undefined,id+' should not change grades without assessment');
+  }
+ }
 });

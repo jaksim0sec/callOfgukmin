@@ -181,3 +181,10 @@ Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새�
 - `GukminTimeline.create({pauseAfterChoice,onTurn})` 두 옵션은 기본적으로 꺼져 있다. pauseAfterChoice면 `resolve`가 선택을 정산하고 `runtime.awaitingContinuation` 상태로 멈춘다. `resume()`으로 단일 저장 트랜잭션 재개 후 `advance` 가능. 재진입·새로고침 중 대기 상태 유지. 진행 중 강제 `advance`는 거부.
 - `onTurn(persona,turn)`은 별도 정산 효과를 만들 수 있으며 `turn:<N>` ID로 해당 턴에 한 번 적용한다. 생애 관제탑은 초등 이후 용돈만 여기서 누적한다. 이전 공통 검증 모드는 영향받지 않는다.
 - 선택 결과를 확인하기 전에는 다음 이벤트를 자동 실행하지 않고, UI가 현재 `reviewPending` 플래그를 표시한다. 0~19세 사건·선택 ID 및 저장 키를 변경하지 않는다.
+
+
+## 2026-10-20 결정적 시나리오 선택·결과 리뷰 추가 계약
+
+선택 정의에 선택적인 `variants: [{id,priority,when,title,body,options}]`를 사용할 수 있다. `when`은 기존 `GukminEffects.matches` 표현식만 받는다. `priority` 내림차순 첫 일치 후보를 사건이 실행되는 `pump()` 시점에 확정하며 기본 후보는 `when` 생략/우선순위 0으로 둔다. `runtime.choices[token].scenarioId`에 저장하고 `choiceId`는 기존 선택 정의 ID로 보존한다. 사건이 열렸을 때 재시작하면 저장된 후보가 그대로 표시·정산된다. 이전 선택에 `scenarioId`가 없다면 해당 기존 선택의 기본 `options` 사용.
+
+`pauseAfterChoice` 모드에서 선택을 해소할 때 `runtime.reviewBefore`에 선택 직전 수치·특성·학교·역할 값을 선택적으로 저장하고 `awaitingContinuation`와 함께 복구한다. 새 리뷰 진행 상태를 만들지 않고 `resume()`에서 `reviewBefore`를 지운다. 과거 리뷰 세이브의 `reviewBefore` 누락은 허용하며 없는 효과를 추정하지 않는다. 데이터와 테스트 상세는 [STORY.md](STORY.md) 참조.

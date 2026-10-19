@@ -101,14 +101,14 @@ global.GukminDirector.register({
      ]}
    ]),
    S.notice('middle:age15',60,'중학교 3학년','고등학교 진학을 생각할 때가 왔다.',{attributes:{age:15}}),
-   S.selection('middle:admission-prep',60,'진학 준비와 가정의 지원',
-    family?'사교육비를 크게 쓰기는 어렵지만 공공 정보와 장학 안내를 이용할 수 있다.':'가족이 진로 선택을 상의하며 학교의 교육과정을 알아보고 있다.',[
-     {id:'public',label:'교육청·학교의 무료 진학 설명회를 찾아간다',
-      effects:{stats:{study:3,relations:2,stress:-1}},detail:'공개된 입학 자료를 직접 확인했다.'},
-     {id:'mentor',label:'담임 선생님과 상담한다',
-      effects:{stats:{study:2,relations:4,stress:-2}},detail:'현실적인 지원 방향을 함께 정리했다.'},
-     {id:'paid',label:'유료 진학 상담에 시간을 쓴다',when:{stats:{money:{gte:6000}}},
-      effects:{stats:{study:4,money:-6000,stress:3}},detail:'비용과 시간을 들여 상담을 받았다.'}
+   S.selection('middle:admission-prep',60,'고교 원서보다 먼저 필요한 것',
+    family?'친구들은 입학 컨설팅을 예약하는데 비용이 부담된다. 교실 뒤에는 무료 교육청 설명회 공지가 붙어 있다.':'가족이 여러 학교의 교육과정을 비교해 보자고 했다. 설명회와 유료 상담 안내가 함께 들어왔다.',[
+     {id:'public',label:'교육청 무료 설명회에서 실제 모집요강을 확인한다',
+      effects:{stats:{study:1}},detail:'전형이 학교마다 달랐다. 설명회에서 받은 안내서를 표시하고 지원 가능한 학교를 추렸다.'},
+     {id:'mentor',label:'담임과 학교 유형별 수업을 비교한다',
+      detail:'상담실에서 지원 일정과 교육과정을 비교했다. 결정하기 전에 가족과 한 번 더 이야기하기로 했다.'},
+     {id:'paid',label:'유료 진학 상담을 받고 전형표를 정리한다',when:{stats:{money:{gte:6000}}},
+      effects:{stats:{study:2,money:-6000}},detail:'상담료 6,000원을 냈다. 상담에서 받은 표를 원서와 대조했고 과장된 합격 보장은 걸러냈다.'}
     ]),
    S.examPrelude('middle',3,61,'1학기 중간고사'),
    S.exam('middle',15,3,61,'1학기 중간고사'),

@@ -108,11 +108,11 @@ global.GukminDirector.register({
      {label:'잠시 쉬고 남은 시험을 준비한다',effects:{stats:{stress:-21,health:9,schoolScore:-1}}},
      {label:'가까운 사람에게 도움을 요청한다',effects:{stats:{stress:-19,health:4,relations:3}}}
     ],{stats:{stress:{gte:75}}}),
-   choiceAt('high:commute',66,'아침 등굣길, 교통편이 늦었다',
-    countryside?'한 시간에 몇 번 없는 버스가 늦는다. 오늘 아침 조회에 늦을지도 모른다.':'갈아타는 버스가 늦어졌고 지각할 것 같다.',[
-     {label:'담임에게 상황을 알리고 안전하게 이동한다',effects:{stats:{relations:2,stress:2}},detail:'지각 사유를 먼저 알렸다.'},
-     {label:'가족에게 다른 이동 방법을 부탁한다',effects:{stats:{relations:2,stress:-2}},detail:'가족과 방법을 상의했다.'},
-     {label:'무리하지 않고 다음 교통편을 기다린다',effects:{stats:{health:2,stress:-3}},detail:'늦었지만 무리하지 않았다.'}
+   choiceAt('high:commute',66,'지각할 것 같은 등굣길',
+    countryside?'동네 버스가 버스정류장에 오지 않는다. 다음 차는 시간이 한참 남았다. 조회까지는 십 분이다.':'버스가 길 중간에서 멈췄다. 단체방에는 조회 시작 문자가 연달아 올라온다.',[
+     {label:'담임에게 지연 상황을 먼저 알리고 안전하게 간다',detail:'담임이 상황을 확인했다. 늦었지만 뛰어들어가다 넘어지는 일은 없었다.'},
+     {label:'가족에게 다른 교통편을 알아봐 달라고 한다',detail:'차를 얻어 탈 수 있는지 알아봤지만 바로 가능한 방법은 없었다. 다음 버스를 타기로 했다.'},
+     {label:'다음 차를 기다리고 지각 사유를 직접 설명한다',detail:'교문 앞에서 시간을 확인했다. 사정을 설명하자 지각 기록을 검토하겠다고 했다.'}
     ]),
    branches,
    examWithPrelude(16,1,68,'school'),
@@ -146,11 +146,11 @@ global.GukminDirector.register({
    ]}
  ]),
    examWithPrelude(17,2,70,'mock'),
-   choiceAt('high:electives',71,'선택과목 신청서를 다시 써야 한다',
-    '원하던 과목이 개설되지 않거나 시간이 겹친다고 한다. 다른 수업 방식도 알아볼 수 있다.',[
-     {label:'공동교육과정·온라인학교를 알아본다',effects:{stats:{study:4,stress:3}},detail:'학교 밖 연계 수업을 살펴봤다.'},
-     {label:'교사와 상담해 대체 과목을 택한다',effects:{stats:{study:2,relations:3,stress:-1}},detail:'이수 조건과 현실적인 선택을 조정했다.'},
-     {label:'여유 있는 시간표로 다시 계획한다',effects:{stats:{health:3,study:-1,stress:-3}},detail:'학업 부담과 관심 분야를 조절했다.'}
+   choiceAt('high:electives',71,'신청한 선택과목이 사라졌다',
+    '신청자가 부족해 희망 과목이 폐강됐다. 다른 과목을 고르라는 안내문에는 ==오늘 오후까지==라고 적혀 있다.',[
+     {label:'공동교육과정에서 같은 과목을 열었는지 찾아본다',detail:'연계 수업은 있었지만 이동 시간이 길었다. 신청 조건을 먼저 확인했다.'},
+     {label:'교사와 이수 조건을 대조해 비슷한 과목을 고른다',detail:'대체 과목의 단원표를 비교했다. 관심 분야와 완전히 같지는 않았다.'},
+     {label:'빈 시간을 활용할 수 있는 다른 선택과목을 찾는다',detail:'희망 순위는 달라졌지만 시간표는 완성됐다. 다음 학기에 듣고 싶은 과목을 적어 뒀다.'}
     ]),
    unique,
    S.branch(choiceAt('high:teamwork',72,'수행평가 전날, 조원 연락이 끊겼다',
@@ -184,26 +184,53 @@ global.GukminDirector.register({
    examWithPrelude(17,2,73,'school'),
    S.notice('high:age18',74,'고등학교 3학년','졸업을 앞두고 있다. 공부뿐 아니라 사람들과의 시간도 중요해졌다.',{attributes:{age:18}}),
    examWithPrelude(18,3,75,'mock'),
-   choiceAt('high:family-time',76,'주말에 온 가족의 연락',
-    familyNeeds?'가족이 이번 주말 집안일을 도와 달라고 했다. 시험 준비도 신경 쓰인다.':'가족 모임과 계획해 둔 개인 일정이 겹친다.',[
-     {label:'필요한 만큼 돕고 남은 시간에 공부한다',effects:{stats:{relations:5,study:1,stress:2}},detail:'가족과 시간을 나누었다.'},
-     {label:'상황을 설명하고 다음 주말로 조정한다',effects:{stats:{study:3,relations:-1,stress:1}},detail:'일정을 솔직하게 설명했다.'},
-     {label:'오늘은 가족과 쉬기로 한다',effects:{stats:{relations:5,health:3,stress:-4,study:-1}},detail:'함께한 시간을 기억했다.'}
+   choiceAt('high:family-time',76,'토요일 오후에 걸려 온 가족의 전화',
+    familyNeeds?'가게에 사람이 몰려 가족이 급하게 도와 달라고 한다. 내일 시험 준비도 남았다.':'가족이 오래전 잡은 모임에 오라고 한다. 일요일에는 공부하려고 했는데 돌아오는 시간이 늦어질 듯하다.',[
+     {label:'필요한 시간만 돕고 돌아와 남은 과제를 마친다',effects:{stats:{relations:1}},detail:'가족이 일을 나눠 맡았다. 돌아왔을 때 책상 위 계획표에는 아직 빈칸이 있었다.'},
+     {label:'내일 일정이 있다며 대신 가능한 시간을 제안한다',detail:'가족이 처음엔 아쉬워했지만 시간을 다시 잡았다. 약속은 지키기로 했다.'},
+     {label:'오늘은 가족과 함께 보내고 내일 계획을 다시 짠다',detail:'오랜만에 함께 저녁을 먹었다. 미뤄 둔 공부는 내일 할 일이 됐다.'}
     ]),
-   choiceAt('high:graduation-photo',77,'졸업사진을 찍는 날',
-    '친구들이 교실 뒤쪽 메모지에 한마디씩 남긴다. 마지막으로 어떤 시간을 보낼까?',[
-     {label:'친구에게 고마웠던 일을 직접 적어 준다',effects:{stats:{relations:5,stress:-2}},detail:'평소 하지 못했던 말을 전했다.'},
-     {label:'선생님께 진로에 관해 다시 물어본다',effects:{stats:{study:2,relations:2}},detail:'조언을 들었다.'},
-     {label:'사진을 찍고 조용히 하루를 보낸다',effects:{stats:{health:2,stress:-3}},detail:'기억에 남을 하루였다.'}
+   choiceAt('high:graduation-photo',77,'졸업앨범 촬영 날',
+    '담임이 열 번 넘게 줄을 맞추라 했는데 박재호는 계속 뒤에서 장난을 친다. ==마지막 사진이라고 다들 갑자기 친한 척한다.==',[
+     {label:'오래 함께한 친구에게 작은 쪽지를 남긴다',detail:'친구는 쪽지를 읽고 웃었다. 답장은 졸업식 날 주겠다고 했다.'},
+     {label:'선생님과 진로에 관한 마지막 질문을 나눈다',detail:'선생님은 답을 대신 정해 주진 않았다. 다만 준비해야 할 서류 하나를 알려 줬다.'},
+     {label:'촬영이 끝나면 조용히 가방을 챙겨 돌아간다',detail:'뒤돌아보니 교실은 여전히 시끄러웠다. 찍힌 사진은 아직 볼 수 없었다.'}
     ]),
    examWithPrelude(18,3,78,'school'),
+   S.branch(choiceAt('high:csat-strategy',78,'수능을 앞두고 고르는 마지막 학습 방향',
+    '3학년 1학기 평가를 마쳤다. 대학과 전형을 확정할 때까지 시간이 남았지만 준비 방향은 이제 미루기 어렵다.',[
+     {label:'지원 전형을 비교해 계획을 정리한다',detail:'접수 일정과 준비할 서류를 따로 적었다.'},
+     {label:'기출문제를 다시 풀며 수능 준비 계획을 세운다',detail:'오답 목록을 정리하고 남은 공부 일정을 새로 썼다.'}
+    ]),[
+     {id:'csat-mock-strength',priority:20,when:{stats:{exam:{gte:62}}},
+      body:'최근 모의고사 결과가 꾸준하다. 그런데 원서 상담에서는 내신과 전형별 준비가 빠졌다고 지적했다. ==점수 하나로 지원전략은 결정되지 않는다.==',
+      options:[
+       {label:'모의고사 대비를 유지하면서 지원 가능 전형을 분석한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'모의고사 준비를 이어가기로 했다. 동시에 지원 일정과 제출 서류를 표로 정리했다.'},
+       {label:'기출 풀이 시간을 늘리는 계획을 짠다',effects:{attributes:{preExamStrategy:'exam'}},detail:'오답 유형을 추려 주간 계획에 적었다. 아직 수능 점수가 나온 것은 아니다.'},
+       {label:'학교 기록과 면접 준비 내용을 먼저 검토한다',effects:{attributes:{preExamStrategy:'record'}},detail:'학교 활동 기록과 희망 전형의 요건을 대조했다. 보완할 항목 몇 개를 발견했다.'}
+      ]},
+     {id:'csat-record-strength',priority:10,when:{stats:{schoolScore:{gte:67}}},
+      body:'내신은 잘 관리했지만 모의고사는 들쭉날쭉하다. 상담실에서는 어느 전형도 합격이 확정된 건 아니라고 했다.',
+      options:[
+       {label:'내신 활용 전형의 제출 일정과 자격을 점검한다',effects:{attributes:{preExamStrategy:'record'}},detail:'학교 기록을 확인하고 서류 누락이 없도록 체크했다.'},
+       {label:'모의고사 취약 단원부터 남은 계획을 다시 쓴다',effects:{attributes:{preExamStrategy:'exam'}},detail:'틀린 유형을 묶어 계획을 세웠다. 다음 점수는 아직 모른다.'},
+       {label:'지원 일정과 수능 준비를 나눠 진행한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'원서 일정표와 공부 계획을 따로 적었다. 빽빽하지만 하나씩 확인할 수 있게 됐다.'}
+      ]},
+     {id:'csat-open-plan',priority:0,
+      body:'수능이 가까워지자 교실에서 대학 이름이 대화의 절반을 차지한다. 너는 누가 정해 준 답 대신 지금 할 수 있는 일을 골라야 한다.',
+      options:[
+       {label:'기출문제의 자주 틀리는 유형을 우선 정리한다',effects:{attributes:{preExamStrategy:'exam'}},detail:'오답 원인을 세 갈래로 나눠 적었다. 실력이 하루 만에 오른 것은 아니다.'},
+       {label:'학교 활동과 지원 전형을 먼저 비교한다',effects:{attributes:{preExamStrategy:'record'}},detail:'지원 가능한 전형과 필요한 기록을 정리했다. 빈칸은 담당 선생님에게 확인할 예정이다.'},
+       {label:'무리한 계획을 줄이고 두 준비를 번갈아 한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'할 수 있는 분량만 정했다. 당장 성적이 바뀌진 않았지만 일정표는 완성했다.'}
+      ]}
+    ]),
    S.notice('high:graduation',79,'고등학교를 졸업했다',
     '시험과 관계, 선택한 과목과 기억이 남았다. 다음 인생 이야기는 준비 중이다.',{
      attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]
     }),
    legacy
   );
-  return {...stages,attributes:{highPeer:{label:'고등학교 첫 인연',hidden:true}}};
+  return {...stages,attributes:{highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true}}};
  }
 });
 })(window);

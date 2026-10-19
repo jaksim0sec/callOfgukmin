@@ -69,10 +69,11 @@ global.GukminDirector.register({
    ]),
    S.notice('infant:age5',20,'다섯 살의 일상','친구들과 더 복잡한 놀이를 시작한다.',{attributes:{age:5}}),
    S.notice('infant:age6',24,'취학 준비','곧 초등학교에 들어간다.',{attributes:{age:6}}),
-   S.selection('infant:prepare',24,'내일은 처음 학교에 간다','가방을 싸다 보니 필통, 크레파스, 새 공책이 눈에 띈다.',[
-    {label:'공책 첫 장에 낙서를 한다',effects:{stats:{relations:1,health:2},traits:{add:['호기심']}},detail:'새 공책에는 무언가 그려 보고 싶었다.'},
-    {label:'필통 속 연필을 몇 번이나 세어 본다',effects:{stats:{relations:2,stress:1},traits:{add:['꼼꼼함']}},detail:'준비물은 빠짐없이 챙기고 싶다.'},
-    {label:'가방을 옆에 두고 일찍 잠든다',effects:{stats:{health:3,stress:-3},traits:{add:['느긋함']}},detail:'내일은 내일 생각하기로 했다.'}
+   S.selection('infant:prepare',24,'초등학교 가방을 처음 싸는 밤',
+    '필통을 여닫느라 밤이 깊어졌다. 내일이 첫 등교다. 책상 위에는 새 연필과 이름표가 놓여 있다.',[
+    {label:'공책 첫 장에 내 이름을 적는다',detail:'글씨가 삐뚤빼뚤해서 다시 썼다. 가족은 공책을 덮어 가방에 넣어 줬다.'},
+    {label:'준비물 목록을 보며 가방을 챙긴다',detail:'색연필 하나가 침대 밑에서 나왔다. 지우개는 아직 못 찾았지만 가방은 닫았다.'},
+    {label:'가방을 문 앞에 두고 잠자리에 든다',detail:'가방을 두 번이나 확인했다. 새 학교 생각에 한참 뒤척이다 잠들었다.'}
    ]),
    S.notice('infant:school-entry',28,'초등학교 입학','지역 배정 초등학교에서 학교생활을 시작한다.',{
     attributes:{age:7,phase:'elementary',job:'초등학생'},

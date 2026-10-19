@@ -63,25 +63,27 @@ global.GukminDirector.register({
     {label:'시간표를 줄이고 잠을 충분히 잔다',effects:{stats:{stress:-20,health:8,study:-2}}},
     {label:'친구와 가볍게 놀면서 기분을 전환한다',effects:{stats:{stress:-18,health:3,relations:4}}}
    ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},stats:{stress:{gte:65}}}}},
-   S.selection('elementary:afterschool',37,'방과 후 활동 신청','학교의 방과 후 안내장이 집에 도착했다.',[
-    {id:'school',label:'학교 방과 후 프로그램을 신청한다',effects:{stats:{study:4,relations:2,stress:2}},detail:'학교 프로그램으로 꾸준히 배웠다.'},
-    {id:'library',label:'도서관에서 스스로 배운다',effects:{stats:{study:3,stress:-2,relations:1}},detail:'가까운 도서관을 활용했다.'},
-    {id:'academy',label:wealthy?'학원 수업을 추가한다':'유료 학원에 등록한다',when:{stats:{money:{gte:3000}}},effects:{stats:{study:6,stress:5,money:-3000}},detail:'유료 수업에서 학습 진도를 앞서갔다.'}
+   S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
+    '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
+    {id:'school',label:'학교 방과 후 교실에서 과제를 함께 풀기로 한다',effects:{stats:{study:3}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
+    {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{stats:{study:2}},detail:'도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
+    {id:'academy',label:'유료 학원 수업에 등록한다',when:{stats:{money:{gte:3000}}},effects:{stats:{study:4,money:-3000}},detail:'수강료 3,000원을 실제로 냈다. 매주 같은 시간에 교재를 풀기 시작했다.'}
    ]),
    S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:10}}),
-   S.selection('elementary:project',41,'우리 동네 소개 발표','학급에서 지역 소개 발표를 준비한다.',[
-    {label:'직접 자료를 찾아 발표한다',effects:{stats:{study:5,relations:2,stress:4}},detail:area+'을 직접 조사해 발표했다.'},
-    {label:'친구와 역할을 나누어 준비한다',effects:{stats:{relations:5,study:3}},detail:'친구들과 함께 완성했다.'},
-    {label:'간단한 포스터를 만든다',effects:{stats:{study:1,stress:-2}},detail:'부담 없이 과제를 마쳤다.'}
+   S.selection('elementary:project',41,'우리 동네 발표에 생긴 빈칸',
+    '발표 전날 한 조원이 동네 소개 사진을 가져왔는데 그 사진은 ==전혀 다른 시의 축제==였다. 이미 PPT 표지에는 그 사진이 걸려 있다.',[
+    {label:'사진의 출처를 확인하고 지역 자료로 바꾼다',effects:{stats:{study:2}},detail:'사진을 찾다 같은 이름의 축제가 두 지역에 있다는 걸 알았다. 발표에는 출처를 같이 적었다.'},
+    {label:'조원에게 사진을 바꾸자고 부탁한다',effects:{stats:{relations:1}},detail:'조원이 원본 사진을 다시 찾아 보냈다. 수정한 자료를 함께 확인한 뒤 제출했다.'},
+    {label:'사진은 빼고 직접 그린 지도를 넣는다',detail:'발표가 조금 투박해졌지만 다른 지역을 우리 동네라고 소개하진 않았다.'}
    ]),
    S.selection('elementary:interest-followup',43,'관심 분야를 더 깊이 해볼 기회','학교 축제에서 한 분야의 활동을 다시 맡아 볼 수 있다.',[
-    {label:'발표문을 쓰고 토론을 진행한다',tags:['humanities'],
+    {label:'발표문을 쓰고 토론을 진행한다',detail:'짝과 서로 다른 주장을 발표했다. 질문을 받자 미처 준비하지 못한 반론이 있었다.',tags:['humanities'],
      conditional:[{when:{traits:['관심-문과']},result:{effects:{traits:{add:['문과']}},history:{title:'문과 적성 발견',detail:'몇 차례 활동을 통해 표현 분야의 흥미가 자랐다.'}}}]},
-    {label:'탐구 실험과 수학 문제를 함께 풀어 본다',tags:['science'],
+    {label:'탐구 실험과 수학 문제를 함께 풀어 본다',detail:'계산이 맞지 않아 다시 측정했다. 예상했던 답과 다른 값도 그대로 기록했다.',tags:['science'],
      conditional:[{when:{traits:['관심-이과']},result:{effects:{traits:{add:['이과']}},history:{title:'이과 적성 발견',detail:'여러 탐구 경험이 과학 분야에 대한 관심으로 이어졌다.'}}}]},
-    {label:'무대나 전시 작품을 준비한다',tags:['arts'],
+    {label:'무대나 전시 작품을 준비한다',detail:'전시가 시작되자 직접 만든 작품 옆에 관람객이 남긴 쪽지가 붙었다.',tags:['arts'],
      conditional:[{when:{traits:['관심-예체능']},result:{effects:{traits:{add:['예체능']}},history:{title:'예체능 적성 발견',detail:'꾸준한 창작 경험으로 표현의 즐거움을 느꼈다.'}}}]},
-    {label:'체육 활동과 연습을 이어간다',tags:['sports'],
+    {label:'체육 활동과 연습을 이어간다',detail:'연습하던 동작이 마지막에 제대로 됐다. 다른 팀도 함께 박수를 쳤다.',tags:['sports'],
      conditional:[{when:{traits:['관심-체육']},result:{effects:{traits:{add:['체육']}},history:{title:'체육 적성 발견',detail:'꾸준한 활동이 운동의 즐거움을 더했다.'}}}]}
    ]),
    S.notice('elementary:age11',44,'초등학교 5학년','반 친구들과의 관계가 더 복잡해졌다.',{attributes:{age:11}}),

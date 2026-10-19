@@ -99,3 +99,10 @@
 
 - `html/game.html`은 3단계 시트 개선분이 이전 GitHub Pages 캐시에 묶이지 않게 CSS와 게임 JS 참조에 버전 쿼리를 붙인다. 정적 파일 경로와 스크립트 로드 순서는 그대로다.
 - `tests/smoke.mjs`는 경로·순서 검증 시 쿼리를 제거하고 실제 파일 존재 검사를 유지한다.
+
+
+## 2026-10-20 생애 스토리 브랜치 실행 계약
+
+오퍼레이터가 런타임 이전에 반환하는 스토리 정의에는 조건부 `variants` 후보가 포함될 수 있으나, 실제 후보의 `scenarioId`는 `timeline.pump()`의 이벤트 시작 순간 저장된다. 새로고침 시 기존 시나리오를 계속 쓰고 구 저장 선택은 `choiceId`에 연결된 원래 옵션을 유지한다. `contentId`, 저장 키, `simulation.version` 불변.
+
+`GukminDailyChoice.restore(snapshot)`는 일상 선택의 저장된 `awaitingContinuation` 리뷰와 `reviewBefore`를 복원한다. 기록·결과 마크업은 `GukminMarkup.render` 안전 DOM 전용. 상세 제약은 [STORY.md](STORY.md) 참조.
