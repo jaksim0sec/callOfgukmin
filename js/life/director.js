@@ -31,7 +31,24 @@ function content(persona){
 }
 function create({persona,persist,onChange}){
  const definitions=content(persona);
- const timeline=global.GukminTimeline.create({...definitions,persona,persist,onChange});
+ const choices=new Map(definitions.choices.map(c=>[c.id,c]));
+ function decorate(raw){
+  if(raw.choice)return {...raw,progress:{value:1,remaining:0,waiting:true,title:raw.choice.title}};
+  const eligible=definitions.events.filter(event=>{
+   const runtime=raw.runtime.events[event.id];
+   const c=choices.get(event.choice);
+   return c&&c.blocksTime!==false&&c.progress!==false&&
+     runtime?.status!=='completed'&&event.every===undefined&&
+     (event.at??0)>=raw.runtime.turn&&
+     global.GukminEffects.matches(raw.persona,event.when,event.at);
+  }).sort((a,b)=>(a.at??0)-(b.at??0))[0];
+  if(!eligible)return {...raw,progress:{value:0,remaining:null,waiting:false,title:''}};
+  const at=eligible.at??0,remain=Math.max(0,at-raw.runtime.turn);
+  const elapsed=Math.max(0,raw.runtime.turn-(raw.runtime.progressStart||0));
+  return {...raw,progress:{value:remain===0?1:elapsed/Math.max(1,elapsed+remain),remaining:remain,waiting:false,title:eligible.title}};
+ }
+ const timeline=global.GukminTimeline.create({...definitions,persona,persist,
+  onChange:s=>onChange?.(decorate(s))});
  function run(){
    // Execute current content, then only known one-shot events with reachable conditions.
    // Never advance a clock when no future content exists.
@@ -49,10 +66,10 @@ function create({persona,persist,onChange}){
      const turns=Math.min(...targets)-s.runtime.turn;
      timeline.advance(Math.min(10000,turns));
    }
-   return timeline.snapshot();
+   return decorate(timeline.snapshot());
  }
  return Object.freeze({
-   snapshot:timeline.snapshot,
+   snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
    resolve:(token,optionId)=>{const result=timeline.resolve(token,optionId);if(result)run();return result;},
    apply:(id,result)=>{const applied=timeline.apply(id,result);if(applied)run();return applied;},

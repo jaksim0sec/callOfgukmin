@@ -75,8 +75,13 @@ function apply(persona,result={},context={}){
  if(effects.schools){
   // Import old-format school records before editing, preserving every prior entry.
   s.schoolHistory=clone(P.schoolsOf(s));
-  for(const record of effects.schools){
-   keys(record,['id','kind','name','status'],'학교');
+  for(const raw of effects.schools){
+   keys(raw,['id','kind','name','status'],'학교');
+   // Graduate the currently enrolled school when the life story doesn't know its name in advance.
+   const eligible=!raw.id&&!raw.name&&raw.status==='graduated'
+     ?s.schoolHistory.filter(r=>r.kind===raw.kind&&r.status==='enrolled'):[];
+   if(!raw.id&&!raw.name&&eligible.length!==1)throw new Error('졸업 학교가 모호함');
+   const record=eligible.length?{...eligible[0],status:'graduated'}:raw;
    if(!record.id||!record.name||!P.schoolKinds.some(k=>k.id===record.kind)||!['enrolled','graduated','dropout'].includes(record.status))throw new Error('학교 기록 오류');
    const legacy=s.schoolHistory.filter(r=>!r.id&&r.kind===record.kind&&r.name===record.name);
    if(legacy.length>1)throw new Error('학교 이력이 모호함: '+record.name);

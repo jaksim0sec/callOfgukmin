@@ -67,3 +67,10 @@
 
 - `data/base.js`에 독립적으로 추첨되는 가정 재력 계층 프리셋을 기록하고 `data/regions.js`에 기존 255개 지역 후보와 태그를 이관. 모든 화면에서 `playerState.js` 앞에 두 파일을 로드한다.
 - `GukminPlayer.generate()`에서 출생 지역·태그·재력·특성을 만든다. `GukminStatus.traitToken(name)`으로 출생 인트로와 인게임 특성 토큰을 공유하며 저장 중인 기존 인물은 다시 추첨하지 않는다.
+
+## 고교까지 플레이 흐름 (2026-10-19)
+
+- 정적 로드 순서: `data/base → data/regions → data/schools → playerState → effects → timeline → life/director → life/story → life/infant → life/elementary → life/middle → life/high → systemDemo → statusView → game → majorView → boot`. 대기/결과 HTML도 같은 로드 순서를 유지하여 스모크 검증을 공유한다.
+- 기본 인생은 첫 선택(2세 가족 이벤트)까지 자동 진행하며 이후 선택을 해결할 때마다 관제탑이 다음 사건 시점까지 진행한다. 해당 시대 이벤트가 없으면 멈춘다. 고3 기말고사와 졸업까지 처리된 뒤 추가 운영자(operator) 등록을 기다린다.
+- 한방 팝업은 `majorView.js`가 게임 뷰의 `#lifeDecisionDialog`에 실험실과 별도로 표시한다. 기존 학교/정당 UI는 여전히 검증 모드 전용 미리보기이며 기본 게임에서 접근할 수 없다.
+- 구버전 저장 데이터·legacy 키를 삭제하지 않는다. 동일 `life-main-v1` 콘텐츠 ID를 유지하고 과거에 완료된 출생 사건은 중복 실행하지 않는다.

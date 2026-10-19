@@ -34,14 +34,14 @@ try{
   assert.equal(await page.locator('#birthIntroName').textContent(),initial);
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
-  assert.equal(await page.locator('#age').textContent(),'#0살');
-  assert.equal((await page.locator('#nextChoiceLabel').textContent()).trim(),'이야기 준비 중');
+  assert.equal(await page.locator('#age').textContent(),'#2살');
+  assert.equal((await page.locator('#nextChoiceLabel').textContent()).trim(),'응답 대기');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
-  assert.equal(firstLife.simulation.turn,0);
+  assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
-  assert.equal(await page.locator('#action').isVisible(),false);
+  assert.equal(await page.locator('#action').isVisible(),true);
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
 
@@ -79,6 +79,32 @@ try{
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#rerollPersona').click();const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(fresh.simulation,undefined);assert.equal(fresh.stats.money,0);
   assert.deepEqual(errors,[]);console.log(`PASS ${name}: A–F, reload, previews, save preservation, layout`);await context.close();
  }
+
+ // The built-in exam presenter uses a paper-style modal and settles through the same timeline.
+ const examContext=await browser.newContext();
+ const examPage=await examContext.newPage();
+ await examPage.addInitScript(()=>{
+  window.GukminContent={
+   contentId:'exam-view-check',events:[{id:'exam-view',layer:'한방 이벤트',at:0,choice:'exam-view'}],
+   choices:[{id:'exam-view',layer:'한방 선택',title:'중간고사',presentation:{type:'exam',grade:1,term:'1학기 중간고사',category:'school'},options:[
+    {id:'0',label:'쉰다',result:{effects:{stats:{health:2}}}},
+    {id:'1',label:'조금',result:{effects:{stats:{study:1}}}},
+    {id:'2',label:'꾸준히',result:{effects:{stats:{study:3}}}},
+    {id:'3',label:'집중',result:{effects:{stats:{study:6}}}},
+    {id:'4',label:'매우 집중',result:{effects:{stats:{health:-3}}}}
+   ]}]
+  };
+ });
+ await examPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+ await examPage.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
+ assert.equal(await examPage.locator('#lifeDecisionDialog .life-answer').count(),5);
+ await examPage.locator('#lifeDecisionDialog .life-answer').nth(2).click();
+ await examPage.locator('#lifeDecisionDialog .life-submit').click();
+ assert.equal(await examPage.locator('#lifeDecisionDialog[open]').count(),0);
+ assert.equal(await examPage.evaluate(()=>GukminGame.session.snapshot().runtime.choices['exam-view:1'].status),'closed');
+ console.log('PASS exam paper presenter: five choices, commit, close');
+ await examContext.close();
+
  // A future major-choice popup can attach later; the infrastructure itself opens none.
  const context=await browser.newContext();const page=await context.newPage();
  await page.addInitScript(()=>{window.GukminContent={contentId:'major-adapter-check',events:[{id:'major',layer:'한방 이벤트',at:0,title:'검증 한방',choice:'major'}],choices:[{id:'major',layer:'한방 선택',title:'중요한 선택',options:[{id:'accept',label:'확정',result:{effects:{stats:{money:7}}}}]}]};});

@@ -16,15 +16,15 @@ const SCHOOL_KINDS = [
   {id:'uni',label:'대학교'}
 ];
 const METRIC_DEFS = {
-  stress:{label:'정신병',type:'progress',tone:'negative'},
-  health:{label:'건강',type:'progress',tone:'positive'},
+  stress:{label:'정신병',type:'progress',tone:'negative',min:0,max:100},
+  health:{label:'건강',type:'progress',tone:'positive',min:0,max:100},
   money:{label:'재산',type:'currency'},
   allowance:{label:'용돈',type:'currency'},
   income:{label:'수입',type:'currency'},
-  relations:{label:'관계',type:'progress'},
-  study:{label:'성적',type:'progress'},
-  schoolScore:{label:'내신',type:'progress'},
-  exam:{label:'수능',type:'progress'},
+  relations:{label:'관계',type:'progress',min:0,max:100},
+  study:{label:'성적',type:'progress',min:0,max:100},
+  schoolScore:{label:'내신',type:'progress',min:0,max:100},
+  exam:{label:'모의고사',type:'progress',min:0,max:100},
   support:{label:'지지도',type:'progress'},
   awareness:{label:'인지도',type:'progress'}
 };

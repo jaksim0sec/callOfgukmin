@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','data/regions','playerState','effects','timeline','life/director','life/infant','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','data/schools','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -120,41 +120,81 @@ test('birth defaults and stage routes are data-owned without triggering a clock 
  assert.throws(()=>E.apply(next,{effects:{attributes:{phase:'missing'}}}),/생애 단계/);
 });
 
-test('director consumes available birth content, stops without an invented clock and restores once',()=>{
+
+test('director begins at family choice after birth news and restores without duplication',()=>{
  const {c,P,storage}=setup(),D=c.GukminDirector;
- const person=P.generate();
- let run=D.create({persona:person,persist:p=>P.save(p)});
- let s=run.run();
- assert.equal(s.runtime.turn,0);
- assert.equal(s.runtime.events['infant:birth-registered'].status,'completed');
- assert.equal(s.choice,null);
- assert.deepEqual(plain(run.active()),['infant']);
- assert.equal(s.persona.history.length,person.history.length,'no duplicate birth records');
- run=D.create({persona:P.load(),persist:p=>P.save(p)});
- s=run.run();assert.equal(s.runtime.turn,0);
+ let engine=D.create({persona:P.generate(),persist:p=>P.save(p)});
+ let s=engine.run();
+ assert.equal(s.runtime.turn,8);
+ assert.equal(s.persona.age,2);
  assert.equal(s.runtime.events['infant:birth-registered'].count,1);
+ assert.equal(s.choice.id,'infant:home');
+ assert.equal(s.choice.layer,'일상 선택');
+ const historyLen=s.persona.history.length;
+ engine=D.create({persona:P.load(),persist:p=>P.save(p)});
+ s=engine.run();
+ assert.equal(s.runtime.turn,8);
+ assert.equal(s.choice.id,'infant:home');
+ assert.equal(s.persona.history.length,historyLen);
+ assert.deepEqual(plain(engine.active()),['infant']);
  assert.equal(storage.get('callOfgukmin__playable__v1'),'legacy-sentinel');
 });
-test('director automatically advances only to registered future content and switches life operators',()=>{
+test('life cycle stays deterministic and reaches high-school graduation with school history',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
- D.register({id:'school',when:{phase:'elementary'},generate:()=>({events:[
-   {id:'school-entry',layer:'소식 이벤트',at:2,result:{history:{title:'입학 예고'}}}
- ]})});
- let saved=null;
- const run=D.create({persona:P.generate(),persist:p=>{saved=p;return true;}});
- run.run();
- assert.equal(run.snapshot().runtime.turn,0,'no unrelated phase timer');
- run.apply('phase-change',{effects:{attributes:{phase:'elementary'}}});
- const s=run.snapshot();
- assert.deepEqual(plain(run.active()),['school']);
- assert.equal(s.runtime.turn,2);
- assert.ok(s.persona.history.some(item=>item.title==='입학 예고'));
- assert.equal(s.runtime.events['school-entry'].status,'completed');
- assert.equal(s.persona.age,0,'no arbitrary age/time mapping');
- const resumed=D.create({persona:saved});
- resumed.run();
- assert.equal(resumed.snapshot().runtime.events['school-entry'].count,1);
- assert.equal(resumed.snapshot().runtime.turn,2);
+ const original=P.generate();
+ let engine=D.create({persona:original,persist:p=>P.save(p)});
+ engine.run();
+ let decisions=0,exams=0,applications=0,lastTurn=0;
+ while(engine.snapshot().choice&&decisions<70){
+  const s=engine.snapshot(),choice=s.choice;
+  assert.ok(s.runtime.turn>=lastTurn,'non-decreasing clock');
+  lastTurn=s.runtime.turn;
+  if(choice.presentation?.type==='exam'){
+   exams++;
+   assert.equal(choice.options.length,5);
+   assert.ok(choice.options.every(o=>o.result.effects.stats.study!==undefined));
+  }
+  if(choice.presentation?.type==='school'){
+   applications++;
+   assert.ok(choice.options.every(o=>o.school.name));
+   assert.ok(choice.options.some(o=>o.school.region===c.GukminSchools.regionOf(original)));
+  }
+  const option=choice.options.find(o=>o.id==='effort-2'&&o.available)||choice.options.find(o=>o.available);
+  assert.ok(option,'at least one available option');
+  engine.resolve(choice.token,option.id);
+  decisions++;
+  if(decisions%4===0)engine=D.create({persona:P.load(),persist:p=>P.save(p)});
+ }
+ const final=engine.snapshot();
+ assert.equal(exams,18,'six middle-school and twelve high-school examinations');
+ assert.equal(applications,1,'one school application');
+ assert.ok(decisions>=25);
+ assert.equal(final.persona.age,19);
+ assert.equal(final.runtime.turn,79);
+ assert.equal(final.choice,null);
+ assert.equal(final.progress.remaining,null);
+ assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='elementary').status,'graduated');
+ assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='middle').status,'graduated');
+ assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='high').status,'graduated');
+ assert.equal(final.runtime.events['high:graduation'].count,1);
+ engine=D.create({persona:P.load(),persist:p=>P.save(p)});
+ engine.run();
+ assert.equal(engine.snapshot().runtime.events['high:graduation'].count,1);
+ assert.equal(engine.snapshot().runtime.turn,79);
+});
+test('special-school game thresholds lock options until grade requirements hold',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ const persona=P.generate();
+ const pack=D.content(persona);
+ const school=pack.choices.find(c=>c.id==='middle:high-application');
+ assert.equal(school.options.length,3);
+ assert.equal(school.presentation.type,'school');
+ assert.ok(school.options.find(o=>!o.when));
+ assert.ok(school.options.some(o=>o.when?.stats?.schoolScore?.gte>=70));
+ const exam=pack.choices.find(c=>c.id.startsWith('high:1:3월-모의고사'));
+ assert.equal(exam.options.length,5);
+ assert.equal(exam.presentation.type,'exam');
+ assert.ok(exam.options[4].result.effects.stats.health<0);
 });
 
 test('region catalogue and independent wealth presets generate tagged births',()=>{
