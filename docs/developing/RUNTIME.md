@@ -6,23 +6,23 @@
 
 | 파일 | 현재 책임 |
 |---|---|
-| `index.html` | GitHub Pages 루트 진입·글꼴·CSS/JS 로드·`#app` 호스트만 소유 |
+| `index.html` | GitHub Pages 루트 진입 시 `html/waiting.html`로 이동하는 리다이렉트 전용 |
 | `html/waiting.html` | 대기 화면·현재 인물/출생 정보·시작/재추첨/결과 미리보기 버튼 |
 | `html/game.html` | 인게임 포스터·속성/상태·특성·인생 기록·학교/정당 모달 |
 | `html/result.html` | 종료 판정이 없는 결과 화면 **미리보기** |
-| `js/boot.js` | HTML 조각 비동기 로드/캐시·전환·마운트·해제·오류 처리 |
+| `js/boot.js` | 독립 HTML 화면별 초기화·화면 이동. 런타임 HTML fetch 사용 안 함 |
 | `js/playerState.js` | 인물 생성/보존·스탯 정의/단계별 활성 조건·학력/특성 기반 데이터 |
 | `js/statusView.js` | 왼쪽 속성·학력 토큰 / 오른쪽 상태 스탯·특성 렌더링 |
 | `js/poster.js` | 기존 독립 DOM 포스터 `GukminPoster.create/update` |
 | `js/game.js` | **인게임 화면 전용** 컨트롤러: 렌더/기록, 서류·투표지 미리보기, 리셋 |
 | `css/style.css` | 정적 세 화면 및 반응형·팝업·토큰 스타일 |
-| `tests/smoke.mjs` | HTML/JS 참조·구문·ID·CSS 단위·게임 진행 미포함 확인 |
+| `tests/smoke.mjs` | 독립 HTML/JS 상대경로·구문·ID·CSS 단위와 fetch 제거 확인 |
 
-- 단일 HTML 호스트: `index.html` → `js/boot.js` → `fetch('./html/{waiting|game|result}.html')`. 로드 시 HTML 조각은 `#app` 내부에만 마운트. 다른 화면 DOM은 해제.
+- `index.html` → `html/waiting.html` 리다이렉트. 각 `html/{waiting|game|result}.html`은 `<!doctype html>`이 있는 독립 문서이며 공통 JS/CSS를 `../` 상대경로로 불러온다. `boot.js`는 화면별 초기화와 페이지 네비게이션만 처리하며 `fetch()`를 사용하지 않는다.
 - 스크립트 순서: `poster.js`, `playerState.js`, `statusView.js`, `game.js`, `boot.js`. 일반 `defer` 스크립트, 번들러/외부 런타임 프레임워크 없음.
-- HTML 조각이 fetch로 로드되므로 `file://` 직접 실행 대신 루트에서 `python3 -m http.server 8000` 등의 정적 서버로 실행한다. GitHub Pages 호스팅 경로는 루트 `index.html` 유지.
+- 독립 HTML 파일이므로 `fetch()` 없이 직접 페이지가 열린다. HTTP 정적 서버 권장: 루트에서 `python3 -m http.server 8000`. GitHub Pages 호스팅 경로는 루트 `index.html` 유지.
 - 초기 화면은 **대기**. 시작 클릭은 인게임으로 이동하지만 **스토리 시간은 진행시키지 않는다**. 결과 화면은 대기에서 테스트용으로만 접근.
-- 화면 전환마다 인게임 화면의 이벤트 리스너를 제거하고 재진입 시 현재 인물 저장값을 다시 읽는다.
+- 페이지 이동마다 브라우저가 새 HTML 문서를 로드하고, 공통 `localStorage` UI 키로 동일 인물을 다시 읽는다.
 - 작업 시작 시 [AGENTS.md](../../AGENTS.md), CSS 작업이면 [CSS.md](CSS.md), [UI.md](UI.md) 확인.
 
 ## 인물 데이터·UI 계약

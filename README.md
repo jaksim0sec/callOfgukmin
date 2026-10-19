@@ -7,7 +7,7 @@
 - **대기** (`html/waiting.html`): 이름·출생 배경·포스터, 새 인물 생성, 인게임 진입, 결과 화면 미리보기.
 - **인게임** (`html/game.html`): PC 2열 / 모바일 포스터·속성 정보 + 항상 열린 인생 기록 바텀시트. 속성 스탯은 왼쪽, 상태 스탯·특성 토큰은 오른쪽.
 - **결과** (`html/result.html`): 별도 결과 레이아웃. 현재는 종료 판정이 없는 **미리보기**만 가능.
-- `index.html`은 GitHub Pages용 단일 진입 문서다. `js/boot.js`가 각 HTML 조각을 필요할 때 불러와 **한 번에 한 화면만** 표시한다.
+- `index.html`은 대기 화면으로 이동하는 진입점이다. `html/`의 세 파일은 **독립 HTML 페이지**이며 `js/boot.js`가 클릭 시 브라우저 페이지를 이동시킨다. 동적 `fetch` 없이 작동한다.
 
 ## UI 기반 기능
 
@@ -24,7 +24,7 @@ node tests/smoke.mjs
 python3 -m http.server 8000
 ```
 
-정적 HTML 조각은 HTTP 서버에서 `fetch`로 로드한다. `file://`에서 직접 열면 작동하지 않을 수 있다.
+대기·인게임·결과 화면은 각각 HTML을 직접 열 수 있다. HTTP 정적 서버 또는 GitHub Pages에서 실행한다.
 
 - [AGENTS.md](./AGENTS.md): 개발 규칙
 - [docs 안내](./docs/README.md): 문서 분류

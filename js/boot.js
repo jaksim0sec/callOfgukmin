@@ -1,89 +1,58 @@
-/* Static HTML screen host. Index owns no view-specific markup.
- * Three templates are fetched once and mounted one at a time.
+/* GitHub Pages-safe page router. Each HTML view is a standalone document.
+ * No runtime fetch, no injection of partial HTML, no dependency on #app.
  */
 (function(global){
 'use strict';
-const TEMPLATES=Object.freeze({
- waiting:'./html/waiting.html',
- game:'./html/game.html',
- result:'./html/result.html'
-});
-const host=document.getElementById('app');
-const cache=new Map();
-let cleanup=null;
-let request=0;
-async function getTemplate(name){
- if(!Object.hasOwn(TEMPLATES,name))throw new Error('Unknown screen '+name);
- if(cache.has(name))return cache.get(name);
- const response=await fetch(TEMPLATES[name],{cache:'no-cache'});
- if(!response.ok)throw new Error('Cannot load '+TEMPLATES[name]+' ('+response.status+')');
- const markup=await response.text();
- cache.set(name,markup);
- return markup;
+const PAGES=new Set(['waiting','game','result']);
+const screen=document.body.dataset.screen;
+function navigate(name){
+ if(!PAGES.has(name))throw new Error('Unknown page: '+name);
+ global.location.assign(new URL('./'+name+'.html',global.location.href).href);
 }
-function el(id){return host.querySelector('#'+id);}
-function previewPoster(mount,persona,stage){
+function renderPoster(target,persona,stage){
  const data=global.GukminGame.posterData(persona);
- data.stage=stage||data.stage;
- mount.append(global.GukminPoster.create(data));
+ data.stage=stage;
+ target.replaceChildren(global.GukminPoster.create(data));
 }
-function mountWaiting(navigate){
- const persona=global.GukminPlayer.ensure();
- function render(){
-  const item=global.GukminPlayer.ensure();
-  el('waitingName').textContent=item.name;
-  el('waitingBackground').textContent=item.birthplace+' · '+item.family;
-  const mount=el('waitingPosterMount');
-  mount.replaceChildren();
-  previewPoster(mount,item,'출생');
+function initWaiting(){
+ const player=global.GukminPlayer;
+ const name=document.getElementById('waitingName');
+ const background=document.getElementById('waitingBackground');
+ const mount=document.getElementById('waitingPosterMount');
+ function show(){
+   const s=player.ensure();
+   name.textContent=s.name;
+   background.textContent=s.birthplace+' · '+s.family;
+   renderPoster(mount,s,'출생');
  }
- el('enterGame').addEventListener('click',()=>navigate('game'));
- el('previewResult').addEventListener('click',()=>navigate('result'));
- el('rerollPersona').addEventListener('click',()=>{
-  const next=global.GukminPlayer.generate();
-  global.GukminPlayer.save(next);
-  render();
+ document.getElementById('enterGame').addEventListener('click',()=>navigate('game'));
+ document.getElementById('previewResult').addEventListener('click',()=>navigate('result'));
+ document.getElementById('rerollPersona').addEventListener('click',()=>{
+   player.save(player.generate());
+   show();
  });
- render();
- return ()=>{};
+ show();
 }
-function mountResult(navigate){
+function initResult(){
  const persona=global.GukminPlayer.ensure();
- previewPoster(el('resultPosterMount'),persona,'결과 미리보기');
- el('resultBack').addEventListener('click',()=>navigate('waiting'));
- return ()=>{};
+ renderPoster(document.getElementById('resultPosterMount'),persona,'결과 미리보기');
+ document.getElementById('resultBack').addEventListener('click',()=>navigate('waiting'));
 }
-async function navigate(name){
- const current=++request;
- host.setAttribute('aria-busy','true');
- try{
-  const html=await getTemplate(name);
-  if(current!==request)return;
-  if(cleanup)cleanup();
-  cleanup=null;
-  const template=document.createElement('template');
-  template.innerHTML=html;
-  host.replaceChildren(template.content.cloneNode(true));
-  document.body.dataset.screen=name;
-  if(name==='game')cleanup=global.GukminGame.mount(host,navigate);
-  else if(name==='result')cleanup=mountResult(navigate);
-  else cleanup=mountWaiting(navigate);
- }catch(error){
-  if(current!==request)return;
-  console.error('Screen failed to load:',error);
-  if(cleanup)cleanup();
-  cleanup=null;
-  host.replaceChildren();
-  const box=document.createElement('main');
-  box.className='screen-error';
-  const title=document.createElement('h1');title.textContent='화면을 불러오지 못했어';
-  const desc=document.createElement('p');desc.textContent='인터넷 연결 또는 정적 파일 경로를 확인해 줘.';
-  const retry=document.createElement('button');retry.type='button';retry.textContent='다시 시도';
-  retry.addEventListener('click',()=>navigate(name));
-  box.append(title,desc,retry);
-  host.append(box);
- }finally{if(current===request)host.removeAttribute('aria-busy');}
+try{
+ if(screen==='waiting')initWaiting();
+ else if(screen==='game')global.GukminGame.mount(document,navigate);
+ else if(screen==='result')initResult();
+ else throw new Error('Missing or invalid data-screen attribute: '+screen);
+}catch(error){
+ console.error('국민의 부름 화면 초기화 실패 ('+screen+'):',error);
+ const notice=document.createElement('div');
+ notice.className='screen-error';
+ notice.setAttribute('role','alert');
+ notice.textContent='화면 초기화 오류: '+(error instanceof Error?error.message:String(error))+' — 새로고침하거나 대기 화면으로 돌아가 줘.';
+ const link=document.createElement('a');
+ link.href='./waiting.html';link.textContent='대기 화면';
+ notice.append(link);
+ document.body.replaceChildren(notice);
 }
 global.GukminScreens=Object.freeze({navigate});
-navigate('waiting');
 })(window);

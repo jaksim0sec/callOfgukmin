@@ -6,11 +6,11 @@
 - GitHub Pages에서 **저장소 루트 `index.html`**을 사용한다. 배포 루트·외부 라이브러리를 이유 없이 바꾸지 않는다. 과거 플레이 저장을 보존하고 신규 UI 시연용 키를 분리한다.
 
 ## 구조
-- `index.html`: GitHub Pages 루트 진입점·`#app`만. 세부 화면 DOM 금지.
-- `html/waiting.html`, `html/game.html`, `html/result.html`: 각 화면의 HTML 구조. 화면별 상태는 단일 호스트에서 교체.
+- `index.html`: GitHub Pages 루트 진입점, 대기 화면으로 리다이렉트만 수행. 세부 화면 DOM 금지.
+- `html/waiting.html`, `html/game.html`, `html/result.html`: 각 화면의 독립 HTML 문서(공통 JS/CSS 참조). 페이지 네비게이션으로 교체.
 - `css/style.css`: 공통 스타일·모바일 바텀시트·선택 모달.
 - `js/poster.js`: 포스터 컴포넌트(`window.GukminPoster`).
-- `js/boot.js`: 화면 템플릿 로드·전환·정리.
+- `js/boot.js`: 각 화면의 초기화와 독립 페이지 간 이동. `fetch()`/HTML 조각 삽입 금지.
 - `js/playerState.js`: 인물 생성·저장·속성/상태/특성 정의·생애 단계별 표시 목록.
 - `js/statusView.js`: 속성/학교 토큰과 상태 프로그래스·특성 SVG 토큰 렌더링.
 - `js/game.js`: 인게임 화면 렌더·팝업 미리보기 전용. 스토리·선거·엔딩을 임의로 재활성화하지 않는다.
