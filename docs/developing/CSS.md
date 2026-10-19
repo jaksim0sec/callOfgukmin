@@ -159,4 +159,12 @@
 - 현재 `#lifeSheet`, `#sheetToggle`, `.sheet-head`, `.sheet-content`를 그대로 사용한다. PC 2열·게임 데이터·단일 기록 스크롤은 변경하지 않는다.
 - 모바일 높이는 CSS 변수의 약 20/55/90dvh, easing은 CSS가 소유한다. JS는 높이를 직접 쓰지 않고 드래그 중 `--sheet-drag-height` 임시 변수만 rAF로 갱신하며 해제할 때 제거한다.
 - 원본과 맞춘 임계값: 최소 위쪽 80px 초과→중간, 중간 위 80px 초과→전체·아래 90px 초과→최소, 전체 아래 60px 초과→중간·240px 초과→최소. 탭은 세 단계 순환. 최근 회귀 수정 사항인 드래그 합성 클릭 억제 **180ms** 유지.
-- 손잡이·헤더만 Pointer Events 드래그, 헤더 버튼 제외. 취소·리마운트 시 이벤트와 프레임 정리. 속도 기반 관성은 원본에도 없어 도입하지 않는다. `prefers-reduced-motion` 적용.
+- 손잡이·헤더만 Pointer Events 드래그, 헤더 버튼 제외. 취소·리마운트 시 이벤트와 프레임 정리. 초기 제공된 코드 기준 설명이다. 아래 최종 수정 코드에서 실제 속도 기반 관성으로 대체한다. `prefers-reduced-motion` 적용.
+
+## 22. 관성·스프링 바텀시트 전환 (2026-10-20)
+
+- 최종 Copilot 원본의 포인터 속도 추적 `dy/dt`, 관성 투영 거리 220, 스프링 `stiffness=.035`와 `damping=.8`을 `createLifeSheetController`로 이식한다. 기존 거리 임계값 전용 동작은 대체된다.
+- 스냅 비율 20/55/90%는 CSS 변수 `--sheet-min-ratio`, `--sheet-mid-ratio`, `--sheet-max-ratio`가 소유하며 JS는 이를 읽어 스프링 목표만 산출한다. 최소/최대 rem 제한 유지.
+- 드래그 중 CSS 변수 `--sheet-drag-height`, 스프링 중 `--sheet-motion-height`만 JS가 갱신한다. CSS가 높이·이징 외관·축소시 본문 숨김을 담당한다. `is-springing` 종료 후 임시 변수를 지운다.
+- 원본 `close()`, 검은 오버레이, 재생성 DOM, MutationObserver, 호출되지 않는 `goDown` HTML 조각은 기존 상시 기록 시트 계약과 맞지 않아 이식하지 않는다. 전체에서 강한 하향 드래그는 최소화로 정착한다.
+- 원본 물리 애니메이션을 Pointer Events 한 경로로 통합하며 마우스/터치 중복 입력 제거. 드래그 중 프레임 제한, 스프링 중 재드래그 취소, 리마운트 해제, reduced-motion 즉시 정착, 직전 합성 클릭 180ms 억제를 적용한다.
