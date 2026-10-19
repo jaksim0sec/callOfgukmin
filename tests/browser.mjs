@@ -87,6 +87,12 @@ try{
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'swipe down: middle');
    await drag(230);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'swipe down: min');
+   await drag(-230);
+   await drag(-230);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-expanded')),true,'return to full for strong downward gesture');
+   await drag(270);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-minimized')),true,'long drag minimizes, never removes');
+   assert.equal(await page.locator('#lifeSheet').count(),1,'one persistent sheet remains');
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    const tapGrip=async()=>{
     const b=await page.locator('#sheetToggle').boundingBox();
