@@ -448,3 +448,11 @@ test('aptitude comes from repeated related activities and applies tagged modifie
  const plainEffect=E.apply(person,{tags:['sports'],effects:{stats:{schoolScore:3}}}).stats.schoolScore;
  assert.equal(tagged,plainEffect+2);
 });
+
+test('science-school lookup keeps all eight gifted institutions distinct from science highs',()=>{
+ const {c}=setup(),S=c.GukminSchools;
+ for(const name of ['광주과학고등학교','서울과학고등학교','경기과학고등학교',
+  '대구과학고등학교','대전과학고등학교','세종과학예술영재학교',
+  '인천과학예술영재학교','한국과학영재학교'])assert.equal(S.kindOf(name),'gifted',name);
+ assert.equal(S.kindOf('경기북과학고등학교'),'science');
+});

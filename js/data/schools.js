@@ -24,7 +24,11 @@ const checked=Object.freeze({
  '경기물류고등학교':'https://www.goept.kr/goept/na/ntt/selectNttInfo.do?bbsId=10070&mi=10055&nttSn=2548226'
 });
 const autonomous=new Set(['휘문고등학교','해운대고등학교','북일고등학교']);
-const gifted=new Set(['광주과학고등학교','세종과학예술영재학교']);
+const gifted=new Set([
+ '광주과학고등학교','세종과학예술영재학교','서울과학고등학교',
+ '경기과학고등학교','대구과학고등학교','대전과학고등학교',
+ '인천과학예술영재학교','한국과학영재학교'
+]);
 const international=new Set(['고양국제고등학교']);
 const vocational=new Set(['경기물류고등학교']);
 const autonomousPublic=new Set(['현화고등학교']);

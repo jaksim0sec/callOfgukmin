@@ -149,7 +149,8 @@ function traitToken(name,entry={}){
 function showTraits(root,s){
   const traits=root.querySelector('#traits');traits.replaceChildren();
   const entries=Array.isArray(s.traits)?s.traits.filter(Boolean):[];
-  if(!entries.length){
+  const enrolled=global.GukminPlayer.schoolsOf(s).find(r=>r.kind==='high'&&r.status==='enrolled');
+  if(!entries.length&&!enrolled){
     traits.append(node('span','traits-empty','아직 획득한 특성이 없어'));
     return;
   }
@@ -165,7 +166,6 @@ function showTraits(root,s){
     traits.append(token);
   }
   // Derived presentation only: schoolHistory stays the single source of school identity.
-  const enrolled=global.GukminPlayer.schoolsOf(s).find(r=>r.kind==='high'&&r.status==='enrolled');
   if(enrolled){
    const kind=global.GukminSchools.kindOf(enrolled.name);
    const labels={science:'과학고',foreign:'외국어고',international:'국제고',gifted:'영재학교',
