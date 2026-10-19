@@ -37,10 +37,21 @@ function posterData(persona){
  };
 }
 
-function createLifeSheetController(sheet,mobileSheet){
+function createLifeSheetController(sheet, mobileSheet) {
  const grip=sheet.querySelector('#sheetToggle'),head=sheet.querySelector('.sheet-head');
  const labels=['인생 기록 중간까지 펼치기','인생 기록 전체 펼치기','인생 기록 최소화'];
- let level=0,drag=null,pendingFrame=0,lastDragAt=-Infinity;
+ const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+ let level=0,drag=null,dragFrame=0,springFrame=0,lastDragAt=-Infinity;
+ function snapHeights(){
+  const css=getComputedStyle(sheet),vh=innerHeight;
+  const rem=parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const ratio=(name,otherwise)=>Number.parseFloat(css.getPropertyValue(name))||otherwise;
+  return [
+   Math.min(12*rem,Math.max(8.5*rem,vh*ratio('--sheet-min-ratio',.2))),
+   vh*ratio('--sheet-mid-ratio',.55),
+   Math.min(vh*ratio('--sheet-max-ratio',.9),vh-rem)
+  ];
+ }
  function setLevel(next){
   level=next;
   sheet.classList.toggle('is-minimized',level===0);
@@ -49,47 +60,95 @@ function createLifeSheetController(sheet,mobileSheet){
   grip.setAttribute('aria-expanded',String(level!==0));
   grip.setAttribute('aria-label',labels[level]);
  }
- // The supplied openSheet's directional snap: close becomes minimize.
- function chooseLevel(start,delta){
-  if(start===0)return delta< -80?1:0;
-  if(start===1)return delta< -80?2:delta>90?0:1;
-  return delta>240?0:delta>60?1:2;
+ function cancelSpring(){
+  if(springFrame)cancelAnimationFrame(springFrame);
+  springFrame=0;
+  sheet.classList.remove('is-springing');
+  sheet.style.removeProperty('--sheet-motion-height');
+ }
+ function springTo(next,velocity=0,startHeight=sheet.getBoundingClientRect().height){
+  cancelSpring();
+  const heights=snapHeights(),target=heights[next];
+  setLevel(next);
+  if(!mobileSheet.matches||reducedMotion.matches||Math.abs(startHeight-target)<.5)return;
+  let x=startHeight,sv=-Math.sign(velocity)*Math.sqrt(Math.abs(velocity))*.1;
+  const stiffness=.035,damping=.8;
+  sheet.classList.add('is-springing');
+  sheet.style.setProperty('--sheet-motion-height',x+'px');
+  function animate(){
+   const distance=target-x;
+   const force=Math.max(-25,Math.min(25,distance*stiffness));
+   sv=(sv+force)*damping;
+   x+=sv;
+   sheet.style.setProperty('--sheet-motion-height',x+'px');
+   if(Math.abs(target-x)<.5&&Math.abs(sv)<.5){
+    springFrame=0;
+    sheet.classList.remove('is-springing');
+    sheet.style.removeProperty('--sheet-motion-height');
+   }else springFrame=requestAnimationFrame(animate);
+  }
+  springFrame=requestAnimationFrame(animate);
+ }
+ function chooseLevel(start,currentHeight,velocity,totalDelta){
+  const heights=snapHeights(),projected=Math.max(heights[0],Math.min(heights[2],
+   currentHeight-Math.max(-2,Math.min(2,velocity))*220));
+  if(start===0)return velocity<-.55||projected>(heights[0]+heights[1])/2?1:0;
+  if(start===1){
+   if(velocity<-.55||projected>(heights[1]+heights[2])/2)return 2;
+   if(velocity>.55||projected<(heights[0]+heights[1])/2)return 0;
+   return 1;
+  }
+  // Source close() maps to minimum; a strong downward gesture can skip middle.
+  if(totalDelta>240||(velocity>1.15&&projected<(heights[0]+heights[1])/2))return 0;
+  return velocity>.55||projected<(heights[1]+heights[2])/2?1:2;
+ }
+ function paintDrag(){
+  dragFrame=0;
+  if(drag)sheet.style.setProperty('--sheet-drag-height',drag.startHeight-drag.delta+'px');
  }
  function startDrag(e){
   if(!mobileSheet.matches||!e.isPrimary||e.button!==0||drag)return;
   if(e.target.closest('button:not(#sheetToggle),a,input,select,textarea'))return;
-  drag={id:e.pointerId,target:e.currentTarget,startY:e.clientY,
-   startHeight:sheet.getBoundingClientRect().height,startLevel:level,delta:0,moved:false};
+  const height=sheet.getBoundingClientRect().height;
+  cancelSpring();
+  const now=performance.now();
+  drag={id:e.pointerId,owner:e.currentTarget,startY:e.clientY,startHeight:height,
+   startLevel:level,delta:0,lastY:e.clientY,lastT:now,velocity:0,moved:false};
+  sheet.classList.add('is-dragging');
+  sheet.style.setProperty('--sheet-drag-height',height+'px');
   e.currentTarget.setPointerCapture(e.pointerId);
- }
- function paintDrag(){
-  pendingFrame=0;
-  if(drag)sheet.style.setProperty('--sheet-drag-height',String(drag.startHeight-drag.delta)+'px');
  }
  function onDrag(e){
   if(!drag||e.pointerId!==drag.id)return;
+  const now=performance.now(),dt=Math.max(now-drag.lastT,1);
+  drag.velocity=(e.clientY-drag.lastY)/dt;
+  drag.lastY=e.clientY;drag.lastT=now;
   drag.delta=e.clientY-drag.startY;
-  if(!drag.moved&&Math.abs(drag.delta)<8)return;
-  drag.moved=true;
-  sheet.classList.add('is-dragging');
-  if(!pendingFrame)pendingFrame=requestAnimationFrame(paintDrag);
-  if(e.cancelable)e.preventDefault();
+  if(Math.abs(drag.delta)>=8)drag.moved=true;
+  if(drag.moved){
+   if(!dragFrame)dragFrame=requestAnimationFrame(paintDrag);
+   if(e.cancelable)e.preventDefault();
+  }
  }
  function endDrag(e,cancelled=false){
   if(!drag||e.pointerId!==drag.id)return;
   const ended=drag;
-  if(pendingFrame)cancelAnimationFrame(pendingFrame);
-  pendingFrame=0;drag=null;
+  if(dragFrame)cancelAnimationFrame(dragFrame);
+  dragFrame=0;
+  drag=null;
   sheet.classList.remove('is-dragging');
   sheet.style.removeProperty('--sheet-drag-height');
   const delta=e.clientY-ended.startY;
-  setLevel(ended.moved&&!cancelled?chooseLevel(ended.startLevel,delta):ended.startLevel);
+  const currentHeight=ended.startHeight-delta;
+  const velocity=performance.now()-ended.lastT>90?0:ended.velocity;
   if(ended.moved)lastDragAt=performance.now();
-  if(ended.target.hasPointerCapture(e.pointerId))ended.target.releasePointerCapture(e.pointerId);
+  const next=!cancelled&&ended.moved?chooseLevel(ended.startLevel,currentHeight,velocity,delta):ended.startLevel;
+  springTo(next,cancelled?0:velocity,ended.moved?currentHeight:ended.startHeight);
+  if(ended.owner.hasPointerCapture(e.pointerId))ended.owner.releasePointerCapture(e.pointerId);
  }
  function tapGrip(){
   if(!mobileSheet.matches||performance.now()-lastDragAt<180)return;
-  setLevel((level+1)%3);
+  springTo((level+1)%3);
  }
  function cancelDrag(e){endDrag(e,true);}
  for(const target of [grip,head]){
@@ -101,11 +160,13 @@ function createLifeSheetController(sheet,mobileSheet){
  grip.addEventListener('click',tapGrip);
  setLevel(0);
  return function disposeLifeSheet(){
-  if(pendingFrame)cancelAnimationFrame(pendingFrame);
-  if(drag?.target.hasPointerCapture(drag.id))drag.target.releasePointerCapture(drag.id);
+  if(dragFrame)cancelAnimationFrame(dragFrame);
+  dragFrame=0;
+  if(drag?.owner.hasPointerCapture(drag.id))drag.owner.releasePointerCapture(drag.id);
   drag=null;
-  sheet.style.removeProperty('--sheet-drag-height');
   sheet.classList.remove('is-dragging');
+  sheet.style.removeProperty('--sheet-drag-height');
+  cancelSpring();
   for(const target of [grip,head]){
    target.removeEventListener('pointerdown',startDrag);
    target.removeEventListener('pointermove',onDrag);
