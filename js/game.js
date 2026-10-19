@@ -48,83 +48,52 @@ function mount(root,navigate,content=global.GukminContent){
  const $=id=>root.querySelector('#'+id);
  const sheet=$('lifeSheet'),sheetGrip=$('sheetToggle');
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
- let lastSheetDrag=0,drag=null;
- // The sheet is visible but compact on mobile, even while a choice is waiting.
- if(mobileSheet.matches)sheet.classList.add('is-minimized');
- function currentSheetLevel(){return sheet.classList.contains('is-expanded')?2:sheet.classList.contains('is-middle')?1:0;}
+
+ let sheetLevel=0,drag=null,lastSheetDrag=0;
+ const sheetHead=sheet.querySelector('.sheet-head');
+ // Existing game DOM is permanent; CSS owns sheet heights and animation.
  function setSheetLevel(level){
-  sheet.classList.toggle('is-minimized',level===0);
-  sheet.classList.toggle('is-middle',level===1);
-  sheet.classList.toggle('is-expanded',level===2);
-  sheetGrip.setAttribute('aria-expanded',String(level!==0));
-  sheetGrip.setAttribute('aria-label',['인생 기록 중간까지 펼치기','인생 기록 전체 펼치기','인생 기록 최소화'][level]);
+  sheetLevel=Math.max(0,Math.min(2,level));
+  sheet.classList.toggle('is-minimized',sheetLevel===0);
+  sheet.classList.toggle('is-middle',sheetLevel===1);
+  sheet.classList.toggle('is-expanded',sheetLevel===2);
+  sheetGrip.setAttribute('aria-expanded',String(sheetLevel!==0));
+  sheetGrip.setAttribute('aria-label',['인생 기록 중간까지 펼치기','인생 기록 전체 펼치기','인생 기록 최소화'][sheetLevel]);
  }
- function sheetLevelHeight(level){
-  const vh=global.innerHeight,rem=parseFloat(global.getComputedStyle(document.documentElement).fontSize);
-  return level===0?Math.min(12*rem,Math.max(8.5*rem,.2*vh)):level===1?.55*vh:Math.min(.9*vh,vh-rem);
- }
- function snapSheetDrag(level,height,delta,moved,cancel=false){
-  if(cancel||!moved)return level;
-  const target=Math.max(sheetLevelHeight(0),Math.min(sheetLevelHeight(2),height-delta));
-  const distances=[0,1,2].map(n=>Math.abs(target-sheetLevelHeight(n)));
-  let next=distances.indexOf(Math.min(...distances));
-  if(next===level&&Math.abs(delta)>=48)next=Math.max(0,Math.min(2,level+(delta<0?1:-1)));
-  return next;
- }
+ setSheetLevel(0);
  function beginSheetDrag(e){
   if(!mobileSheet.matches||!e.isPrimary||e.button!==0||drag||
-    e.target.closest('button:not(#sheetToggle),a,input'))return;
-  drag={pointer:e.pointerId,owner:e.currentTarget,y:e.clientY,
-    height:sheet.getBoundingClientRect().height,
-    level:currentSheetLevel(),moved:false};
+    e.target.closest('button:not(#sheetToggle),a,input,select,textarea'))return;
+  drag={pointer:e.pointerId,owner:e.currentTarget,startY:e.clientY,
+    startHeight:sheet.getBoundingClientRect().height,startLevel:sheetLevel,moved:false};
   e.currentTarget.setPointerCapture(e.pointerId);
  }
  function moveSheetDrag(e){
   if(!drag||e.pointerId!==drag.pointer)return;
-  const delta=e.clientY-drag.y;
-  if(!drag.moved&&Math.abs(delta)<8)return;
+  const distance=e.clientY-drag.startY;
+  if(!drag.moved&&Math.abs(distance)<8)return;
   drag.moved=true;
-  sheet.classList.remove('is-minimized','is-middle','is-expanded');
   sheet.classList.add('is-dragging');
-  const minimum=8.5*parseFloat(global.getComputedStyle(document.documentElement).fontSize);
-  const height=Math.max(minimum,Math.min(global.innerHeight*.9,drag.height-delta));
-  sheet.style.height=(100*height/global.innerHeight)+'dvh';
-  e.preventDefault();
+  // A transient CSS variable is the only live positioning input.
+  sheet.style.setProperty('--sheet-drag-height',(drag.startHeight-distance)+'px');
+  if(e.cancelable)e.preventDefault();
  }
  function finishSheetDrag(e,cancel=false){
   if(!drag||e.pointerId!==drag.pointer)return;
-  const {owner,y,moved,level,height}=drag;
-  const next=snapSheetDrag(level,height,e.clientY-y,moved,cancel);
-  drag=null;sheet.style.removeProperty('height');sheet.classList.remove('is-dragging');
+  const {owner,startY,startLevel,moved,pointer}=drag;
+  let next=startLevel;
+  if(moved&&!cancel){
+   const delta=e.clientY-startY;
+   const threshold=Math.min(80,Math.max(48,global.innerHeight*.08));
+   if(delta<=-threshold)next=Math.min(2,startLevel+1);
+   else if(delta>=threshold)next=Math.max(0,startLevel-1);
+  }
+  drag=null;
+  sheet.classList.remove('is-dragging');
+  sheet.style.removeProperty('--sheet-drag-height');
   setSheetLevel(next);
   if(moved&&owner===sheetGrip)lastSheetDrag=Date.now();
-  if(owner.hasPointerCapture(e.pointerId))owner.releasePointerCapture(e.pointerId);
- }
- // Touch Events fallback for mobile browsers that cancel pointer gestures.
- function touchStart(e){
-  if(!mobileSheet.matches||drag||!e.touches.length)return;
-  const t=e.touches[0];
-  drag={pointer:'touch',owner:e.currentTarget,y:t.clientY,height:sheet.getBoundingClientRect().height,level:currentSheetLevel(),moved:false};
- }
- function touchMove(e){
-  if(!drag||drag.pointer!=='touch'||!e.touches.length)return;
-  const y=e.touches[0].clientY,delta=y-drag.y;
-  if(Math.abs(delta)<8&&!drag.moved)return;
-  drag.moved=true;
-  sheet.classList.remove('is-minimized','is-middle','is-expanded');
-  sheet.classList.add('is-dragging');
-  const minimum=8.5*parseFloat(global.getComputedStyle(document.documentElement).fontSize);
-  sheet.style.height=(100*Math.max(minimum,Math.min(global.innerHeight*.9,drag.height-delta))/global.innerHeight)+'dvh';
-  if(e.cancelable)e.preventDefault();
- }
- function touchEnd(e,cancel=false){
-  if(!drag||drag.pointer!=='touch')return;
-  const {y,moved,level,height}=drag;
-  const finalY=e.changedTouches[0]?.clientY??y;
-  const next=snapSheetDrag(level,height,finalY-y,moved,cancel);
-  drag=null;sheet.style.removeProperty('height');sheet.classList.remove('is-dragging');
-  setSheetLevel(next);
-  if(moved)lastSheetDrag=Date.now();
+  if(owner.hasPointerCapture(pointer))owner.releasePointerCapture(pointer);
  }
  let persona=global.GukminPlayer.ensure();
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
@@ -318,17 +287,10 @@ function mount(root,navigate,content=global.GukminContent){
 
  const subscriptions=[
   [sheetGrip,'click',()=>{
-    // Dragging a button can generate a synthetic click after pointerup.
-    if(Date.now()-lastSheetDrag<350)return;
-    setSheetLevel((currentSheetLevel()+1)%3);
+    if(!mobileSheet.matches||Date.now()-lastSheetDrag<350)return;
+    setSheetLevel((sheetLevel+1)%3);
   }],
-  ...[sheetGrip,sheet.querySelector('.sheet-head')].flatMap(node=>[
-   [node,'touchstart',touchStart],
-   [node,'touchmove',touchMove],
-   [node,'touchend',touchEnd],
-   [node,'touchcancel',e=>touchEnd(e,true)],
-  ]),
-  ...[sheetGrip,sheet.querySelector('.sheet-head')].flatMap(node=>[
+  ...[sheetGrip,sheetHead].flatMap(node=>[
    [node,'pointerdown',beginSheetDrag],
    [node,'pointermove',moveSheetDrag],
    [node,'pointerup',finishSheetDrag],
@@ -343,7 +305,7 @@ function mount(root,navigate,content=global.GukminContent){
   [$('confirm'),'click',confirmDialog],
   [$('choiceDialog'),'close',()=>{selection=-1}]
  ];
- for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler,event==='touchmove'?{passive:false}:undefined);}
+ for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
  function dispose(){if(disposed)return;disposed=true;clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
