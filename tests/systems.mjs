@@ -618,10 +618,14 @@ test('pre-exam strategy is a deterministic preparatory memory, not a scored CSAT
   s=eng.run();
  }
  assert.equal(s.choice?.id,'high:csat-strategy');
- assert.equal(s.choice.scenarioId,'csat-mock-strength');
+ const expected=s.persona.stats.exam>=62?'csat-mock-strength':
+  s.persona.stats.schoolScore>=67?'csat-record-strength':'csat-open-plan';
+ assert.equal(s.choice.scenarioId,expected,'latest assessed state, not initial persona, decides the scenario');
  assert.equal(s.persona.age,18);
  const before={exam:s.persona.stats.exam,schoolScore:s.persona.stats.schoolScore};
- eng.resolve(s.choice.token,s.choice.options[1].id);
+ const examPlan=s.choice.options.find(o=>o.result?.effects?.attributes?.preExamStrategy==='exam');
+ assert.ok(examPlan,'each route offers a realistic exam-preparation path');
+ eng.resolve(s.choice.token,examPlan.id);
  const after=eng.snapshot();
  assert.deepEqual({exam:after.persona.stats.exam,schoolScore:after.persona.stats.schoolScore},before,'choosing a future study direction cannot retroactively alter grades');
  assert.equal(after.persona.attributes.preExamStrategy,'exam');
@@ -639,4 +643,42 @@ test('brief frustration and ordinary communication do not create unearned medica
    assert.equal(deltas.schoolScore,undefined,id+' should not change grades without assessment');
   }
  }
+});
+
+test('same-turn blocking decisions open sequentially, with the second scenario based on the first result',()=>{
+ const {P,T}=setup(),p=P.generate();
+ const pack={contentId:'ordered-scenarios',pauseAfterChoice:true,persist:state=>P.save(state),
+  attributes:{sequenceMemory:{label:'첫 결정',hidden:true}},
+  choices:[
+   {id:'first',layer:'일상 선택',options:[
+    {id:'yes',label:'참여',result:{effects:{attributes:{sequenceMemory:'yes'}}}},
+    {id:'no',label:'보류',result:{effects:{attributes:{sequenceMemory:'no'}}}}]},
+   {id:'second',layer:'일상 선택',options:[{id:'legacy',label:'기존'}],variants:[
+    {id:'first-was-yes',priority:10,when:{attributes:{sequenceMemory:'yes'}},body:'먼저 참여한 덕에 새로운 제안이 왔다.',options:[{id:'support',label:'이어간다'}]},
+    {id:'other',priority:0,body:'다른 제안이 왔다.',options:[{id:'observe',label:'지켜본다'}]}
+   ]}
+  ],
+  events:[
+   {id:'first',layer:'일상 이벤트',at:1,choice:'first'},
+   {id:'second',layer:'일상 이벤트',at:1,choice:'second'}
+  ]};
+ let engine=T.create({...pack,persona:p});engine.advance(1);
+ let snapshot=engine.snapshot();
+ assert.equal(snapshot.choice.id,'first');
+ assert.equal(Object.keys(snapshot.runtime.choices).length,1,'second decision has not opened');
+ const token=snapshot.choice.token;engine.resolve(token,'yes');
+ snapshot=engine.snapshot();
+ assert.equal(snapshot.reviewPending,true);
+ assert.equal(snapshot.choice,null,'review is not covered by next decision');
+ assert.equal(Object.keys(snapshot.runtime.choices).length,1);
+ assert.equal(engine.resume(),true);
+ snapshot=engine.snapshot();
+ assert.equal(snapshot.choice.id,'second');
+ assert.equal(snapshot.choice.scenarioId,'first-was-yes');
+ assert.equal(snapshot.runtime.choices['second:1'].scenarioId,'first-was-yes');
+ engine=T.create({...pack,persona:P.load()});
+ assert.equal(engine.snapshot().choice.scenarioId,'first-was-yes','same story survives reload');
+ const alternate=T.create({...pack,persona:P.generate()});alternate.advance(1);
+ alternate.resolve(alternate.snapshot().choice.token,'no');alternate.resume();
+ assert.equal(alternate.snapshot().choice.scenarioId,'other','different past changes only this slot');
 });

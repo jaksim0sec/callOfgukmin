@@ -61,7 +61,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   if(e.every!==undefined)r.nextAt+=e.every;
  }
  function pump(s){
-  if(s.runtime.awaitingContinuation)return;
+  if(s.runtime.awaitingContinuation||blocking(s))return;
   for(const [id,e] of eventDefs){
    const r=s.runtime.events[id];
    if(r.status==='running'){finish(s,id);continue;}
@@ -81,6 +81,8 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
       .find(candidate=>E.matches(s.persona,candidate.when,s.runtime.turn));
     s.runtime.choices[token]={token,eventId:id,choiceId:c.id,layer:c.layer,status:'waiting',
       openedAt:s.runtime.turn,...(variant?{scenarioId:variant.id}:{})};
+    // Later events at this same turn open only after the player's decision.
+    if(c.blocksTime!==false)break;
    }else finish(s,id);
   }
  }
@@ -115,7 +117,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   return {value:next.r.nextAt<=s.runtime.turn?1:Math.min(1,Math.max(0,elapsed/total)),remaining:Math.max(0,next.r.nextAt-s.runtime.turn),waiting:paused,title:next.e.title};
  }
  function snapshot(s=state){
-  const current=waiting(s)[0];
+  const current=s.runtime.awaitingContinuation?null:waiting(s)[0];
   let choice=null;
   if(current){
    const def=choiceDefs.get(current.choiceId);
@@ -139,6 +141,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
  }
  function resolve(token,optionId){
   return transact(s=>{
+   if(s.runtime.awaitingContinuation)return false;
    const r=s.runtime.choices[token];
    if(!r||r.status!=='waiting')return false;
    const def=choiceDefs.get(r.choiceId);

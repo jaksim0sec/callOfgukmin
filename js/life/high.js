@@ -104,9 +104,9 @@ global.GukminDirector.register({
    examWithPrelude(16,1,65,'mock'),
    choiceAt('high:recover',65,'학교생활을 다시 조율한다',
     '시험과 여러 활동이 겹쳐 몸과 마음이 지쳤다. 부담을 나누고 쉬어 갈 방법을 찾자.',[
-     {label:'상담 선생님과 학습량을 조정한다',effects:{stats:{stress:-27,health:5,relations:2}}},
-     {label:'잠시 쉬고 남은 시험을 준비한다',effects:{stats:{stress:-21,health:9,schoolScore:-1}}},
-     {label:'가까운 사람에게 도움을 요청한다',effects:{stats:{stress:-19,health:4,relations:3}}}
+     {label:'상담 뒤 한 달 동안 학습량과 수면 시간을 조정한다',effects:{stats:{stress:-18,health:2}},detail:'상담만으로 달라지진 않았다. 과제 시간을 줄이고 잠드는 시간을 지키자 몇 주 뒤부터 버틸 여유가 생겼다.'},
+     {label:'무리한 일정을 줄이고 실제로 며칠 휴식한다',effects:{stats:{stress:-12,health:4}},detail:'휴식 기간에는 밀린 일을 억지로 처리하지 않았다. 돌아와서 남은 과제부터 다시 순서를 잡았다.'},
+     {label:'가족과 도움받을 수 있는 일과 없는 일을 나눠 본다',effects:{stats:{stress:-9,relations:1}},detail:'가족이 집안일 일부를 맡았다. 시험 걱정은 그대로지만 그동안 하던 일 하나는 내려놓을 수 있었다.'}
     ],{stats:{stress:{gte:75}}}),
    choiceAt('high:commute',66,'지각할 것 같은 등굣길',
     countryside?'동네 버스가 버스정류장에 오지 않는다. 다음 차는 시간이 한참 남았다. 조회까지는 십 분이다.':'버스가 길 중간에서 멈췄다. 단체방에는 조회 시작 문자가 연달아 올라온다.',[

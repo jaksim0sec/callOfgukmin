@@ -188,3 +188,5 @@ Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새�
 선택 정의에 선택적인 `variants: [{id,priority,when,title,body,options}]`를 사용할 수 있다. `when`은 기존 `GukminEffects.matches` 표현식만 받는다. `priority` 내림차순 첫 일치 후보를 사건이 실행되는 `pump()` 시점에 확정하며 기본 후보는 `when` 생략/우선순위 0으로 둔다. `runtime.choices[token].scenarioId`에 저장하고 `choiceId`는 기존 선택 정의 ID로 보존한다. 사건이 열렸을 때 재시작하면 저장된 후보가 그대로 표시·정산된다. 이전 선택에 `scenarioId`가 없다면 해당 기존 선택의 기본 `options` 사용.
 
 `pauseAfterChoice` 모드에서 선택을 해소할 때 `runtime.reviewBefore`에 선택 직전 수치·특성·학교·역할 값을 선택적으로 저장하고 `awaitingContinuation`와 함께 복구한다. 새 리뷰 진행 상태를 만들지 않고 `resume()`에서 `reviewBefore`를 지운다. 과거 리뷰 세이브의 `reviewBefore` 누락은 허용하며 없는 효과를 추정하지 않는다. 데이터와 테스트 상세는 [STORY.md](STORY.md) 참조.
+
+`blocksTime:true`(또는 생략)인 일상·한방 선택은 하나가 대기 중인 동안 같은 턴의 뒤 이벤트·선택을 열지 않는다. 첫 선택의 리뷰가 끝난 뒤 다음 선택과 시나리오를 생성해 이전 결과를 분기 조건에 반영한다. `blocksTime:false` 사건은 뒤의 사건 진행을 막지 않는다. `awaitingContinuation` 중에는 이전 버전에서 이미 열려 있던 다른 선택도 `snapshot().choice`로 노출하지 않는다.

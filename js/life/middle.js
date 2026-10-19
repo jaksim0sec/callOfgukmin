@@ -64,9 +64,9 @@ global.GukminDirector.register({
      ]}
    ]),
    {...S.selection('middle:recover',55,'학교생활을 조절할 시간','시험과 활동이 겹치면서 피로가 쌓였다. 부담을 줄일 방법을 선택하자.',[
-    {label:'담임·상담 선생님과 계획을 다시 잡는다',effects:{stats:{stress:-28,health:5,relations:2}}},
-    {label:'과제를 나누어 하고 며칠 쉬어 간다',effects:{stats:{stress:-22,health:8,schoolScore:-1}}},
-    {label:'친구와 산책하며 생각을 정리한다',effects:{stats:{stress:-18,health:4,relations:4}}}
+    {label:'상담을 거쳐 시험 준비량을 조정하고 몇 주간 실천한다',effects:{stats:{stress:-16}},detail:'교사와 적당한 분량으로 계획을 줄였다. 몇 주 동안 무리하지 않으니 계속 밀리던 숙제가 조금씩 줄었다.'},
+    {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-14,health:4}},detail:'몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
+    {label:'친구에게 부담을 털어놓고 과제 진행을 함께 점검한다',effects:{stats:{stress:-8,relations:1}},detail:'친구와 제출 날짜를 대조한 뒤 할 수 있는 것부터 나눴다. 불안이 완전히 사라지진 않았지만 다음 주 일정은 보였다.'}
    ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},stats:{stress:{gte:65}}}}},
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
    S.examPrelude('middle',2,57,'1학기 중간고사'),

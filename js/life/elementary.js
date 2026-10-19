@@ -59,9 +59,9 @@ global.GukminDirector.register({
    ]),
    S.notice('elementary:age9',36,'초등학교 3학년','수업과 숙제가 점점 다양해진다.',{attributes:{age:9}}),
    {...S.selection('elementary:recover',30,'잠시 쉬어 갈 때','요즘 긴장과 피로가 쌓였다. 몸과 마음을 돌볼 방법을 정해 보자.',[
-    {label:'가족이나 선생님과 이야기하고 쉬어 간다',effects:{stats:{stress:-25,health:6,relations:2}}},
-    {label:'시간표를 줄이고 잠을 충분히 잔다',effects:{stats:{stress:-20,health:8,study:-2}}},
-    {label:'친구와 가볍게 놀면서 기분을 전환한다',effects:{stats:{stress:-18,health:3,relations:4}}}
+    {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-15,health:3}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
+    {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-14,health:4,study:-2}},detail:'모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
+    {label:'가까운 친구에게 최근 힘든 일을 말하고 도움을 구한다',effects:{stats:{stress:-10,relations:1}},detail:'친구가 쉬는 시간마다 잠깐 같이 있자고 했다. 문제는 남아 있지만 혼자 감당할 일이 조금 줄었다.'}
    ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},stats:{stress:{gte:65}}}}},
    S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
     '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
