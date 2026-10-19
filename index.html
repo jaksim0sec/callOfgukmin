@@ -1,63 +1,57 @@
 <!doctype html>
 <html lang="ko"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#172438"><meta name="description" content="국민의 부름 — 한국형 선택형 인생·정치 시뮬레이터. 대통령이 될까, 아니면 다른 인생을 살까?">
-<title>국민의 부름 — THE PEOPLE CALL</title>
-<link rel="stylesheet" href="./style.css"><script src="./game.js" defer></script></head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111d2c"><meta name="description" content="국민의 부름 — 내가 선택한 인생, 내가 만드는 대선. 한국형 정치 인생 시뮬레이션.">
+<title>국민의 부름 — 당신을 부르는 시대</title>
+<link rel="stylesheet" href="./style.css"><script defer src="./game.js"></script></head>
 <body>
 <div class="app">
-<header class="site-head"><a class="wordmark" href="./" aria-label="홈"><span class="mark">國<span>民</span></span><span class="wordtext"><b>국민의 부름</b><small>THE PEOPLE CALL</small></span></a><div class="head-right"><span class="edition">가상 대한민국 · 제1호</span><button class="tiny-link" id="restartTop" hidden>↺ 새 인생</button></div></header>
+<header class="mast">
+ <a class="brand" href="./"><span class="brand-stamp">國民</span><span><b>국민의 부름</b><small>THE PEOPLE CALL</small></span></a>
+ <div class="mast-right"><span class="edition">FICTIONAL REPUBLIC · v3</span><button type="button" id="historyOpen" class="mast-btn" hidden>인생기록 <span>↗</span></button><button type="button" id="newLifeTop" class="mast-btn" hidden>새 인생 ↻</button></div>
+</header>
 <main>
-<section id="intro" class="screen intro">
- <div class="intro-meta"><span><i class="signal"></i> INTERACTIVE LIFE SIMULATION</span><span>THE FATE IS YOURS / 2026</span></div>
- <div class="hero">
-  <div class="hero-text"><div class="hero-pre">내 인생을 건 대통령 선거</div><h1>국민의<br><em>부름<span>.</span></em></h1><p>태어날 집은 못 고른다.<br>어느 학교를 가고, 누굴 믿고, 어떤 말을 할지는 네가 고른다.<br><strong>단, 대통령이 된다는 보장은 없다.</strong></p></div>
-  <div class="hero-art" aria-hidden="true"><div class="hero-ring"><span>제</span><strong>21</strong><span>대?</span></div><div class="hero-art-text">NATIONAL<br>DESTINY<br>OFFICE</div><span class="hero-stamp">운명 추첨 중</span></div>
- </div>
- <div class="intro-lower"><div class="intro-steps"><div><span>01</span> 랜덤 출생</div><div><span>02</span> 진짜 선택</div><div><span>03</span> 결과의 대가</div><div><span>04</span> 다양한 엔딩</div></div>
- <div class="start-form"><label for="playerName">기록할 이름 <small>선택 사항</small></label><div class="form-row"><input id="playerName" type="text" maxlength="12" placeholder="비우면 랜덤 이름" autocomplete="off"><button type="button" class="primary start-btn" id="startBtn">이번 생 시작 <span>↗</span></button></div><div class="sub-note">5~10분 · 회원가입 없음 · 브라우저 자동 저장 · 공유용 결과 이미지</div></div></div>
- <div class="disclaimer">본 게임에 나오는 모든 정당·인물·사건은 허구이며, 게임 수치는 현실의 선거 결과를 예측하지 않습니다.</div>
+<section id="welcome" class="welcome">
+ <div class="hero-text"><span class="micro"><i class="broadcast-dot"></i> 대한민국 가상인생관리국 · 속보</span><h1>국민이<br><em>부르기 전에</em><br>태어나야지.</h1>
+ <p>태어나는 집은 랜덤. 진학도, 직업도, 정치색도 네 선택.<br>그렇다고 당선되는 건 아니거든.</p>
+ <div class="name-field"><label for="nameInput">인생기록에 남길 이름 <span>선택 사항</span></label><div class="name-controls"><input id="nameInput" maxlength="10" placeholder="비우면 이름 랜덤 생성" autocomplete="off"><button id="startBtn" class="btn primary" type="button">이번 생 출생 <span>↗</span></button></div></div>
+ <div class="hero-notes">실제 선택과 랜덤 사건의 결합 · 한 판 약 5~10분 · 결과 공유</div></div>
+ <div class="hero-scene" aria-hidden="true"><div class="hero-type">국민의<br>부름<span>.</span></div><div class="hero-ring"><span>운명</span><b>?</b><small>등급미정</small></div><div class="hero-strip">출생 → 성장 → 정치 → 선택</div><div class="hero-stamp">당선 보장<br>안 함</div></div>
+ <div class="fiction-note">모든 정당·인물·사건 및 정치적 수치는 허구입니다. 현실 선거의 당선 가능성이나 특정 집단의 우열을 뜻하지 않습니다.</div>
 </section>
-<section id="play" class="screen play" hidden>
- <div class="play-head"><div><div class="eyebrow" id="chapter">제1장 · 어린 시절</div><h2 id="sceneHeading">인생은 시작됐다</h2></div><div class="age-box"><span>AGE / YEAR</span><strong id="age">14세</strong><small id="year">2026</small></div></div>
- <section class="journey" aria-label="현재 인생 진행 단계">
- <div class="journey-label"><strong>대통령까지의 여정</strong><span id="journeyStatus">이제 첫걸음을 뗐다</span></div>
- <div id="journeySteps" class="journey-steps" aria-label="학창·기반·사회·정치·경선·대선"></div>
- </section>
- <div class="play-grid">
-  <div class="game-main">
-   <div class="scene-meta"><span id="category">인생의 갈림길</span><span id="stepNum">01 / 21</span></div>
-   <div class="ticker"><b>HEADLINE</b><span id="tickerText">첫 번째 선택이 기다립니다</span></div>
-   <article class="story" aria-live="polite"><span class="story-index" id="storyIndex">I</span><div class="eyebrow" id="sceneKicker">오늘의 선택</div><h3 id="sceneTitle">무엇을 할까?</h3><p id="sceneBody"></p>
-    <div class="result" id="result" hidden><div class="result-label">선택의 결과 · AFTERMATH</div><p id="resultText"></p><div class="delta-list" id="deltas"></div></div>
-   </article>
-   <section id="ballotHeader" class="ballot-header" hidden aria-label="가상 정당 선택">
- <div class="ballot-top"><span>가상 공직선거 · 정당 가입 신청</span><span>SIMULATION ONLY / 01—05</span></div>
- <h4>당신의 정치색은?</h4>
- <p>슬로건은 진지한데 사람들은 다들 서로를 견제하고 있다. 기호를 누르면 입당한다. 실제 정당 및 투표용지와 무관한 가상의 번호다.</p>
- </section>
- <div id="choices" class="choices"></div>
-   <button id="nextBtn" type="button" class="primary next-btn" hidden>다음 장으로 <span>→</span></button>
-   <div class="game-bottom"><span>단축키 1~5 · 선택은 되돌릴 수 없어</span><button id="timelineBtn" type="button">↗ 인생기록 보기</button></div>
-  </div>
-  <aside class="record">
-   <div class="record-top"><b>CITIZEN FILE</b><div class="record-seal">가상<br>국민</div></div>
-   <div class="identity"><div class="portrait" id="portrait">김</div><div><strong id="profileName">이름</strong><small id="profileBirth">출생지</small></div></div>
-   <div class="field"><span>학력</span><b id="school">미정</b></div><div class="field"><span>직업</span><b id="career">학생</b></div><div class="field"><span>소속</span><b id="party">무소속</b></div>
-   <div class="stat-head">현재 상태 <span>0—100</span></div><div class="stat-list" id="stats"></div>
-   <div class="scandal"><div><span>논란 위험도</span><b id="riskNum">0</b></div><div class="track"><div id="riskMeter"></div></div></div>
-   <div class="log-title">최근 기록</div><ol id="recentLog"></ol>
-   <p class="tiny">게임 속 지표는 실제 학벌·직업·지역의 가치 평가가 아닌 창작된 수치입니다.</p>
+<section id="game" class="game" hidden>
+ <div class="chapter-bar"><div><span class="micro" id="chapterOverline">01 / 인생기록</span><h2 id="chapterTitle">국민의 새싹</h2><p id="chapterDescription">어떤 어른이 될지는 아직 모른다.</p></div><div class="age-counter"><small>현재 나이</small><strong id="ageValue">5<span>세</span></strong><span id="yearValue">2026년</span></div></div>
+ <div class="progress" id="phaseProgress" aria-label="인생 진행 단계"></div>
+ <div class="game-grid">
+  <aside class="candidate-col">
+   <div class="candidate-poster" id="candidatePoster" data-template="campaign" style="--party:#607b85">
+    <div class="poster-graphic"><div class="poster-splash"></div><div class="anon-portrait" aria-hidden="true">
+      <svg viewBox="0 0 300 390" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><linearGradient id="silGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#34414e"/><stop offset="1" stop-color="#111922"/></linearGradient></defs><path d="M57 390C57 307 76 265 123 243L141 226h39l20 17c47 23 67 62 67 147Z" fill="url(#silGrad)"/><path d="M104 124C104 72 124 45 159 43c38-2 62 29 62 81l-5 56c-9 38-29 60-58 60s-50-22-57-59Z" fill="url(#silGrad)"/><path d="M115 75C124 40 153 24 180 40c21-4 46 16 42 44L214 60l-24-17-28-5-31 18Z" fill="#111922"/><path d="M127 237 150 273 181 237" stroke="#52606a" stroke-width="10" fill="none" opacity=".22"/><path d="M150 273v118" stroke="#596673" stroke-width="2" opacity=".3"/></svg>
+    </div></div>
+    <div class="poster-top"><span id="posterMottoTop">아직 부름 없음</span><span id="posterDistrict">가상 대한민국</span></div>
+    <div class="poster-identity"><div class="poster-stage" id="posterStage">미래의 씨앗</div><div class="poster-name" id="posterName">김하람</div><div class="poster-lower"><div class="poster-party"><span id="posterIcon">◇</span><b id="posterParty">무소속</b></div><div class="poster-number" id="posterNumber">—</div></div></div>
+   </div>
+   <div class="profile-bar"><div class="profile-header"><span>PROFILE / 현재 상태</span><span id="profileStatus">학생</span></div><div class="profile-tokens" id="profileTokens"></div></div>
+   <div class="stance-panel"><div class="stance-head"><strong>내 정치 성향</strong><span id="stanceLabel">아직 정해지지 않음</span></div><div class="stance-line"><span>분배 중시</span><div class="stance-track"><i id="ecoMarker"></i></div><span>시장 중시</span></div><div class="stance-line"><span>변화 중시</span><div class="stance-track"><i id="changeMarker"></i></div><span>안정 중시</span></div><div class="party-loyalty" id="loyaltyPanel" hidden><span>소속당 신뢰</span><strong id="loyaltyValue">80</strong><div><i id="loyaltyFill"></i></div></div></div>
   </aside>
+  <section class="board">
+   <div class="news-bar"><span><i class="broadcast-dot"></i> 실시간 인생 속보</span><p id="newsText">세상은 너의 선택을 기억한다.</p></div>
+   <div class="board-heading"><div><span class="micro" id="turnLabel">LIFE / 001</span><h3 id="dayHeading">이번 시기의 활동</h3><p id="boardGuide">일상에서 작은 선택을 쌓고, 인생의 전환점을 맞아보자.</p></div><span class="round-stamp" id="actionsRemaining">남은 활동 2회</span></div>
+   <div class="event-card" id="eventCard"><div class="event-eyebrow"><span id="eventTag">오늘의 사건</span><span id="eventSource">생활 속보</span></div><div class="event-row"><div class="event-emoji" id="eventIcon">📨</div><div><h4 id="eventTitle">동네에 새로운 일이 생겼다</h4><p id="eventDescription">세상은 네가 선택하지 않은 일도 만들어낸다.</p></div></div></div>
+   <div class="choice-heading"><span>일상 선택 <small>DAILY ACTIONS</small></span><span id="actionHint">행동을 고르면 시간이 흐름</span></div>
+   <div class="daily-actions" id="dailyChoices"></div>
+   <div class="choice-response" id="choiceResponse" hidden><div class="response-top"><span>선택의 결과</span><b id="responseHeading">그날의 신문</b></div><p id="responseText"></p><div class="delta-tags" id="deltaTags"></div><button type="button" id="nextDay" class="btn primary full">다음 날로 <span>→</span></button></div>
+   <div class="major-trigger" id="majorTrigger"><div><span>인생의 분기점</span><strong id="majorTitle">다가올 전환점</strong><p id="majorSubtitle">일상 선택 이후 특별한 선택지를 열 수 있어.</p></div><button type="button" id="majorOpen" class="btn major-button" disabled>결정하기 <span>↗</span></button></div>
+   <div class="world-panel"><div class="world-heading"><strong>세상의 반응</strong><span id="worldNote">정치권에 들어가면 지역 여론이 반응해</span></div><div class="region-cards" id="regions"></div><div class="world-footer"><span id="worldSummary">아직 아무도 너를 정치인으로 알지 못해.</span><b id="worldTotal">—</b></div></div>
+  </section>
  </div>
 </section>
-<section id="end" class="screen ending" hidden>
- <div class="eyebrow">FINAL REPORT · 인생기록 최종호</div><h2 id="endingTitle">운명의 결말</h2><p class="end-summary" id="endingSummary"></p>
- <div class="end-grid"><div class="end-poster" id="poster"><div class="poster-top"><span>국민의 부름</span><span>THE PEOPLE CALL</span></div><div class="poster-icon" id="endingIcon">🏛️</div><span class="poster-tag" id="endingTag">국민의 선택</span><h3 id="endingHeadline">역사는 기억한다</h3><p id="endingName">김○○ · 70세</p><div class="poster-quote" id="endingQuote">평범하지 않은 인생이었다.</div><div class="poster-bottom"><span>MY LIFE / MY CHOICE</span><span id="posterSerial">NO. 000001</span></div></div>
- <div class="end-info"><div class="end-info-label">인생 성적표</div><div id="finalStats"></div><div class="path-title">당신이 걸어온 길</div><div id="pathSummary"></div><button type="button" class="primary end-btn" id="downloadBtn">결과 이미지 저장 <span>↓</span></button><button type="button" class="ghost end-btn" id="shareBtn">친구에게 공유 <span>↗</span></button><button type="button" class="ghost end-btn" id="retryBtn">↺ 새로운 인생</button><p class="tiny">결과 이미지는 기기에서 생성되며 서버에 저장하지 않습니다.</p></div></div>
-</section>
+<section id="ending" class="ending" hidden><div class="end-heading"><span class="micro">FINALE / 인생 종간호</span><h2 id="endTitle">이번 생은 여기까지</h2><p id="endDescription"></p></div>
+ <div class="end-layout"><div class="ending-poster" id="endingPoster"><div class="ending-head"><b>국민의 부름</b><span>FINAL EDITION</span></div><div class="ending-symbol" id="endSymbol">🏛️</div><div class="ending-slogan" id="endSlogan">국민은 기억한다</div><div class="ending-label" id="endKind">최종 결과</div><div class="ending-name" id="endName">김하람</div><div class="ending-party" id="endParty">무소속</div><div class="ending-bottom">당신의 인생, 당신의 선택 <span id="endSerial">NO. 000001</span></div></div>
+ <div class="ending-facts"><h3>이렇게 살았네 <span>LIFE REPORT</span></h3><div id="endFacts"></div><h3>내가 남긴 기록 <span>HIGHLIGHTS</span></h3><div id="endMoments"></div><h3>지역별 반응 <span>FICTIONAL ELECTION</span></h3><div id="endRegions"></div><button type="button" class="btn primary full" id="downloadBtn">인생 포스터 PNG 저장 <span>↓</span></button><button type="button" class="btn outline full" id="shareBtn">텍스트로 공유 <span>↗</span></button><button type="button" class="btn outline full" id="replayBtn">새 인생 시작 ↻</button></div></div>
+ </section>
 </main>
-<footer><span>국민의 부름 © FICTIONAL REPUBLIC</span><span>당신의 한 표보다 어려운 당신의 한 생</span></footer>
-</div>
-<dialog id="timeline"><div class="dialog-head"><h2>인생 연대기</h2><button id="closeTimeline" type="button" aria-label="닫기">✕</button></div><ol id="fullLog"></ol></dialog>
+<footer>국민의 부름 · 가상 대한민국 <span>실제 정당·실존 인물과 무관한 풍자 게임</span></footer></div>
+<dialog id="majorDialog" class="major-dialog"><div class="modal-head"><div><span id="majorOverline">TURNING POINT</span><h2 id="modalTitle">원서를 제출할 시간</h2><p id="modalDescription"></p></div><button type="button" id="majorClose" aria-label="닫기">✕</button></div><div class="major-content"><div class="document-top"><b id="documentType">입학 지망서</b><span id="documentSerial">PERSONAL DOC / 001</span></div><div id="majorOptions" class="major-options"></div><p id="majorLegal" class="major-legal">이 선택은 인생 경로에 영향을 줍니다. 현실 제도와 확률은 별개입니다.</p></div></dialog>
+<dialog id="historyDialog" class="history-dialog"><div class="modal-head"><div><span>국민의 부름 · ARCHIVE</span><h2>내 인생의 타임라인</h2><p>학교, 직업, 사건과 정치 활동의 흔적</p></div><button type="button" id="historyClose">✕</button></div><div class="history-content" id="historyContent"></div></dialog>
 </body></html>
