@@ -85,7 +85,7 @@ try{
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(saved.simulation.turn,4);assert.equal(saved.metricHistory.at(-1).value,3);
   // F: restore data across independent pages; legacy save never touched.
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
-  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('.school-token-complete').waitFor();
+  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('#birthIntroSkip').click();await page.locator('.school-token-complete').waitFor();
   const layout=await page.evaluate(()=>{
    const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
    return {poster:box('#playerPosterMount'),profile:box('.profile'),gauges:box('.gauges'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};
