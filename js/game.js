@@ -354,7 +354,7 @@ function mount(root,navigate,content=global.GukminContent){
 
  const subscriptions=[
   [sheetGrip,'click',()=>{
-    if(!mobileSheet.matches||Date.now()-lastSheetDrag<350)return;
+    if(!mobileSheet.matches||Date.now()-lastSheetDrag<180)return;
     setSheetLevel((sheetLevel+1)%3);
   }],
   ...[sheetGrip,sheetHead].flatMap(node=>[

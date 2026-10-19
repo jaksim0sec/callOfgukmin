@@ -246,7 +246,7 @@ test('school catalog distinguishes autonomous/gifted/foreign and local Gyeonggi 
  ]){
   const sample={...person,birthplaceId:'경기도.'+city+'.테스트동',regionTags:['수도권']};
   const options=S.options(sample);
-  assert.equal(options.length,3);
+  assert.equal(options.length,4);
   assert.equal(options[0].name,first);
   assert.equal(options[2].name,advanced);
   assert.equal(options[2].kind,kind);
