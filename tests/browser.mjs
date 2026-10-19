@@ -59,7 +59,9 @@ try{
    assert.ok(old.height<viewport.height*.3,'sheet starts compact and does not cover most of the game');
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#sheetToggle').click();
-   await page.waitForTimeout(260);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-springing')),true,'tap starts spring motion');
+   await page.waitForTimeout(950);
+   assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-springing')),false,'spring settles and cleans up');
    const middle=await page.locator('#lifeSheet').boundingBox();
    assert.ok(middle.height>old.height+50&&middle.height<viewport.height*.7,'tap opens middle');
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true);
