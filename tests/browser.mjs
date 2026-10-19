@@ -1,0 +1,103 @@
+/* Optional real Chromium integration. Install Playwright outside the app if unavailable. */
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {spawn} from 'node:child_process';
+import {createServer} from 'node:net';
+import {fileURLToPath} from 'node:url';
+import {dirname,resolve} from 'node:path';
+import {mkdir} from 'node:fs/promises';
+const {chromium}=createRequire(import.meta.url)('playwright');
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
+let server,browser;
+const artifacts=process.env.BROWSER_ARTIFACTS||'/tmp/callOfgukmin-browser';
+await mkdir(artifacts,{recursive:true});
+try{
+ let base=process.env.BROWSER_BASE_URL;
+ if(!base){
+  const listener=createServer();await new Promise(r=>listener.listen(0,'127.0.0.1',r));const port=listener.address().port;await new Promise(r=>listener.close(r));
+  server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.1','--directory',dirname(root)],{stdio:'ignore'});
+  base=`http://127.0.0.1:${port}/callOfgukmin/`;
+  for(let i=0;i<50;i++){try{if((await fetch(base+'html/waiting.html')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
+ }
+ browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||'/usr/bin/chromium',args:['--no-sandbox','--disable-dev-shm-usage']});
+ for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
+  const context=await browser.newContext({viewport});const page=await context.newPage(),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.route('https://fonts.googleapis.com/**',route=>route.abort());
+  page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
+  await page.goto(base,{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();
+  await page.evaluate(()=>localStorage.setItem('callOfgukmin__playable__v1','legacy-browser-sentinel'));
+  page.setDefaultTimeout(7000);
+  const initial=await page.locator('#waitingName').textContent();assert.ok(initial.trim());
+  await page.locator('#enterGame').click();await page.locator('#playerPosterMount .gk-poster').waitFor();
+  assert.equal(await page.locator('#age').textContent(),'#0살');
+  assert.equal(await page.locator('#systemTools').isVisible(),false);
+  assert.equal(await page.locator('#action').isVisible(),false);
+  await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
+  const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
+
+  for(const [button,kind] of [['previewSchool','school-dialog'],['previewParty','ballot-dialog']]){
+   await page.locator('#'+button).click();await page.locator('#choiceDialog.'+kind).waitFor();await page.locator('#options button').first().click();await page.locator('#confirm').click();assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),before);
+  }
+
+  // A: an opt-in test content pack uses the same engine as future content.
+  await page.locator('#startSystemDemo').click();await page.locator('#advanceTurn').click();assert.ok((await page.locator('#log').textContent()).includes('검증 사건'));
+  // B: actual progress and choice UI; paused clock and persisted pending choice.
+  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0.5);
+  await page.locator('#advanceTurn').click();assert.equal(await page.locator('#advanceTurn').isDisabled(),true);
+  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#currentChoice button').first().waitFor();
+  await page.locator('#currentChoice button').first().evaluate(b=>{b.click();b.click();});
+  assert.match(await page.locator('.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.metric-health').textContent(),/95/);
+  assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
+  // C–E: one event pack drives traits, periodic effect, schools and custom metric.
+  assert.ok((await page.locator('#traits').textContent()).includes('검증용 저축습관'));
+  assert.equal(await page.locator('.metric-demoFocus').count(),1);
+  await page.locator('#advanceTurn').click();assert.equal(await page.locator('.school-token-active').count(),1);assert.match(await page.locator('.metric-demoFocus').textContent(),/3/);
+  await page.screenshot({path:`${artifacts}/${name}-school.png`,fullPage:true});
+  await page.locator('#advanceTurn').click();assert.match(await page.locator('.metric-money').textContent(),/10,100원/);assert.equal(await page.locator('.school-token-active').count(),0);assert.equal(await page.locator('.school-token-complete').count(),1);assert.equal(await page.locator('.metric-demoFocus').count(),0);
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(saved.simulation.turn,4);assert.equal(saved.metricHistory.at(-1).value,3);
+  // F: restore data across independent pages; legacy save never touched.
+  await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
+  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();await page.locator('#enterGame').click();await page.locator('.school-token-complete').waitFor();
+  const layout=await page.evaluate(()=>{
+   const box=s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,bottom:r.bottom};};
+   return {poster:box('#playerPosterMount'),profile:box('.profile'),sheet:box('.sheet'),log:box('#log'),action:box('#action'),head:box('.sheet-head'),progress:box('#choiceTiming'),sheetPosition:getComputedStyle(document.querySelector('.sheet')).position,overflow:document.documentElement.scrollWidth>innerWidth};
+  });
+  assert.equal(layout.overflow,false);assert.ok(layout.log.height>30,'history remains readable');assert.ok(layout.progress.y>=layout.head.bottom-1,'progress follows log title');assert.ok(layout.action.bottom<=viewport.height+1,'actions stay within viewport');
+  if(name==='desktop'){assert.ok(Math.abs(layout.poster.width-layout.profile.width)<1);assert.notEqual(layout.sheetPosition,'fixed');}else{assert.equal(layout.sheetPosition,'fixed');assert.ok(Math.abs(layout.sheet.bottom-viewport.height)<1);}
+  await page.screenshot({path:`${artifacts}/${name}-completed.png`,fullPage:true});
+  assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__playable__v1')),'legacy-browser-sentinel');
+  await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#rerollPersona').click();const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(fresh.simulation,undefined);assert.equal(fresh.stats.money,0);
+  assert.deepEqual(errors,[]);console.log(`PASS ${name}: A–F, reload, previews, save preservation, layout`);await context.close();
+ }
+ // A future major-choice popup can attach later; the infrastructure itself opens none.
+ const context=await browser.newContext();const page=await context.newPage();
+ await page.addInitScript(()=>{window.GukminContent={contentId:'major-adapter-check',events:[{id:'major',layer:'한방 이벤트',at:0,title:'검증 한방',choice:'major'}],choices:[{id:'major',layer:'한방 선택',title:'중요한 선택',options:[{id:'accept',label:'확정',result:{effects:{stats:{money:7}}}}]}]};});
+ await page.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+ await page.locator('#currentChoice').waitFor();assert.match(await page.locator('#currentChoice').textContent(),/한방 선택 응답 대기/);
+ assert.equal(await page.locator('dialog[open]').count(),0);assert.equal(await page.locator('#currentChoice button').count(),0);
+ await page.reload({waitUntil:'domcontentloaded'});
+ assert.equal(await page.evaluate(()=>{const s=GukminGame.session;s.advance(10);return s.snapshot().runtime.turn;}),0);
+ await page.evaluate(()=>{GukminGame.registerMajorPresenter(({choice,resolve})=>{window.majorTestChoice=choice;window.finishMajor=resolve;});window.finishMajor('accept');window.finishMajor('accept');});
+ assert.match(await page.locator('.metric-money').textContent(),/7원/);assert.equal(await page.locator('dialog[open]').count(),0);console.log('PASS major adapter: wait, reload, no popup, callback settlement once');await context.close();
+ const lifecycle=await browser.newContext();const lifecyclePage=await lifecycle.newPage();
+ await lifecyclePage.addInitScript(()=>{window.GukminContent={contentId:'lifecycle-check',events:[{id:'major',layer:'한방 이벤트',at:0,title:'한방',choice:'major'}],choices:[{id:'major',layer:'한방 선택',options:[{id:'accept',label:'확인',result:{effects:{stats:{money:7}}}}]}]};});
+ await lifecyclePage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});await lifecyclePage.locator('#currentChoice').waitFor();
+ const afterDispose=await lifecyclePage.evaluate(()=>{
+  GukminGame.registerMajorPresenter(({resolve})=>{window.staleMajor=resolve;});
+  const session=GukminGame.session;session.dispose();GukminPlayer.save(GukminPlayer.generate());
+  const before=localStorage.getItem(GukminPlayer.storageKey);window.staleMajor('accept');
+  let rejected=false;try{session.advance(1);}catch{rejected=true;}
+  return {unchanged:before===localStorage.getItem(GukminPlayer.storageKey),rejected};
+ });
+ assert.equal(afterDispose.unchanged,true,'disposed presenter cannot overwrite a newer save');assert.equal(afterDispose.rejected,true,'disposed public session cannot advance');
+ await lifecyclePage.reload({waitUntil:'domcontentloaded'});await lifecyclePage.locator('#currentChoice').waitFor();
+ const replaced=await lifecyclePage.evaluate(()=>{
+  let cleaned=0,shown=0;
+  GukminGame.registerMajorPresenter(()=>()=>{cleaned++;});
+  GukminGame.registerMajorPresenter(null);
+  GukminGame.registerMajorPresenter(()=>{shown++;return()=>{cleaned++;};});
+  GukminGame.session.dispose();return {cleaned,shown};
+ });
+ assert.deepEqual(replaced,{cleaned:2,shown:1});console.log('PASS major lifecycle: disposed callbacks ignored, replacement/unregister cleanup');await lifecycle.close();
+}finally{await browser?.close();server?.kill();}

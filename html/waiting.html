@@ -6,15 +6,7 @@
   <meta name="theme-color" content="#0b0b0f">
   <title>국민의 부름 · 대기</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
-  <script>
-    /* Canonical asset root on GitHub Pages; keep local development functional. */
-    const root = location.hostname === 'jaksim0sec.github.io'
-      ? '/callOfgukmin/'
-      : new URL('../', location.href).href;
-    const base = document.createElement('base');
-    base.href = root;
-    document.head.append(base);
-  </script>
+  <base href="../">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-screen="waiting">
@@ -41,6 +33,9 @@
 </main>
 <script src="js/poster.js" defer></script>
 <script src="js/playerState.js" defer></script>
+<script src="js/effects.js" defer></script>
+<script src="js/timeline.js" defer></script>
+<script src="js/systemDemo.js" defer></script>
 <script src="js/statusView.js" defer></script>
 <script src="js/game.js" defer></script>
 <script src="js/boot.js" defer></script>

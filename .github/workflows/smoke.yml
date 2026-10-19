@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'html/**'
       - 'css/**'
       - 'js/**'
       - 'tests/**'
@@ -10,6 +11,7 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'html/**'
       - 'css/**'
       - 'js/**'
       - 'tests/**'
@@ -23,3 +25,4 @@ jobs:
         with:
           node-version: '22'
       - run: node tests/smoke.mjs
+      - run: node --test tests/systems.mjs

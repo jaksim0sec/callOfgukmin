@@ -46,10 +46,18 @@
 
 ## 5. 화면 3종과 학교·특성 토큰 (2026-10-19)
 
-- 루트 `index.html`은 대기로 리다이렉트. `html/waiting.html`, `html/game.html`, `html/result.html`은 각각 `<base>`를 적용한 `css/style.css`로 공통 CSS를 불러오는 독립 문서. GitHub Pages에서는 `/callOfgukmin/css/style.css`, 로컬 개발에서는 상위 경로 기준. 모두 공통 `css/style.css`를 사용하나, 대기/결과는 `.waiting-screen`·`.result-screen` 접두 선택자로 독립 레이아웃을 소유한다.
+- 루트 `index.html`은 대기로 리다이렉트. `html/waiting.html`, `html/game.html`, `html/result.html`은 각각 정적 `<base href="../">`를 적용한 `css/style.css`로 공통 CSS를 불러오는 독립 문서. GitHub Pages에서는 `/callOfgukmin/css/style.css`, 로컬 개발에서는 상위 경로 기준. 모두 공통 `css/style.css`를 사용하나, 대기/결과는 `.waiting-screen`·`.result-screen` 접두 선택자로 독립 레이아웃을 소유한다.
 - 인게임 반응형 골격(`.game`, `.desktop-left`, `.desktop-right`, `.status`, `.sheet`)은 유지한다. PC 왼쪽 포스터/프로필 동일 너비, 모바일 고정 바텀시트는 여전히 필수 계약이다.
 - 속성 스탯은 `.attribute-list`·`.attribute-row`, 학교는 기존 `.school-list`·`.school-row`와 `.school-token`을 사용한다. **새 카드 컴포넌트 없음**. `.school-token-active`만 재학 강조, `.school-token-complete`는 졸업 톤.
 - 상태 스탯은 `.gauges-list`에 동적 항목을 넣는다. 기존 `.gauges`는 전체 박스 및 상단 라벨/하단 특성의 컨테이너. `.trait-section`은 프로그래스 아래에 위치한다.
 - 학교/특성/속성 토큰은 `.token-icon-pill`과 `.token-icon`을 공유하며, **알약 배경 + 내부 흰색 둥근 선 SVG 아이콘 + 이름**을 보존한다. 구체 색상과 활성 상태는 종류별 클래스로 구분.
 - PC 상태 내부는 2열, 모바일 760px 이하 4열·440px 이하 2열 기준을 상태 `.gauges-list`에 적용한다. `:root` 이외의 크기/간격은 `rem`/`em` 기준이다.
 - 새 화면은 뷰별 컨테이너에서만 레이아웃을 제어하며, 기존 게임 진행 코드를 CSS 작업과 함께 되살리지 않는다. 후속 폰트 크기·토큰 디자인 변경에도 **이 파일을 함께 검토·갱신**한다.
+
+## 6. 공통 선택·진행도 (2026-10-19)
+
+- `.choice-timing`은 `.sheet-head` 바로 아래, 스크롤 기록 바깥의 고정 높이 영역이다. 데이터의 다음 선택 예정 턴·대기를 표현한다.
+- 기존 기본 상태/미리보기 액션은 제거했다. `.action-area`는 현재 선택이 있을 때만 표시하고 `.inline-choices`에 N개의 일상 선택 버튼을 넣는다. 한방 전용 팝업의 시각 디자인은 이번 범위에 포함하지 않는다.
+- PC 2열, 포스터/프로필 동일 너비, 모바일 상시 열린 53dvh 바텀시트·학교/특성 알약은 보존한다. 모바일 액션은 시트 높이의 최대 60%에서 내부 스크롤하여 기록 공간을 남긴다. 상태 패널은 기존 페이지 스크롤로 접근한다.
+- 개발 검증 도구 `.system-tools`는 `?systems=1`에서만 표시한다. 기본 플레이 UI에 개발용 버튼이나 미리보기 안내를 노출하지 않는다.
+- 길이 단위는 rem/em 중심이다. Chromium 1365×900, 390×844, 360×640에서 실제 선택·졸업 토큰·동적 스탯·대기·가로 넘침과 시트 위치를 검증했다. 기록 중요도 minor는 작은 기록으로 표시한다.

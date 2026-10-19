@@ -6,15 +6,7 @@
   <meta name="theme-color" content="#0b0b0f">
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
-  <script>
-    /* Canonical asset root on GitHub Pages; keep local development functional. */
-    const root = location.hostname === 'jaksim0sec.github.io'
-      ? '/callOfgukmin/'
-      : new URL('../', location.href).href;
-    const base = document.createElement('base');
-    base.href = root;
-    document.head.append(base);
-  </script>
+  <base href="../">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-screen="game">
@@ -47,15 +39,24 @@
         <button id="resetGame" class="mini-reset" type="button" aria-label="새 인물 생성" title="새 인물 생성">↻</button>
         <span class="chapter-meta"><span id="chapter">인물 생성</span><span class="mode-chip">UI 시연</span></span>
       </div>
-      <div class="log" id="log" role="log" aria-live="polite"></div>
-      <div class="action-area" id="action">
-        <div class="current-line"><span>현재 상태</span><strong>출생 직후 · 이야기 준비 중</strong></div>
-        <div class="preview-actions">
-          <button type="button" class="preview-btn" id="previewSchool">진학 서류 UI <span aria-hidden="true">↗</span></button>
-          <button type="button" class="preview-btn secondary" id="previewParty">정당 투표지 UI <span aria-hidden="true">↗</span></button>
+      <div class="choice-timing" id="choiceTiming">
+        <div class="timing-label"><span>다음 선택까지</span><span id="nextChoiceLabel">이야기 준비 중</span></div>
+        <progress id="nextChoiceProgress" max="1" value="0" aria-label="다음 선택까지 진행도"></progress>
+      </div>
+      <section id="systemTools" class="system-tools" aria-label="개발 검증 도구" hidden>
+        <div class="system-controls">
+          <button type="button" class="preview-btn" id="startSystemDemo">공통 시스템 검증</button>
+          <button type="button" class="preview-btn" id="advanceTurn" hidden>다음 턴</button>
+          <span id="turnLabel" class="fine">검증용 진행 · 실제 생애 콘텐츠 아님</span>
+          <button type="button" class="text-action" id="previewSchool">진학 서류 검증</button>
+          <button type="button" class="text-action" id="previewParty">정당 투표지 검증</button>
         </div>
-        <p class="fine">UI 미리보기입니다. 선택해도 시간·스탯·스토리는 진행되지 않습니다.</p>
-        <button type="button" class="text-action back-action" id="backToWaiting">대기 화면으로 돌아가기</button>
+      </section>
+      <div class="log" id="log" role="log" aria-live="polite"></div>
+      <p id="systemError" class="system-error" role="alert" hidden></p>
+      <div class="action-area" id="action" hidden>
+        <div class="current-line"><span>현재 선택</span><strong id="currentTitle"></strong></div>
+        <div id="currentChoice" class="current-choice" aria-live="polite"></div>
       </div>
     </section>
   </div>
@@ -67,6 +68,9 @@
 </dialog>
 <script src="js/poster.js" defer></script>
 <script src="js/playerState.js" defer></script>
+<script src="js/effects.js" defer></script>
+<script src="js/timeline.js" defer></script>
+<script src="js/systemDemo.js" defer></script>
 <script src="js/statusView.js" defer></script>
 <script src="js/game.js" defer></script>
 <script src="js/boot.js" defer></script>

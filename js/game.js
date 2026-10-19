@@ -1,5 +1,5 @@
 /* In-game UI controller.
- * The game template is mounted by boot.js. Story advancement remains disabled.
+ * Mounted by boot.js; content owns rules, this module projects committed state.
  */
 (function(global){
 'use strict';
@@ -29,90 +29,171 @@ function posterData(persona){
   imageSrc:persona.portraitSrc,ageGroup:persona.age>=19?'adult':'child',template:'solid'
  };
 }
-function mount(root,navigate){
+let majorPresenter=null,refreshMounted=null,resetMajorPresentation=null,mountedSession=null;
+function registerMajorPresenter(presenter){
+ if(presenter!==null&&typeof presenter!=='function')throw new Error('한방 선택 표시기는 함수여야 함');
+ if(majorPresenter===presenter)return;
+ resetMajorPresentation?.();majorPresenter=presenter;refreshMounted?.();
+}
+function mount(root,navigate,content=global.GukminContent){
+ mountedSession?.dispose();
+ let disposed=false;
  const $=id=>root.querySelector('#'+id);
  let persona=global.GukminPlayer.ensure();
- let selection=-1,previewKind='';
+ let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
+ let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
+ const verificationMode=new URLSearchParams(global.location.search).has('systems');
+ $('systemTools').hidden=!verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   global.GukminStatus.render(root,persona);
-  text('chapter','기본 인물 정보');
+  text('chapter',snapshot?'기반 검증 · '+snapshot.runtime.turn+'턴':'기본 인물 정보');
   const host=$('playerPosterMount'),data=posterData(persona);
   if(!host.firstElementChild)host.append(global.GukminPoster.create(data));
   else global.GukminPoster.update(host.firstElementChild,data);
   document.documentElement.style.setProperty('--party',persona.partyColor||'#677181');
   const log=$('log');log.replaceChildren();
-  for(const item of persona.history){
+  for(const item of persona.history.filter(h=>h.display!=='hidden')){
    const article=el('article','record'),line=el('div','record-top');
-   line.append(el('span','record-age','#'+item.age+'살'),el('strong','',item.title));
+   line.append(el('span','record-age','#'+item.age+'살'+(item.turn!==undefined?' · '+item.turn+'턴':'')),el('strong','',item.title));
+   article.dataset.importance=item.importance||'normal';
    article.append(line,el('p','',item.detail));
    log.append(article);
   }
+  renderProgress();
  }
+ function clearMajor(){presentationEpoch++;const dispose=disposeMajor;disposeMajor=null;presentedToken=null;dispose?.();}
  function reset(){
   if(!global.confirm('현재 인물 정보를 초기화하고 다시 생성할까?'))return;
-  persona=global.GukminPlayer.generate();
-  global.GukminPlayer.save(persona);
-  render();
+  const fresh=global.GukminPlayer.generate();
+  if(!global.GukminPlayer.save(fresh))throw new Error('저장 실패');
+  clearMajor();persona=fresh;engine=null;snapshot=null;render();
  }
- function openPreview(type){
-  selection=-1;previewKind=type;
+ function openDialog(type,options,{title,body,kicker,commit}){
+  selection=-1;dialogOptions=options;dialogCommit=commit;
   const school=type==='school',dialog=$('choiceDialog');
   dialog.className=school?'school-dialog':'ballot-dialog';
-  text('kicker',school?'진학 지원서 · 디자인 미리보기':'정당 가입 · 디자인 미리보기');
-  text('modalTitle',school?'진학 고등학교 선택':'소속 정당 선택');
-  text('modalStory',school?'본인이 진학할 고등학교를 선택하시오.':'입당할 정당을 선택하시오. (가상의 정당입니다.)');
+  text('kicker',kicker);
+  text('modalTitle',title);
+  text('modalStory',body);
   text('summary','아직 선택하지 않음');
   $('confirm').disabled=true;
   const list=$('options');list.className=school?'options':'ballot-paper';list.replaceChildren();
-  const options=school?SCHOOLS:PARTIES;
   options.forEach((item,i)=>{
    const button=el('button',school?'option':'ballot-row');
    button.type='button';button.setAttribute('aria-pressed','false');
    if(school){
-    const crest=el('span','crest');crest.append(el('span','',item.icon));
+    const crest=el('span','crest');crest.append(el('span','',item.icon||'學'));
     const body=el('span','option-text');
     body.append(el('strong','school-name',item.name),el('small','',item.desc));
     const tags=el('span','choice-tags');
-    item.tags.forEach(t=>tags.append(el('span','token',t)));
+    (item.tags||[]).forEach(t=>tags.append(el('span','token',t)));
     body.append(tags);button.append(crest,body,el('span','check','✓'));
    }else{
     const n=el('span','ballot-no',i+1),content=el('span','ballot-party');
     const mark=el('span','party-mark',item.icon),words=el('span','');
     mark.style.setProperty('--color',item.color);
-    words.append(el('strong','',item.name),el('small','',item.desc));
+    words.append(el('strong','',item.name),el('small','',item.desc||''));
     content.append(mark,words);
     const box=el('span','stamp-box');box.append(el('span','stamp','✓'));
     button.append(n,content,box);
    }
+   button.disabled=item.available===false;
    button.addEventListener('click',()=>{
     selection=i;
     Array.from(list.querySelectorAll('button')).forEach((node,index)=>node.setAttribute('aria-pressed',String(index===i)));
-    text('summary',item.name+' 선택됨 (미리보기)');
+    text('summary',item.name+' 선택됨');
     $('confirm').disabled=false;
    });
    list.append(button);
   });
   dialog.showModal();
  }
- function confirmPreview(){
-  if(selection<0)return;
-  const item=(previewKind==='school'?SCHOOLS:PARTIES)[selection];
-  $('choiceDialog').close();
-  text('chapter',item.name+' · UI만 미리보기');
+ function openPreview(type){
+  const school=type==='school';
+  openDialog(type,school?SCHOOLS:PARTIES,{
+   title:school?'진학 고등학교 선택':'소속 정당 선택',
+   body:school?'본인이 진학할 고등학교를 선택하시오.':'입당할 정당을 선택하시오. (가상의 정당입니다.)',
+   kicker:school?'진학 지원서 · 디자인 미리보기':'정당 가입 · 디자인 미리보기',
+   commit:item=>text('chapter',item.name+' · UI만 미리보기')
+  });
  }
+ function confirmDialog(){
+  if(selection<0)return;
+  const item=dialogOptions[selection],commit=dialogCommit;
+  $('choiceDialog').close();
+  commit(item);
+ }
+ function safely(fn){
+  return (...args)=>{if(disposed)return false;try{$('systemError').hidden=true;return fn(...args);}catch(error){
+   text('systemError',error.message);$('systemError').hidden=false;console.error(error);
+  }};
+ }
+ function connect(definition){
+  engine=global.GukminTimeline.create({
+   ...definition,persona,persist:s=>global.GukminPlayer.save(s),
+   onChange:s=>{snapshot=s;persona=s.persona;render();}
+  });
+  snapshot=engine.snapshot();persona=snapshot.persona;
+ }
+ function startDemo(){
+  connect(global.GukminSystemDemo.config());engine.advance(0);
+ }
+ function renderProgress(){
+  if(disposed)return;
+  const active=!!engine,choice=snapshot?.choice,p=snapshot?.progress;
+  $('startSystemDemo').hidden=active;$('advanceTurn').hidden=!active;
+  $('advanceTurn').disabled=!!p?.waiting;
+  text('turnLabel',active?snapshot.runtime.turn+'턴 · 검증용 시간':'검증용 진행 · 실제 생애 콘텐츠 아님');
+  $('action').hidden=!choice;
+  text('currentTitle',choice?.title||'');
+  text('nextChoiceLabel',p?.waiting?'응답 대기':p?.remaining!==null&&p?.remaining!==undefined?p.remaining+'턴 남음':active?'예정된 선택 없음':'이야기 준비 중');
+  $('nextChoiceProgress').value=p?.value||0;
+  const current=$('currentChoice');current.replaceChildren();
+  if(presentedToken!==choice?.token)clearMajor();
+  if(!choice)return;
+  if(choice.layer==='한방 선택'){
+   current.append(el('p','fine','한방 선택 응답 대기'));
+   if(majorPresenter&&presentedToken!==choice.token){
+    presentedToken=choice.token;
+    const owner=engine,epoch=presentationEpoch;
+    const dispose=majorPresenter({choice,root,resolve:optionId=>{if(disposed||engine!==owner||epoch!==presentationEpoch)return false;return safely(()=>owner.resolve(choice.token,optionId))();}});
+    if(typeof dispose==='function'){if(!disposed&&epoch===presentationEpoch&&snapshot?.choice?.token===choice.token)disposeMajor=dispose;else dispose();}
+   }
+   return;
+  }
+  if(choice.body)current.append(el('p','fine',choice.body));
+  const choices=el('div','inline-choices');
+  const owner=engine;
+  for(const option of choice.options){
+   const button=el('button','inline-choice',option.label);button.type='button';button.disabled=!option.available;
+   button.addEventListener('click',safely(()=>engine===owner?owner.resolve(choice.token,option.id):false));choices.append(button);
+  }
+  current.append(choices);
+ }
+ if(persona.simulation?.contentId===global.GukminSystemDemo.contentId)connect(global.GukminSystemDemo.config());
+ else if(content){connect(content);engine.advance(0);}
+ refreshMounted=renderProgress;resetMajorPresentation=clearMajor;
+
  const subscriptions=[
   [$('resetGame'),'click',reset],
+  [$('startSystemDemo'),'click',startDemo],
+  [$('advanceTurn'),'click',()=>engine.advance(1)],
   [$('previewSchool'),'click',()=>openPreview('school')],
   [$('previewParty'),'click',()=>openPreview('party')],
   [$('close'),'click',()=>$('choiceDialog').close()],
-  [$('confirm'),'click',confirmPreview],
-  [$('choiceDialog'),'close',()=>{selection=-1}],
-  [$('backToWaiting'),'click',()=>navigate('waiting')]
+  [$('confirm'),'click',confirmDialog],
+  [$('choiceDialog'),'close',()=>{selection=-1}]
  ];
- for(const [node,event,handler] of subscriptions)node.addEventListener(event,handler);
+ for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
+ function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
+ function dispose(){if(disposed)return;disposed=true;clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ mountedSession=Object.freeze({
+  snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
+  resolve:(token,id)=>requireEngine().resolve(token,id),apply:(id,result)=>requireEngine().apply(id,result),dispose
+ });
  render();
- return ()=>{for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);};
+ return dispose;
 }
-global.GukminGame=Object.freeze({mount,posterData});
+global.GukminGame=Object.freeze({mount,posterData,registerMajorPresenter,get session(){return mountedSession;}});
 })(window);

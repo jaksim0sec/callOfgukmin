@@ -40,6 +40,11 @@ function pill(label,iconName,kind=''){
   el.append(icon(iconName),node('span','token-name',label));
   return el;
 }
+const metricRenderers=new Map();
+function registerMetricRenderer(type,render){
+ if(typeof render!=='function')throw new Error('스탯 렌더러는 함수여야 함');
+ metricRenderers.set(type,render);
+}
 function showAttributes(root,s){
   const attributes=root.querySelector('#attributeRows');
   const schools=root.querySelector('#schools');
@@ -60,6 +65,12 @@ function showAttributes(root,s){
     const tokens=node('span','attribute-tokens');
     roles.forEach(role=>tokens.append(pill(typeof role==='string'?role:role.label||role.name||'역할','flag','attribute-token')));
     line.append(tokens);attributes.append(line);
+  }
+  for(const [id,def] of Object.entries(global.GukminPlayer.attributeDefinitions)){
+    if(!def.custom||def.hidden||s.attributes?.[id]===undefined)continue;
+    const line=node('div','attribute-row');
+    line.append(node('span','attribute-label',def.label),pill(s.attributes[id],def.icon||'flag','attribute-token'));
+    attributes.append(line);
   }
   const records=global.GukminPlayer.schoolsOf(s);
   for(const kind of global.GukminPlayer.schoolKinds){
@@ -93,11 +104,13 @@ function showMetrics(root,s){
     wrap.append(line);
     if(metric.type==='progress'){
       const progress=node('progress','');
-      progress.max=100;
-      progress.value=Number.isFinite(number)?Math.max(0,Math.min(100,number)):0;
+      const min=metric.min??0,max=metric.max??100;
+      progress.max=max-min;
+      progress.value=Number.isFinite(number)?Math.max(0,Math.min(max-min,number-min)):0;
       progress.setAttribute('aria-label',metric.label);
       wrap.append(progress);
     }
+    if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);
     if(metric.type==='currency')wrap.classList.add('gauge-currency');
     if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
     list.append(wrap);
@@ -130,5 +143,5 @@ function render(root,persona){
   showMetrics(root,persona);
   showTraits(root,persona);
 }
-global.GukminStatus=Object.freeze({render});
+global.GukminStatus=Object.freeze({render,registerMetricRenderer});
 })(window);

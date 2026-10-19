@@ -3,6 +3,7 @@
 | 경로 | 구분 | 활용 |
 |---|---|---|
 | [VISION.md](VISION.md) | 방향성 | 어떤 게임을 만들지 |
+| [developing/SYSTEMS.md](developing/SYSTEMS.md) | 구현 계약 | 이벤트 3종·선택 2종·정산·시간·저장·검증 콘텐츠 API |
 | [developing/RUNTIME.md](developing/RUNTIME.md) | 구현 사실 | 3화면 HTML·JS 책임·화면 전환·상태 토큰 구조·검증 |
 | [developing/CSS.md](developing/CSS.md) | **필수 CSS 작업 규칙** | 수정 전에 읽고 CSS 변경 때마다 동시 갱신 |
 | [developing/UI.md](developing/UI.md) | 구현 사실 | 학교·특성 SVG 토큰, 화면별 구성, 포스터 |
