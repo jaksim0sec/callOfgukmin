@@ -393,7 +393,7 @@ try{
   return {target:node.dataset.ratio,duration:getComputedStyle(node).transitionDuration};
  });
  assert.equal(gaugeMotion.target,'0.55','synthetic state change sets the correct real target');
- assert.match(gaugeMotion.duration,/0\\.5s/,'gauge transitions use shared half-second motion');
+ assert.match(gaugeMotion.duration,/0\.5s/,'gauge transitions use shared half-second motion');
  await timedPage.waitForTimeout(90);
  const intermediate=await timedPage.locator('.metric-stress .ui-progress-fill').evaluate(el=>{
   const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
