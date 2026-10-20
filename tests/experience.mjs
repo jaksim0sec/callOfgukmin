@@ -159,8 +159,12 @@ try{
    }
   }else if(await page.locator('#lifeDecisionDialog').isVisible()){
    const category=await page.evaluate(()=>GukminGame.session.snapshot().choice?.presentation?.type);
-   const index=category==='exam'?2:0;
-   await page.locator('#lifeDecisionDialog .life-answer:not(:disabled)').nth(index).click();
+   if(category!=='grade-seal'){
+    const index=category==='exam'?2:0;
+    const selector=['exam','school'].includes(category)?'.life-answer:not(:disabled)':
+     '.admission-choices button:not([hidden]):not(:disabled)';
+    await page.locator('#lifeDecisionDialog '+selector).nth(index).click();
+   }
    await page.locator('#lifeDecisionDialog .life-submit').click();decisions++;
   }else if(await page.locator('#lifeCinematicDismiss').isVisible()){
    await page.locator('#lifeCinematicDismiss').click();
@@ -170,7 +174,7 @@ try{
   }else if(state.choice?.layer==='일상 선택'){
    assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'new routine popup is never forced open');
    await page.locator('#resumeDailyChoice').click();
-  }else if(state.runtime.events['high:graduation']?.status==='completed'){
+  }else if(['high:graduation','admission:retry-graduation'].some(id=>state.runtime.events[id]?.status==='completed')){
    completed=true;break;
   }else await page.waitForTimeout(30);
  }
