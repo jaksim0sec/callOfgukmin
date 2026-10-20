@@ -303,6 +303,10 @@ global.GukminDirector.register({
    stages.events.find(event=>event.id==='high:graduation').when={
     all:[{attributes:{admissionAttempts:1}},{not:{attributes:{admissionDestination:'retry'}}}]
    };
+   stages.events.find(event=>event.id==='high:graduation').result.conditional=[
+    {when:{attributes:{admissionDestination:'college'}},result:{effects:{attributes:{job:'대학 입학 예정'}}}},
+    {when:{attributes:{admissionDestination:'employment'}},result:{effects:{attributes:{job:'사회 진출 준비'}}}}
+   ];
    // Each elective route has a later, deterministic consequence in an existing news slot.
   const senior=stages.events.find(event=>event.id==='high:age18');
   senior.result.conditional=[
