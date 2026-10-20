@@ -120,8 +120,10 @@ function mount(root,navigate,content=global.GukminContent){
      if(impacts.length){
       const tray=el('div','record-impacts');
       for(const [position,impact] of impacts.entries()){
-       const chip=global.GukminStatus.pill(impact.text,impact.icon,
-        'daily-result-chip impact-'+impact.tone+(impact.id?' metric-'+impact.id:''));
+       const chip=impact.id&&Number.isFinite(impact.amount)
+        ?global.GukminStatus.metricImpact(impact.id,impact.amount,'daily-result-chip')
+        :global.GukminStatus.pill(impact.text,impact.icon,
+         'daily-result-chip impact-'+impact.tone);
        if(impact.color)chip.style.setProperty('--trait-color',impact.color);
        if(snapshot?.reviewPending&&group===lastClosed)
         chip.style.animationDelay=Math.min(position,6)*.07+'s';
@@ -147,8 +149,9 @@ function mount(root,navigate,content=global.GukminContent){
      const impacts=dailyUI.changesFor();
      if(impacts.length){
       const tray=el('div','record-impacts');
-      for(const impact of impacts)tray.append(global.GukminStatus.pill(impact.text,impact.icon,
-       'daily-result-chip impact-'+impact.tone+(impact.id?' metric-'+impact.id:'')));
+      for(const impact of impacts)tray.append(impact.id&&Number.isFinite(impact.amount)
+       ?global.GukminStatus.metricImpact(impact.id,impact.amount,'daily-result-chip')
+       :global.GukminStatus.pill(impact.text,impact.icon,'daily-result-chip impact-'+impact.tone));
       article.append(tray);
      }
      nextButton(article);
@@ -239,7 +242,7 @@ function mount(root,navigate,content=global.GukminContent){
  }
  dailyUI=global.GukminDailyChoice.create({
   dialog:$('dailyChoiceDialog'),body:$('dailyChoiceBody'),heading:$('dailyModalHeading'),
-  collapseButton:$('dailyModalCollapse'),resumeButton:$('resumeDailyChoice'),
+  resumeButton:$('resumeDailyChoice'),
   resolve:(token,id)=>safely(()=>engine.resolve(token,id))(),
   proceed:()=>safely(()=>engine.run())()
  });
