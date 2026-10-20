@@ -66,8 +66,12 @@ try{
    const sample=GukminStatus.traitToken('예체능');return sample.style.getPropertyValue('--trait-color');
   });
   assert.equal(traitTint,'#EB83C0','trait owns its distinct color');
-  assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).animationName),/daily-dialog-rise/,
-   'daily choice enters gently from below');
+  assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).animationName),/paper-sheet-rise/,
+   'grid paper rises from the bottom');
+  assert.equal(await page.locator('#dailyPaperGrip').count(),1,'paper uses common sheet grip');
+  assert.equal(await page.evaluate(()=>typeof GukminSheet.create),'function','shared snap sheet controller is loaded');
+  assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).fontFamily),/Serif KR|Batang/,'diary uses Korean serif');
+  assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).backgroundImage),/linear-gradient/,'paper grid is rendered');
   const shownEffects=await page.locator('#dailyChoiceBody .daily-choice-effect').count();
   const realEffects=await page.evaluate(()=>{
    const snapshot=GukminGame.session.snapshot();
@@ -80,11 +84,13 @@ try{
   });
   assert.equal(shownEffects,realEffects,'preview never invents rewards when a narrative choice has no numeric effect');
   await page.locator('#dailyModalCollapse').click();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'modal collapses without settling');
+  await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'paper collapses without settling');
   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'resume remains in sheet header');
   await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'resumes without losing selection');
   await page.keyboard.press('Escape');
+  await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'Escape collapses without choosing');
   assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
   if(name!=='desktop'){
@@ -154,10 +160,18 @@ try{
    assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
-  // A confirmed life choice closes the dialog; its reply and effects persist in the log.
+  // Paper choices require explicit confirmation; result appears on paper then remains in history.
   await page.locator('#resumeDailyChoice').click();
+  assert.equal(await page.locator('#dailyPaperConfirm').isDisabled(),true);
   await page.locator('#dailyChoiceBody .inline-choice').first().click();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'decision dialog closes on selection');
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'marking paper never settles a choice');
+  assert.equal(await page.locator('#dailyPaperConfirm').isEnabled(),true);
+  assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1);
+  await page.locator('#dailyPaperConfirm').click();
+  assert.equal(await page.locator('#dailyPaperResult').isVisible(),true,'result appears on same paper');
+  await page.locator('#dailyPaperConfirm').click();
+  await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'recorded paper folds to history');
    assert.equal(await page.locator('#log .record-choice').count(),1,'choice response is in life history');
    assert.ok((await page.locator('#log .record-choice').textContent()).includes('내 선택'));
    assert.equal(await page.locator('#action').evaluate(e=>e.hidden),true,'no duplicate result card');
@@ -191,6 +205,8 @@ try{
   await page.locator('#dailyModalCollapse').click();
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
+  assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
+  await page.locator('#dailyPaperConfirm').click();
   assert.match(await page.locator('.gauge.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.gauge.metric-health').textContent(),/95/);
   assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
   // C–E: one event pack drives traits, periodic effect, schools and custom metric.
