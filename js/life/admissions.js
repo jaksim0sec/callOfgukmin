@@ -124,6 +124,28 @@ function cycle(pack,prefix,base,second=false){
     {risk:'입시 결과 없이 준비 기간과 생활비 부담이 늘어남'})]:[])
   ],'한방 선택',{type:'admission-route',term:second?'재도전 진로 선택':'대입 진로 선택'});
  event(pack,route,withGate());
+ // A story slot shared by both admissions paths: familiar classmates carry through.
+ const practiceOptions=[
+  option('team','친구와 기출을 나눠 풀며 틀린 이유를 설명한다',
+   '남에게 설명하려니 모호한 부분이 드러났다. 문제를 더 정확히 풀게 됐지만 방과 후까지 시간이 걸렸다.',
+   {stats:{exam:2,study:1,relations:2,stress:2}}),
+  option('intense','연락을 줄이고 혼자 고난도 문항까지 밀어붙인다',
+   '끝까지 붙잡은 유형에 자신감이 붙었다. 대신 연락을 미뤘고 저녁 늦게까지 쉬지 못했다.',
+   {stats:{exam:5,relations:-2,stress:6,health:-1}},
+   {risk:'성과는 크지만 관계와 건강·압박을 희생'}),
+  option('rest','계획한 기본 문제만 풀고 수면 시간을 확보한다',
+   '덜 익숙한 문제는 다음으로 넘겼다. 대신 일정한 시간에 잠들어 다음 날 공부를 이어갈 수 있었다.',
+   {stats:{exam:-1,health:3,stress:-5}},
+   {risk:'이번 주 문제 풀이량과 단기 성적 기회 감소'})
+ ];
+ const studyFriend=S.branch(S.selection(prefix+':peer-practice',routeAt+1,'원서철의 단체방',
+  '원서 접수 얘기로 시끄러운 단체방에 기출문제 사진이 올라왔다. ==오늘 남은 자유 시간은 두 시간이다.==',
+  practiceOptions),[
+   {id:'sea',priority:30,when:{attributes:{highPeer:'세아'}},body:'윤세아가 오답이 갈린 문제를 사진으로 보냈다. ==세아는 정답보다 풀이 과정을 궁금해한다.== 어떻게 남은 두 시간을 쓸까?',options:practiceOptions},
+   {id:'harin',priority:20,when:{attributes:{highPeer:'하린'}},body:'최하린이 “이거 왜 틀린 거지?”라며 단체방에 문제를 올렸다. ==수능까지 남은 시간은 줄어든다.== 어떻게 준비할까?',options:practiceOptions},
+   {id:'jaeho',priority:10,when:{attributes:{highPeer:'재호'}},body:'박재호가 기출 풀이를 한꺼번에 보냈다. 정답은 맞았는데 풀이가 서로 다르다. ==이번 주말엔 정리할 시간이 없다.== 어떻게 할까?',options:practiceOptions}
+  ]);
+ event(pack,studyFriend,withGate({not:{attributes:{admissionRoute:'employment'}}}));
  const earlyGuard=withGate({attributes:{admissionRoute:'early'}});
  board(pack,prefix,routeAt+1,'early',earlyGuard);
  const preparation=S.selection(prefix+':last-week',routeAt+2,'수능을 앞둔 마지막 일주일',
@@ -151,6 +173,22 @@ function cycle(pack,prefix,base,second=false){
    ]})],
   '한방 선택',{type:'grade-seal',category:'mock',term:'수능 성적 통지표'});
  event(pack,csat,withGate({not:{attributes:{admissionRoute:'employment'}}}));
+ const afterExam=S.selection(prefix+':exam-evening',routeAt+3,'시험이 끝난 저녁',
+  '수능이 끝났다. 주변에선 벌써 가채점과 원서 이야기를 시작한다. ==점수 발표까지는 아직 시간이 있다.==',
+  [
+   option('review','친구와 시험을 복기하며 다음 계획을 세운다',
+    '친구와 헷갈린 문항을 비교하고 다음 지원 일정까지 살폈다. 후회도 조금 남아 한동안 결과를 곱씹었다.',
+    {stats:{study:2,relations:3,stress:3}},
+    {risk:'가채점 이야기가 불안을 키울 수 있음'}),
+   option('family','가족과 저녁을 먹으며 긴 시험을 마무리한다',
+    '가족과 식사하면서 시험 이야기 대신 오랜만에 일상을 나눴다. 함께한 시간만큼 긴장은 풀렸다.',
+    {stats:{relations:2,stress:-4,health:1}}),
+   option('sleep','연락을 잠시 미루고 충분히 쉰다',
+    '휴대전화 알림을 잠시 꺼 두고 일찍 쉬었다. 다음 날은 덜 피곤했지만 단체방의 이야기는 놓쳤다.',
+    {stats:{health:4,stress:-5,relations:-1}},
+    {risk:'친구들과 정보를 주고받을 기회 감소'})
+  ]);
+ event(pack,afterExam,withGate({not:{attributes:{admissionRoute:'employment'}}}));
  // The university board opens only if there was no successful early admission.
  const regularGuard=withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}},{attributes:{earlyStatus:'skipped'}}]});
  board(pack,prefix,routeAt+5,'regular',regularGuard);
