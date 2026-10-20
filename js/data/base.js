@@ -67,12 +67,12 @@ const TRAIT_DEFS = {
  '다이아수저':{icon:'sparkle',tier:'diamond',description:'매우 풍족한 경제적 지원을 받는 출생 배경'},
   '저축습관':{color:'#E7B34F',icon:'savings',description:'저축을 실제로 실행할 때 남는 돈이 늘어난다.',modifiers:[{tags:['save'],stats:{money:{add:1000}}}]},
   '인내심':{color:'#63A6E2',icon:'hourglass',description:'시험 준비의 부담을 조금 덜어 준다.',modifiers:[{tags:['assessment'],stats:{stress:{multiply:.75}}}]},
-  '꼼꼼함':{color:'#58C9AB',icon:'check',description:'시험에서 검산을 통해 실수를 줄인다.',modifiers:[{tags:['assessment'],stats:{exam:{add:2},schoolScore:{add:2}}}]},
-  '리더십':{color:'#E6A245',icon:'flag',description:'실제 협업 선택에서 신뢰를 얻는 데 도움이 된다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
-  '언변':{color:'#A994FF',icon:'speech',description:'면접·토론·연설에 영향을 주는 특성'},
-  '친화력':{color:'#F68CB8',icon:'users',description:'친구들과 협력할 때 작은 관계 보너스.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
+  '꼼꼼함':{color:'#58C9AB',icon:'check',description:'시험에서 검산으로 실수를 줄인다. 수행평가에서 기존 기록을 검증하는 해결법을 사용할 수 있다.',modifiers:[{tags:['assessment'],stats:{exam:{add:2},schoolScore:{add:2}}}]},
+  '리더십':{color:'#E6A245',icon:'flag',description:'협업에서 관계 보너스를 얻는다. 수행평가 분담과 추가 부탁의 범위 조율에 활용할 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
+  '언변':{color:'#A994FF',icon:'speech',description:'토론·질의응답 방식으로 수행평가를 해결할 수 있다. 대표 발표의 준비 부족을 보완하지만 컨디션은 따로 관리해야 한다.'},
+  '친화력':{color:'#F68CB8',icon:'users',description:'친구들과 협력할 때 관계 보너스를 얻는다. 수행평가를 분담할 수 있지만 이후 부탁도 늘어날 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
   '흡연':{icon:'pulse',negative:true,color:'#DD756A',description:'흡연 습관은 건강과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{health:-1,money:-2000}}}}},
-  '자기주장':{icon:'speech',color:'#79C5EE',description:'부담스러운 부탁에 자신의 한계를 분명히 표현한 경험'},
+  '자기주장':{icon:'speech',color:'#79C5EE',description:'자신의 한계를 표현한 경험. 추가 부탁을 전부 수락하거나 거절하는 대신 범위를 조율할 수 있다.'},
   '미루는 습관':{color:'#DD756A',icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'},
   '호기심':{color:'#EBC65F',icon:'sparkle',description:'새로운 물건과 상황을 먼저 탐색하는 성격'},
   '낯가림':{color:'#A3A1D2',icon:'home',description:'처음 보는 사람 앞에서 조심스러워하는 성격'},
@@ -83,10 +83,10 @@ const TRAIT_DEFS = {
   '관심-이과':{hidden:true,description:'과학·수학 분야의 탐색 기록'},
   '관심-예체능':{hidden:true,description:'예술·공연 분야의 탐색 기록'},
   '관심-체육':{hidden:true,description:'운동·체육 분야의 탐색 기록'},
-  '문과':{color:'#AE94EF',icon:'graduation',aptitude:'humanities',description:'읽기·토론·표현 활동에 관심을 발전시켰다.',modifiers:[{tags:['humanities'],stats:{schoolScore:{add:2}}}]},
-  '이과':{color:'#56D0C2',icon:'graduation',aptitude:'science',description:'과학·수학 탐구에 관심을 발전시켰다.',modifiers:[{tags:['science'],stats:{schoolScore:{add:2},study:{add:1}}}]},
-  '예체능':{color:'#EB83C0',icon:'graduation',aptitude:'arts',description:'예술·음악·공연 활동에 관심을 발전시켰다.',modifiers:[{tags:['arts'],stats:{relations:{add:2}}}]},
-  '체육':{color:'#7AD783',icon:'graduation',aptitude:'sports',description:'운동과 체육 활동에 관심을 발전시켰다.',modifiers:[{tags:['sports'],stats:{health:{add:2}}}]}
+  '문과':{color:'#AE94EF',icon:'graduation',aptitude:'humanities',description:'읽기·토론 활동을 이어 왔다. 토론 동아리와 질의응답 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['humanities'],stats:{schoolScore:{add:2}}}]},
+  '이과':{color:'#56D0C2',icon:'graduation',aptitude:'science',description:'과학·수학 탐구를 이어 왔다. 수행평가에서 누적 기록으로 근거를 검증하는 해결법을 사용할 수 있다.',modifiers:[{tags:['science'],stats:{schoolScore:{add:2},study:{add:1}}}]},
+  '예체능':{color:'#EB83C0',icon:'graduation',aptitude:'arts',description:'창작 활동을 이어 왔다. 수행평가를 영상으로 구성하는 해결법을 사용할 수 있다. 제작 시간은 필요하다.',modifiers:[{tags:['arts'],stats:{relations:{add:2}}}]},
+  '체육':{color:'#7AD783',icon:'graduation',aptitude:'sports',description:'운동과 연습을 이어 왔다. 대표팀 활동과 실물 시연 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['sports'],stats:{health:{add:2}}}]}
 };
 
 const freezeCopy=value=>{

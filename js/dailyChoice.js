@@ -135,11 +135,15 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
     text.append(el('small','daily-choice-locked',
      Number.isFinite(needed)&&Number.isFinite(held)
       ?'재산 부족 · '+held.toLocaleString('ko-KR')+'원 / '+needed.toLocaleString('ko-KR')+'원 필요'
-      :'현재 조건에서는 선택할 수 없음'));
+      :option.requirement?'필요 · '+option.requirement:'현재 조건에서는 선택할 수 없음'));
    }
+   if(option.available&&option.requirement)
+    text.append(S.pill('활용 · '+option.requirement,'sparkle','daily-choice-advantage'));
    const indicators=el('span','daily-choice-effects');
-   // Show the *actual* projected outcome, including conditional traits and modifiers.
-   const projected=global.GukminEffects.apply(persona,option.result,{turn:choice.openedAt||0});
+   // Ordinary choices show the exact projection. A declared uncertain outlook
+   // reveals known costs, leaving conditional success/failure for the result.
+   const forecast=option.outlook?{...option.result,conditional:[]}:option.result;
+   const projected=global.GukminEffects.apply(persona,forecast,{turn:choice.openedAt||0});
    for(const [id,next] of Object.entries(projected.stats||{})){
     const amount=Number.isFinite(next)&&Number.isFinite(persona.stats?.[id])?next-persona.stats[id]:0;
     if(!Number.isFinite(amount)||amount===0)continue;
@@ -173,6 +177,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
    }
    if(indicators.childElementCount)text.append(indicators);
    else text.append(el('small','daily-choice-note',Object.keys(option.result?.effects?.attributes||{}).length?'이 행동을 이후 이야기에서 기억합니다':'수치 변화 없이 이야기를 이어갑니다'));
+   if(option.outlook)text.append(rich('small','daily-choice-outlook',option.outlook));
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
    button.append(number,text,el('span','daily-choice-chevron','›'));
    button.addEventListener('click',()=>resolve(choice.token,option.id));

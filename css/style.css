@@ -554,6 +554,10 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .daily-choice-dialog .daily-choice-effects{opacity:1}
 .daily-choice-dialog .daily-choice-effect{color:color-mix(in srgb,var(--gauge-color,#7A8593) 86%,white)}
 .daily-choice-dialog .daily-choice-locked{color:#eba690}
+.daily-choice-advantage.token-icon-pill{align-self:flex-start;font-size:.65rem;padding:.24rem .45rem;
+ color:#bfe1dc;background:#23423e;border-color:#527b71;max-width:100%}
+.daily-choice-advantage .token-icon{width:.85rem;height:.85rem;color:#94c9b9}
+.daily-choice-outlook{display:block;font-size:.72rem;line-height:1.55;color:#d5c6aa;margin-top:.3rem}
 .daily-choice-note{font-size:.68rem;color:#9aa6b5;line-height:1.45}
 .daily-choice-dialog .inline-choice:disabled{opacity:1;background:#ffffff02}
 .daily-choice-dialog .inline-choice:disabled .daily-choice-title{color:#9298a3}

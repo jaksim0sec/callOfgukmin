@@ -137,10 +137,45 @@ global.GukminDirector.register({
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
   );
+  // Earlier interests open an activity; sustained commitments become usable experience.
+  S.paths(stages,'middle:friends',[
+   {id:'humanities-club',priority:35,when:{traits:['문과']},
+    body:'토론 동아리에서 발표자를 찾는다. 원고만 읽는 발표는 점수를 못 받는다고 한다. 일주일에 두 번, 방과 후 시간이 필요하다.',
+    options:[
+     {label:'질문과 반론을 준비하는 토론팀에 들어간다',tags:['humanities'],effects:{attributes:{clubPath:'humanities'},stats:{relations:2,stress:2}},detail:'첫 토론에서는 말문이 막혔다. 다음 주엔 근거를 적어 와 다시 반박했다. 정기 연습 일정이 생겼다.'},
+     {label:'친구가 있는 방송부에서 원고를 써 본다',effects:{attributes:{clubPath:'media'},stats:{relations:1}},detail:'친구가 촬영하고 너는 질문을 적었다. 방송부 원고에는 교과서와 다른 문장이 필요했다.'},
+     {label:'동아리를 비우고 혼자 읽고 싶은 책을 읽는다',effects:{attributes:{clubPath:'none'},stats:{study:2,stress:-1}},detail:'읽는 시간을 확보했다. 대신 합동 발표자 명단에서는 이름이 빠졌다.'}
+    ]},
+   {id:'sports-club',priority:35,when:{traits:['체육']},
+    body:'체육 동아리 선배가 대표팀 연습을 권한다. 매주 두 번 남아야 하고 대회 전에는 주말 연습도 있다.',
+    options:[
+     {label:'정기 연습에 참가하고 대표팀에 도전한다',tags:['sports'],effects:{attributes:{clubPath:'sports'},stats:{study:-1,relations:2}},detail:'기본 훈련부터 다시 했다. 팀에 이름이 올라갔지만 연습날에는 친구들의 다른 약속을 놓쳤다.'},
+     {label:'대표팀 대신 친구들과 가볍게 운동한다',effects:{attributes:{clubPath:'none'},stats:{health:2,stress:-1}},detail:'정해진 훈련은 없었다. 편한 만큼 대회 명단에도 들어가지는 않았다.'},
+     {label:'연습 시간에는 학교 보충 수업을 듣는다',effects:{attributes:{clubPath:'none'},stats:{study:3,relations:-1}},detail:'놓친 단원을 채웠다. 팀 단체방에는 새 유니폼 사진이 올라왔다.'}
+    ]}
+  ]);
+  const commitments=[
+   {id:'media',title:'축제 메인 영상과 시험 범위',body:'예린이 축제 메인 영상을 맡아 보자고 한다. 한 달 동안 촬영과 편집을 해야 한다. 그달 시험 준비 시간은 이미 빠듯하다.',role:'행사 영상 제작',action:'예린과 축제 메인 영상을 끝까지 만든다',detail:'몇 주간 촬영과 편집을 반복했다. 상영이 끝나자 다른 반에서도 제작을 부탁했다. 복습하지 못한 단원은 남았다.',tags:['arts'],requirement:'방송부 활동',study:3},
+   {id:'science',title:'탐구 발표회와 밀린 문제집',body:'민호가 교내 탐구 발표회에 함께 나가자고 한다. 새 실험을 세 번 더 해야 한다. 문제집 진도는 다른 친구들보다 늦다.',role:'탐구 기록과 검증',action:'민호와 실험을 반복하고 발표회에 나간다',detail:'세 차례의 실험을 같은 형식으로 기록했다. 마지막에는 오차의 원인까지 설명했다. 문제집은 끝내 다 못 풀었다.',tags:['science'],requirement:'과학 동아리 활동',study:3},
+   {id:'humanities',title:'토론 대회 참가 신청서',body:'학교 대표 토론팀 지원서를 받았다. 자료 조사와 모의 토론에 방과 후 한 달을 써야 한다. 그 시간에 시험 범위도 마쳐야 한다.',role:'토론과 질의응답',action:'팀 대표로 토론 대회를 준비한다',detail:'상대가 바뀔 때마다 질문도 달랐다. 한 달간 원고를 고치고 반론을 연습했다. 발표 경험은 쌓였지만 문제풀이 시간은 줄었다.',tags:['humanities'],requirement:'토론 동아리 활동',study:3},
+   {id:'sports',title:'대회 명단에 적힌 내 이름',body:'학교 대표 대회가 시험 준비 기간과 겹친다. 주전으로 뛰려면 한 달간 연습에 빠지지 않아야 한다.',role:'대표팀 훈련과 시연',action:'한 달간 훈련하고 학교 대표로 출전한다',detail:'반복 훈련과 경기 운영을 함께 경험했다. 경기 뒤에도 몸을 관리해야 했다. 수업 필기는 친구에게 빌려 채웠다.',tags:['sports'],requirement:'체육 동아리 활동',study:2}
+  ];
+  for(const path of commitments){
+   const showcase={id:'showcase',label:path.action,requirement:path.requirement,tags:path.tags,
+    when:{attributes:{clubPath:path.id}},risk:'준비 기간 동안 시험 복습 시간이 줄어듦',
+    effects:{stats:{study:-2,relations:4,stress:3},attributes:{projectSkill:path.id,schoolRole:path.role}},detail:path.detail};
+   const steady={id:'steady',label:'맡은 일만 하며 복습과 연습 일정을 지킨다',
+    effects:{stats:{study:path.study,stress:2,relations:1},traits:{add:[path.id==='humanities'?'언변':path.id==='science'?'꼼꼼함':'인내심']}},
+    detail:'몇 주간 약속한 분량만 맡았다. 대표 자리는 다른 친구에게 갔지만 같은 일을 꾸준히 해낼 방식이 남았다.'};
+   const study={id:'study',label:'대표 활동은 넘기고 시험 준비에 시간을 쓴다',
+    effects:{stats:{study:5,stress:3,relations:-2},attributes:{projectSkill:'study',schoolRole:'학업 집중'}},
+    detail:'남은 단원을 복습하고 문제를 풀었다. 행사와 대회 사진에는 네가 없었고, 친구들은 준비 때의 일을 한동안 자기들끼리 이야기했다.'};
+   S.paths(stages,'middle:resources',[{id:'commitment-'+path.id,priority:60,when:{attributes:{clubPath:path.id}},title:path.title,body:path.body,options:[showcase,steady,study]}]);
+  }
   return {...stages,attributes:{
    schoolTrack:{label:'고교 유형',hidden:true},
    schoolProgram:{label:'학교 교육과정 유형',hidden:true},
-   clubPath:{label:'중학교 활동 기록',hidden:true},admissionResearch:{label:'진학 조사 경로',hidden:true}
+   projectSkill:{label:'활동 경험',hidden:true},schoolRole:{label:'쌓아온 경험'},clubPath:{label:'중학교 활동 기록',hidden:true},admissionResearch:{label:'진학 조사 경로',hidden:true}
   }};
  }
 });

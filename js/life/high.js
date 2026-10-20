@@ -308,7 +308,106 @@ global.GukminDirector.register({
   ];
   // Science-school choices describe lab access rather than an invented commute.
   for(const branch of senior.result.conditional)branch.when={all:[branch.when,{not:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]}}]};
-  return {...stages,attributes:{highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
+  // New scripts extend the same slots; existing saved scenario IDs remain valid.
+  const modes=[
+   {id:'media',traits:['예체능'],requirement:'예체능 또는 영상 제작 경험',role:'영상으로 설명하는 사람',
+    action:'쌓아온 편집 경험으로 비교 영상을 만든다',tags:['arts'],stats:{study:-1,relations:3,stress:2},
+    detail:'예전에 만든 영상의 구성을 꺼내 새 자료를 붙였다. 긴 발표 대신 비교 장면으로 설명했다. 친구들은 다음 행사 영상도 부탁했지만 네 복습은 하루 밀렸다.'},
+   {id:'science',traits:['이과','꼼꼼함'],requirement:'이과·꼼꼼함 또는 탐구 기록 경험',role:'기록으로 검증하는 사람',
+    action:'이전 탐구 기록과 검산표로 근거를 다시 맞춘다',tags:['science'],stats:{study:3,stress:1,relations:-1},
+    detail:'남겨 둔 측정 기록의 형식이 새 자료를 검증할 시간을 아껴 줬다. 확인한 근거만 고쳐 제출했다. 보기 좋은 발표를 원하던 조원과는 끝까지 의견이 달랐다.'},
+   {id:'humanities',traits:['문과','언변'],requirement:'문과·언변 또는 토론 준비 경험',role:'질문으로 설득하는 사람',
+    action:'토론 때 연습한 질의응답으로 발표를 다시 짠다',tags:['humanities'],stats:{study:1,relations:3,stress:2},
+    detail:'긴 슬라이드를 줄이고 예상 질문을 나눴다. 반복해서 받아 본 반론이 이번에는 답변이 됐다. 발표 연습 때문에 개인 공부는 늦게 시작했다.'},
+   {id:'sports',traits:['체육'],requirement:'체육 또는 대표팀 훈련 경험',role:'시연으로 보여주는 사람',
+    action:'체육 활동에서 익힌 동작 시연을 비교 자료로 쓴다',tags:['sports'],stats:{study:-1,health:-1,relations:4,stress:1},
+    detail:'움직임을 직접 시연하며 원리를 설명했다. 꾸준히 연습한 동작이라 새 대본을 외울 필요는 적었다. 리허설에 쓴 시간만큼 문제풀이가 밀렸다.'},
+   {id:'organizing',traits:['리더십','친화력'],requirement:'리더십 또는 친화력',role:'사람을 모아 마무리하는 사람',
+    action:'친구들이 잘하는 일을 나눠 역할을 다시 맡긴다',tags:['team'],stats:{study:1,relations:3,stress:1},
+    detail:'혼자 채울 분량을 친구들에게 나눠 맡겼다. 쌓아 둔 신뢰 덕에 이번 마감은 지켰다. 다음번 조 편성에서는 모두 네 이름부터 불렀다.'}
+  ];
+  const modeWhen=mode=>({any:[{attributes:{projectSkill:mode.id}},...mode.traits.map(trait=>({traits:[trait]}))]});
+  const ready={all:[{stats:{health:{gte:52},stress:{lte:75}}},
+   {any:[{stats:{schoolScore:{gte:65}}},{traits:['언변']}]}]};
+  const spotlight={id:'spotlight',label:'대표 발표를 맡고 남은 기간 전부 걸어 본다',
+   outlook:'대표 발표 기회 · 내신 지수 65 이상 또는 언변이 준비에 도움 · 건강 55 이상·스트레스 68 이하일 때 성과를 낼 수 있습니다',
+   risk:'다른 공부 시간을 비우고 연습을 떠맡음',
+   effects:{stats:{study:-2,stress:7,health:-3},attributes:{projectStyle:'spotlight'}},
+   detail:'최종 발표 명단에 이름을 올리고 며칠간 원고와 시연을 고쳤다. 내 시험 공부는 뒤로 밀렸다.',
+   conditional:[
+    {when:ready,result:{effects:{stats:{schoolScore:4,relations:6},attributes:{projectResult:'recognized',projectObligation:'speaking',schoolRole:'대표 발표 경험'}},
+     history:{title:'준비했던 말이 통했다',detail:'질문이 나와도 연습한 근거로 답했다. 교사는 다음 공개 발표도 부탁했다. 좋은 평가를 받았지만 줄여 둔 공부량은 따로 메워야 한다.'}}},
+    {when:{not:ready},result:{effects:{stats:{schoolScore:-2,relations:-2},attributes:{projectResult:'overextended',projectObligation:'none',schoolRole:'무리했던 대표 발표'}},
+     history:{title:'혼자 맡은 분량이 남았다',detail:'연습이 끝나지 않았는데 체력부터 바닥났다. 질문에 답하지 못한 부분이 평가에 남았다. 친구에게 넘겼어야 할 일까지 붙들고 있었다.'}}}
+   ]};
+  const protect={id:'protect',label:'확인된 자료만 묶어 내고 내 시험 준비를 지킨다',
+   effects:{stats:{study:4,stress:1,relations:-2},attributes:{projectStyle:'study',projectResult:'limited',projectObligation:'none',schoolRole:'학업 집중'}},
+   detail:'발표 분량은 작아졌다. 너는 남은 단원을 복습했지만 조원들은 더 해 볼 수 있지 않았냐고 말했다.'};
+  const commonBody='수행평가 발표와 축제 준비가 같은 주에 잡혔다. 자료 일부는 비었고, 내 시험 범위도 남았다. 주제는 학교생활 속 문제 하나를 근거로 설명하는 것이다.\n\n담당 교사는 영상·실물 시연·질의응답 중 설명에 맞는 형식을 골라도 된다고 했다. ==남은 방과 후는 사흘이다.==';
+  const projectPaths=scripts=>S.paths(stages,'high:teamwork',scripts.flatMap(script=>[
+   script,...[
+    ['harin','하린','최하린은 발표 규모를 키우자고 한다. 조원들은 네가 맡을 분량부터 정해 달라고 기다린다.'],
+    ['sea','세아','윤세아는 근거가 빈 부분을 짚었다. 자료를 전부 다시 찾자니 준비 시간이 부족하다.'],
+    ['jaeho','재호','박재호는 축제 일정까지 겹쳤다며 이번에는 네가 중심을 맡아 달라고 한다.']
+   ].map(([id,peer,detail])=>({...script,id:script.id+'-'+id,priority:script.priority+1,
+    when:{all:[...(script.when?[script.when]:[]),{attributes:{highPeer:peer}}]},body:detail+'\n\n'+script.body}))
+  ]));
+  projectPaths([{id:'project-open',priority:40,title:'마감을 앞두고, 어떤 방식으로 풀까?',body:commonBody,
+   options:[spotlight,{id:'specialty',label:'쌓아온 활동 경험으로 다른 발표 형식을 쓴다',requirement:'적성 특성 또는 동아리 대표 활동 경험',when:{any:modes.map(modeWhen)},
+    effects:{attributes:{projectStyle:'experience'}},detail:'활동 경험을 살릴 수 있는지 확인했다.'},protect]}]);
+  for(const mode of modes){
+   const special={id:'specialty',label:mode.action,requirement:mode.requirement,when:modeWhen(mode),tags:mode.tags,
+    effects:{stats:mode.stats,attributes:{projectStyle:mode.id,projectResult:'delivered',projectObligation:mode.id,schoolRole:mode.role}},detail:mode.detail};
+   const script={title:'마감을 앞두고, 어떤 방식으로 풀까?',body:commonBody,options:[spotlight,special,protect]};
+   const practiced=JSON.parse(JSON.stringify(special));
+   practiced.requirement=mode.role+' · 심화 경험';
+   practiced.effects.stats={...mode.stats,study:(mode.stats.study||0)+1,stress:Math.max(0,(mode.stats.stress||0)-1),relations:(mode.stats.relations||0)+1};
+   practiced.detail='중학교 때 끝까지 맡아 본 작업의 순서와 자료가 남아 있었다. 처음부터 다시 배우지 않고 그 방법을 꺼냈다. '+mode.detail;
+   projectPaths([
+    {...script,id:'project-'+mode.id,priority:50,when:modeWhen(mode)},
+    {...script,options:[spotlight,practiced,protect],id:'project-experienced-'+mode.id,priority:90,when:{attributes:{projectSkill:mode.id}}}
+   ]);
+  }
+  const boundaries={any:[{traits:['자기주장']},{traits:['리더십']}]};
+  for(const [id,description] of [['media','지난번 영상이 좋았다며 다른 반에서도 편집을 부탁했다'],['science','탐구 기록을 잘 정리했다며 새 보고서의 검토 부탁이 왔다'],['humanities','다음 행사에서도 질의응답을 맡아 달라는 부탁이 왔다'],['sports','학교 행사 시연을 한 번 더 맡아 달라는 부탁이 왔다'],['organizing','다음 행사까지 네가 조율해 달라는 부탁이 왔다'],['speaking','공개 발표를 맡아 달라는 부탁이 다시 왔다']]){
+   S.paths(stages,'high:family-time',[{id:'reputation-obligation-'+id,priority:50,when:{attributes:{projectObligation:id}},
+    title:'잘해 놓은 일이 다시 돌아왔다',body:description+'. ==이번엔 시험 준비 기간이다.==\n\n한 번 잘한 일이 다음 일정까지 비워 주지는 않았다.',
+    options:[
+     {id:'accept',label:'요청을 전부 맡아 사람들과의 약속을 지킨다',effects:{stats:{relations:4,study:-3,stress:5},attributes:{projectObligation:'fulfilled'}},detail:'맡은 일은 끝냈다. 고맙다는 말도 들었다. 대신 시험 전날까지 빈 단원을 메워야 했다.'},
+     {id:'negotiate',label:'쌓아온 조율 경험으로 범위를 나눠 맡긴다',requirement:'자기주장 또는 리더십',when:boundaries,tags:['team'],
+      effects:{stats:{relations:2,study:-1,stress:1},attributes:{projectObligation:'shared'}},detail:'이번에 가능한 분량을 먼저 정하고 나머지는 나눠 맡겼다. 모든 사람이 만족하진 않았지만 약속도 공부도 일부 지켰다.'},
+     {id:'decline',label:'이번에는 거절하고 내 시험 계획을 지킨다',effects:{stats:{study:3,stress:-2,relations:-3},attributes:{projectObligation:'declined'}},detail:'다른 사람을 찾겠다는 짧은 답장이 왔다. 공부할 시간은 남았다. 다음 행사 이야기는 당분간 네가 없는 단체방에서 이어졌다.'}
+    ]}]);
+  }
+  S.paths(stages,'high:tobacco-offer',[{id:'senior-invitation',priority:50,
+   title:'점심시간 뒤의 십 분',
+   body:'몇 번 인사하던 선배들이 점심 뒤에 같이 있자고 한다. 친구 하나도 따라 나왔다. 한 선배가 담배를 권하며 말을 건넨다.\n\n교실로 돌아가면 밀린 과제를 해야 한다. 여기서는 별것 아닌 얘기에도 다들 웃는다.',
+   options:[
+    {label:'약속이 있다며 돌아가 밀린 과제를 정리한다',effects:{stats:{study:1,relations:-1},attributes:{habitStage:'away'}},detail:'네가 돌아오자 교실에는 몇 명만 남아 있었다. 과제를 마쳤다. 선배들끼리 찍은 사진은 나중에 단체방에서 봤다.'},
+    {label:'권유는 넘기고 친구와 잠깐 이야기하다 나온다',effects:{stats:{relations:1},attributes:{habitStage:'away'}},detail:'다음 교시 선생님 얘기를 하다 친구와 교실로 돌아왔다. 특별한 약속은 잡지 않았다.'},
+    {label:'한 번쯤은 괜찮겠다며 담배 권유를 받아들이고 남는다',effects:{stats:{relations:3,stress:-2},attributes:{habitStage:'first'}},detail:'권유를 받아들인 뒤 시험 얘기 대신 시답잖은 농담을 했다. 다음날 선배가 네 이름을 먼저 불렀다. 쉬는 시간에 다시 볼 것 같은 분위기였다.'}
+   ]}]);
+  const routine=choiceAt('high:break-routine',73,'점심 뒤, 익숙해진 자리',
+   '점심을 먹고 나면 선배들이 먼저 연락한다. ==시험이 끝난 날에도 같은 자리에 모였다.== 선배가 아무렇지 않게 또 담배를 권한다.\n\n오늘은 반 친구가 같이 운동장에 가자고 한다. 쉬는 시간을 어디에 쓸까?',[
+    {id:'repeat',label:'지난번처럼 권하는 담배를 받아들이고 모임을 계속 간다',effects:{stats:{relations:2,stress:-2},attributes:{habitStage:'routine'}},detail:'며칠이 몇 주가 됐다. 모임에서 담배를 피우는 날이 늘었고 수업 전에 급히 돌아오는 일도 익숙해졌다.'},
+    {id:'occasional',label:'권유는 넘기고 가끔만 만나며 반 친구들과도 지낸다',effects:{stats:{relations:1,study:1},attributes:{habitStage:'occasional'}},detail:'모든 연락에 나가지는 않았다. 교실에 남은 날에는 친구와 과제를 먼저 마쳤다.'},
+    {id:'leave',label:'오늘부터 다른 약속을 잡고 그 모임에는 나가지 않는다',effects:{stats:{relations:-1,stress:1,study:1},attributes:{habitStage:'away'}},detail:'처음 며칠은 심심했다. 연락은 조금씩 줄었고 점심 뒤 시간이 다시 비었다.'}
+   ],{attributes:{habitStage:'first'}});
+  stages.events.push(routine.event);stages.choices.push(routine.choice);
+  senior.result.conditional.push({when:{attributes:{habitStage:'routine'}},result:{
+   effects:{stats:{health:-6,money:-12000,stress:3},traits:{add:['흡연']},attributes:{habitStage:'revealed'}},
+   history:{title:'짧던 쉬는 시간이 길어졌다',detail:'처음에는 선배를 따라 잠깐 나갔을 뿐이었다. 몇 달 뒤, 계단에서 숨을 고르다가 쉬는 시간과 지출이 전부 그 습관에 맞춰진 걸 깨달았다. ==이제는 어울리는 자리보다 흡연 습관 자체가 남아 있었다.=='}}});
+  S.paths(stages,'high:smoking-followup',[{id:'habit-aftermath',priority:50,when:{traits:['흡연']},
+   title:'시험보다 먼저 떠오르는 쉬는 시간',body:'중간에 자꾸 자리를 뜨니 복습 흐름이 끊긴다. 지출도 눈에 띈다. ==한 번의 선택보다 반복한 생활이 더 크게 남았다.==\n\n익숙한 모임과 생활을 어떻게 바꿀까?',
+   options:[
+    {label:'주변 도움을 받아 몇 주간 생활과 만나는 약속을 바꾼다',effects:{stats:{stress:6,relations:-1},traits:{remove:['흡연']},attributes:{habitStage:'stopped'}},detail:'몇 주간 도움을 받으며 생활을 바꿨다. 선배들을 만나는 횟수도 줄었다. 처음에는 불편했지만 습관에 끌려 자리를 뜨는 일은 멈췄다. 이미 쓴 돈과 놓친 시간은 남았다.'},
+    {label:'일단 모이는 횟수부터 줄이며 혼자 조절해 본다',effects:{stats:{stress:2,relations:-1},attributes:{habitStage:'limited'}},detail:'일부 약속은 줄였다. 공부 시간을 조금 되찾았지만 습관이 사라진 것은 아니었다.'},
+    {label:'시험이 끝나면 생각하기로 하고 원래 모임을 유지한다',effects:{stats:{relations:1,stress:-2,study:-1},attributes:{habitStage:'entrenched'}},detail:'당장의 불편은 덜었다. 그런데 교재를 펼쳐 둔 시간과 실제로 공부한 시간의 차이는 줄지 않았다.'}
+   ]}]);
+  const finalExam=stages.choices.find(choice=>choice.presentation?.annual&&choice.presentation.grade===3&&choice.presentation.category==='school');
+  for(const option of finalExam.options)option.result.conditional.push({when:{attributes:{habitStage:'entrenched'}},result:{
+   effects:{stats:{schoolScore:-2,stress:2}},history:{title:'비워 둔 복습 시간',detail:'쉬는 시간마다 흐름이 끊겨 끝내 못 본 단원이 있었다. 시험에서 그 부분을 만나자 떠올릴 근거가 부족했다. 미뤘던 생활의 부담이 이번에는 성적에 남았다.'}}});
+  return {...stages,attributes:{projectStyle:{label:'수행평가 해결 방식',hidden:true},projectResult:{label:'수행평가 결과',hidden:true},projectObligation:{label:'다음 부탁',hidden:true},habitStage:{label:'쉬는 시간의 선택',hidden:true},highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }
 });
 })(window);

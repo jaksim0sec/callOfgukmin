@@ -859,3 +859,82 @@ test('chosen learning resources are recorded for later daily stories',()=>{
  const project=pack.choices.find(x=>x.id==='elementary:project');
  assert.ok(project.variants?.some(v=>v.when?.attributes?.afterschoolPath==='library'));
 });
+
+function openLifeScene({c,P,T},id,persona){
+ const pack=c.GukminDirector.content(persona),choice=pack.choices.find(x=>x.id===id);
+ assert.ok(choice,'real life choice exists: '+id);
+ const engine=T.create({persona,attributes:pack.attributes,traits:pack.traits,
+  choices:[choice],events:[{id:'scene',at:0,layer:choice.layer==='일상 선택'?'일상 이벤트':'한방 이벤트',choice:id}],pauseAfterChoice:true});
+ engine.advance(0);return engine;
+}
+
+test('built interests and club experience unlock materially different project solutions',()=>{
+ for(const [trait,expected] of [['예체능','media'],['이과','science'],['문과','humanities'],['체육','sports'],['리더십','organizing']]){
+  const env=setup(),p=env.P.generate();p.phase='high';p.age=17;p.traits=[trait];p.stats.study=65;
+  const e=openLifeScene(env,'high:teamwork',p),choice=e.snapshot().choice;
+  const special=choice.options.find(o=>o.id==='specialty');
+  assert.ok(special?.available,trait+' opens a usable solution, not only a badge');
+  assert.ok(special.requirement.includes(trait),'the earned advantage is explained');
+  e.resolve(choice.token,special.id);
+  assert.equal(e.snapshot().persona.attributes.projectStyle,expected);
+ }
+ const env=setup(),plain=env.P.generate();plain.phase='high';plain.age=17;plain.traits=[];
+ const choice=openLifeScene(env,'high:teamwork',plain).snapshot().choice;
+ assert.equal(choice.options.find(o=>o.id==='specialty')?.available,false,'unearned solution is not available');
+ assert.ok(choice.options.filter(o=>o.available).length>=2,'a player without traits retains real alternatives');
+ for(const peer of ['하린','세아','재호']){
+  plain.attributes={highPeer:peer};
+  const current=openLifeScene(env,'high:teamwork',plain).snapshot().choice;
+  assert.ok(current.options.some(o=>o.id==='spotlight'),peer+' cannot mask the new project behind a legacy scenario');
+ }
+});
+
+test('project gambles reward preparation and can fail when exhausted with no reroll',()=>{
+ const env=setup(),p=env.P.generate();p.phase='high';p.age=17;p.stats.study=75;p.stats.relations=45;p.stats.schoolScore=70;
+ const good=openLifeScene(env,'high:teamwork',p),c=good.snapshot().choice;
+ assert.ok(c.options.find(o=>o.id==='spotlight')?.outlook,'a gamble is described without promising a guaranteed reward');
+ good.resolve(c.token,'spotlight');const won=good.snapshot().persona;
+ assert.equal(won.attributes.projectResult,'recognized');assert.ok(won.stats.health<p.stats.health&&won.stats.stress>p.stats.stress);
+ p.stats.health=30;p.stats.stress=80;
+ const bad=openLifeScene(env,'high:teamwork',p),b=bad.snapshot().choice;
+ bad.resolve(b.token,'spotlight');assert.equal(bad.snapshot().persona.attributes.projectResult,'overextended');
+ assert.ok(bad.snapshot().persona.stats.schoolScore<p.stats.schoolScore);
+ assert.equal(bad.resolve(b.token,'spotlight'),false,'a failed gamble cannot be rolled again');
+});
+
+test('a media commitment leaves an opportunity and a later obligation instead of a free reward',()=>{
+ const env=setup(),p=env.P.generate();p.phase='middle';p.age=14;p.attributes={clubPath:'media'};p.stats.study=65;
+ const e=openLifeScene(env,'middle:resources',p),c=e.snapshot().choice;
+ assert.ok(c.options.some(o=>o.id==='showcase'),'a club member can commit to a substantial project');
+ e.resolve(c.token,'showcase');const experienced=e.snapshot().persona;
+ assert.equal(experienced.attributes.projectSkill,'media');assert.ok(experienced.stats.study<p.stats.study);
+ experienced.phase='high';experienced.age=17;
+ const project=openLifeScene(env,'high:teamwork',experienced),pc=project.snapshot().choice;
+ const natural=env.P.generate();natural.phase='high';natural.age=17;natural.traits=['예체능'];
+ const ordinary=openLifeScene(env,'high:teamwork',natural).snapshot().choice.options.find(o=>o.id==='specialty');
+ const practiced=pc.options.find(o=>o.id==='specialty');
+ assert.ok(practiced.result.effects.stats.study>ordinary.result.effects.stats.study,'completed experience adds an advantage beyond aptitude alone');
+ project.resolve(pc.token,'specialty');const after=project.snapshot().persona;
+ const follow=openLifeScene(env,'high:family-time',after).snapshot().choice;
+ assert.match(follow.body,/부탁|영상|의뢰/);
+ assert.ok(follow.options.some(o=>o.id==='decline'),'the player can refuse the new commitment at a social cost');
+});
+
+test('first tobacco invitation is followed by another choice before a habit and costs emerge',()=>{
+ const env=setup(),p=env.P.generate();p.phase='high';p.age=17;p.stats.relations=45;p.stats.stress=15;p.stats.money=20000;
+ const first=openLifeScene(env,'high:tobacco-offer',p),fc=first.snapshot().choice;
+ first.resolve(fc.token,'choice-2');const contact=first.snapshot().persona;
+ assert.equal(env.P.hasTrait(contact,'흡연'),false,'one invitation does not silently become a long-term habit');
+ assert.equal(contact.stats.health,p.stats.health);assert.equal(contact.stats.money,p.stats.money);
+ assert.doesNotMatch(fc.body,/책임져|건강.*손해|디버프/,'the scene is not a warning label');
+ const second=openLifeScene(env,'high:break-routine',contact),sc=second.snapshot().choice;
+ assert.match(sc.options.find(o=>o.id==='repeat').label,/담배|피우/,'continuing tobacco use is a deliberate action, not just meeting friends');
+ second.resolve(sc.token,'repeat');const repeated=second.snapshot().persona;
+ assert.equal(env.P.hasTrait(repeated,'흡연'),false,'the repeated routine receives its own later revelation');
+ const pack=env.c.GukminDirector.content(repeated),senior=pack.events.find(e=>e.id==='high:age18');
+ const revealed=env.E.apply(repeated,{...senior.result,history:senior.history},{turn:74});
+ assert.ok(env.P.hasTrait(revealed,'흡연'));assert.ok(revealed.stats.health<repeated.stats.health&&revealed.stats.money<repeated.stats.money);
+ assert.match(revealed.history.at(-1).detail,/쉬는 시간|계단|지출/,'the consequence points back to the routine');
+ const turnedBack=env.E.apply(contact,sc.options.find(o=>o.id==='leave').result);
+ assert.equal(env.P.hasTrait(env.E.apply(turnedBack,senior.result),'흡연'),false,'changing course interrupts the chain');
+});

@@ -100,19 +100,52 @@ try{
   console.log('PASS experience '+name+': long choices, truthful interests, major fold/reopen/reload, grade review and school footer');
   await context.close();
  }
- // A complete life driven only by visible controls; no session.run/resolve shortcuts.
+ // Whole lives driven only by visible controls; the second builds a character and repeats a risky routine.
+ for(const itinerary of ['default','creative-habit']){
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
  await page.goto(base+'html/game.html');await page.locator('#dailyChoiceDialog[open]').waitFor();
- let completed=false,decisions=0;
+ let completed=false,decisions=0,reloadedContact=false,specialtyUsed=false,sawRevelation=false,invitationSeen=false;
  for(let i=0;i<180;i++){
   const state=await page.evaluate(()=>GukminGame.session.snapshot());
   assert.equal(await page.evaluate(()=>!document.getElementById('lifeCinematic').hidden&&!!document.querySelector('dialog[open]')),false,'a transition never competes with a native choice dialog');
   if(await page.locator('#dailyChoiceDialog').isVisible()){
-   await page.locator('#dailyChoiceBody .inline-choice:not(:disabled)').first().click();decisions++;
+   const choice=await page.evaluate(()=>GukminGame.session.snapshot().choice);
+   if(!choice)continue;
+   let option=choice.options.find(o=>o.available);
+   if(itinerary==='creative-habit'){
+    const ids={'elementary:interest-exploration':'choice-2','elementary:interest-followup':'choice-2',
+     'middle:resources':'showcase','high:tobacco-offer':'choice-2','high:break-routine':'repeat',
+     'high:teamwork':'specialty','high:smoking-followup':'choice-2','high:family-time':'decline'};
+    const wanted=ids[choice.id];if(wanted)option=choice.options.find(o=>o.id===wanted&&o.available)||option;
+    if(choice.id==='high:tobacco-offer'){
+     invitationSeen=true;
+     assert.equal(await page.locator('#dailyChoiceBody .trait-negative').count(),0,'first invitation does not announce the future habit');
+     assert.equal(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-health').count(),0,'no invented instant health consequence');
+     await page.screenshot({path:`${artifacts}/habit-invitation.png`});
+    }
+    if(choice.id==='high:teamwork'){
+     assert.ok(option.id==='specialty'&&(/영상|편집/.test(option.requirement)));
+     assert.ok(await page.locator('#dailyChoiceBody .daily-choice-advantage').count());
+     assert.equal(await page.locator('#dailyChoiceBody .inline-choice').first().locator('.metric-schoolScore').count(),0,'gamble preview does not promise its conditional reward');
+     specialtyUsed=true;await page.screenshot({path:`${artifacts}/creative-project.png`});
+    }
+    if(choice.id==='high:smoking-followup'){
+     assert.ok(state.persona.traits.includes('흡연'));
+     assert.ok(state.persona.history.some(h=>h.title==='짧던 쉬는 시간이 길어졌다'));
+     sawRevelation=true;await page.screenshot({path:`${artifacts}/habit-revelation.png`});
+    }
+   }
+   await page.locator('#dailyChoiceBody .inline-choice').nth(choice.options.findIndex(o=>o.id===option.id)).click();decisions++;
+   if(itinerary==='creative-habit'&&choice.id==='high:tobacco-offer'&&!reloadedContact){
+    const saved=await page.evaluate(()=>GukminGame.session.snapshot().persona);
+    assert.equal(saved.attributes.habitStage,'first');assert.equal(saved.traits.includes('흡연'),false);
+    await page.reload();await page.locator('#log .continue-story').first().waitFor();reloadedContact=true;
+   }
   }else if(await page.locator('#lifeDecisionDialog').isVisible()){
-   const index=state.choice?.presentation?.type==='exam'?2:0;
+   const category=await page.evaluate(()=>GukminGame.session.snapshot().choice?.presentation?.type);
+   const index=category==='exam'?2:0;
    await page.locator('#lifeDecisionDialog .life-answer:not(:disabled)').nth(index).click();
    await page.locator('#lifeDecisionDialog .life-submit').click();decisions++;
   }else if(await page.locator('#lifeCinematicDismiss').isVisible()){
@@ -127,7 +160,14 @@ try{
  assert.ok(completed,'visible UI reaches the current chapter boundary');assert.ok(decisions>=30);
  assert.equal(await page.locator('.life-chapter-complete').isVisible(),true);
  assert.deepEqual(errors,[]);
- await page.screenshot({path:`${artifacts}/mobile-complete-visible-controls.png`,fullPage:true});
- console.log('PASS visible-controls life: '+decisions+' decisions, result acknowledgements, actual chapter completion');
+ if(itinerary==='creative-habit'){
+  assert.ok(invitationSeen&&specialtyUsed&&sawRevelation&&reloadedContact,'the route uses its built skill and delayed consequence after reload');
+  const final=await page.evaluate(()=>GukminGame.session.snapshot().persona);
+  assert.equal(final.attributes.projectStyle,'media');assert.equal(final.attributes.habitStage,'entrenched');
+  assert.ok(final.history.some(h=>h.title==='비워 둔 복습 시간'),'continued routine affects the later assessment');
+ }
+ await page.screenshot({path:`${artifacts}/mobile-complete-${itinerary}.png`,fullPage:true});
+ console.log('PASS visible-controls '+itinerary+': '+decisions+' decisions, result acknowledgements, actual chapter completion');
  await context.close();
+ }
 }finally{await browser?.close();server.kill();}
