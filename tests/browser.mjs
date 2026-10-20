@@ -240,7 +240,20 @@ try{
    assert.ok(Math.abs(split.actual-split.expected)<4,'middle snap follows the status/profile boundary');
    assert.equal(split.overflow,'auto','background remains scrollable');
    assert.equal(split.touch,'pan-y','record scrolling is independent of sheet gestures');
-   assert.equal(split.scrollable,true,'profile remains reachable below the collapsed sheet');
+   const backgroundScroll=await page.evaluate(()=>{
+    const profile=document.querySelector('.desktop-right > .profile');
+    const oldHeight=profile.style.minHeight;
+    profile.style.minHeight='150vh'; // A short toddler profile needs no scrolling; simulate long school history.
+    const canScroll=document.documentElement.scrollHeight>innerHeight;
+    const sheet=document.querySelector('#lifeSheet'),before=sheet.getBoundingClientRect().top;
+    window.scrollTo(0,Math.min(90,document.documentElement.scrollHeight-innerHeight));
+    const moved=window.scrollY>0,stationary=Math.abs(sheet.getBoundingClientRect().top-before)<1;
+    window.scrollTo(0,0);
+    profile.style.minHeight=oldHeight;
+    return {canScroll,moved,stationary};
+   });
+   assert.ok(backgroundScroll.canScroll&&backgroundScroll.moved,'long profile scrolls behind the middle sheet');
+   assert.equal(backgroundScroll.stationary,true,'fixed sheet stays still during page scrolling');
    await page.locator('#sheetToggle').click();
    await page.waitForTimeout(260);
    const expanded=await page.locator('#lifeSheet').boundingBox();
