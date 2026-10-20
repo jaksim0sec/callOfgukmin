@@ -74,7 +74,7 @@ function create({persona,persist,onChange}){
   if(person.stats.health<25&&pressure<90)stats.stress=1;
   return Object.keys(stats).length?{effects:{stats}}:null;
  };
- const timeline=global.GukminTimeline.create({...definitions,persona,persist,pauseAfterChoice:true,onTurn,
+ const timeline=global.GukminTimeline.create({...definitions,persona,persist,pauseAfterChoice:choice=>choice.layer==='한방 선택',onTurn,
   onChange:s=>onChange?.(decorate(s))});
  function run(){
    // The player explicitly reviews the last result before any further progress.
