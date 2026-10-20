@@ -248,9 +248,9 @@ function mount(root,navigate,content=global.GukminContent){
   resumeButton:$('resumeDailyChoice'),
   resolve:(token,id)=>{
    const result=safely(()=>engine.resolve(token,id))();
-   if(result!==false&&!disposed&&!snapshot?.choice&&!snapshot?.reviewPending&&
-      snapshot?.runtime?.contentId===global.GukminDirector.contentId&&!cinematicShown)
-    startJourney();
+   if(result!==false&&!disposed&&snapshot?.reviewPending&&
+      snapshot.runtime.contentId===global.GukminDirector.contentId)
+    startJourney(); // UI-only: review is recorded, then resumed without another click.
    return result;
   },
   proceed:()=>safely(()=>engine.run())()
