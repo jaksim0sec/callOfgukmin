@@ -109,7 +109,7 @@ try{
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
  await page.goto(base+'html/game.html');await page.locator('#dailyChoiceDialog[open]').waitFor();
- let completed=false,decisions=0,reloadedContact=false,specialtyUsed=false,sawRevelation=false,invitationSeen=false;
+ let completed=false,decisions=0,reloadedContact=false,specialtyUsed=false,sawRevelation=false,invitationSeen=false,sawMetricSummary=false;
  for(let i=0;i<180;i++){
   const state=await page.evaluate(()=>GukminGame.session.snapshot());
   assert.equal(await page.evaluate(()=>!document.getElementById('lifeCinematic').hidden&&!!document.querySelector('dialog[open]')),false,'a transition never competes with a native choice dialog');
@@ -143,6 +143,11 @@ try{
    }
    await page.locator('#dailyChoiceBody .inline-choice').nth(choice.options.findIndex(o=>o.id===option.id)).click();
    await page.locator('#dailyPaperConfirm').click();decisions++;
+   if(await page.locator('#dailyPaperResult .metric-impact .impact-arrow').count()){
+    sawMetricSummary=true;
+    assert.equal(await page.locator('#dailyPaperResult .daily-paper-impact-heading').textContent(),'이번 선택의 영향');
+    assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'인생 기록으로 돌아가기');
+   }
    if(itinerary==='creative-habit'&&choice.id==='high:tobacco-offer'&&!reloadedContact){
     const saved=await page.evaluate(()=>GukminGame.session.snapshot().persona);
     assert.equal(saved.attributes.habitStage,'first');assert.equal(saved.traits.includes('흡연'),false);
@@ -163,6 +168,7 @@ try{
   }else await page.waitForTimeout(30);
  }
  assert.ok(completed,'visible UI reaches the current chapter boundary');assert.ok(decisions>=30);
+ assert.ok(sawMetricSummary,'real life decisions show at least one settled metric change on paper');
  assert.equal(await page.locator('.life-chapter-complete').isVisible(),true);
  assert.deepEqual(errors,[]);
  if(itinerary==='creative-habit'){
