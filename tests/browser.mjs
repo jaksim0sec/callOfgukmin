@@ -548,7 +548,7 @@ try{
   assert.ok((await p.locator('#lifeDecisionDialog .life-school-source').getAttribute('href')).startsWith('https://'));
   await p.locator('#lifeDecisionDialog .life-submit').click();
   const ended=await walk('nothing');
-  assert.equal(ended.age,19);assert.equal(ended.turn,79);
+  assert.equal(ended.age,19);assert.equal(ended.turn,99);
   assert.equal(await p.locator('#choiceTiming').isVisible(),false,'completed chapter has no meaningless progress bar');
   assert.equal(await p.locator('.life-chapter-complete button').count(),1,'completed chapter has an explicit replay action');
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
