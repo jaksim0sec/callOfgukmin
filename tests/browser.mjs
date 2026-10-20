@@ -120,7 +120,7 @@ try{
   }
   assert.equal(tokenContract[0].borderRadius,tokenContract[1].borderRadius,'all tokens share the same pill geometry');
   assert.equal(tokenContract[1].background,'rgb(235, 131, 192)','trait uses its intrinsic custom color');
-  assert.ok(await page.locator('#traits .token[data-token-kind=trait]').count()>0,'main status uses the shared factory');
+  assert.ok(await page.locator('#attributeRows .token[data-token-kind=attribute]').count()>0,'main status uses the shared factory');
 
   const testMarkup=await page.evaluate(()=>{
    const el=document.createElement('p');GukminMarkup.render(el,'**강조** ==표시== ~~삭제~~');
@@ -393,6 +393,8 @@ try{
  await examPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
  await examPage.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
  assert.equal(await examPage.locator('#lifeDecisionDialog .life-answer').count(),5);
+ assert.ok(await examPage.locator('#lifeDecisionDialog .life-effects .token[data-token-kind=metric]').count()>0,
+ 'exam forecast uses the same semantic token DOM, not independent text badges');
  await examPage.locator('#lifeDecisionDialog .life-answer').nth(2).click();
  await examPage.locator('#lifeDecisionDialog .life-submit').click();
  assert.equal(await examPage.locator('#lifeDecisionDialog[open]').count(),0);
