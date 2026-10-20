@@ -70,7 +70,7 @@ function differences(before,after){
  return result;
 }
 function create({dialog,body,heading,resumeButton,resolve,proceed}){
- let token=null,folded=false,review=false,delta=[],selectedId=null,currentChoice=null;
+ let token=null,folded=true,review=false,delta=[],selectedId=null,currentChoice=null,pendingDecision=null;
  const confirm=dialog.querySelector('#dailyPaperConfirm');
  const mobile=global.matchMedia('(max-width: 47.5em)');
  const paper=global.GukminSheet.create({
@@ -83,8 +83,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  function sync(){
   resumeButton.hidden=token===null||review||dialog.open;
   resumeButton.textContent='선택 진행 중 · 열기';
-  confirm.textContent=review?'인생 기록으로 돌아가기':'이 선택으로 기록하기';
-  confirm.disabled=!review&&!selectedId;
+  confirm.textContent='이 선택으로 기록하기';
+  confirm.disabled=!selectedId||!!pendingDecision;
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
@@ -93,13 +93,15 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  }
  function closeNow(){
   if(dialog.open)dialog.close();
+  const decision=pendingDecision;pendingDecision=null;
+  if(decision)resolve(decision.token,decision.id);
   sync();
-  if(!resumeButton.hidden)resumeButton.focus({preventScroll:true});
+  if(!resumeButton.hidden&&!decision)resumeButton.focus({preventScroll:true});
  }
  function fold(){folded=true;if(dialog.open)paper.dismiss();else sync();}
  function reset(){
   if(dialog.open)dialog.close();
-  body.replaceChildren();token=null;folded=false;review=false;delta=[];selectedId=null;currentChoice=null;
+  body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;
   sync();
  }
  function cancel(event){event.preventDefault();fold();}
@@ -109,10 +111,13 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)fold();
  }
  function confirmSelection(){
-  if(review){fold();return;}
-  if(!selectedId||!currentChoice)return;
+  if(!selectedId||!currentChoice||pendingDecision)return;
   const option=currentChoice.options.find(item=>item.id===selectedId);
-  if(option?.available)resolve(currentChoice.token,option.id);
+  if(!option?.available)return;
+  pendingDecision={token:currentChoice.token,id:option.id};
+  folded=true;
+  confirm.disabled=true;
+  paper.dismiss(); // Finish closing before settling, so the story never swaps behind an open modal.
  }
  resumeButton.addEventListener('click',open);
  confirm.addEventListener('click',confirmSelection);
@@ -120,43 +125,10 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  dialog.addEventListener('click',backdrop);
  dialog.addEventListener('close',sync);
  function capture(before,after,choice,reviewPending){
-  if(choice?.layer!=='일상 선택'||!reviewPending)return;
-  delta=differences(before,after);review=true;folded=false;
-  if(dialog.open){
-   body.replaceChildren();
-   const page=el('section','daily-paper-result');
-   page.id='dailyPaperResult';
-   page.append(el('small','daily-paper-note','나의 선택'));
-   const option=choice.options?.find(item=>item.id===selectedId);
-   page.append(el('h3','daily-paper-result-title',option?.label||'오늘의 선택'));
-   page.append(el('small','daily-paper-note','선택 이후'));
-   const records=after.history?.slice(before.history?.length||0)||[];
-   const last=records.filter(item=>item.display!=='hidden').at(-1);
-   page.append(rich('p','daily-paper-result-story',last?.detail||'선택이 인생 기록에 남았다.'));
-   if(delta.length){
-    page.append(el('h4','daily-paper-impact-heading','이번 선택의 영향'));
-    const chips=el('div','daily-paper-impacts');
-    for(const item of delta){
-     let chip;
-     if(item.id&&Number.isFinite(item.amount)){
-      chip=S.metricImpact(item.id,item.amount,'daily-paper-impact');
-     }else if(item.trait&&item.change==='gain'){
-      chip=S.traitToken(item.trait);
-      chip.classList.add('daily-paper-impact','daily-trait-preview');
-     }else{
-      chip=S.createToken({type:'context',label:item.text,icon:item.icon||'sparkle',
-       classes:'daily-paper-impact impact-'+item.tone});
-     }
-     chips.append(chip);
-    }
-    page.append(chips);
-   }else{
-    page.append(el('h4','daily-paper-impact-heading','이번 선택의 영향'));
-    page.append(el('p','daily-paper-neutral','즉시 변한 능력치는 없어. 이 선택은 인생 기록에 남아.'));
-   }
-   body.append(page);body.scrollTop=0;
-  }
-  sync();
+  if(choice?.layer!=='일상 선택')return;
+  delta=differences(before,after);
+  review=!!reviewPending; // Only a legacy saved review can still be pending.
+  folded=true;
  }
  function restore(snapshot){
   if(!snapshot?.reviewPending)return;
@@ -166,7 +138,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   delta=snapshot.runtime.reviewBefore?differences(snapshot.runtime.reviewBefore,snapshot.persona):[];
  }
  function showChoice(choice,host,persona){
-  if(token!==choice.token){token=choice.token;folded=false;review=false;delta=[];selectedId=null;}
+  if(token!==choice.token){token=choice.token;folded=true;review=false;delta=[];selectedId=null;}
   currentChoice=choice;
   heading.textContent=choice.title;body.replaceChildren();
   const stage=P.phaseOf(persona),labels={infant:'유년기',elementary:'초등학교',middle:'중학교',high:'고등학교'};
@@ -250,7 +222,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    list.append(button);
   }
   body.append(list);
-  if(!folded)open();sync();
+  sync(); // The player opens the next story intentionally, never via an automatic modal.
  }
  function changesFor(outcome){
   return outcome?.before&&outcome?.after?differences(outcome.before,outcome.after):review?delta:[];
