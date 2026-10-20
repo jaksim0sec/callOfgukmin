@@ -236,12 +236,12 @@ global.GukminDirector.register({
   cycle(pack,'admission:first',79,false);
   notice(pack,S.notice('admission:repeat-year',88,'다시 시작한 입시 준비',
    '고등학교는 끝났지만 입시는 한 번 더 준비하기로 했다. 작년 결과와 놓쳤던 단원을 다시 살피고, 생활비와 공부 시간을 새로 조정했다.',
-   {attributes:{age:19,admissionAttempts:2},stats:{stress:3,study:1}}),
+   {attributes:{age:19,admissionAttempts:2,job:'N수 준비'},schools:[{kind:'high',status:'graduated'}],stats:{stress:3,study:1}}),
    {attributes:{admissionDestination:'retry'}});
   cycle(pack,'admission:second',89,true);
-  const retakeGraduate=S.notice('admission:retry-graduation',99,'고등학교와 입시 기록을 정리하다',
+  const retakeGraduate=S.notice('admission:retry-graduation',99,'재도전 입시를 마치다',
    '다시 준비한 입시도 마쳤다. 지원 결과와 쌓은 경험을 기록하고 대학 또는 사회로 나아갈 준비를 한다.',
-   {attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]});
+   {attributes:{age:19,job:'입시 종료'}});
   retakeGraduate.result.conditional=[
    {when:{attributes:{admissionDestination:'college'}},result:{effects:{attributes:{job:'대학 입학 예정'}}}},
    {when:{attributes:{admissionDestination:'employment'}},result:{effects:{attributes:{job:'사회 진출 준비'}}}},
