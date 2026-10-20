@@ -201,10 +201,16 @@ global.GukminDirector.register({
    {attributes:{age:19,admissionAttempts:2},stats:{stress:3,study:1}}),
    {attributes:{admissionDestination:'retry'}});
   cycle(pack,'admission:second',89,true);
-  notice(pack,S.notice('admission:retry-graduation',99,'고등학교와 입시 기록을 정리하다',
+  const retakeGraduate=S.notice('admission:retry-graduation',99,'고등학교와 입시 기록을 정리하다',
    '다시 준비한 입시도 마쳤다. 지원 결과와 쌓은 경험을 기록하고 대학 또는 사회로 나아갈 준비를 한다.',
-   {attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]}),
-   {attributes:{admissionAttempts:2}});
+   {attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]});
+  retakeGraduate.result.conditional=[
+   {when:{attributes:{admissionDestination:'college'}},result:{effects:{attributes:{job:'대학 입학 예정'}}}},
+   {when:{attributes:{admissionDestination:'employment'}},result:{effects:{attributes:{job:'사회 진출 준비'}}}},
+   {when:{attributes:{admissionDestination:'retry'}},result:{effects:{attributes:{job:'N수 준비'}}}},
+   {when:{attributes:{admissionDestination:'more-prep'}},result:{effects:{attributes:{job:'N수 준비'}}}}
+  ];
+  notice(pack,retakeGraduate,{attributes:{admissionAttempts:2}});
   return pack;
  }
 });
