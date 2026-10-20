@@ -329,6 +329,12 @@ function mount(root,navigate,content=global.GukminContent){
      detail:choice.presentation.category==='mock'?'모의고사 결과':'내신 평가 결과',
      before:old+' ('+before.stats[id]+')',after:next+' ('+s.persona.stats[id]+')',changes});
    }
+   if(choice?.presentation?.type==='grade-seal'&&s.reviewPending){
+    const key=choice.presentation.category==='mock'?'exam':'schoolScore';
+    const grade=global.GukminGrades.report(key,s.persona.stats[key],'high').display;
+    queueCinematic({kind:'grade',title:'두구두구…',detail:key==='exam'?'대학수학능력시험 최종 결과':'고등학교 최종 내신 결과',
+     before:'최종 성적',after:grade+'!',sealed:true});
+   }
    if(choice?.presentation?.type==='school'&&s.reviewPending){
     const school=global.GukminPlayer.schoolsOf(s.persona).find(item=>item.kind==='high'&&item.status==='enrolled');
     queueCinematic({title:'고등학교 입학',detail:school?.name||'새로운 학교생활이 시작됐다.'});
