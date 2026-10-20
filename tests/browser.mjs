@@ -77,13 +77,20 @@ try{
   assert.ok(await page.locator('#dailyChoiceBody .daily-choice-story').evaluate(el=>
     parseFloat(getComputedStyle(el).fontSize)>parseFloat(getComputedStyle(document.querySelector('#dailyModalHeading')).fontSize)),
     'story text visually leads event title');
-  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact').count()>0,true,'semantic solid metric pills');
-  assert.ok(await page.locator('#dailyChoiceBody .metric-impact .impact-arrow').count()>0,'metric change has an inline SVG arrow');
-  assert.equal(await page.locator('#dailyChoiceBody .metric-impact').first().evaluate(el=>{
-    const p=getComputedStyle(el);
-    const icon=getComputedStyle(el.querySelector('.token-icon'));
-    return p.backgroundColor!=='rgba(0, 0, 0, 0)'&&p.color==='rgb(255, 255, 255)'&&icon.color==='rgb(255, 255, 255)';
-  }),true,'metric pill keeps a solid background with white label and icon');
+  const semanticPill=await page.evaluate(()=>{
+   const chip=GukminStatus.metricImpact('relations',2);
+   document.body.append(chip);
+   const style=getComputedStyle(chip),glyph=getComputedStyle(chip.querySelector('.token-icon'));
+   const result={background:style.backgroundColor,label:style.color,icon:glyph.color,
+    arrow:chip.querySelector('.impact-arrow')?.tagName.toLowerCase(),
+    readable:chip.getAttribute('aria-label')};
+   chip.remove();return result;
+  });
+  assert.equal(semanticPill.background,'rgb(135, 105, 216)','metric retains shared relationship color');
+  assert.equal(semanticPill.label,'rgb(255, 255, 255)','metric pill label is white');
+  assert.equal(semanticPill.icon,'rgb(255, 255, 255)','metric pill icon is white');
+  assert.equal(semanticPill.arrow,'svg','delta direction uses SVG');
+  assert.match(semanticPill.readable,/관계.*증가.*2/);
   const testMarkup=await page.evaluate(()=>{
    const el=document.createElement('p');GukminMarkup.render(el,'**강조** ==표시== ~~삭제~~');
    return [el.querySelector('strong')?.textContent,el.querySelector('mark')?.textContent,el.querySelector('del')?.textContent].join('|');
@@ -234,7 +241,7 @@ try{
   await page.locator('#dailyPaperConfirm').click();
   assert.equal(await page.locator('#dailyPaperResult').isVisible(),true,'result appears on same paper');
   assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'인생 기록으로 돌아가기');
-  assert.ok(await page.locator('#dailyPaperResult .daily-paper-impacts').isVisible(),'settled decision summarizes real effects on paper');
+  assert.equal(await page.locator('#dailyPaperResult .daily-paper-impact-heading').textContent(),'이번 선택의 영향','settled decision summarizes actual effects, even when none changed');
   await page.locator('#dailyPaperConfirm').click();
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'recorded paper folds to history');
