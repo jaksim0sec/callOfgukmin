@@ -985,3 +985,55 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 @keyframes admission-grade-reveal{from{opacity:0;transform:scale(.65) translateY(.5rem)}to{opacity:1;transform:scale(1) translateY(0)}}
 @media(max-width:22.5em){.admission-paper{padding:1rem}.admission-major{padding:.6rem}.admission-major .admission-choice-title{font-size:1.3rem}.admission-big-grade{font-size:1.45rem}.admission-major .admission-risk{font-size:.58rem}}
 @media(prefers-reduced-motion:reduce){.admission-major,.admission-row,.admission-minor{transition:none}.life-cinematic-card.is-sealed .life-cinematic-grade strong{animation:none}}
+
+/* Daily reward in the same diary paper. All effect pills come from GukminStatus. */
+.paper-choice-sheet.is-reward .daily-modal-head h2{display:none}
+.paper-choice-sheet .daily-reward-hero{
+ text-align:center;padding:1.5rem .25rem 1.75rem;display:flex;flex-direction:column;align-items:center;
+ gap:.8rem;border-bottom:.0625rem solid var(--paper-line)
+}
+.paper-choice-sheet .daily-reward-seal{
+ width:3.3rem;height:3.3rem;color:#1a9b56;
+ display:grid;place-items:center;animation:daily-reward-pop .58s cubic-bezier(.2,1.4,.4,1) both
+}
+.paper-choice-sheet .daily-reward-seal svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+.paper-choice-sheet .daily-reward-seal svg path{stroke-dasharray:31;stroke-dashoffset:31;animation:daily-reward-check .5s .22s ease-out forwards}
+.paper-choice-sheet .daily-reward-headline{
+ font:800 1.6rem/1.32 'Pretendard Variable','Pretendard',sans-serif;
+ color:#24202a;letter-spacing:-.045em;margin:0;
+ animation:daily-reward-rise .45s .1s both
+}
+.paper-choice-sheet .daily-reward-story{
+ margin:0;max-width:29rem;color:#6c6670;font:500 .9rem/1.72 'Pretendard Variable','Pretendard',sans-serif;
+ word-break:keep-all;animation:daily-reward-rise .5s .16s both
+}
+.paper-choice-sheet .daily-reward-changes{padding:1.2rem 0 .55rem;animation:daily-reward-rise .45s .2s both}
+.paper-choice-sheet .daily-reward-changes-title{display:block;font-size:.86rem;color:#37313a;margin-bottom:.85rem;font-weight:760}
+.paper-choice-sheet .daily-reward-tokens{display:flex;gap:.43rem;flex-wrap:wrap;align-items:center}
+.paper-choice-sheet .daily-reward-tokens .daily-reward-token.token-icon-pill{
+ animation:daily-reward-token .46s cubic-bezier(.16,.9,.2,1.1) both;
+ animation-delay:calc(.22s + var(--reward-order,0)*.075s)
+}
+.paper-choice-sheet .daily-reward-empty{color:#726c77;font-size:.78rem;line-height:1.6;margin:0}
+.paper-choice-sheet.is-reward .daily-paper-confirm{
+ background:var(--paper-accent);color:#fff;
+ animation:daily-reward-rise .4s .3s both;
+ transition:filter .2s ease,transform .22s ease
+}
+.paper-choice-sheet.is-reward .daily-paper-confirm:hover{filter:brightness(1.1)}
+.paper-choice-sheet.is-reward .daily-paper-confirm:active{transform:scale(.985)}
+@keyframes daily-reward-pop{from{opacity:0;transform:scale(.65)}to{opacity:1;transform:scale(1)}}
+@keyframes daily-reward-check{to{stroke-dashoffset:0}}
+@keyframes daily-reward-rise{from{opacity:0;transform:translateY(.6rem)}to{opacity:1;transform:translateY(0)}}
+@keyframes daily-reward-token{from{opacity:0;transform:translateY(.55rem) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){
+ .paper-choice-sheet .daily-reward-seal,
+ .paper-choice-sheet .daily-reward-seal svg path,
+ .paper-choice-sheet .daily-reward-headline,
+ .paper-choice-sheet .daily-reward-story,
+ .paper-choice-sheet .daily-reward-changes,
+ .paper-choice-sheet .daily-reward-tokens .daily-reward-token.token-icon-pill,
+ .paper-choice-sheet.is-reward .daily-paper-confirm{animation:none!important}
+ .paper-choice-sheet .daily-reward-seal svg path{stroke-dashoffset:0}
+ .paper-choice-sheet.is-reward .daily-paper-confirm{transition:none!important}
+}
