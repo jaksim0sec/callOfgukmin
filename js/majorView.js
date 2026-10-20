@@ -9,16 +9,20 @@ const make=(tag,cls,text)=>{
  if(text!==undefined)element.textContent=String(text);
  return element;
 };
-const notation={study:'학업',schoolScore:'내신',exam:'모의고사',stress:'스트레스',health:'건강',relations:'관계',allowance:'용돈',money:'재산'};
 function effectList(option,person,turn){
  const projected=global.GukminEffects.apply(person,option.result,{turn});
  const span=make('span','life-effects');
  for(const [id,next] of Object.entries(projected.stats)){
   const n=Number.isFinite(next)&&Number.isFinite(person.stats[id])?next-person.stats[id]:0;
   if(!n)continue;
-  const tag=make('span','life-delta '+((id==='stress'?n<0:n>0)?'life-delta-up':'life-delta-down'),
-   (notation[id]||id)+' '+(n>0?'+':'−')+Math.abs(n).toLocaleString('ko-KR',{maximumFractionDigits:2})+(['money','allowance','income'].includes(id)?'원':''));
-  span.append(tag);
+  span.append(global.GukminStatus.createToken({type:'metric',id,amount:n,classes:'life-delta'}));
+ }
+ for(const entry of projected.traits||[]){
+  const name=typeof entry==='string'?entry:entry.name;
+  if(global.GukminPlayer.hasTrait(person,name))continue;
+  const def=global.GukminPlayer.traitDefinitions[name]||{};
+  if(def.hidden)continue;
+  span.append(global.GukminStatus.createToken({type:'trait',name,classes:'life-delta'}));
  }
  return span;
 }
