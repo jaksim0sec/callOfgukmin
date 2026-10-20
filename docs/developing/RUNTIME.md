@@ -1,5 +1,12 @@
 # 국민의 부름 — 정적 화면 기반 실행 구조
 
+## 2026-10-20 범용 시트 컨트롤러
+
+`js/sheetController.js`는 시트 `element`, `handle`, `dragTargets`, `steps: [{name,ratio,minRem?,maxRem?,topGapRem?}]`, `initial`, `enabled`, `dismissible`, `removeOnDismiss`, `onDismiss`를 받아 재사용 가능한 스냅/관성/해제 정책을 제공한다. `dispose`, `dismiss`, `setLevel`, `reset`, `revealAtLeast`, `getLevel` 메서드를 제공한다. 스타일 변경은 각 시트 클래스로 격리한다.
+
+기록 시트는 3단계 비삭제형, 일상 모눈 선택지는 2단계 접기 허용형이다. 후자의 선택 확정은 명시적 버튼을 거치고 결과는 같은 종이 안에 표시한 뒤 기존 기록/리뷰로 돌아간다.
+
+
 > 현행: 정적 3화면·공통 정산 기반과 출생~19세 학생 생애 콘텐츠. 성인·정치·전체 게임 엔딩은 연결하지 않았다. 아래는 날짜별 개발 이력이므로 최신 LIFE/STORY/UI/CSS 계약을 우선한다.
 
 ## 2026-10-20 사용성 회귀 보강
