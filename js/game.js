@@ -59,7 +59,7 @@ function mount(root,navigate,content=global.GukminContent){
   const controls=visible.reduce((sum,node)=>sum+(node?.getBoundingClientRect().height||0),0);
   const safeBottom=Number.parseFloat(getComputedStyle(sheet).paddingBottom)||0;
   const height=Math.ceil(Math.max(6*rem,controls+safeBottom+rem*.375));
-  root.style.setProperty('--life-sheet-peek-height',height+'px');
+  root.querySelector('.game').style.setProperty('--life-sheet-peek-height',height+'px');
   return height;
  }
  // Use the profile's page offset, not its scrolling screen offset, to avoid jumping.
