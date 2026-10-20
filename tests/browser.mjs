@@ -87,6 +87,21 @@ try{
    assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-middle')),true,'paper grip lowers to its configurable middle height');
    await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(380);
    assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-expanded')),true,'paper grip restores full height');
+   // Regression: a dismissible sheet must track the finger BELOW its lowest snap.
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+   const handleBounds=await page.locator('#dailyPaperGrip').boundingBox();
+   const startHeight=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   const dragX=handleBounds.x+handleBounds.width/2,dragY=handleBounds.y+handleBounds.height/2;
+   await page.mouse.move(dragX,dragY);await page.mouse.down();
+   await page.mouse.move(dragX,dragY+85,{steps:10});
+   await page.waitForTimeout(60);
+   const followingHeight=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   assert.ok(followingHeight<startHeight-45,
+    'dismissible paper must visibly follow a downward drag below its first snap');
+   await page.mouse.up();await page.waitForTimeout(370);
+   // Restore the initial top snap for later actions.
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+
   }
 
   const shownEffects=await page.locator('#dailyChoiceBody .daily-choice-effect').count();
