@@ -310,8 +310,7 @@ try{
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false);
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'saved pending choice does not cover the screen');
-  await page.locator('#resumeDailyChoice').click();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'explicitly reopened saved choice is now visible');
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
   assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count()>0,
