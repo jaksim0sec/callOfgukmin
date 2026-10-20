@@ -24,7 +24,7 @@ try{
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/game.html');await page.locator('#dailyChoiceDialog[open]').waitFor();
-  await page.locator('#dailyModalCollapse').click();
+  await page.keyboard.press('Escape');
   await page.locator('#traits .trait-control').first().click();
   assert.ok(await page.locator('#traitInfo').isVisible(),'trait explanation works without hover');
   await page.locator('#traits .trait-control').first().click();
@@ -51,12 +51,12 @@ try{
   await page.locator('#dailyChoiceDialog[open]').waitFor();
   assert.equal(await page.locator('#dailyChoiceDialog').evaluate(d=>getComputedStyle(d).display),'flex','daily header and body share bounded flex layout');
   await page.locator('#dailyChoiceBody .inline-choice').last().scrollIntoViewIfNeeded();
-  assert.ok(await page.locator('#dailyModalCollapse').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'collapse remains visible while options scroll');
+  assert.ok(await page.locator('#dailyPaperGrip').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'paper grip stays visible while options scroll');
   const size=await page.locator('#dailyChoiceDialog').boundingBox();assert.ok(size.y>=0&&size.y+size.height<=viewport.height+1);
   await page.screenshot({path:`${artifacts}/${name}-daily.png`});
   await page.locator('#dailyChoiceBody .inline-choice').nth(2).click();
   await page.locator('#dailyPaperConfirm').click();
-  await page.locator('#dailyModalCollapse').click();
+  await page.keyboard.press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.match(await page.locator('#log .record-choice').first().textContent(),/관심.*예체능/,'exploration is described as an interest in the result');
   await walk('exam');
