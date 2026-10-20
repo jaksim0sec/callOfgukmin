@@ -57,7 +57,7 @@ function presentAdmission({choice,resolve,root}){
  }else if(p.type==='university'){
   const score=person?.stats?.[p.gradeMetric];
   const current=make('p','admission-current-score',
-   (p.gradeMetric==='schoolScore'?'최종 내신 ':'최종 수능 ')+global.GukminGrades.report(p.gradeMetric,score,'high').display);
+   (p.gradeMetric==='schoolScore'?'최종 내신 ':'최종 수능 ')+global.GukminGrades.report(p.gradeMetric,score,'high').display+' · 현재 게임 지수 '+(Number.isFinite(score)?score:'—'));
   modal.append(current);
  }
  choice.options.forEach((entry,index)=>{
