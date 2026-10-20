@@ -1,5 +1,14 @@
 # CSS 개발 규칙 — 국민의 부름
 
+## 2026-10-21 전역 토큰 단일 생성 계약
+
+- **유일한 DOM 생성 함수**: `GukminStatus.createToken({type,id?,name?,label?,icon?,amount?,state?,entry?,classes?})`. 모든 의미 있는 토큰은 `span.token.token-icon-pill` 루트, SVG `.token-icon`, `.token-name`을 같은 순서로 반환한다. 변화 토큰이면 `.impact-arrow` SVG + `.impact-amount`를 뒤에 붙인다.
+- `type`: `metric` 상태 스탯(해당 `metric-*` 팔레트), `trait`/ `interest` 특성 정의 고유색, `school` 재학·졸업, `attribute` 출생지·집안·역할, `context` 학교 유형·조건·설명. 기존 `pill/traitToken/metricImpact`는 호환용 위임 함수이며 독립 DOM을 만들 수 없다.
+- 단일 디자인: **단색 의미 배경 + 흰 SVG + 흰 이름 + 알약형의 동일한 높이/여백/테두리**. 숫자는 이모지나 텍스트 `+2`가 아닌 흰 SVG 삼각형 + 절댓값. 부정적 변화도 스탯 고유색을 유지하며 아래방향 SVG로 표현한다.
+- 인게임 프로필·학교/학력·특성·일상 모눈 종이 선택/최종 정리·인생기록·시험지/고교 지원서 영향 미리보기·시스템 검증 UI·출생 인트로가 위 생성기를 공유한다. 화면별 CSS는 그룹 간격과 이벤트 연출만 담당하고 개별 토큰을 투명하게 만들거나 색/아이콘 규칙을 뒤집지 않는다.
+- 공통 스타일 `:root .token.token-icon-pill`에서 색상 변수·높이·여백·글자·아이콘 규격을 관리한다. 세부 색상은 의미에 맞게 `--gauge-color`, `--trait-color`, `--token-fill`로 주입한다. 이 파일 외 파일에 토큰 모양을 복제하거나 원시 `.life-delta` 구조를 만들지 않는다.
+
+
 ## 2026-10-20 일상 선택 종이 UI 계층과 토큰
 
 - `#dailyModalHeading`은 사건 제목 메타/보조 타이포(.89rem), 나이·단계는 .63rem으로 낮추고 메인 사건 설명 `.daily-choice-story`를 약 1.1rem, weight 650으로 승격한다. 기존 `GukminMarkup.render`의 strong, em, mark, del은 DOM을 그대로 유지하며 종이 스킨에서 시각적 강조만 설정한다.
