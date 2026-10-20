@@ -51,9 +51,9 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   }
   springFrame=requestAnimationFrame(frame);
  }
- function dismiss(){
+ function dismiss(velocity=0,from=element.getBoundingClientRect().height){
   if(!dismissible||disposed)return false;
-  springTo(-1);
+  springTo(-1,velocity,from);
   return true;
  }
  function finishDismiss(){
@@ -103,7 +103,10 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   if(done.moved)lastDragAt=performance.now();
   const next=cancelled||!done.moved?done.startLevel:choose(done.startLevel,current,velocity,delta);
   if(done.owner.hasPointerCapture(e.pointerId))done.owner.releasePointerCapture(e.pointerId);
-  if(next===-1){dismiss();return;}
+  if(next===-1){
+   dismiss(velocity,Math.max(0,Math.min(heights().at(-1),current)));
+   return;
+  }
   springTo(next,cancelled?0:velocity,done.moved?Math.max(heights()[0],Math.min(heights().at(-1),current)):done.startHeight);
  }
  function cancel(e){up(e,true);}
