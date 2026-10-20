@@ -2,8 +2,7 @@
 
 ## 2026-10-21 일상 결과 UI 단일 출처
 
-`GukminTimeline.create`의 `pauseAfterChoice`는 기존 boolean 정책 외에 `(choiceDefinition, selectedOption)=>boolean`도 받는다. 인생 감독 `GukminDirector`는 일상 선택은 즉시 정산, 한방 선택만 검토 대기. 일상 `resolve`는 모달 공통 스프링 닫힘 완료 후 실행하며, 정산 내역은 `runtime.choices[token].outcome`와 인생 기록에 한 번만 표시한다. 일상 선택이 닫힌 직후 후속 소식 진행은 허용하되 다음 일상 팝업은 명시적 열기로만 나타난다. 20/55/90 기록 시트와 시험지 연출 정책은 유지한다. 이전에 저장된 일상 검토 대기는 진입 시 기존 감독 `run()`으로 안전하게 이어진다.
-
+일상 선택은 공통 시트 닫힘이 끝난 뒤 기존 `engine.resolve`로 정산한다. 엔진의 `pauseAfterChoice:true` 및 저장 계약은 **수정하지 않는다**. 인게임 UI만 이어서 기존 `startJourney()`를 호출해 `reviewPending`을 자동 정리한다. 이 과정에서 결과는 `runtime.choices[token].outcome`과 인생 기록으로 한 번 표시되고 결과 종이는 열지 않는다. 후속 소식이 진행되더라도 다음 일상 팝업은 사용자가 직접 열 때까지 닫혀 있다.
 
 ## 2026-10-20 범용 시트 컨트롤러
 
