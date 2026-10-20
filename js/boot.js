@@ -41,6 +41,7 @@ function initWaiting(){
  const introFamily=document.getElementById('birthIntroFamily');
  const countdown=document.getElementById('birthIntroCountdown');
  const birthProgress=document.getElementById('birthIntroProgress');
+ const birthFill=document.getElementById('birthIntroFill');
  const introBackground=document.getElementById('birthIntroBackground');
  const skip=document.getElementById('birthIntroSkip');
  const introTrait=document.getElementById('birthIntroTrait');
@@ -67,10 +68,12 @@ function initWaiting(){
    document.querySelector('.waiting-screen').inert=true;
    skip.focus({preventScroll:true});
    const duration=10000,start=global.performance.now();
+   birthFill.style.transform='scaleX(0)';
    function updateCountdown(){
      const elapsed=Math.min(duration,global.performance.now()-start);
      countdown.textContent=Math.max(0,Math.ceil((duration-elapsed)/1000))+'초 후 출생';
      birthProgress.value=elapsed/1000;
+     birthFill.style.transform='scaleX('+(elapsed/duration)+')';
    }
    updateCountdown();
    introTick=global.setInterval(updateCountdown,100);
