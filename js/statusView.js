@@ -163,6 +163,16 @@ function showAttributes(root,s){
 }
 function showMetrics(root,s){
  const list=root.querySelector('#gaugesList');
+ // Preserve the currently painted fill ratio across renderer replacements.
+ const previous=new Map();
+ for(const old of list.querySelectorAll('.gauge')){
+  const fill=old.querySelector('.ui-progress-fill');
+  if(!fill)continue;
+  const matrix=getComputedStyle(fill).transform;
+  const ratio=matrix&&matrix!=='none'?Number.parseFloat(matrix.split('(')[1]):Number(fill.dataset.ratio);
+  previous.set([...old.classList].find(name=>name.startsWith('metric-')),Number.isFinite(ratio)?ratio:0);
+ }
+ const nextFills=[];
  list.replaceChildren();
  const phase=global.GukminPlayer.phaseOf(s);
  for(const metric of global.GukminPlayer.activeMetrics(s)){
@@ -191,7 +201,15 @@ function showMetrics(root,s){
    progress.max=max-min;
    progress.value=Number.isFinite(number)?Math.max(0,Math.min(max-min,number-min)):0;
    progress.setAttribute('aria-label',name);
-   wrap.append(progress);
+   progress.classList.add('ui-progress-native');
+   const track=node('span','ui-progress-track gauge-progress-track');
+   const fill=node('span','ui-progress-fill');
+   const ratio=Math.max(0,Math.min(1,progress.max?progress.value/progress.max:0));
+   fill.dataset.ratio=String(ratio);
+   fill.style.transform='scaleX('+ (previous.get('metric-'+metric.id)??0)+')';
+   track.append(fill);
+   wrap.append(progress,track);
+   nextFills.push([fill,ratio]);
   }
   // Grade methodology is available on hover; avoid repeating warning text under each gauge.
   if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);
@@ -199,6 +217,10 @@ function showMetrics(root,s){
   if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
   list.append(wrap);
  }
+ // The DOM is mounted before transitioning. Re-rendering no longer flashes a native bar.
+ if(nextFills.length)requestAnimationFrame(()=>{
+  for(const [fill,ratio] of nextFills)if(fill.isConnected)fill.style.transform='scaleX('+ratio+')';
+ });
 }
 
 function traitToken(name,entry={}){
