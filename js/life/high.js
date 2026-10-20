@@ -293,8 +293,8 @@ global.GukminDirector.register({
        {label:'무리한 계획을 줄이고 두 준비를 번갈아 한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'할 수 있는 분량만 정했다. 당장 성적이 바뀌진 않았지만 일정표는 완성했다.'}
       ]}
     ]),
-   S.notice('high:graduation',79,'고등학교를 졸업했다',
-    '시험과 관계, 선택한 과목과 기억이 남았다. 다음 인생 이야기는 준비 중이다.',{
+   S.notice('high:graduation',99,'고등학교를 졸업했다',
+    '시험과 관계, 선택한 과목과 원서 결과가 남았다. 다음 이야기는 대학·사회생활에서 이어진다.',{
      attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]
     }),
    legacy
