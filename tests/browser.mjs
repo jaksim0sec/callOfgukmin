@@ -306,7 +306,10 @@ try{
    'logical event progress remains accurate even when the decorative bar is hidden');
   assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no redundant progress bar during manual verification');
   await page.locator('#advanceTurn').click();assert.equal(await page.locator('#advanceTurn').isDisabled(),true);
-  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
+  await page.reload({waitUntil:'domcontentloaded'});
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false);
+  await page.locator('#resumeDailyChoice').click();
+  await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'saved pending choice does not cover the screen');
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
