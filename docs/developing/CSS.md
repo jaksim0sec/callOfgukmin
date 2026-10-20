@@ -1,5 +1,13 @@
 # CSS 개발 규칙 — 국민의 부름
 
+## 2026-10-21 자동 일상 열림·전역 진행바 보간
+
+- 새로운 일상 선택 토큰이 나타나면 **기존** 기록 시트 헤더의 `#resumeDailyChoice` 하나로 즉시 열기/5초 자동 열기를 함께 제공한다. 버튼 안의 자동 카운트다운은 `.auto-choice-track > .auto-choice-fill`로 보이며 같은 시간에 채워진다. 일기창 열린 후 수동으로 접으면 같은 사건을 자동 재오픈하지 않는다. 다른 탭/창으로 이동하면 남은 시간과 채움도 일시 정지한다.
+- 각 영역의 프로그래스는 `.ui-progress-track > .ui-progress-fill` 트랙·필 구조를 공유한다. 상태 스탯은 `--gauge-color`, 출생 신고서는 원래의 분홍색, 인생 진행은 기존 그라데이션을 유지한다. 위치/폭 전환은 `--progress-duration`, `--progress-ease`를 사용한다.
+- 스탯과 출생 `<progress>`는 접근성을 위해 그대로 유지하되 투명 네이티브 요소 뒤에 transform 보간 가능한 시각 막대를 겹친다. 상태 스탯 리렌더 때 현재 화면에 표시된 진행값을 보존해 처음부터 튀지 않고 새 값으로 이동한다. 재화처럼 막대가 없는 지표에는 만들지 않는다.
+- 5초는 **실제 시간**이며 시스템 턴/정산과 연결하지 않는다. `prefers-reduced-motion`에는 시각 전환만 생략하고 자동 열기 시간과 직접 열기 조작은 유지한다. CSS는 rem/em을 사용하며 기록 시트 스프링 및 시험/진학 모달은 변경하지 않는다.
+
+
 ## 2026-10-21 전역 토큰 단일 생성 계약
 
 - **유일한 DOM 생성 함수**: `GukminStatus.createToken({type,id?,name?,label?,icon?,amount?,state?,entry?,classes?})`. 모든 의미 있는 토큰은 `span.token.token-icon-pill` 루트, SVG `.token-icon`, `.token-name`을 같은 순서로 반환한다. 변화 토큰이면 `.impact-arrow` SVG + `.impact-amount`를 뒤에 붙인다.
