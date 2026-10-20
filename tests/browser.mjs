@@ -282,6 +282,7 @@ try{
   assert.equal(await page.locator('#log .record-choice').count()>=1,true,'choice and outcome are stored together in history');
   assert.ok((await page.locator('#log .record-choice').first().textContent()).includes('내 선택'));
   assert.equal(await page.locator('#log .record-choice .continue-story').count(),0,'ordinary choices require no next-story acknowledgement');
+  assert.equal(await page.locator('#log .record-review-fallback').count(),0,'no transient review fallback banner');
   const savedChoice=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(savedChoice.simulation.awaitingContinuation,false,'routine choice no longer pauses the simulation');
   assert.equal(savedChoice.simulation.reviewBefore,undefined,'routine choices do not save redundant review state');
