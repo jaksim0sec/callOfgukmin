@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b0b0f">
   <title>국민의 부름 · 인생</title>
-  <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=character-paths-20261020">
+  <link rel="stylesheet" href="css/style.css?v=diary-paper-20261020">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -78,9 +78,11 @@
   <div class="modal-foot"><span class="summary" id="summary">항목을 선택하세요</span><button type="button" class="confirm" id="confirm" disabled>선택 확인</button></div>
 </dialog>
 <aside id="lifeNewsToast" class="life-news-toast" role="status" aria-live="polite" hidden></aside>
-<dialog id="dailyChoiceDialog" class="daily-choice-dialog" aria-labelledby="dailyModalHeading">
-  <header class="daily-modal-head"><div><small>국민의 선택</small><h2 id="dailyModalHeading">어떻게 할까?</h2></div><button type="button" class="daily-modal-collapse" id="dailyModalCollapse">접기⌄</button></header>
+<dialog id="dailyChoiceDialog" class="daily-choice-dialog paper-choice-sheet" aria-labelledby="dailyModalHeading">
+  <button type="button" class="paper-sheet-grip" id="dailyPaperGrip" aria-label="일상 기록 시트 높이 조절"><span aria-hidden="true"></span></button>
+  <header class="daily-modal-head"><div><small>인생 기록 · 일상</small><h2 id="dailyModalHeading">오늘의 이야기</h2></div><button type="button" class="daily-modal-collapse" id="dailyModalCollapse" aria-label="일상 선택 접기">접기⌄</button></header>
   <div class="daily-modal-body" id="dailyChoiceBody" aria-live="polite"></div>
+  <footer class="daily-paper-footer"><button id="dailyPaperConfirm" class="daily-paper-confirm" type="button" disabled>이 선택으로 기록하기</button></footer>
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
 <script src="js/poster.js?v=character-paths-20261020" defer></script>
@@ -99,8 +101,9 @@
 <script src="js/life/high.js?v=character-paths-20261020" defer></script>
 <script src="js/systemDemo.js?v=character-paths-20261020" defer></script>
 <script src="js/statusView.js?v=character-paths-20261020" defer></script>
-<script src="js/dailyChoice.js?v=character-paths-20261020" defer></script>
-<script src="js/game.js?v=character-paths-20261020" defer></script>
+<script src="js/sheetController.js?v=diary-paper-20261020" defer></script>
+<script src="js/dailyChoice.js?v=diary-paper-20261020" defer></script>
+<script src="js/game.js?v=diary-paper-20261020" defer></script>
 <script src="js/majorView.js?v=character-paths-20261020" defer></script>
 <script src="js/boot.js?v=character-paths-20261020" defer></script>
 </body>
