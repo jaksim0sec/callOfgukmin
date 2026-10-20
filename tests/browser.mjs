@@ -279,7 +279,14 @@ try{
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
+  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count()>0,
+   'a real money change is visualized as shared metric pill before settlement');
   await page.locator('#dailyPaperConfirm').click();
+  assert.ok(await page.locator('#dailyPaperResult .metric-impact.metric-money .impact-arrow').count()>0,
+   'the settled result repeats the SVG money impact');
+  assert.ok(await page.locator('#dailyPaperResult .metric-impact.metric-health').count()>0,
+   'negative metric changes are also in the final impact summary');
+  assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'인생 기록으로 돌아가기');
   assert.match(await page.locator('.gauge.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.gauge.metric-health').textContent(),/95/);
   assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
   // C–E: one event pack drives traits, periodic effect, schools and custom metric.
