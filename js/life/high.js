@@ -293,13 +293,17 @@ global.GukminDirector.register({
        {label:'무리한 계획을 줄이고 두 준비를 번갈아 한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'할 수 있는 분량만 정했다. 당장 성적이 바뀌진 않았지만 일정표는 완성했다.'}
       ]}
     ]),
-   S.notice('high:graduation',99,'고등학교를 졸업했다',
+   S.notice('high:graduation',88,'고등학교를 졸업했다',
     '시험과 관계, 선택한 과목과 원서 결과가 남았다. 다음 이야기는 대학·사회생활에서 이어진다.',{
      attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]
     }),
    legacy
   );
-  // Each elective route has a later, deterministic consequence in an existing news slot.
+  // First-attempt graduation is skipped while preparing for a second admission year.
+   stages.events.find(event=>event.id==='high:graduation').when={
+    all:[{attributes:{admissionAttempts:1}},{not:{attributes:{admissionDestination:'retry'}}}]
+   };
+   // Each elective route has a later, deterministic consequence in an existing news slot.
   const senior=stages.events.find(event=>event.id==='high:age18');
   senior.result.conditional=[
    {when:{attributes:{electiveRoute:'shared'}},result:{effects:{stats:{study:2,stress:2}},history:{title:'다른 학교에서 보낸 한 학기',detail:'공동교육과정 수업을 마쳤다. 이동 일정은 빠듯했지만 학교에 없던 단원을 끝까지 배웠다.'}}},
