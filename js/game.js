@@ -321,7 +321,7 @@ function mount(root,navigate,content=global.GukminContent){
     const id=choice.presentation.category==='mock'?'exam':'schoolScore',phase=global.GukminPlayer.phaseOf(before);
     const old=global.GukminGrades.report(id,before.stats[id],phase).display;
     const next=global.GukminGrades.report(id,s.persona.stats[id],phase).display;
-    const names={[id]:id==='schoolScore'&&phase==='middle'?'교과 성취':global.GukminPlayer.metricDefinition(id).label,study:'학습 기반',stress:'스트레스',health:'건강'};
+    const names={[id]:id==='schoolScore'&&phase==='middle'?'교과 성취':global.GukminPlayer.metricDefinition(id).label,study:'학습 기반',stress:global.GukminPlayer.metricDefinition('stress').label,health:'건강'};
     const changes=Object.entries(names).map(([key,label])=>{
      const delta=(s.persona.stats[key]??0)-(before.stats[key]??0);
      return delta?label+' '+(delta>0?'+':'−')+Math.abs(delta).toLocaleString('ko-KR',{maximumFractionDigits:2}):'';
