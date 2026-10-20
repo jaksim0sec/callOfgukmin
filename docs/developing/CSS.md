@@ -1,5 +1,17 @@
 # CSS 개발 규칙 — 국민의 부름
 
+## 2026-10-20 일상 선택 종이 UI 계층과 토큰
+
+- `#dailyModalHeading`은 사건 제목 메타/보조 타이포(.89rem), 나이·단계는 .63rem으로 낮추고 메인 사건 설명 `.daily-choice-story`를 약 1.1rem, weight 650으로 승격한다. 기존 `GukminMarkup.render`의 strong, em, mark, del은 DOM을 그대로 유지하며 종이 스킨에서 시각적 강조만 설정한다.
+- 중복 `어떻게 할까?` 소제목은 제거하고 `inline-choices` 그룹의 aria-label로 의미를 보존. 헤더의 `접기⌄` 버튼도 제거, 드래그 가능한 그립·헤더 및 Escape/바깥쪽 탭으로 접는다.
+- `GukminStatus.metricImpact(id,delta)`가 스탯 정의의 동일 SVG/이름을 쓰고 정방향/역방향 삼각형 SVG를 생성한다. `.metric-*`에 정의된 `--gauge-color`를 배경으로 쓰며 아이콘/글씨/삼각형 모두 흰색. 일상 선택·선택 직후 종이 결과·영구 인생 기록에서 함께 쓴다.
+- 특성도 기존 `traitToken` / `--trait-color`를 그대로 쓰고 종이 스킨에서 고유 단색 배경 + 흰색 아이콘/텍스트를 적용한다. 숫자 증감이 없으면 정직한 안내를 보여준다.
+- 일상 선택 확정 뒤 같은 종이에서 행동·결과 서술·실제 변화만 정산해 표시하고 하단 버튼은 `인생 기록으로 돌아가기`로 변경. 기존 저장·검토 대기 흐름은 유지한다.
+- 닫힘은 `GukminSheet` 공통 스프링 높이 보간을 유지하고, `.paper-choice-sheet[open].is-dismissing::backdrop` 전환으로 배경도 부드럽게 사라진다. 별도 CSS 닫기 transform·JS 타이머 추가 없음.
+- 길이 단위는 rem/em 및 dvh. 작은 화면에서는 선택지/결과 본문만 스크롤하고 헤더·그립·하단 버튼은 보존한다.
+
+
+
 ## 2026-10-20 일기 시트 제스처 정합성 보강
 
 - `GukminSheet`의 `dismissible:true`는 최저 스냅 아래로도 실제 드래그 높이를 0까지 추적한다. 비삭제형은 기존 최저 스냅을 유지한다.

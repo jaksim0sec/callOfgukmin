@@ -46,6 +46,26 @@ function pill(label,iconName,kind=''){
   el.append(icon(iconName),node('span','token-name',label));
   return el;
 }
+// One visual source for metric changes in choices, final paper and history.
+function metricImpact(id,amount,kind=''){
+ const def=global.GukminPlayer.metricDefinition(id);
+ const up=amount>=0;
+ const token=pill(def.label,def.icon||'sparkle','metric-impact metric-'+id+(kind?' '+kind:''));
+ const arrow=document.createElementNS(NS,'svg');
+ arrow.setAttribute('viewBox','0 0 12 12');
+ arrow.setAttribute('aria-hidden','true');
+ arrow.setAttribute('focusable','false');
+ arrow.classList.add('impact-arrow');
+ const triangle=document.createElementNS(NS,'path');
+ triangle.setAttribute('d',up?'M6 1 11 10H1Z':'M1 2h10L6 11Z');
+ triangle.setAttribute('fill','currentColor');
+ arrow.append(triangle);
+ const numeric=Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:2})+
+  (['money','allowance','income'].includes(id)?'원':'');
+ token.append(arrow,node('span','impact-amount',numeric));
+ token.setAttribute('aria-label',def.label+' '+(up?'증가 ':'감소 ')+numeric);
+ return token;
+}
 const metricRenderers=new Map();
 function registerMetricRenderer(type,render){
  if(typeof render!=='function')throw new Error('스탯 렌더러는 함수여야 함');
@@ -214,5 +234,5 @@ function render(root,persona){
   showMetrics(root,persona);
   showTraits(root,persona);
 }
-global.GukminStatus=Object.freeze({render,registerMetricRenderer,pill,traitToken});
+global.GukminStatus=Object.freeze({render,registerMetricRenderer,pill,traitToken,metricImpact});
 })(window);

@@ -36,7 +36,7 @@ function differences(before,after){
   if(!Number.isFinite(old)||!Number.isFinite(value)||old===value)continue;
   if(id==='study'&&(phase==='middle'||phase==='high'))continue;
   const def=P.metricDefinition(id),delta=value-old;
-  result.push({id,icon:def.icon||'sparkle',
+  result.push({id,amount:delta,icon:def.icon||'sparkle',
    text:def.label+' '+(delta>0?'+':'−')+Math.abs(delta).toLocaleString('ko-KR')+
     (['money','allowance','income'].includes(id)?'원':''),
    tone:(id==='stress'?delta<0:delta>0)?'good':'bad'});
@@ -47,7 +47,7 @@ function differences(before,after){
   const def=P.traitDefinitions[item]||{};
   if(def.hidden&&!item.startsWith('관심-'))continue;
   result.push({text:item.startsWith('관심-')?'관심 발견 · '+item.slice(3):'특성 획득 · '+item,
-   icon:def.icon||'sparkle',tone:def.hidden?'neutral':def.negative?'bad':'good',color:def.color});
+   trait:item,change:'gain',icon:def.icon||'sparkle',tone:def.hidden?'neutral':def.negative?'bad':'good',color:def.color});
  }
  for(const item of prior)if(item&&!next.has(item)){
   const def=P.traitDefinitions[item]||{};
@@ -69,7 +69,7 @@ function differences(before,after){
   result.push({text:'역할 종료 · '+item,icon:'flag',tone:'neutral'});
  return result;
 }
-function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed}){
+function create({dialog,body,heading,resumeButton,resolve,proceed}){
  let token=null,folded=false,review=false,delta=[],selectedId=null,currentChoice=null;
  const confirm=dialog.querySelector('#dailyPaperConfirm');
  const mobile=global.matchMedia('(max-width: 47.5em)');
@@ -83,7 +83,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
  function sync(){
   resumeButton.hidden=token===null||review||dialog.open;
   resumeButton.textContent='선택 진행 중 · 열기';
-  confirm.textContent=review?'결과 확인하기':'이 선택으로 기록하기';
+  confirm.textContent=review?'인생 기록으로 돌아가기':'이 선택으로 기록하기';
   confirm.disabled=!review&&!selectedId;
  }
  function open(){
@@ -114,7 +114,6 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   const option=currentChoice.options.find(item=>item.id===selectedId);
   if(option?.available)resolve(currentChoice.token,option.id);
  }
- collapseButton.addEventListener('click',fold);
  resumeButton.addEventListener('click',open);
  confirm.addEventListener('click',confirmSelection);
  dialog.addEventListener('cancel',cancel);
@@ -130,19 +129,30 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
    page.append(el('small','daily-paper-note','나의 선택'));
    const option=choice.options?.find(item=>item.id===selectedId);
    page.append(el('h3','daily-paper-result-title',option?.label||'오늘의 선택'));
-   page.append(el('small','daily-paper-note','오늘의 기록'));
+   page.append(el('small','daily-paper-note','선택 이후'));
    const records=after.history?.slice(before.history?.length||0)||[];
    const last=records.filter(item=>item.display!=='hidden').at(-1);
    page.append(rich('p','daily-paper-result-story',last?.detail||'선택이 인생 기록에 남았다.'));
    if(delta.length){
-    page.append(el('small','daily-paper-note','변화한 것들'));
+    page.append(el('h4','daily-paper-impact-heading','이번 선택의 영향'));
     const chips=el('div','daily-paper-impacts');
     for(const item of delta){
-     const chip=S.pill(item.text,item.icon||'sparkle','daily-paper-impact '+(item.tone==='bad'?'impact-bad':''));
-     if(item.color)chip.style.setProperty('--trait-color',item.color);
+     let chip;
+     if(item.id&&Number.isFinite(item.amount)){
+      chip=S.metricImpact(item.id,item.amount,'daily-paper-impact');
+     }else if(item.trait&&item.change==='gain'){
+      chip=S.traitToken(item.trait);
+      chip.classList.add('daily-paper-impact','daily-trait-preview');
+     }else{
+      chip=S.pill(item.text,item.icon||'sparkle','daily-paper-impact impact-'+item.tone);
+      if(item.color)chip.style.setProperty('--trait-color',item.color);
+     }
      chips.append(chip);
     }
     page.append(chips);
+   }else{
+    page.append(el('h4','daily-paper-impact-heading','이번 선택의 영향'));
+    page.append(el('p','daily-paper-neutral','즉시 변한 능력치는 없어. 이 선택은 인생 기록에 남아.'));
    }
    body.append(page);body.scrollTop=0;
   }
@@ -169,7 +179,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   const situation=el('section','daily-scenario');
   situation.append(el('span','daily-scenario-kicker','지금 상황'),el('strong','daily-scenario-title',choice.title));
   if(choice.body)situation.append(rich('p','daily-choice-story',choice.body));
-  body.append(situation,el('p','daily-choice-prompt','어떻게 할까?'));
+  body.append(situation);
   const list=el('div','inline-choices');
   list.setAttribute('role','group');list.setAttribute('aria-label','일상 선택지');
   for(const [index,option] of choice.options.entries()){
@@ -197,9 +207,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
     const amount=Number.isFinite(next)&&Number.isFinite(persona.stats?.[id])?next-persona.stats[id]:0;
     if(!Number.isFinite(amount)||amount===0)continue;
     const def=P.metricDefinition(id),good=id==='stress'?amount<0:amount>0;
-    indicators.append(S.pill(def.label+' '+(amount>0?'+':'−')+Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:2})+
-     (['money','allowance','income'].includes(id)?'원':''),def.icon||'sparkle',
-     'daily-choice-effect metric-'+id+' '+(good?'is-positive':'is-negative')));
+    indicators.append(S.metricImpact(id,amount,'daily-choice-effect '+(good?'is-positive':'is-negative')));
    }
    for(const trait of projected.traits||[]){
     const name=typeof trait==='string'?trait:trait.name;
@@ -258,7 +266,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
  function dispose(){
   reset();
   paper.dispose();
-  collapseButton.removeEventListener('click',fold);resumeButton.removeEventListener('click',open);
+  resumeButton.removeEventListener('click',open);
   confirm.removeEventListener('click',confirmSelection);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }

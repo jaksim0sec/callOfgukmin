@@ -51,7 +51,7 @@ try{
   assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),1);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'daily choice modal opens automatically');
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
-  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').textContent(),'어떻게 할까?');
+  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').count(),0,'redundant prompt removed from paper');
   assert.equal(await page.locator('#dailyChoiceBody .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
   const escapedMarkup=await page.evaluate(()=>{
    const root=document.createElement('p');
@@ -72,6 +72,30 @@ try{
   assert.equal(await page.evaluate(()=>typeof GukminSheet.create),'function','shared snap sheet controller is loaded');
   assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).fontFamily),/Serif KR|Batang/,'diary uses Korean serif');
   assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).backgroundImage),/linear-gradient/,'paper grid is rendered');
+  assert.equal(await page.locator('#dailyModalCollapse').count(),0,'no redundant paper close text');
+  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').count(),0,'no oversized question heading');
+  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-story').evaluate(el=>
+    parseFloat(getComputedStyle(el).fontSize)>parseFloat(getComputedStyle(document.querySelector('#dailyModalHeading')).fontSize)),
+    'story text visually leads event title');
+  const semanticPill=await page.evaluate(()=>{
+   const chip=GukminStatus.metricImpact('relations',2);
+   document.body.append(chip);
+   const style=getComputedStyle(chip),glyph=getComputedStyle(chip.querySelector('.token-icon'));
+   const result={background:style.backgroundColor,label:style.color,icon:glyph.color,
+    arrow:chip.querySelector('.impact-arrow')?.tagName.toLowerCase(),
+    readable:chip.getAttribute('aria-label')};
+   chip.remove();return result;
+  });
+  assert.equal(semanticPill.background,'rgb(135, 105, 216)','metric retains shared relationship color');
+  assert.equal(semanticPill.label,'rgb(255, 255, 255)','metric pill label is white');
+  assert.equal(semanticPill.icon,'rgb(255, 255, 255)','metric pill icon is white');
+  assert.equal(semanticPill.arrow,'svg','delta direction uses SVG');
+  assert.match(semanticPill.readable,/관계.*증가.*2/);
+  const testMarkup=await page.evaluate(()=>{
+   const el=document.createElement('p');GukminMarkup.render(el,'**강조** ==표시== ~~삭제~~');
+   return [el.querySelector('strong')?.textContent,el.querySelector('mark')?.textContent,el.querySelector('del')?.textContent].join('|');
+  });
+  assert.equal(testMarkup,'강조|표시|삭제','rich story markup remains semantic');
   assert.equal(await page.evaluate(()=>{
    const host=document.createElement('div'),grip=document.createElement('button');
    host.append(grip);document.body.append(host);
@@ -130,7 +154,7 @@ try{
    },0);
   });
   assert.equal(shownEffects,realEffects,'preview never invents rewards when a narrative choice has no numeric effect');
-  await page.locator('#dailyModalCollapse').click();
+  await page.keyboard.press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'paper collapses without settling');
   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'resume remains in sheet header');
@@ -216,6 +240,8 @@ try{
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1);
   await page.locator('#dailyPaperConfirm').click();
   assert.equal(await page.locator('#dailyPaperResult').isVisible(),true,'result appears on same paper');
+  assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'인생 기록으로 돌아가기');
+  assert.equal(await page.locator('#dailyPaperResult .daily-paper-impact-heading').textContent(),'이번 선택의 영향','settled decision summarizes actual effects, even when none changed');
   await page.locator('#dailyPaperConfirm').click();
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'recorded paper folds to history');
@@ -235,7 +261,7 @@ try{
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')).simulation.awaitingContinuation),false);
 
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
-  if(await page.locator('#dailyChoiceDialog').isVisible())await page.locator('#dailyModalCollapse').click();
+  if(await page.locator('#dailyChoiceDialog').isVisible())await page.keyboard.press('Escape');
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
 
   for(const [button,kind] of [['previewSchool','school-dialog'],['previewParty','ballot-dialog']]){
@@ -249,11 +275,19 @@ try{
   await page.locator('#advanceTurn').click();assert.equal(await page.locator('#advanceTurn').isDisabled(),true);
   await page.reload({waitUntil:'domcontentloaded'});await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'saved pending choice auto-restores');
-  await page.locator('#dailyModalCollapse').click();
+  await page.keyboard.press('Escape');
   await page.locator('#resumeDailyChoice').click();
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
+  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count()>0,
+   'a real money change is visualized as shared metric pill before settlement');
   await page.locator('#dailyPaperConfirm').click();
+  assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().reviewPending),false,
+   'system demo is intentionally configured without a post-choice pause');
+  assert.ok(await page.locator('#log .record-impacts .metric-impact.metric-money .impact-arrow').count()>0,
+   'instant demo choices retain the same money arrow in permanent history');
+  assert.ok(await page.locator('#log .record-impacts .metric-impact.metric-health').count()>0,
+   'instant demo history retains its actual health cost');
   assert.match(await page.locator('.gauge.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.gauge.metric-health').textContent(),/95/);
   assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
   // C–E: one event pack drives traits, periodic effect, schools and custom metric.
