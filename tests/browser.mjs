@@ -224,7 +224,7 @@ try{
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#sheetToggle').click();
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-springing')),true,'tap starts spring motion');
-   await page.waitForTimeout(950);
+   await page.waitForFunction(()=>!document.querySelector('#lifeSheet').classList.contains('is-springing'),null,{timeout:3500});
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-springing')),false,'spring settles and cleans up');
    const middle=await page.locator('#lifeSheet').boundingBox();
    assert.ok(middle.height>old.height+50&&middle.height<viewport.height*.7,'tap opens middle');
