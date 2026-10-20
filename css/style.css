@@ -831,7 +831,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  font-size:.71rem
 }
 .paper-choice-sheet .daily-paper-impact.impact-bad{color:#a84b5e;border-color:#e4c1c7;background:#fcf3f4}
-.paper-choice-sheet.is-dismissing{animation:none!important;transform:translateY(105%);transition:transform .2s ease!important}
+.paper-choice-sheet.is-dismissing{animation:none!important} /* Shared spring owns dismissal. */
 @media(max-width:47.5em){
  .paper-choice-sheet.snap-controlled{
   position:fixed;inset:auto 0 0;margin:0 auto;

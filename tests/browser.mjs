@@ -87,6 +87,36 @@ try{
    assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-middle')),true,'paper grip lowers to its configurable middle height');
    await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(380);
    assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-expanded')),true,'paper grip restores full height');
+   // Regression: a dismissible sheet must track the finger BELOW its lowest snap.
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+   const handleBounds=await page.locator('#dailyPaperGrip').boundingBox();
+   const startHeight=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   const dragX=handleBounds.x+handleBounds.width/2,dragY=handleBounds.y+handleBounds.height/2;
+   await page.mouse.move(dragX,dragY);await page.mouse.down();
+   await page.mouse.move(dragX,dragY+85,{steps:10});
+   await page.waitForTimeout(60);
+   const followingHeight=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   assert.ok(followingHeight<startHeight-45,
+    'dismissible paper must visibly follow a downward drag below its first snap');
+   await page.mouse.up();await page.waitForTimeout(370);
+   // Restore the initial top snap for later actions.
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+   // Close by dragging, without jumping back up at pointer release.
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+   const closingGrip=await page.locator('#dailyPaperGrip').boundingBox();
+   const cx=closingGrip.x+closingGrip.width/2,cy=closingGrip.y+closingGrip.height/2;
+   await page.mouse.move(cx,cy);await page.mouse.down();
+   await page.mouse.move(cx,cy+145,{steps:12});await page.waitForTimeout(40);
+   const beforeRelease=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   await page.mouse.up();
+   const afterRelease=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   assert.ok(afterRelease<beforeRelease+35,'releasing downward swipe must not jump paper back to its first snap');
+   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'drag dismiss keeps a pending choice');
+   await page.locator('#resumeDailyChoice').click();
+   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'pending choice reopens after swipe dismiss');
+
+
   }
 
   const shownEffects=await page.locator('#dailyChoiceBody .daily-choice-effect').count();

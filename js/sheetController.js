@@ -6,7 +6,7 @@
 function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=>true,dismissible=false,removeOnDismiss=false,onDismiss=()=>{}}){
  if(!element||!handle||!Array.isArray(steps)||!steps.length)throw new Error('Sheet requires an element, handle and snap steps');
  if(steps.some(s=>!s.name||!(s.ratio>0&&s.ratio<=1)))throw new Error('Invalid sheet snap step');
- let level=Math.max(0,Math.min(steps.length-1,initial)),drag=null,dragFrame=0,springFrame=0,dismissTimer=0,lastDragAt=-Infinity,disposed=false;
+ let level=Math.max(0,Math.min(steps.length-1,initial)),drag=null,dragFrame=0,springFrame=0,lastDragAt=-Infinity,disposed=false;
  const reduce=global.matchMedia('(prefers-reduced-motion: reduce)');
  const rootFont=()=>Number.parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
  function heights(){
@@ -24,35 +24,40 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
  }
  function cancelSpring(){
   if(springFrame)cancelAnimationFrame(springFrame);
-  springFrame=0;element.classList.remove('is-springing');element.style.removeProperty('--sheet-motion-height');
+  springFrame=0;element.classList.remove('is-springing','is-dismissing');
+  element.style.removeProperty('--sheet-motion-height');
  }
  function springTo(index,velocity=0,from=element.getBoundingClientRect().height){
-  cancelSpring();setLevel(index);
-  if(!enabled()||reduce.matches)return;
-  const heightList=heights(),target=heightList[level];
-  if(Math.abs(from-target)<.5)return;
+  cancelSpring();
+  const dismissing=index===-1;
+  if(!dismissing)setLevel(index);
+  const heightList=heights(),target=dismissing?0:heightList[level];
+  if(!enabled()||reduce.matches||Math.abs(from-target)<.5){
+   if(dismissing)finishDismiss();
+   return;
+  }
+  if(dismissing)element.classList.add('is-dismissing');
   let x=from,v=-Math.sign(velocity)*Math.sqrt(Math.abs(velocity))*.1;
   element.classList.add('is-springing');element.style.setProperty('--sheet-motion-height',x+'px');
   function frame(){
    v=(v+Math.max(-25,Math.min(25,(target-x)*.035)))*.8;
-   x+=v;element.style.setProperty('--sheet-motion-height',Math.max(heightList[0],Math.min(heightList.at(-1),x))+'px');
+   x+=v;element.style.setProperty('--sheet-motion-height',
+    Math.max(dismissing?0:heightList[0],Math.min(heightList.at(-1),x))+'px');
    if(Math.abs(target-x)<.5&&Math.abs(v)<.5){
-    springFrame=0;element.classList.remove('is-springing');element.style.removeProperty('--sheet-motion-height');
+    springFrame=0;element.classList.remove('is-springing','is-dismissing');
+    element.style.removeProperty('--sheet-motion-height');
+    if(dismissing)finishDismiss();
    }else springFrame=requestAnimationFrame(frame);
   }
   springFrame=requestAnimationFrame(frame);
  }
- function dismiss(){
+ function dismiss(velocity=0,from=element.getBoundingClientRect().height){
   if(!dismissible||disposed)return false;
-  cancelSpring();
-  if(dismissTimer)clearTimeout(dismissTimer);
-  if(!enabled()||reduce.matches){finishDismiss();return true;}
-  element.classList.add('is-dismissing');
-  dismissTimer=global.setTimeout(finishDismiss,210);
+  springTo(-1,velocity,from);
   return true;
  }
  function finishDismiss(){
-  dismissTimer=0;element.classList.remove('is-dismissing');
+  element.classList.remove('is-dismissing');
   if(removeOnDismiss)element.remove();
   onDismiss();
  }
@@ -68,7 +73,7 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   return start;
  }
  function paint(){dragFrame=0;if(drag)element.style.setProperty('--sheet-drag-height',
-  Math.max(heights()[0],Math.min(heights().at(-1),drag.startHeight-drag.delta))+'px');}
+  Math.max(dismissible?0:heights()[0],Math.min(heights().at(-1),drag.startHeight-drag.delta))+'px');}
  function down(e){
   if(disposed||!enabled()||!e.isPrimary||e.button!==0||drag)return;
   if(e.target.closest('button:not(.sheet-grip):not(.paper-sheet-grip),a,input,select,textarea'))return;
@@ -98,7 +103,10 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   if(done.moved)lastDragAt=performance.now();
   const next=cancelled||!done.moved?done.startLevel:choose(done.startLevel,current,velocity,delta);
   if(done.owner.hasPointerCapture(e.pointerId))done.owner.releasePointerCapture(e.pointerId);
-  if(next===-1){dismiss();return;}
+  if(next===-1){
+   dismiss(velocity,Math.max(0,Math.min(heights().at(-1),current)));
+   return;
+  }
   springTo(next,cancelled?0:velocity,done.moved?Math.max(heights()[0],Math.min(heights().at(-1),current)):done.startHeight);
  }
  function cancel(e){up(e,true);}
@@ -120,7 +128,6 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   if(dragFrame)cancelAnimationFrame(dragFrame);
   if(drag?.owner.hasPointerCapture(drag.id))drag.owner.releasePointerCapture(drag.id);
   drag=null;
-  if(dismissTimer)clearTimeout(dismissTimer);
   cancelSpring();
   for(const target of dragTargets){
    target.removeEventListener('pointerdown',down);target.removeEventListener('pointermove',move);
