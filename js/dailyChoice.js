@@ -70,7 +70,7 @@ function differences(before,after){
  return result;
 }
 function create({dialog,body,heading,resumeButton,resolve,proceed}){
- let token=null,folded=true,review=false,delta=[],selectedId=null,currentChoice=null,pendingDecision=null;
+ let token=null,folded=true,review=false,delta=[],selectedId=null,currentChoice=null,pendingDecision=null,reward=null;
  const confirm=dialog.querySelector('#dailyPaperConfirm');
  const AUTO_OPEN_MS=5000;
  let autoReady=false,autoRemaining=AUTO_OPEN_MS,autoStarted=0,autoTimeout=0,autoTicker=0;
@@ -139,13 +139,66 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   steps:[{name:'middle',ratio:.62},{name:'expanded',ratio:.94,topGapRem:.5}],
   onDismiss:closeNow
  });
+ function rewardStory(before,after,from,to){
+  const history=after.history||[];
+  const entries=Number.isInteger(from)&&Number.isInteger(to)?
+   history.slice(from,to+1):history.slice(before?.history?.length||0);
+  return entries.filter(item=>item.display!=='hidden').map(item=>item.detail||'').filter(Boolean).join(' ');
+ }
+ function rewardModel(before,after,label,from,to){
+  return {label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
+ }
+ function renderReward(){
+  if(!reward)return;
+  dialog.classList.add('is-reward');
+  const gained=reward.changes.filter(item=>item.change==='gain');
+  const visibleTraits=gained.filter(item=>item.trait&&!item.trait.startsWith('관심-'));
+  const interests=gained.filter(item=>item.trait?.startsWith('관심-'));
+  heading.textContent='';
+  dialog.querySelector('.daily-modal-head small').textContent='일상 선택 결과';
+  body.replaceChildren();
+  const hero=el('section','daily-reward-hero');
+  const seal=el('span','daily-reward-seal');
+  seal.innerHTML='<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="20"/><path d="m14 24 7 7 13-15"/></svg>';
+  const title=el('h3','daily-reward-headline',visibleTraits.length?'새로운 특성 획득!':interests.length?'새로운 관심 발견!':'선택 완료!');
+  hero.append(seal,title);
+  if(reward.story)hero.append(rich('p','daily-reward-story',reward.story));
+  else if(reward.label)hero.append(el('p','daily-reward-story',reward.label));
+  body.append(hero);
+  const section=el('section','daily-reward-changes');
+  section.append(el('strong','daily-reward-changes-title','획득한 보상'));
+  const tray=el('div','daily-reward-tokens');
+  const ordered=[...gained,...reward.changes.filter(item=>item.change!=='gain')];
+  for(const [index,change] of ordered.entries()){
+   let tokenNode;
+   if(change.id&&Number.isFinite(change.amount))
+    tokenNode=S.metricImpact(change.id,change.amount,'daily-reward-token');
+   else if(change.trait?.startsWith('관심-'))
+    tokenNode=S.createToken({type:'interest',name:change.trait.slice(3),classes:'daily-reward-token'});
+   else if(change.change==='gain'&&change.trait){
+    tokenNode=S.traitToken(change.trait);
+    tokenNode.classList.add('daily-reward-token');
+   }else tokenNode=S.createToken({type:'context',label:change.text,icon:change.icon,classes:'daily-reward-token impact-'+change.tone});
+   tokenNode.style.setProperty('--reward-order',Math.min(index,8));
+   tray.append(tokenNode);
+  }
+  if(!ordered.length)tray.append(el('p','daily-reward-empty','수치 변화 없이 이야기에 기록됐어.'));
+  section.append(tray);body.append(section);
+  body.scrollTop=0;
+  sync();
+ }
+ function openRestoredReward(){
+  if(!reward||dialog.open)return false;
+  dialog.showModal();paper.reset();renderReward();
+  return true;
+ }
  function sync(){
-  resumeButton.hidden=token===null||review||dialog.open;
+  resumeButton.hidden=token===null||review||dialog.open||!!reward;
   resumeButton.classList.toggle('is-auto-opening',autoReady);
   if(!autoReady){autoLabel.textContent='선택 열기';autoTime.hidden=true;autoTrack.hidden=true;}
   else paintClock();
-  confirm.textContent='이 선택으로 기록하기';
-  confirm.disabled=!selectedId||!!pendingDecision;
+  confirm.textContent=reward?'보상 받기':'이 선택으로 기록하기';
+  confirm.disabled=reward?false:!selectedId||!!pendingDecision;
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
@@ -154,17 +207,19 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});
  }
  function closeNow(){
+  const claimed=!!reward;
   if(dialog.open)dialog.close();
-  const decision=pendingDecision;pendingDecision=null;
-  if(decision)resolve(decision.token,decision.id);
+  pendingDecision=null;reward=null;
+  if(claimed){token=null;review=false;currentChoice=null;dialog.classList.remove('is-reward');}
   sync();
-  if(!resumeButton.hidden&&!decision)resumeButton.focus({preventScroll:true});
+  if(claimed)proceed();
+  else if(!resumeButton.hidden)resumeButton.focus({preventScroll:true});
  }
  function fold(){folded=true;cancelClock();if(dialog.open)paper.dismiss();else sync();}
  function reset(){
   cancelClock();
   if(dialog.open)dialog.close();
-  body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;
+  body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward');
   sync();
  }
  function cancel(event){event.preventDefault();fold();}
@@ -174,13 +229,15 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)fold();
  }
  function confirmSelection(){
+  if(reward){paper.dismiss();return;}
   if(!selectedId||!currentChoice||pendingDecision)return;
   const option=currentChoice.options.find(item=>item.id===selectedId);
   if(!option?.available)return;
   pendingDecision={token:currentChoice.token,id:option.id};
-  folded=true;
   confirm.disabled=true;
-  paper.dismiss(); // Finish closing before settling, so the story never swaps behind an open modal.
+  // Settle once while keeping this same sheet open for the actual reward.
+  resolve(pendingDecision.token,pendingDecision.id);
+  if(!reward){pendingDecision=null;sync();} // Failed settlement keeps the selection editable.
  }
  resumeButton.addEventListener('click',open);
  document.addEventListener('visibilitychange',handleVisibility);
@@ -191,20 +248,27 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  function capture(before,after,choice,reviewPending){
   if(choice?.layer!=='일상 선택')return;
   delta=differences(before,after);
-  review=!!reviewPending; // Only a legacy saved review can still be pending.
-  folded=true;
+  review=!!reviewPending;
+  if(!pendingDecision||pendingDecision.token!==choice.token)return;
+  const selected=choice.options.find(item=>item.id===pendingDecision.id);
+  reward=rewardModel(before,after,selected?.label,(before.history||[]).length,(after.history||[]).length-1);
+  pendingDecision=null;
+  renderReward();
  }
  function restore(snapshot){
-  if(!snapshot?.reviewPending)return;
+  if(!snapshot?.reviewPending)return false;
   const last=Object.values(snapshot.runtime?.choices||{}).filter(item=>item.status==='closed').at(-1);
-  if(last?.layer!=='일상 선택')return;
-  token=last.token;review=true;folded=true;
-  delta=snapshot.runtime.reviewBefore?differences(snapshot.runtime.reviewBefore,snapshot.persona):[];
+  if(last?.layer!=='일상 선택')return false;
+  const outcome=last.outcome;
+  if(!outcome?.before||!outcome?.after)return false;
+  token=last.token;review=true;folded=false;delta=differences(outcome.before,outcome.after);
+  reward=rewardModel(outcome.before,outcome.after,outcome.label,outcome.historyFrom,outcome.historyTo);
+  return true;
  }
  function showChoice(choice,host,persona){
   if(token!==choice.token){
-   cancelClock();token=choice.token;folded=true;review=false;delta=[];selectedId=null;
-   autoReady=true;autoRemaining=AUTO_OPEN_MS;
+   cancelClock();token=choice.token;folded=true;review=false;delta=[];selectedId=null;reward=null;
+   dialog.classList.remove('is-reward');autoReady=true;autoRemaining=AUTO_OPEN_MS;
   }
   currentChoice=choice;
   heading.textContent=choice.title;body.replaceChildren();
@@ -311,7 +375,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   confirm.removeEventListener('click',confirmSelection);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }
- return Object.freeze({showChoice,changesFor,capture,restore,highlight,reset,dispose,isReview:()=>review});
+ return Object.freeze({showChoice,changesFor,capture,restore,openRestoredReward,highlight,reset,dispose,isReview:()=>review,isRewardVisible:()=>!!reward});
 }
 global.GukminDailyChoice=Object.freeze({create});
 global.GukminMarkup=Object.freeze({render:renderRich});
