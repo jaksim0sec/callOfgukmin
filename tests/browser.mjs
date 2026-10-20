@@ -51,7 +51,7 @@ try{
   assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),1);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'daily choice modal opens automatically');
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
-  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').textContent(),'어떻게 할까?');
+  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').count(),0,'redundant prompt removed from paper');
   assert.equal(await page.locator('#dailyChoiceBody .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
   const escapedMarkup=await page.evaluate(()=>{
    const root=document.createElement('p');
