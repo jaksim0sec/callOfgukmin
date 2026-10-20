@@ -137,6 +137,25 @@ global.GukminDirector.register({
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
   );
+  // An elected elementary class president leaves a visible history and changes a later dilemma.
+  S.paths(stages,'middle:group-chat',[{
+   id:'former-class-president',priority:35,when:{attributes:{classElection:'elected'}},
+   title:'반장이었던 걸 기억하는 친구',
+   body:'단체방에서 수행평가 자료가 잘못 공유됐다. 한 친구가 “너 초등학교 때 반장이었잖아. 이번에도 정리 좀 해 줘”라고 말한다. ==오늘 내 숙제도 끝나지 않았다.== 예전 경험을 어떻게 쓸까?',
+   options:[
+    {id:'organize',label:'친구들을 모아 제출 기준을 다시 확인하고 정리한다',
+     risk:'조정에 실패하면 내 숙제도 밀리며, 모두의 기대를 떠안음',
+     tags:['team'],effects:{stats:{relations:5,study:-2,stress:5}},
+     detail:'전과 달리 모든 일을 혼자 하지 않고 확인할 사람을 나눴다. 늦게까지 친구들의 질문을 받느라 내 문제집은 끝내지 못했다.'},
+    {id:'boundary',label:'공식 안내만 공유하고 내 과제를 먼저 마친다',
+     effects:{stats:{study:3,relations:-2,stress:1}},
+     detail:'교사 공지 원문을 올리고 각자 확인해 달라고 했다. 내 과제는 끝냈지만 몇몇 친구는 좀 더 도와줄 줄 알았다고 말했다.'},
+    {id:'delegate',label:'학급 임원에게 함께 정리하자고 제안한다',
+     risk:'친구에게 일을 넘긴 것으로 보일 수 있음',
+     tags:['team'],effects:{stats:{relations:2,study:1,stress:2}},
+     detail:'현재 학급 임원과 역할을 나눴다. 예전 반장 경험을 살리되 이번엔 결정권을 독차지하지 않았다. 안내는 조금 늦게 완성됐다.'}
+   ]
+  }]);
   // Earlier interests open an activity; sustained commitments become usable experience.
   S.paths(stages,'middle:friends',[
    {id:'humanities-club',priority:35,when:{traits:['문과']},
