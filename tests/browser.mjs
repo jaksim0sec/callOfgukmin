@@ -320,8 +320,9 @@ try{
   await page.locator('#dailyChoiceDialog.is-reward .daily-reward-hero').waitFor();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'reward remains in the original daily paper');
   assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'보상 받기');
-  assert.ok(await page.locator('#dailyChoiceDialog .daily-reward-tokens .token.token-icon-pill').count()>0,
-   'reward uses the existing shared token DOM, not separate stat cards');
+  assert.ok(await page.locator('#dailyChoiceDialog .daily-reward-tokens .token.token-icon-pill').count()>0 ||
+   await page.locator('#dailyChoiceDialog .daily-reward-empty').count()===1,
+   'actual effects use shared tokens and zero-effect choices display an honest empty state');
   await page.locator('#dailyPaperConfirm').click();
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#log .record-choice').count()>=1,true,'choice and outcome are stored together in history');
