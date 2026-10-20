@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -174,7 +174,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
  assert.equal(applications,1,'one school application');
  assert.ok(decisions>=25);
  assert.equal(final.persona.age,19);
- assert.equal(final.runtime.turn,79);
+ assert.equal(final.runtime.turn,99);
  assert.equal(final.choice,null);
  assert.equal(final.progress.remaining,null);
  assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='elementary').status,'graduated');
@@ -184,7 +184,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
  engine=D.create({persona:P.load(),persist:p=>P.save(p)});
  engine.run();
  assert.equal(engine.snapshot().runtime.events['high:graduation'].count,1);
- assert.equal(engine.snapshot().runtime.turn,79);
+ assert.equal(engine.snapshot().runtime.turn,99);
 });
 test('special-school game thresholds lock options until grade requirements hold',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
