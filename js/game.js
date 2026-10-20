@@ -53,13 +53,13 @@ function mount(root,navigate,content=global.GukminContent){
  const sheet=$('lifeSheet');
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
 
- const lifeSheet=global.GukminSheet.create({
+ const snapSheet=global.GukminSheet.create({
   element:sheet,handle:$('sheetToggle'),dragTargets:[$('sheetToggle'),sheet.querySelector('.sheet-head')],
   enabled:()=>mobileSheet.matches,initial:0,dismissible:false,
   steps:[{name:'minimized',ratio:.2,minRem:8.5,maxRem:12},
    {name:'middle',ratio:.55},{name:'expanded',ratio:.9,topGapRem:1}]
  });
- lifeSheet.revealResults=()=>lifeSheet.revealAtLeast(1);
+ const lifeSheet={...snapSheet,revealResults:()=>snapSheet.revealAtLeast(1)};
  let persona=global.GukminPlayer.ensure();
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
