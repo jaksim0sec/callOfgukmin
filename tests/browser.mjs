@@ -72,6 +72,23 @@ try{
   assert.equal(await page.evaluate(()=>typeof GukminSheet.create),'function','shared snap sheet controller is loaded');
   assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).fontFamily),/Serif KR|Batang/,'diary uses Korean serif');
   assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).backgroundImage),/linear-gradient/,'paper grid is rendered');
+  assert.equal(await page.evaluate(()=>{
+   const host=document.createElement('div'),grip=document.createElement('button');
+   host.append(grip);document.body.append(host);
+   const c=GukminSheet.create({element:host,handle:grip,
+    steps:[{name:'short',ratio:.3},{name:'tall',ratio:.75}],initial:1,
+    enabled:()=>false,dismissible:true,removeOnDismiss:true});
+   const count=c.getStepCount();c.dismiss();const removed=!host.isConnected;c.dispose();
+   return count===2&&removed;
+  }),true,'generic sheet supports arbitrary steps and optional removal');
+  if(name!=='desktop'){
+   assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-expanded')),true);
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(380);
+   assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-middle')),true,'paper grip lowers to its configurable middle height');
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(380);
+   assert.equal(await page.locator('#dailyChoiceDialog').evaluate(el=>el.classList.contains('is-expanded')),true,'paper grip restores full height');
+  }
+
   const shownEffects=await page.locator('#dailyChoiceBody .daily-choice-effect').count();
   const realEffects=await page.evaluate(()=>{
    const snapshot=GukminGame.session.snapshot();
