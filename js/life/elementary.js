@@ -5,7 +5,7 @@ const S=global.GukminStory;
 // The class election remembers candidacy, outcome and service separately.
 const winner={any:[{stats:{relations:{gte:55}}},{all:[{traits:['리더십']},{stats:{relations:{gte:51}}}]}]};
 function stand(label){
- return {label,effects:{attributes:{classElection:'ran'}},
+ return {label,risk:'선거 준비와 학급 일을 맡을 시간 필요 · 관계 55 이상이면 당선 가능',effects:{attributes:{classElection:'ran'},stats:{stress:2}},
   detail:'출마 신청서에 이름을 적었다. 개표 결과는 잠시 뒤 나온다.',
   conditional:[
    {when:winner,result:{effects:{attributes:{classElection:'elected',roles:['반장']}},history:{title:'반장에 뽑혔다',detail:'점심시간까지 이어진 투표에서 과반을 얻었다. 이제 학급 공지를 책임질 차례다.'}}},
@@ -87,9 +87,9 @@ global.GukminDirector.register({
    ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},stats:{stress:{gte:65}}}}},
    S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
     '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
-    {id:'school',label:'학교 방과 후 교실에서 과제를 함께 풀기로 한다',effects:{stats:{study:3}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
-    {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{stats:{study:2}},detail:'도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
-    {id:'academy',label:'한 학기 방과 후 학원을 다닌다 (월 16만 원)',...(fee?{when:{stats:{money:{gte:fee}}}}:{}),effects:{stats:{study:4,...(fee?{money:-fee}:{})}},detail:fee?'첫 달 수강료 16만 원을 직접 냈다. 매주 교재를 풀었다.':'가족이 첫 달 수강료 16만 원을 부담했다. 매주 교재를 풀었다.'}
+    {id:'school',label:'학교 방과 후 교실에서 과제를 함께 푼다',risk:'정해진 요일에는 다른 약속을 잡기 어려움',effects:{attributes:{afterschoolPath:'school'},stats:{study:3,stress:1}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
+    {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{attributes:{afterschoolPath:'library'},stats:{study:2}},detail:'도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
+    {id:'academy',label:'한 달간 방과 후 학원을 다닌다 (16만 원'+(funded?' · 가족 부담':' · 직접 부담')+')',risk:'주 3회 수업 · 다른 방과 후 활동 시간이 줄어듦',...(fee?{when:{stats:{money:{gte:fee}}}}:{}),effects:{attributes:{afterschoolPath:'academy'},stats:{study:4,stress:2,...(fee?{money:-fee}:{})}},detail:fee?'첫 달 수강료 16만 원을 직접 냈다. 매주 교재를 풀었다.':'가족이 첫 달 수강료 16만 원을 부담했다. 매주 교재를 풀었다.'}
    ]),
    S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:10}}),
    S.selection('elementary:project',41,'우리 동네 발표에 생긴 빈칸',
@@ -98,20 +98,20 @@ global.GukminDirector.register({
       effects:{stats:{study:1,stress:2}},
       detail:'지역 도서관 자료와 시청 사진을 대조하다 축제 이름이 겹친다는 걸 발견했다. 밤늦게 출처까지 다시 적었다. **발표의 사실관계는 바로잡았지만** 준비 시간이 빠듯해졌다.'},
      {label:'조원과 함께 원본을 찾아 수정한다',risk:'연락이 늦으면 수정 시간도 줄어듦',
-      effects:{stats:{relations:2,stress:1}},
+      tags:['team'],effects:{stats:{relations:2,stress:1}},
       detail:'조원은 처음엔 자신이 틀리지 않았다고 주장했다. 너도 근거를 보여 줬고, 결국 둘이 새 사진을 찾아 표지를 고쳤다. **다음 발표도 같이 하자**는 답장이 왔지만 다른 과목 과제는 밀렸다.'},
      {label:'문제 사진을 빼고 확인된 정보만 발표한다',risk:'자료를 준비한 조원과 의견 충돌',
       effects:{stats:{relations:-1,stress:1}},
       detail:'축제 사진을 삭제하자 조원이 왜 말도 없이 뺐냐며 따졌다. 너는 확인된 내용만 발표하겠다고 설명했다. 자료는 정확했지만 **조별 분위기는 냉랭해졌다.**'}
    ]),
-   S.selection('elementary:interest-followup',43,'관심 분야를 더 깊이 해볼 기회','학교 축제에서 활동을 고른다. ==2학년 때 관심을 가졌던 분야를 다시 연습하면 정식 특성이 된다.== 다른 분야를 탐색해도 괜찮다.',[
-    {label:'발표문을 쓰고 토론을 진행한다',detail:'짝과 서로 다른 주장을 발표했다. 질문을 받자 미처 준비하지 못한 반론이 있었다.',tags:['humanities'],
+   S.selection('elementary:interest-followup',43,'관심 분야를 더 깊이 해볼 기회','축제 준비가 시작됐다. 수업 뒤 여러 주 동안 활동 하나를 맡을 수 있다.\n\n==전에 좋아했던 분야를 이어 가면 적성 특성이 된다.== 새로운 분야를 고르면 관심부터 남는다.',[
+    {label:'발표문을 쓰고 토론을 진행한다',risk:'축제까지 여러 차례 원고를 고쳐야 함',effects:{stats:{stress:1}},detail:'짝과 서로 다른 주장을 발표했다. 질문을 받자 미처 준비하지 못한 반론이 있었다.',tags:['humanities'],
      conditional:[{when:{traits:['관심-문과']},result:{effects:{traits:{add:['문과']}},history:{title:'문과 적성 발견',detail:'몇 차례 활동을 통해 표현 분야의 흥미가 자랐다.'}}}]},
-    {label:'탐구 실험과 수학 문제를 함께 풀어 본다',detail:'계산이 맞지 않아 다시 측정했다. 예상했던 답과 다른 값도 그대로 기록했다.',tags:['science'],
+    {label:'탐구 실험과 수학 문제를 함께 풀어 본다',risk:'실패한 실험까지 다시 기록해야 함',effects:{stats:{stress:1}},detail:'계산이 맞지 않아 다시 측정했다. 예상했던 답과 다른 값도 그대로 기록했다.',tags:['science'],
      conditional:[{when:{traits:['관심-이과']},result:{effects:{traits:{add:['이과']}},history:{title:'이과 적성 발견',detail:'여러 탐구 경험이 과학 분야에 대한 관심으로 이어졌다.'}}}]},
-    {label:'무대나 전시 작품을 준비한다',detail:'전시가 시작되자 직접 만든 작품 옆에 관람객이 남긴 쪽지가 붙었다.',tags:['arts'],
+    {label:'무대나 전시 작품을 준비한다',risk:'작업 시간만큼 다른 활동 시간이 줄어듦',effects:{stats:{stress:1}},detail:'전시가 시작되자 직접 만든 작품 옆에 관람객이 남긴 쪽지가 붙었다.',tags:['arts'],
      conditional:[{when:{traits:['관심-예체능']},result:{effects:{traits:{add:['예체능']}},history:{title:'예체능 적성 발견',detail:'꾸준한 창작 경험으로 표현의 즐거움을 느꼈다.'}}}]},
-    {label:'체육 활동과 연습을 이어간다',detail:'연습하던 동작이 마지막에 제대로 됐다. 다른 팀도 함께 박수를 쳤다.',tags:['sports'],
+    {label:'체육 활동과 연습을 이어간다',risk:'정기 연습에 맞춰 일정을 비워야 함',effects:{stats:{stress:1}},detail:'연습하던 동작이 마지막에 제대로 됐다. 다른 팀도 함께 박수를 쳤다.',tags:['sports'],
      conditional:[{when:{traits:['관심-체육']},result:{effects:{traits:{add:['체육']}},history:{title:'체육 적성 발견',detail:'꾸준한 활동이 운동의 즐거움을 더했다.'}}}]}
    ]),
    S.notice('elementary:age11',44,'초등학교 5학년','반 친구들과의 관계가 더 복잡해졌다.',{attributes:{age:11}}),
@@ -144,6 +144,12 @@ global.GukminDirector.register({
       {label:'지난 학기 학급 회의를 마무리하고 마지막 공지를 나눠 준다',effects:{traits:{add:['리더십']}},detail:'반장으로 여러 번 회의를 진행한 끝에 마지막 공지를 끝냈다. ==한 번 당선된 게 아니라 실제로 한 해를 맡아 본 경험==이 남았다.'},
       {label:'민서에게 마지막 회의를 맡기고 뒤에서 돕는다',effects:{stats:{relations:1},traits:{add:['리더십']}},detail:'민서가 발표하고 너는 준비한 종이를 나눠 줬다. 그동안 혼자 하던 일을 나누는 법도 익혔다.'}
      ]},
+    {id:'election-lost',priority:30,when:{attributes:{classElection:'lost'}},
+     body:'졸업앨범을 정리하다 반장 선거 때 쓴 공약 종이가 나왔다. 민서는 \"그때 네 공약 중에 아직도 안 된 게 있네\"라며 웃었다.',
+     options:[
+      {label:'떨어진 뒤에도 함께한 일을 앨범에 적는다',effects:{stats:{relations:1}},detail:'당선되지는 못했지만 축제 때 나눠 맡은 일은 남았다. 민서가 옆에 자기 이름도 적었다.'},
+      {label:'공약 종이를 접어 가방에 넣는다',detail:'종이 끝은 해졌지만 글씨는 읽혔다. 다음 학교에서는 무엇을 해 보고 싶은지 잠깐 생각했다.'}
+     ]},
     {id:'campaign-followup',priority:25,when:{attributes:{classElection:'supported'}},
      body:'지난 선거 때 함께 포스터를 붙이던 민서가 졸업앨범을 펼쳤다. 낙서 아래 네 이름도 작게 적혀 있다.',
      options:[
@@ -165,7 +171,23 @@ global.GukminDirector.register({
     ]
    })
   );
-  return {...stages,attributes:{friendRoute:{label:'첫 친구의 기억',hidden:true},classElection:{label:'학급 대표 선거',hidden:true}}};
+  // Retain the player's chosen resource in a later problem, without adding another stop.
+  const project=stages.choices.find(choice=>choice.id==='elementary:project');
+  project.variants=[
+   {id:'library-records',priority:20,when:{attributes:{afterschoolPath:'library'}},
+    body:'조원이 넣은 축제 사진이 이상하다. 방과 후 도서관에서 봤던 지역 안내 책자와 장소가 다르다. ==발표는 내일이다.== 이미 표지에 들어간 사진을 어떻게 할까?',options:project.options},
+   {id:'school-teammates',priority:10,when:{attributes:{afterschoolPath:'school'}},
+    body:'방과 후 교실에서 함께 과제를 풀던 조원이 사진을 잘못 골랐다. ==다른 시의 축제 사진이 표지에 들어갔다.== 친구는 맞는 사진이라고 우긴다. 발표는 내일이다.',options:project.options},
+   {id:'project-default',priority:0,body:project.body,options:project.options}
+  ];
+  const followup=stages.choices.find(choice=>choice.id==='elementary:interest-followup');
+  for(const [index,field] of ['문과','이과','예체능','체육'].entries()){
+   followup.options[index].result.conditional.push({
+    when:{withoutTraits:['관심-'+field,field]},
+    result:{effects:{traits:{add:['관심-'+field]}},history:{title:field+' 분야를 새로 탐색했다',detail:'이번에는 새로운 분야에 시간을 써 봤다. 아직 적성으로 단정하진 않지만 관심의 기록이 남았다.'}}
+   });
+  }
+  return {...stages,attributes:{afterschoolPath:{label:'방과 후 활동',hidden:true},friendRoute:{label:'첫 친구의 기억',hidden:true},classElection:{label:'학급 대표 선거',hidden:true}}};
  }
 });
 })(window);

@@ -155,7 +155,7 @@ global.GukminDirector.register({
   {id:'career-sea',priority:30,when:{attributes:{highPeer:'세아'}},
    body:'윤세아가 학과 안내서를 펴고 묻는다. "좋아하는 과목하고 잘하는 과목이 다르면 뭘 골라?"',
    options:[
-    {label:'세아와 실제 전공 수업 목록을 살펴본다',effects:{stats:{relations:1}},detail:'학과 이름보다 수업 내용이 훨씬 낯설었다. 세아도 목록에 표시했다.'},
+    {label:'세아와 실제 전공 수업 목록을 살펴본다',tags:['team'],effects:{stats:{relations:1}},detail:'학과 이름보다 수업 내용이 훨씬 낯설었다. 세아도 목록에 표시했다.'},
     {label:'관심 수업의 선수 과목을 찾아본다',effects:{stats:{study:1}},detail:'필요한 과목을 적었지만 아직 희망 학과를 확정하진 않았다.'},
     {label:'아직 진로를 모르겠다고 인정한다',detail:'세아가 웃었다. 본인도 지망 학과를 세 번 고쳤다고 했다.'}
    ]},
@@ -185,7 +185,7 @@ global.GukminDirector.register({
       title:'선택 탐구의 실험실 예약이 취소됐다',
       body:'학기 탐구 주제는 이미 정했는데 공동 실험실 예약이 취소됐다. ==발표까지 2주.== 다른 조도 장비가 필요하다.',
       options:[
-       {label:'공용 장비 사용 시간을 조원들과 재배정한다',effects:{attributes:{electiveRoute:'shared'},stats:{relations:1}},detail:'다섯 조가 시간표를 고쳤다. 새벽까지 기다릴 필요는 없게 됐다.'},
+       {label:'공용 장비 사용 시간을 조원들과 재배정한다',effects:{attributes:{electiveRoute:'shared'},stats:{relations:1}},detail:'다섯 조가 시간표를 고쳤다. 방과 후에 길게 기다리던 시간을 줄였다.'},
        {label:'실험 규모를 줄이고 검증 가능한 질문 하나만 남긴다',effects:{attributes:{electiveRoute:'alternate'},stats:{study:1}},detail:'제목은 덜 거창해졌다. ==대신 결론은 네가 직접 검증할 수 있다.=='},
        {label:'지도교사와 대체 실험실을 찾는다',effects:{attributes:{electiveRoute:'petition'}},detail:'다른 연구실 빈 시간이 나왔다. 지도교사는 안전교육을 먼저 다시 받으라고 했다.'}
       ]},
@@ -206,9 +206,9 @@ global.GukminDirector.register({
      {label:'피우지 않겠다고 하고 친구와 함께 나온다',
       effects:{stats:{relations:1,stress:1}},
       detail:'친구도 따라 나왔다. "와, 저런 얘기 갑자기 하면 난감하네." 둘은 말없이 교실로 돌아왔다.'},
-     {label:'거절하지 못하고 권유에 넘어간다',risk:'건강·돈에 손해가 남는 습관으로 이어질 수 있음',
-      effects:{stats:{health:-2,money:-3000},traits:{add:['흡연']}},
-      detail:'처음부터 불편했다. ==건강에 부담을 주는 습관이 남았다.== 관계가 좋아진 것도 아니었다. ~~괜찮을 거라던 말은 어디 갔지.~~'}
+     {label:'거절하지 못하고 권유에 넘어간다',risk:'반복되면 건강·재산에 지속적인 부담',
+      effects:{stats:{health:-2},traits:{add:['흡연']}},
+      detail:'처음에는 공짜 권유였지만 이후에도 같은 무리에 어울리며 반복했다. 몇 주 뒤에는 ==흡연 습관==이 남았다. 잠깐 거절하기 어려웠던 일이 계속 신경 쓸 일이 됐다.'}
    ]),
    S.branch(choiceAt('high:teamwork',72,'수행평가 전날, 조원 연락이 끊겼다',
     '발표가 내일인데 한 조원이 맡은 자료를 보내지 않는다. 단체방 분위기가 험악해진다.',[
@@ -219,7 +219,7 @@ global.GukminDirector.register({
   {id:'team-sea',priority:30,when:{attributes:{highPeer:'세아'}},
    body:'윤세아가 실험 결과 파일을 열었다. 마지막 그래프의 단위가 틀렸다. ==이미 보고서를 인쇄했다.==',
    options:[
-    {label:'세아와 원본 데이터를 다시 계산한다',risk:'늦은 밤까지 재작업',
+    {label:'세아와 원본 데이터를 다시 계산한다',tags:['team','science'],risk:'늦은 밤까지 재작업',
       effects:{stats:{study:3,stress:3,health:-1}},
       detail:'세아와 측정값을 하나씩 대조해 단위 오류를 찾아냈다. 한밤중에 정정본을 인쇄했지만 다음 날 둘 다 피곤한 얼굴이었다.'},
      {label:'교사에게 오류를 알리고 정정본을 낸다',risk:'수정 기한을 넘겨 감점 가능',
@@ -233,13 +233,13 @@ global.GukminDirector.register({
    body:'최하린과 준비한 토론 발표에서 한 조원이 맡은 슬라이드를 보내지 않았다. 그런데 단체방 프로필 사진은 방금 바뀌었다.',
    options:[
     {label:'조원에게 필요한 자료와 마감을 명확히 전달한다',detail:'조원이 절반을 보내 왔다. 나머지는 너와 하린이 다시 확인했다.'},
-    {label:'하린과 발표 분량을 줄여 마무리한다',risk:'발표 완성도 일부를 포기',effects:{stats:{relations:2,schoolScore:-1},traits:{add:['친화력']}},detail:'지난 학기부터 함께 고친 자료를 다시 나눴다. 분량은 줄었지만 ==일을 나누고 마무리하는 습관==이 남았다.'},
+    {label:'하린과 발표 분량을 줄여 마무리한다',tags:['team','humanities'],risk:'발표 완성도 일부를 포기',effects:{stats:{relations:2,schoolScore:-1},traits:{add:['친화력']}},detail:'지난 학기부터 함께 고친 자료를 다시 나눴다. 분량은 줄었지만 ==일을 나누고 마무리하는 습관==이 남았다.'},
     {label:'담당 교사에게 역할별 진행 상황을 알린다',detail:'교사는 작업 기록을 확인했다. 단체방은 며칠 동안 조용했다.'}
    ]},
   {id:'team-jaeho',priority:0,
    body:'박재호가 축제 홍보 영상 링크를 보냈다. 마지막 장면에 학교 이름이 틀렸다. 예약 업로드까지 ==30분 남았다.==',
    options:[
-    {label:'재호와 마지막 장면을 다시 편집한다',effects:{stats:{study:1,relations:1}},detail:'오타를 고쳤다. 영상이 다시 출력되는 동안 둘 다 말을 안 했다.'},
+    {label:'재호와 마지막 장면을 다시 편집한다',tags:['team','arts'],risk:'출력하는 동안 내 과제 시간이 줄어듦',effects:{stats:{study:1,relations:1,stress:2}},detail:'오타를 고쳤다. 영상이 다시 출력되는 동안 둘 다 말을 안 했다.'},
     {label:'업로드 예약을 취소하고 수정본을 늦게 낸다',detail:'시간은 놓쳤지만 잘못된 학교 이름으로 퍼지지는 않았다.'},
     {label:'문제 장면을 통째로 삭제해 올린다',detail:'급한 불은 껐다. 갑자기 영상이 짧아진 이유를 댓글에서 물었다.'}
    ]}
@@ -248,7 +248,7 @@ global.GukminDirector.register({
    S.notice('high:age18',74,'고등학교 3학년','졸업을 앞두고 있다. 공부뿐 아니라 사람들과의 시간도 중요해졌다.',{attributes:{age:18}}),
    examWithPrelude(18,3,75,'mock'),
    choiceAt('high:family-time',76,'토요일 오후에 걸려 온 가족의 전화',
-    familyNeeds?'가게에 사람이 몰려 가족이 급하게 도와 달라고 한다. 내일 시험 준비도 남았다.':'가족이 오래전 잡은 모임에 오라고 한다. 일요일에는 공부하려고 했는데 돌아오는 시간이 늦어질 듯하다.',[
+    familyNeeds?'가족의 일이 겹쳐 집안일을 도와 달라는 전화가 왔다. 네게도 내일까지 끝내야 할 시험 준비가 남았다.':'가족이 오래전 잡은 모임에 오라고 한다. 일요일에는 공부하려고 했는데 돌아오는 시간이 늦어질 듯하다.',[
      {label:'필요한 시간만 돕고 돌아와 남은 과제를 마친다',effects:{stats:{relations:2,stress:2}},detail:'가족과 시간을 나눠 일을 마쳤다. 돌아왔을 때 책상 위 계획표에는 아직 빈칸이 있었다. ==오늘 밤은 조금 늦어졌다.=='},
      {label:'내일 일정이 있다며 대신 가능한 시간을 제안한다',effects:{stats:{study:2,relations:-1}},detail:'가족이 조금 아쉬워했다. 대신 공부 계획을 마무리했고, 다음 주엔 함께하기로 했다.'},
      {label:'오늘은 가족과 함께 보내고 내일 계획을 다시 짠다',effects:{stats:{stress:-3,relations:2,study:-1}},detail:'오랜만에 같이 저녁을 먹었다. ==머릿속은 조금 가벼워졌지만 공부는 내일로 밀렸다.=='}
@@ -260,7 +260,7 @@ global.GukminDirector.register({
       {label:'아직은 바꿀 생각이 없다',effects:{stats:{health:-2,stress:1}},detail:'일상이 달라지는 줄 알면서도 미뤘다. 이후의 부담은 계속된다.'}
     ]),event:{...S.selection('high:smoking-followup',76,'','',[{label:'확인'}]).event,when:{turn:{eq:76},traits:['흡연']}}},
    choiceAt('high:graduation-photo',77,'졸업앨범 촬영 날',
-    '담임이 열 번 넘게 줄을 맞추라 했는데 박재호는 계속 뒤에서 장난을 친다. ==마지막 사진이라고 다들 갑자기 친한 척한다.==',[
+    '담임이 열 번 넘게 줄을 맞추라 했는데 뒷줄 친구들은 계속 장난을 친다. ==마지막 사진이라고 다들 갑자기 친한 척한다.==',[
      {label:'오래 함께한 친구에게 작은 쪽지를 남긴다',detail:'친구는 쪽지를 읽고 웃었다. 답장은 졸업식 날 주겠다고 했다.'},
      {label:'선생님과 진로에 관한 마지막 질문을 나눈다',detail:'선생님은 답을 대신 정해 주진 않았다. 다만 준비해야 할 서류 하나를 알려 줬다.'},
      {label:'촬영이 끝나면 조용히 가방을 챙겨 돌아간다',detail:'뒤돌아보니 교실은 여전히 시끄러웠다. 찍힌 사진은 아직 볼 수 없었다.'}
@@ -299,6 +299,15 @@ global.GukminDirector.register({
     }),
    legacy
   );
+  // Each elective route has a later, deterministic consequence in an existing news slot.
+  const senior=stages.events.find(event=>event.id==='high:age18');
+  senior.result.conditional=[
+   {when:{attributes:{electiveRoute:'shared'}},result:{effects:{stats:{study:2,stress:2}},history:{title:'다른 학교에서 보낸 한 학기',detail:'공동교육과정 수업을 마쳤다. 이동 일정은 빠듯했지만 학교에 없던 단원을 끝까지 배웠다.'}}},
+   {when:{attributes:{electiveRoute:'alternate'}},result:{effects:{stats:{stress:-2}},history:{title:'바꾼 시간표가 자리를 잡았다',detail:'대체 과목에 맞춰 일정을 지켰다. 원래 희망한 수업은 못 들었지만 방과 후를 무리하게 채우지 않았다.'}}},
+   {when:{attributes:{electiveRoute:'petition'}},result:{effects:{stats:{relations:1}},history:{title:'함께 요청했던 수업의 뒷이야기',detail:'학교에서 바로 개설해 주지는 못했다. 대신 학생들과 교사가 소규모 탐구 모임을 꾸려 한 학기를 함께했다.'}}}
+  ];
+  // Science-school choices describe lab access rather than an invented commute.
+  for(const branch of senior.result.conditional)branch.when={all:[branch.when,{not:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]}}]};
   return {...stages,attributes:{highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }
 });

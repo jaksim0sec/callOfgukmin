@@ -30,9 +30,11 @@ function lifeTitle(persona){
  return global.GukminPlayer.phaseDefinition(phase).label;
 }
 function posterData(persona){
+ const phase=global.GukminPlayer.phaseOf(persona);
+ const phrases={infant:'세상이 궁금한 아이',elementary:'꿈을 키우는\n초등학생',middle:'가능성을 찾는\n중학생',high:'내 길을 고르는\n고등학생'};
  return {
   color:persona.partyColor,partyName:persona.party,partyIcon:persona.partyIcon,
-  phrase:'미래의 씨앗',stage:persona.job,name:persona.name,number:persona.number,
+  phrase:persona.job==='고교 졸업'?'다음 장을\n기다리는 청춘':phrases[phase]||'다음 선택은 나의 몫',stage:persona.job,name:persona.name,number:persona.number,
   imageSrc:persona.portraitSrc,ageGroup:persona.age>=19?'adult':'child',template:'solid'
  };
 }
@@ -196,6 +198,7 @@ function mount(root,navigate,content=global.GukminContent){
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
  let dailyUI=null;
+ let renderedHistory=null;
  let journeyTimer=null,journeyActive=false,newsTimer=null;
  const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
@@ -210,6 +213,9 @@ function mount(root,navigate,content=global.GukminContent){
   if(!host.firstElementChild)host.append(global.GukminPoster.create(data));
   else global.GukminPoster.update(host.firstElementChild,data);
   document.documentElement.style.setProperty('--party',persona.partyColor||'#677181');
+  const historyKey=JSON.stringify([persona.history,snapshot?.reviewPending,snapshot?.runtime?.contentId]);
+  if(historyKey===renderedHistory){renderProgress();return;}
+  renderedHistory=historyKey;
   const log=$('log');log.replaceChildren();
    const history=persona.history||[];
    const closed=Object.values(snapshot?.runtime?.choices||{}).filter(entry=>entry.status==='closed');
@@ -250,6 +256,7 @@ function mount(root,navigate,content=global.GukminContent){
       for(const [position,impact] of impacts.entries()){
        const chip=global.GukminStatus.pill(impact.text,impact.icon,
         'daily-result-chip impact-'+impact.tone+(impact.id?' metric-'+impact.id:''));
+       if(impact.color)chip.style.setProperty('--trait-color',impact.color);
        if(snapshot?.reviewPending&&group===lastClosed)
         chip.style.animationDelay=Math.min(position,6)*.07+'s';
        else chip.classList.add('is-static');
@@ -286,6 +293,13 @@ function mount(root,navigate,content=global.GukminContent){
     const banner=el('div','record-review-fallback');
     banner.append(el('strong','','선택 결과를 확인했어'));
     nextButton(banner);log.prepend(banner);
+   }
+   if(snapshot?.runtime?.events?.['high:graduation']?.status==='completed'){
+    const complete=el('section','life-chapter-complete');
+    complete.append(el('small','','학생 시절 · 기록 완료'),el('h2','','다음 장을 기다리는 삶'),
+     el('p','','현재 공개된 이야기는 여기까지입니다. 선택 기록은 그대로 보관됩니다. 다른 선택으로 새로운 삶을 시작할 수도 있습니다.'));
+    const replay=el('button','continue-story','새 인물로 다시 시작');replay.type='button';
+    replay.addEventListener('click',safely(reset));complete.append(replay);log.prepend(complete);
    }
    
   renderProgress();
@@ -391,8 +405,9 @@ function mount(root,navigate,content=global.GukminContent){
   if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
   const completed=currentCinematic;
   currentCinematic=null;cinematic.hidden=true;cinematicShown=false;
-  if(completed?.kind==='grade'&&snapshot?.reviewPending)startJourney();
   nextCinematic();
+  renderProgress();
+  if(!cinematicShown&&completed?.kind==='grade'&&snapshot?.reviewPending)startJourney();
  }
  function clearCinematics(){
   cinematics.length=0;
@@ -404,40 +419,43 @@ function mount(root,navigate,content=global.GukminContent){
   const before=snapshot?.persona||persona,choice=snapshot?.choice;
   const added=s.persona.history.slice(before.history?.length||0);
   dailyUI.capture(before,s.persona,choice,s.reviewPending);
-  snapshot=s;persona=s.persona;render();
+  snapshot=s;persona=s.persona;
+  // Establish the visible scene before rendering a newly opened native dialog.
+  if(s.runtime.contentId===global.GukminDirector.contentId){
+   if(choice?.presentation?.type==='exam'&&s.reviewPending){
+    const id=choice.presentation.category==='mock'?'exam':'schoolScore',phase=global.GukminPlayer.phaseOf(before);
+    const old=global.GukminGrades.report(id,before.stats[id],phase).display;
+    const next=global.GukminGrades.report(id,s.persona.stats[id],phase).display;
+    const names={[id]:id==='schoolScore'&&phase==='middle'?'교과 성취':global.GukminPlayer.metricDefinition(id).label,study:'학습 기반',stress:'스트레스',health:'건강'};
+    const changes=Object.entries(names).map(([key,label])=>{
+     const delta=(s.persona.stats[key]??0)-(before.stats[key]??0);
+     return delta?label+' '+(delta>0?'+':'−')+Math.abs(delta).toLocaleString('ko-KR',{maximumFractionDigits:2}):'';
+    }).filter(Boolean).join(' · ');
+    queueCinematic({kind:'grade',title:choice.presentation.term||choice.title,
+     detail:choice.presentation.category==='mock'?'모의고사 결과':'내신 평가 결과',
+     before:old+' ('+before.stats[id]+')',after:next+' ('+s.persona.stats[id]+')',changes});
+   }
+   if(choice?.presentation?.type==='school'&&s.reviewPending){
+    const school=global.GukminPlayer.schoolsOf(s.persona).find(item=>item.kind==='high'&&item.status==='enrolled');
+    queueCinematic({title:'고등학교 입학',detail:school?.name||'새로운 학교생활이 시작됐다.'});
+   }
+   const events={
+    'infant:school-entry':'초등학교 입학',
+    'elementary:middle-entry':'초등학교 졸업 · 중학교 입학',
+    'high:graduation':'고등학교 졸업'
+   };
+   for(const item of added)if(events[item.source])
+    queueCinematic({title:events[item.source],detail:item.detail});
+  }
+  render();
   if(added.length){$('log')?.firstElementChild?.classList.add('record-arrived');
-   if(journeyActive){const news=added.filter(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
+   if(journeyActive&&!cinematicShown){const news=added.filter(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
     if(news.length)showJourneyNews(news.at(-1));}
   }
-   if(s.reviewPending&&dailyUI.isReview()){
-    lifeSheet.revealResults();$('sheetContent').scrollTop=0;
-    dailyUI.highlight(root);
-   }
-  if(s.runtime.contentId!==global.GukminDirector.contentId)return;
-  if(choice?.presentation?.type==='exam'&&s.reviewPending){
-   const id=choice.presentation.category==='mock'?'exam':'schoolScore',phase=global.GukminPlayer.phaseOf(before);
-   const old=global.GukminGrades.report(id,before.stats[id],phase).display;
-   const next=global.GukminGrades.report(id,s.persona.stats[id],phase).display;
-   const names={study:'학업',stress:'스트레스',health:'건강'};
-   const changes=Object.entries(names).map(([key,label])=>{
-    const delta=(s.persona.stats[key]??0)-(before.stats[key]??0);
-    return delta?label+' '+(delta>0?'+':'')+delta:'';
-   }).filter(Boolean).join(' · ');
-   queueCinematic({kind:'grade',title:choice.presentation.term||choice.title,
-    detail:choice.presentation.category==='mock'?'모의고사 결과':'내신 평가 결과',
-    before:old,after:next,changes});
+  if(s.reviewPending){
+   lifeSheet.revealResults();$('sheetContent').scrollTop=0;
+   if(dailyUI.isReview())dailyUI.highlight(root);
   }
-  if(choice?.presentation?.type==='school'&&s.reviewPending){
-   const school=global.GukminPlayer.schoolsOf(s.persona).find(item=>item.kind==='high'&&item.status==='enrolled');
-   queueCinematic({title:'고등학교 입학',detail:school?.name||'새로운 학교생활이 시작됐다.'});
-  }
-  const events={
-   'infant:school-entry':'초등학교 입학',
-   'elementary:middle-entry':'초등학교 졸업 · 중학교 입학',
-   'high:graduation':'고등학교 졸업'
-  };
-  for(const item of added)if(events[item.source])
-   queueCinematic({title:events[item.source],detail:item.detail});
  }
  function stopJourney(){
   journeyActive=false;
@@ -463,6 +481,7 @@ function mount(root,navigate,content=global.GukminContent){
   journeyActive=true;
   function tick(){
    if(disposed||!journeyActive)return;
+   if(cinematicShown){journeyTimer=global.setTimeout(tick,80);return;}
    const before=engine.snapshot(),had=before.persona.history.length;
    if(before.choice&&!before.reviewPending){stopJourney();renderProgress();return;}
    const changed=engine.step();
@@ -512,18 +531,23 @@ function mount(root,navigate,content=global.GukminContent){
   const hasTarget=Number.isFinite(p?.remaining);
   $('choiceTiming').hidden=!hasTarget&&!choice&&!reviewing&&!journeyActive;
   $('choiceTiming').classList.toggle('is-paused',!!choice||reviewing);
-  text('nextChoiceLabel',reviewing?'선택 결과 확인 중':choice?'선택 중 · 진행 일시정지':hasTarget?p.remaining+'턴 남음':journeyActive?'인생 소식 확인 중':demo?'예정된 선택 없음':'이야기 준비 중');
+  text('nextChoiceLabel',reviewing?'선택 결과 확인 중':choice?'선택 중 · 진행 일시정지':hasTarget?p.remaining+'턴 남음':journeyActive?'인생 소식 확인 중':demo?'예정된 선택 없음':snapshot?.runtime?.events?.['high:graduation']?.status==='completed'?'현재 이야기 완료':'이야기 준비 중');
   const progressValue=choice||reviewing?1:hasTarget?p.value||0:0;
   $('nextChoiceProgress').value=progressValue;
   $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
-  const current=$('currentChoice');current.replaceChildren();
+  const current=$('currentChoice');
+  // The major presenter owns its reopen button until the choice token changes.
+  // Clearing it during a normal render stranded a folded exam after reload.
+  const sameMajor=choice?.layer==='한방 선택'&&presentedToken===choice.token;
+  if(!sameMajor)current.replaceChildren();
   if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
   if(reviewing)return;
   if(!choice){dailyUI.reset();return;}
+  if(cinematicShown)return;
   if(choice.layer==='한방 선택'){
    dailyUI.reset();
-   current.append(el('p','fine','한방 선택 응답 대기'));
+   if(!sameMajor)current.append(el('p','fine','한방 선택 응답 대기'));
    if(majorPresenter&&presentedToken!==choice.token){
     presentedToken=choice.token;
     const owner=engine,epoch=presentationEpoch;

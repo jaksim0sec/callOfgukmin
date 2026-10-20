@@ -45,11 +45,14 @@ function differences(before,after){
  const prior=new Set((before.traits||[]).map(name)),next=new Set((after.traits||[]).map(name));
  for(const item of next)if(item&&!prior.has(item)){
   const def=P.traitDefinitions[item]||{};
-  result.push({text:'특성 획득 · '+item,icon:def.icon||'sparkle',tone:def.negative?'bad':'good'});
+  if(def.hidden&&!item.startsWith('관심-'))continue;
+  result.push({text:item.startsWith('관심-')?'관심 발견 · '+item.slice(3):'특성 획득 · '+item,
+   icon:def.icon||'sparkle',tone:def.hidden?'neutral':def.negative?'bad':'good',color:def.color});
  }
  for(const item of prior)if(item&&!next.has(item)){
   const def=P.traitDefinitions[item]||{};
-  result.push({text:'특성 상실 · '+item,icon:def.icon||'sparkle',tone:def.negative?'good':'bad'});
+  if(def.hidden)continue;
+  result.push({text:(def.negative?'특성 해소 · ':'특성 상실 · ')+item,icon:def.icon||'sparkle',tone:def.negative?'good':'bad'});
  }
  const oldSchool=P.schoolsOf(before);
  for(const school of P.schoolsOf(after)){
@@ -109,6 +112,8 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
  function showChoice(choice,host,persona){
   if(token!==choice.token){token=choice.token;folded=false;review=false;delta=[];}
   heading.textContent=choice.title;body.replaceChildren();
+  const stage=P.phaseOf(persona),labels={infant:'유년기',elementary:'초등학교',middle:'중학교',high:'고등학교'};
+  dialog.querySelector('.daily-modal-head small').textContent=persona.age+'살 · '+(labels[stage]||P.phaseDefinition(stage).label);
   const compact=el('div','daily-choice-compact');
   compact.append(el('strong','',choice.title),el('p','','선택 진행 중 · 결정을 기다리고 있어'));
   const reopen=el('button','daily-choice-reopen','선택 창 열기 →');
@@ -139,7 +144,7 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
     const amount=Number.isFinite(next)&&Number.isFinite(persona.stats?.[id])?next-persona.stats[id]:0;
     if(!Number.isFinite(amount)||amount===0)continue;
     const def=P.metricDefinition(id),good=id==='stress'?amount<0:amount>0;
-    indicators.append(S.pill(def.label+' '+(amount>0?'+':'')+amount+
+    indicators.append(S.pill(def.label+' '+(amount>0?'+':'−')+Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:2})+
      (['money','allowance','income'].includes(id)?'원':''),def.icon||'sparkle',
      'daily-choice-effect metric-'+id+' '+(good?'is-positive':'is-negative')));
    }
@@ -155,10 +160,19 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
     }else if(!def.hidden){
      const reward=S.traitToken(name);
      reward.classList.add('daily-trait-preview');
+     reward.querySelector('.token-name').prepend('+ ');
      indicators.append(reward);
     }
    }
+   for(const trait of persona.traits||[]){
+    const name=typeof trait==='string'?trait:trait.name;
+    if(P.hasTrait(projected,name)||P.traitDefinition(name).hidden)continue;
+    const def=P.traitDefinition(name);
+    indicators.append(S.pill((def.negative?'해소 · ':'상실 · ')+name,def.icon||'sparkle',
+     'daily-choice-effect '+(def.negative?'is-positive':'is-negative')));
+   }
    if(indicators.childElementCount)text.append(indicators);
+   else text.append(el('small','daily-choice-note',Object.keys(option.result?.effects?.attributes||{}).length?'이 행동을 이후 이야기에서 기억합니다':'수치 변화 없이 이야기를 이어갑니다'));
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
    button.append(number,text,el('span','daily-choice-chevron','›'));
    button.addEventListener('click',()=>resolve(choice.token,option.id));

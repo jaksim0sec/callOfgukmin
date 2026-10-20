@@ -10,19 +10,21 @@ const make=(tag,cls,text)=>{
  return element;
 };
 const notation={study:'학업',schoolScore:'내신',exam:'모의고사',stress:'스트레스',health:'건강',relations:'관계',allowance:'용돈',money:'재산'};
-function effectList(option){
- const stats=option.result?.effects?.stats||{};
+function effectList(option,person,turn){
+ const projected=global.GukminEffects.apply(person,option.result,{turn});
  const span=make('span','life-effects');
- for(const [id,n] of Object.entries(stats)){
+ for(const [id,next] of Object.entries(projected.stats)){
+  const n=Number.isFinite(next)&&Number.isFinite(person.stats[id])?next-person.stats[id]:0;
   if(!n)continue;
   const tag=make('span','life-delta '+((id==='stress'?n<0:n>0)?'life-delta-up':'life-delta-down'),
-   (notation[id]||id)+' '+(n>0?'+':'')+n+(id==='allowance'?'원':''));
+   (notation[id]||id)+' '+(n>0?'+':'−')+Math.abs(n).toLocaleString('ko-KR',{maximumFractionDigits:2})+(['money','allowance','income'].includes(id)?'원':''));
   span.append(tag);
  }
  return span;
 }
 function present({choice,resolve,root}){
  let selected=null,closed=false;
+ const person=global.GukminGame.session?.snapshot().persona||global.GukminPlayer.load();
  const p=choice.presentation||{};
  if(!['exam','school'].includes(p.type))return ()=>{};
  const isSchool=p.type==='school';
@@ -32,14 +34,16 @@ function present({choice,resolve,root}){
  head.append(make('span','life-modal-serial','국민의 부름 / '+(isSchool?'지원서':'학교 시험')),
    make('span','life-modal-serial',isSchool?'입학 지원':'NO. '+choice.eventId));
  const title=make('h2','life-modal-title',isSchool?'고등학교 입학 지원서':p.term||choice.title);
- const sub=make('p','life-modal-sub',isSchool?'거주지와 게임 내 지원 조건을 보고 희망 학교를 고르시오.':
+ const sub=make('p','life-modal-sub',isSchool?'학교를 고르면 교육과정과 생활 정보를 확인할 수 있습니다':
    (p.grade+'학년 · '+(p.category==='mock'?'모의고사 · 9등급 기준':'내신 · '+(p.stage==='middle'?'성취도 A–E':'5등급 기준'))));
- const desc=make('p','life-modal-copy',choice.body);
+ const desc=make('p','life-modal-copy');
+ global.GukminMarkup.render(desc,choice.body);
+ const collapse=make('button','life-modal-collapse','접기 ⌄');collapse.type='button';
+ collapse.setAttribute('aria-label','선택을 유지하고 창 접기');head.lastElementChild.replaceWith(collapse);
  const options=make('div','life-modal-options');
  const formTop=make('div','life-paper-form');
  const question=make('div','life-paper-question');
  if(!isSchool){
-  const person=global.GukminPlayer.load();
   const banner=make('div','life-paper-heading');
   banner.append(make('span','life-paper-period','제 1 교시'),make('strong','life-paper-subject',
    p.category==='mock'?'학업 종합 모의평가':'학년별 내신 종합평가'),
@@ -77,35 +81,35 @@ function present({choice,resolve,root}){
   const copy=make('span','life-answer-copy');
   copy.append(make('strong','',option.label));
   if(isSchool){
-   copy.append(make('small','',option.school?.typeLabel||'지역 학교 후보'));
+   copy.append(make('small','life-school-type',option.school?.typeLabel||'지역 학교 후보'));
    const school=option.school||{};
-   const actual=global.GukminPlayer.load()?.stats?.schoolScore;
+   const actual=person?.stats?.schoolScore;
    if(school.minScore){
     const qualifies=Number.isFinite(actual)&&actual>=school.minScore;
     copy.append(make('small','life-requirement',
      '게임 내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
    }else copy.append(make('small','life-requirement','게임 내 별도 내신 제한 없음'));
    if(school.minStudy){
-    const study=global.GukminPlayer.load()?.stats?.study;
-    copy.append(make('small','life-requirement',
-     '누적 학업 역량(참고) '+(Number.isFinite(study)?study:'—')+' · 학교 추천 수준 '+school.minStudy+' (지원 제한 아님)'));
+    const study=person?.stats?.study;
+    copy.append(make('small','life-requirement life-school-extra',
+     '학습 기반 '+(Number.isFinite(study)?study:'—')+' · 권장 '+school.minStudy+' (지원 제한 아님)'));
    }
    if(school.distanceKm!==undefined){
-    copy.append(make('small','life-requirement',
+    copy.append(make('small','life-requirement life-school-extra',
      school.schoolArea+' · 약 '+school.distanceKm+'km (출생 지역 기준 추정)'));
-    copy.append(make('small','life-requirement',
+    copy.append(make('small','life-requirement life-school-extra',
      school.travelMode+' · 월 교통·생활비 예시 약 '+school.travelCost.toLocaleString('ko-KR')+'원 (입학금 아님)'));
-    copy.append(make('small','life-requirement',
+    copy.append(make('small','life-requirement life-school-extra',
      '현실의 타 지역 지원 자격은 별도 모집요강 확인 필요'));
    }
    if(option.available===false){
-    copy.append(make('small','life-requirement','현재 학업 조건을 충족하지 않음 · 해당 학교의 공식 입학 기준은 아님'));
+    copy.append(make('small','life-school-lock','지원 기준 미달'));
    }
   }
-  copy.append(effectList(option));
+  copy.append(effectList(option,person,choice.openedAt||0));
   if(!isSchool&&global.GukminGrades){
    const metric=p.category==='mock'?'exam':'schoolScore';
-   const candidate=global.GukminPlayer.load();
+   const candidate=person;
    const current=candidate?.stats?.[metric];
    if(Number.isFinite(current)){
     // Preview the same modifiers and conditional learning bonuses as real settlement.
@@ -129,7 +133,7 @@ function present({choice,resolve,root}){
   options.append(row);
  });
  const footer=make('footer','life-modal-foot');
- const note=make('p','',isSchool?'※ 실제 학교명은 참고 자료이며, 지원 자격과 합격 판정은 게임용 모형입니다.':'※ 정식 시험 문제가 아닌 게임 선택지입니다. 등급은 실제 석차·응시 결과가 아닌 게임 예상치입니다.');
+ const note=make('p','',isSchool?'게임용 지원 기준입니다. 실제 입학 자격은 학교 자료에서 확인하세요.':'게임 내 예상 성적입니다. 학습 기반과 특성 효과를 포함합니다.');
  footer.append(note,confirm);
  if(isSchool){
   const source=make('a','life-school-source','학교 정보 공시 검색 ↗');
@@ -142,11 +146,17 @@ function present({choice,resolve,root}){
  if(!isSchool)body.append(question);
  body.append(options,footer);
  dialog.replaceChildren(body);
- const reopen=make('button','inline-choice','📄 '+(isSchool?'진학 지원서 열기':'시험지 다시 열기'));
+ const reopen=make('button','inline-choice major-choice-reopen','📄 '+(isSchool?'진학 지원서 열기':'시험지 다시 열기'));
  reopen.type='button';root.querySelector('#currentChoice').append(reopen);
- reopen.addEventListener('click',()=>{if(!closed&&!dialog.open)dialog.showModal();});
- const handleCancel=e=>{e.preventDefault();dialog.close();};
+ const headerReopen=root.querySelector('#resumeMajorChoice');
+ function sync(){if(headerReopen)headerReopen.hidden=closed||dialog.open;}
+ function open(){if(!closed&&!dialog.open){dialog.showModal();sync();}}
+ function fold(){dialog.close();sync();headerReopen?.focus({preventScroll:true});}
+ reopen.addEventListener('click',open);headerReopen?.addEventListener('click',open);
+ collapse.addEventListener('click',fold);
+ const handleCancel=e=>{e.preventDefault();fold();};
  dialog.addEventListener('cancel',handleCancel);
+ dialog.addEventListener('close',sync);
  confirm.addEventListener('click',()=>{
   if(!selected||closed)return;
   const id=selected;
@@ -154,8 +164,10 @@ function present({choice,resolve,root}){
   resolve(id);
  });
  dialog.showModal();
+ sync();
  return ()=>{
   closed=true;dialog.removeEventListener('cancel',handleCancel);
+  dialog.removeEventListener('close',sync);headerReopen?.removeEventListener('click',open);sync();
   if(dialog.open)dialog.close();
   dialog.replaceChildren();
   dialog.classList.remove('is-exam');

@@ -25,7 +25,11 @@ function weightedPick(tiers){
  return tiers.find(tier=>(draw-=tier.weight)<0)||tiers.at(-1);
 }
 function birthContext(){
- const home=pick(HOMES),region=pick(global.GukminRegions.all),tier=weightedPick(DATA.wealthTiers);
+ const region=pick(global.GukminRegions.all),tier=weightedPick(DATA.wealthTiers);
+ // Occupation and region stay independent. Explicit economic descriptions must agree.
+ const home=pick(HOMES.filter(home=>
+  home.name==='형편이 어려운 가정'?['soil','bronze'].includes(tier.id):
+  home.name==='경제적으로 여유 있는 가정'?['gold','diamond'].includes(tier.id):true));
  const stats={...BIRTH_DEFAULTS.stats,allowance:tier.allowance,relations:tier.relations};
  for(const tag of region.tags){
   for(const [id,delta] of Object.entries(DATA.regionPresets[tag]||{}))stats[id]+=delta;

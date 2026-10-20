@@ -809,3 +809,53 @@ test('elementary presentation choice previews its real costs and benefits',()=>{
  assert.deepEqual(plain(project.options.map(o=>o.result.effects.stats)),
   [{study:1,stress:2},{relations:2,stress:1},{relations:-1,stress:1}]);
 });
+
+test('changing interests records a new exploration without granting an unearned aptitude',()=>{
+ const {c,P,E}=setup(),pack=c.GukminDirector.content(P.generate());
+ const start=pack.choices.find(x=>x.id==='elementary:interest-exploration');
+ const follow=pack.choices.find(x=>x.id==='elementary:interest-followup');
+ const arts=E.apply(P.generate(),start.options[2].result);
+ const changed=E.apply(arts,follow.options[1].result);
+ assert.ok(P.hasTrait(changed,'관심-이과'),'a different sustained activity must leave a visible exploration');
+ assert.ok(!P.hasTrait(changed,'이과'),'one science activity cannot award an established aptitude');
+ assert.ok(P.hasTrait(E.apply(arts,follow.options[2].result),'예체능'));
+});
+
+test('cooperation traits actually affect a real school collaboration',()=>{
+ const {c,P,E}=setup(),pack=c.GukminDirector.content(P.generate());
+ const option=pack.choices.find(x=>x.id==='elementary:project').options[1];
+ const base=P.generate();base.stats.relations=45;
+ const ordinary=E.apply(base,option.result);
+ base.traits.push('리더십');
+ assert.equal(E.apply(base,option.result).stats.relations,ordinary.stats.relations+1);
+});
+
+test('accepting a first cigarette records peer pressure before a later sustained smoking habit',()=>{
+ const {c,P,E}=setup(),pack=c.GukminDirector.content(P.generate());
+ const choice=pack.choices.find(x=>x.id==='high:tobacco-offer');
+ const base=P.generate();base.age=17;base.phase='high';base.stats.money=0;
+ const accepted=E.apply(base,choice.options[2].result);
+ assert.ok(P.hasTrait(accepted,'흡연'));
+ assert.ok(accepted.stats.money>=0,'a free offer cannot create personal debt');
+ assert.match(accepted.history.at(-1).detail,/이후|반복|이어/,'the acquired habit needs a passage of time');
+});
+
+test('new birth descriptions agree with the household support tier',()=>{
+ const {P,c}=setup();
+ vm.runInContext('let seed=1905;Math.random=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296)',c);
+ for(let i=0;i<300;i++){
+  const p=P.generate();
+  if(p.family==='형편이 어려운 가정')assert.ok(['soil','bronze'].includes(p.familyTier));
+  if(p.family==='경제적으로 여유 있는 가정')assert.ok(['gold','diamond'].includes(p.familyTier));
+ }
+});
+
+test('chosen learning resources are recorded for later daily stories',()=>{
+ const {c,P,E}=setup(),pack=c.GukminDirector.content(P.generate());
+ const after=pack.choices.find(x=>x.id==='elementary:afterschool');
+ const p=P.generate();p.stats.money=200000;c.GukminDirector.create({persona:p});
+ const learned=E.apply(p,after.options.find(o=>o.id==='library').result);
+ assert.equal(learned.attributes.afterschoolPath,'library');
+ const project=pack.choices.find(x=>x.id==='elementary:project');
+ assert.ok(project.variants?.some(v=>v.when?.attributes?.afterschoolPath==='library'));
+});

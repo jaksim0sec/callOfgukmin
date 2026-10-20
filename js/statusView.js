@@ -149,6 +149,19 @@ function traitToken(name,entry={}){
 }
 function showTraits(root,s){
   const traits=root.querySelector('#traits');traits.replaceChildren();
+  const info=root.querySelector('#traitInfo');
+  if(info){info.hidden=true;info.textContent='';}
+  function inspect(token,description){
+   if(!info||!description)return token;
+   const button=node('button','trait-control');button.type='button';
+   button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','traitInfo');
+   button.append(token);
+   button.addEventListener('click',()=>{
+    const open=button.getAttribute('aria-expanded')!=='true';
+    traits.querySelectorAll('.trait-control').forEach(b=>b.setAttribute('aria-expanded','false'));
+    button.setAttribute('aria-expanded',String(open));info.hidden=!open;info.textContent=open?description:'';
+   });return button;
+  }
   const entries=Array.isArray(s.traits)?s.traits.filter(Boolean):[];
   const enrolled=global.GukminPlayer.schoolsOf(s).find(r=>r.kind==='high'&&r.status==='enrolled');
   if(!entries.length&&!enrolled){
@@ -168,7 +181,7 @@ function showTraits(root,s){
         const tint=global.GukminPlayer.traitDefinitions[field]?.color;
         if(tint)developing.style.setProperty('--trait-color',tint);
         developing.title=field+' 활동을 다시 이어 가면 정식 특성으로 발전할 수 있어';
-        traits.append(developing);
+        traits.append(inspect(developing,developing.title));
        }
       }
       continue;
@@ -177,7 +190,7 @@ function showTraits(root,s){
     const token=traitToken(name,entry);
     token.title=entry.description||def.description||name;
     token.setAttribute('aria-label',name+(negative?' · 디버프':' · 특성'));
-    traits.append(token);
+    traits.append(inspect(token,token.title));
   }
   // Derived presentation only: schoolHistory stays the single source of school identity.
   if(enrolled){

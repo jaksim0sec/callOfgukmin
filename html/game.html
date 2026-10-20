@@ -7,7 +7,7 @@
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=ui-motion-traits-20261020">
+  <link rel="stylesheet" href="css/style.css?v=life-experience-20261020">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -18,6 +18,7 @@
         <section class="trait-section" aria-label="특성">
           <div class="trait-heading"><strong>특성</strong></div>
           <div class="traits" id="traits"></div>
+          <p class="trait-info" id="traitInfo" role="status" hidden></p>
         </section>
         <div class="gauges-heading">상태 스탯</div>
         <div class="gauges-list" id="gaugesList" aria-label="현재 활성 상태 스탯"></div>
@@ -38,6 +39,7 @@
       <div class="sheet-head">
         <strong id="lifeHeadline">0살</strong>
         <button type="button" class="sheet-choice-resume" id="resumeDailyChoice" hidden>선택 진행 중 · 열기</button>
+        <button type="button" class="sheet-choice-resume" id="resumeMajorChoice" hidden>선택 진행 중 · 열기</button>
         <button id="resetGame" class="mini-reset" type="button" aria-label="새 인물 생성" title="새 인물 생성">↻</button>
         <span class="chapter-meta"><span id="chapter">인물 생성</span><span class="mode-chip">생애</span></span>
       </div>
@@ -81,25 +83,25 @@
   <div class="daily-modal-body" id="dailyChoiceBody" aria-live="polite"></div>
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
-<script src="js/poster.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/data/base.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/data/regions.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/data/schools.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/data/grades.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/playerState.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/effects.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/timeline.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/life/director.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/life/story.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/life/infant.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/life/elementary.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/life/middle.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/life/high.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/systemDemo.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/statusView.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/dailyChoice.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/game.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/majorView.js?v=ui-motion-traits-20261020" defer></script>
-<script src="js/boot.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/poster.js?v=life-experience-20261020" defer></script>
+<script src="js/data/base.js?v=life-experience-20261020" defer></script>
+<script src="js/data/regions.js?v=life-experience-20261020" defer></script>
+<script src="js/data/schools.js?v=life-experience-20261020" defer></script>
+<script src="js/data/grades.js?v=life-experience-20261020" defer></script>
+<script src="js/playerState.js?v=life-experience-20261020" defer></script>
+<script src="js/effects.js?v=life-experience-20261020" defer></script>
+<script src="js/timeline.js?v=life-experience-20261020" defer></script>
+<script src="js/life/director.js?v=life-experience-20261020" defer></script>
+<script src="js/life/story.js?v=life-experience-20261020" defer></script>
+<script src="js/life/infant.js?v=life-experience-20261020" defer></script>
+<script src="js/life/elementary.js?v=life-experience-20261020" defer></script>
+<script src="js/life/middle.js?v=life-experience-20261020" defer></script>
+<script src="js/life/high.js?v=life-experience-20261020" defer></script>
+<script src="js/systemDemo.js?v=life-experience-20261020" defer></script>
+<script src="js/statusView.js?v=life-experience-20261020" defer></script>
+<script src="js/dailyChoice.js?v=life-experience-20261020" defer></script>
+<script src="js/game.js?v=life-experience-20261020" defer></script>
+<script src="js/majorView.js?v=life-experience-20261020" defer></script>
+<script src="js/boot.js?v=life-experience-20261020" defer></script>
 </body>
 </html>

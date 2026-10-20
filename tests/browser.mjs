@@ -284,9 +284,16 @@ try{
   const walk=async target=>p.evaluate(target=>{
    const s=GukminGame.session;
    for(let index=0;index<80;index++){
+    const scene=document.getElementById('lifeCinematic');
+    if(scene&&!scene.hidden)document.getElementById('lifeCinematicDismiss').click();
     const snap=s.snapshot(),choice=snap.choice;
     if(snap.reviewPending){s.run();continue;}
-    if(!choice||choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice?.id||null};
+    if(!choice){
+     s.run();const settled=s.snapshot();
+     if(settled.choice||settled.reviewPending)continue;
+     return {age:settled.persona.age,turn:settled.runtime.turn,choice:null};
+    }
+    if(choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice.id};
     const first=choice.options.find(o=>o.available);
     if(!first)throw new Error('No legal choice: '+choice.id);
     s.resolve(choice.token,first.id);
@@ -322,7 +329,8 @@ try{
   await p.locator('#lifeDecisionDialog .life-submit').click();
   const ended=await walk('nothing');
   assert.equal(ended.age,19);assert.equal(ended.turn,79);
-  assert.equal((await p.locator('#nextChoiceLabel').textContent()).trim(),'이야기 준비 중');
+  assert.equal((await p.locator('#nextChoiceLabel').textContent()).trim(),'현재 이야기 완료');
+  assert.equal(await p.locator('.life-chapter-complete button').count(),1,'completed chapter has an explicit replay action');
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
   assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);
   const schoolHistory=await p.evaluate(()=>GukminPlayer.schoolsOf(GukminGame.session.snapshot().persona).find(s=>s.kind==='high'));

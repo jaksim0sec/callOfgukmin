@@ -39,6 +39,9 @@ jobs:
       - run: node tests/browser.mjs
         env:
           BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser
+      - run: node tests/experience.mjs
+        env:
+          BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser
       - uses: actions/upload-artifact@v4
         if: always()
         with:
