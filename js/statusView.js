@@ -218,9 +218,14 @@ function showMetrics(root,s){
   list.append(wrap);
  }
  // The DOM is mounted before transitioning. Re-rendering no longer flashes a native bar.
- if(nextFills.length)requestAnimationFrame(()=>{
-  for(const [fill,ratio] of nextFills)if(fill.isConnected)fill.style.transform='scaleX('+ratio+')';
- });
+ if(nextFills.length){
+  // Commit the old painted scale before requesting a new animation frame.
+  // Without this read, fresh DOM may collapse both styles into one paint.
+  for(const [fill] of nextFills)void fill.offsetWidth;
+  requestAnimationFrame(()=>{
+   for(const [fill,ratio] of nextFills)if(fill.isConnected)fill.style.transform='scaleX('+ratio+')';
+  });
+ }
 }
 
 function traitToken(name,entry={}){
