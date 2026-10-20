@@ -1,5 +1,14 @@
 # CSS 개발 규칙 — 국민의 부름
 
+## 2026-10-20 모눈 종이 선택 시트·공통 스냅 시스템
+
+- `js/sheetController.js` 의 `GukminSheet.create`가 기존 기록 시트와 일상 선택지 모두의 Pointer Events·관성·스프링 및 키보드 그립 조작을 담당한다. DOM 재생성 없이 `--snap-height` / `--sheet-drag-height` / `--sheet-motion-height` 변수로 높이를 제어한다.
+- 메인 `#lifeSheet`는 `steps` 20/55/90%, `dismissible:false` (항상 존속). 일상 `#dailyChoiceDialog`는 `steps` 62/94%, `dismissible:true` (아래로 내려 접기). 단계 수·비율·최솟값·최대값은 JS 구성, 페인트/모양은 CSS 클래스 소유.
+- `.paper-choice-sheet`는 독립적인 흰 모눈 배경 + `Noto Serif KR / Batang` 서체 + 왼쪽 바인더 구멍 + 조용한 체크형 선택 목록. 기존 시험지·지원서·메인 기록 시트에는 이 스타일이 전파되지 않는다.
+- 일상 선택은 선택 행을 표시한 다음 `#dailyPaperConfirm`으로 확정. 실제 정산 뒤 같은 종이에 결과와 정확한 변화가 나타나고 확인 후 기존 기록으로 돌아간다. 대기 중인 선택·정산 대기는 기존 단일 세이브 상태를 유지한다.
+- 본문은 별도 `.daily-modal-body` 단일 스크롤, 그립·헤더만 드래그. 320×568에서도 버튼·본문에 접근 가능해야 하며 `prefers-reduced-motion`을 보존한다.
+
+
 ## 2026-10-20 경험 활용과 결과 전망
 
 - `.daily-choice-advantage`는 기존 선택 행 안에서 활용 가능한 특성·활동 경험을 옅은 초록 알약으로 표시한다. 필요 조건은 잠긴 행의 읽을 수 있는 문구로 표시한다.
