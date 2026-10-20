@@ -39,17 +39,19 @@ try{
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').textContent(),'#2살');
-  assert.match((await page.locator('#nextChoiceLabel').textContent()).trim(),/선택 중/);
+  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no meaningless paused progress bar');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').evaluate(e=>e.hidden),false,'compact decision status is mounted on all viewports');
-  assert.equal(await page.locator('#choiceTiming').isVisible(),true,'progress remains visible and paused while choosing');
-  assert.match((await page.locator('#nextChoiceLabel').textContent()).trim(),/선택 중/);
-  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),1);
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'daily choice modal opens automatically');
+  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'pending decisions are not disguised as 100% progress');
+  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0);
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'first daily choice waits for the player to open it');
+  assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'one intentional entry point is available');
+  await page.locator('#resumeDailyChoice').click();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true);
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').count(),0,'redundant prompt removed from paper');
   assert.equal(await page.locator('#dailyChoiceBody .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
@@ -268,35 +270,28 @@ try{
    assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
-  // Paper choices require explicit confirmation; result appears on paper then remains in history.
+  // One confirmation settles the daily choice; history alone owns its effects.
   await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyPaperConfirm').isDisabled(),true);
   await page.locator('#dailyChoiceBody .inline-choice').first().click();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'marking paper never settles a choice');
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'marking a choice never settles it');
   assert.equal(await page.locator('#dailyPaperConfirm').isEnabled(),true);
-  assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1);
-  await page.locator('#dailyPaperConfirm').click();
-  assert.equal(await page.locator('#dailyPaperResult').isVisible(),true,'result appears on same paper');
-  assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'인생 기록으로 돌아가기');
-  assert.equal(await page.locator('#dailyPaperResult .daily-paper-impact-heading').textContent(),'이번 선택의 영향','settled decision summarizes actual effects, even when none changed');
   await page.locator('#dailyPaperConfirm').click();
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'recorded paper folds to history');
-   assert.equal(await page.locator('#log .record-choice').count(),1,'choice response is in life history');
-   assert.ok((await page.locator('#log .record-choice').textContent()).includes('내 선택'));
-   assert.equal(await page.locator('#action').evaluate(e=>e.hidden),true,'no duplicate result card');
-   const reviewRecord=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
-   assert.equal(reviewRecord.simulation.awaitingContinuation,true,'review is persisted');
-   assert.ok(reviewRecord.simulation.reviewBefore,'before values are persisted');
-   const outcome=Object.values(reviewRecord.simulation.choices).find(x=>x.outcome)?.outcome;
-   assert.ok(outcome?.label&&outcome.historyTo>=outcome.historyFrom,'settled reply is saved with its history range');
-   await page.reload({waitUntil:'domcontentloaded'});
-   await page.locator('#log .record-choice .continue-story').waitFor();
-   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'saved review restores in history, not a modal');
-   assert.equal(await page.locator('#log .record-choice .continue-story').count(),1);
-   await page.locator('#log .record-choice .continue-story').click();
-  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')).simulation.awaitingContinuation),false);
-
+  assert.equal(await page.locator('#dailyPaperResult').count(),0,'there is no extra reward paper or result acknowledgement');
+  assert.equal(await page.locator('#log .record-choice').count()>=1,true,'choice and outcome are stored together in history');
+  assert.ok((await page.locator('#log .record-choice').first().textContent()).includes('내 선택'));
+  assert.equal(await page.locator('#log .record-choice .continue-story').count(),0,'ordinary choices require no next-story acknowledgement');
+  assert.equal(await page.locator('#log .record-review-fallback').count(),0,'no transient review fallback banner');
+  const savedChoice=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
+  assert.equal(savedChoice.simulation.awaitingContinuation,false,'routine choice no longer pauses the simulation');
+  assert.equal(savedChoice.simulation.reviewBefore,undefined,'routine choices do not save redundant review state');
+  const outcome=Object.values(savedChoice.simulation.choices).find(x=>x.outcome)?.outcome;
+  assert.ok(outcome?.label&&outcome.historyTo>=outcome.historyFrom,'settled outcome and history range survive');
+  await page.reload({waitUntil:'domcontentloaded'});
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'reloading does not trigger a modal automatically');
+  assert.ok(await page.locator('#log .record-choice').count()>=1,'outcome survives reload without replay clicks');
+  assert.equal(await page.locator('#log .record-choice .continue-story').count(),0);
   await page.goto(base+'html/game.html?systems=1',{waitUntil:'domcontentloaded'});
   if(await page.locator('#dailyChoiceDialog').isVisible())await page.keyboard.press('Escape');
   const before=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));
@@ -308,17 +303,21 @@ try{
   // A: an opt-in test content pack uses the same engine as future content.
   await page.locator('#startSystemDemo').click();await page.locator('#advanceTurn').click();assert.ok((await page.locator('#log').textContent()).includes('검증 사건'));
   // B: actual progress and choice UI; paused clock and persisted pending choice.
-  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0.5);
+  assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().progress.value),0.5,
+   'logical event progress remains accurate even when the decorative bar is hidden');
+  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no redundant progress bar during manual verification');
   await page.locator('#advanceTurn').click();assert.equal(await page.locator('#advanceTurn').isDisabled(),true);
-  await page.reload({waitUntil:'domcontentloaded'});await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
-  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'saved pending choice auto-restores');
-  await page.keyboard.press('Escape');
+  await page.reload({waitUntil:'domcontentloaded'});
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false);
   await page.locator('#resumeDailyChoice').click();
+  await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'explicitly reopened saved choice is now visible');
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
   assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count()>0,
    'a real money change is visualized as shared metric pill before settlement');
   await page.locator('#dailyPaperConfirm').click();
+  await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().reviewPending),false,
    'system demo is intentionally configured without a post-choice pause');
   assert.ok(await page.locator('#log .record-impacts .metric-impact.metric-money .impact-arrow').count()>0,
@@ -375,7 +374,8 @@ try{
  await recallPage.locator('#enterGame').click();
  await recallPage.locator('#birthIntro').waitFor({state:'visible'});
  await recallPage.locator('#birthIntroSkip').evaluate(button=>button.click());
- await recallPage.locator('#dailyChoiceDialog').waitFor({state:'visible'});
+ assert.equal(await recallPage.locator('#dailyChoiceDialog').isVisible(),false);
+ assert.equal(await recallPage.locator('#resumeDailyChoice').isVisible(),true);
  const newStory=await recallPage.evaluate(()=>GukminGame.session.snapshot().choice.scenarioId);
  assert.ok(newStory,'replaying must open the updated deterministic storyline');
  await recall.close();
@@ -433,7 +433,7 @@ try{
     const first=choice.options.find(o=>o.available);
     if(!first)throw new Error('No legal choice: '+choice.id);
     s.resolve(choice.token,first.id);
-    if(!s.snapshot().reviewPending)throw new Error('Choice review did not persist');
+    if(choice.layer==='한방 선택'&&!s.snapshot().reviewPending)throw new Error('Major choice review did not persist');
    }
    throw new Error('Life path did not reach '+target);
   },target);
@@ -465,7 +465,7 @@ try{
   await p.locator('#lifeDecisionDialog .life-submit').click();
   const ended=await walk('nothing');
   assert.equal(ended.age,19);assert.equal(ended.turn,79);
-  assert.equal((await p.locator('#nextChoiceLabel').textContent()).trim(),'현재 이야기 완료');
+  assert.equal(await p.locator('#choiceTiming').isVisible(),false,'completed chapter has no meaningless progress bar');
   assert.equal(await p.locator('.life-chapter-complete button').count(),1,'completed chapter has an explicit replay action');
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
   assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);

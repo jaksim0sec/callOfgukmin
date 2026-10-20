@@ -1,5 +1,9 @@
 # 국민의 부름 — 정적 화면 기반 실행 구조
 
+## 2026-10-21 일상 결과 UI 단일 출처
+
+일상 선택은 공통 시트 닫힘이 끝난 뒤 기존 `engine.resolve`로 정산한다. 엔진의 `pauseAfterChoice:true` 및 저장 계약은 **수정하지 않는다**. 인게임 UI만 이어서 기존 `startJourney()`를 호출해 `reviewPending`을 자동 정리한다. 이 과정에서 결과는 `runtime.choices[token].outcome`과 인생 기록으로 한 번 표시되고 결과 종이는 열지 않는다. 후속 소식이 진행되더라도 다음 일상 팝업은 사용자가 직접 열 때까지 닫혀 있다.
+
 ## 2026-10-20 범용 시트 컨트롤러
 
 `js/sheetController.js`는 시트 `element`, `handle`, `dragTargets`, `steps: [{name,ratio,minRem?,maxRem?,topGapRem?}]`, `initial`, `enabled`, `dismissible`, `removeOnDismiss`, `onDismiss`를 받아 재사용 가능한 스냅/관성/해제 정책을 제공한다. `dispose`, `dismiss`, `setLevel`, `reset`, `revealAtLeast`, `getLevel` 메서드를 제공한다. 스타일 변경은 각 시트 클래스로 격리한다.
