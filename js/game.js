@@ -262,14 +262,8 @@ function mount(root,navigate,content=global.GukminContent){
  dailyUI=global.GukminDailyChoice.create({
   dialog:$('dailyChoiceDialog'),body:$('dailyChoiceBody'),heading:$('dailyModalHeading'),
   resumeButton:$('resumeDailyChoice'),
-  resolve:(token,id)=>{
-   const result=safely(()=>engine.resolve(token,id))();
-   if(result!==false&&!disposed&&snapshot?.reviewPending&&
-      snapshot.runtime.contentId===global.GukminDirector.contentId)
-    startJourney(); // UI-only: review is recorded, then resumed without another click.
-   return result;
-  },
-  proceed:()=>safely(()=>engine.run())()
+  resolve:(token,id)=>safely(()=>engine.resolve(token,id))(),
+  proceed:()=>safely(startJourney)()
  });
  const cinematics=[],cinematic=$('lifeCinematic');
  let cinematicTimer=null,cinematicShown=false,currentCinematic=null;
@@ -356,8 +350,10 @@ function mount(root,navigate,content=global.GukminContent){
     if(news.length)showJourneyNews(news.at(-1));}
   }
   if(s.reviewPending||choice?.layer==='일상 선택'){
-   // One result owner: the history. Do not open a second reward surface.
-   lifeSheet.revealResults();$('sheetContent').scrollTop=0;
+   // The reward is shown in the original daily sheet; history remains permanent.
+   if(!dailyUI.isRewardVisible()){
+    lifeSheet.revealResults();$('sheetContent').scrollTop=0;
+   }
    if(choice?.layer==='일상 선택')dailyUI.highlight(root);
   }
  }
@@ -411,10 +407,11 @@ function mount(root,navigate,content=global.GukminContent){
    persona,persist:s=>global.GukminPlayer.save(s),onChange
   });
   snapshot=engine.snapshot();persona=snapshot.persona;
-  dailyUI.restore(snapshot);
+  const restoredDailyReward=dailyUI.restore(snapshot);
   if(snapshot.reviewPending){
    const last=Object.values(snapshot.runtime.choices||{}).filter(item=>item.status==='closed').at(-1);
-   if(last?.layer==='일상 선택')engine.run(); // Recover old saves stuck on an obsolete review sheet.
+   if(restoredDailyReward)dailyUI.openRestoredReward();
+   else if(last?.layer==='일상 선택')engine.run(); // Old outcome without a recoverable before/after.
    else lifeSheet.revealResults();
   }else engine.run();
  }
@@ -452,7 +449,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!sameMajor)current.replaceChildren();
   if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
-  if(reviewing)return;
+  if(dailyUI.isRewardVisible()||reviewing)return;
   if(!choice){dailyUI.reset();return;}
   if(cinematicShown)return;
   if(choice.layer==='한방 선택'){
