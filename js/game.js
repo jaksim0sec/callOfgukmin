@@ -180,7 +180,7 @@ function mount(root,navigate,content=global.GukminContent){
     banner.append(el('strong','','선택 결과를 확인했어'));
     nextButton(banner);log.prepend(banner);
    }
-   if(snapshot?.runtime?.events?.['high:graduation']?.status==='completed'){
+   if(['high:graduation','admission:retry-graduation'].some(id=>snapshot?.runtime?.events?.[id]?.status==='completed')){
     const complete=el('section','life-chapter-complete');
     complete.append(el('small','','학생 시절 · 기록 완료'),el('h2','','다음 장을 기다리는 삶'),
      el('p','','현재 공개된 이야기는 여기까지입니다. 선택 기록은 그대로 보관됩니다. 다른 선택으로 새로운 삶을 시작할 수도 있습니다.'));
@@ -281,6 +281,7 @@ function mount(root,navigate,content=global.GukminContent){
   cinematicShown=true;
   const body=$('lifeCinematicBody');body.replaceChildren();
   const card=el('section','life-cinematic-card'+(scene.kind==='grade'?' is-grade':''));
+  card.classList.toggle('is-sealed',!!scene.sealed);
   card.append(el('span','life-cinematic-kicker',scene.kind==='grade'?'학교 성적 통지표':'인생의 전환점'));
   card.append(el('h2','life-cinematic-title',scene.title));
   if(scene.detail)card.append(el('p','life-cinematic-description',scene.detail));
@@ -342,7 +343,8 @@ function mount(root,navigate,content=global.GukminContent){
    const events={
     'infant:school-entry':'초등학교 입학',
     'elementary:middle-entry':'초등학교 졸업 · 중학교 입학',
-    'high:graduation':'고등학교 졸업'
+    'high:graduation':'고등학교 졸업',
+    'admission:retry-graduation':'재도전 이후의 졸업'
    };
    for(const item of added)if(events[item.source])
     queueCinematic({title:events[item.source],detail:item.detail});
