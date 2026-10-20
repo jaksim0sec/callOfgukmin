@@ -23,7 +23,7 @@ try{
   const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://fonts.googleapis.com/**',r=>r.abort());
-  await page.goto(base+'html/game.html');await page.locator('#dailyChoiceDialog[open]').waitFor();
+  await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').click();
   await page.keyboard.press('Escape');
   await page.locator('#traits .trait-control').first().click();
   assert.ok(await page.locator('#traitInfo').isVisible(),'trait explanation works without hover');
@@ -48,7 +48,7 @@ try{
    throw new Error('unreachable '+target);
   },target);
   await walk('elementary:interest-exploration');
-  await page.locator('#dailyChoiceDialog[open]').waitFor();
+  await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyChoiceDialog').evaluate(d=>getComputedStyle(d).display),'flex','daily header and body share bounded flex layout');
   await page.locator('#dailyChoiceBody .inline-choice').last().scrollIntoViewIfNeeded();
   assert.ok(await page.locator('#dailyPaperGrip').evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'paper grip stays visible while options scroll');
@@ -56,8 +56,8 @@ try{
   await page.screenshot({path:`${artifacts}/${name}-daily.png`});
   await page.locator('#dailyChoiceBody .inline-choice').nth(2).click();
   await page.locator('#dailyPaperConfirm').click();
-  await page.keyboard.press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+  assert.equal(await page.locator('#dailyPaperResult').count(),0,'no redundant reward page');
   assert.match(await page.locator('#log .record-choice').first().textContent(),/관심.*예체능/,'exploration is described as an interest in the result');
   await walk('exam');
   await page.locator('#lifeDecisionDialog[open]').waitFor();
@@ -111,7 +111,7 @@ try{
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
- await page.goto(base+'html/game.html');await page.locator('#dailyChoiceDialog[open]').waitFor();
+ await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').waitFor({state:'visible'});
  let completed=false,decisions=0,reloadedContact=false,specialtyUsed=false,sawRevelation=false,invitationSeen=false,sawMetricSummary=false;
  for(let i=0;i<180;i++){
   const state=await page.evaluate(()=>GukminGame.session.snapshot());
@@ -146,15 +146,16 @@ try{
    }
    await page.locator('#dailyChoiceBody .inline-choice').nth(choice.options.findIndex(o=>o.id===option.id)).click();
    await page.locator('#dailyPaperConfirm').click();decisions++;
-   if(await page.locator('#dailyPaperResult .metric-impact .impact-arrow').count()){
+   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+   if(await page.locator('#log .record-choice .record-impacts .metric-impact .impact-arrow').count()){
     sawMetricSummary=true;
-    assert.equal(await page.locator('#dailyPaperResult .daily-paper-impact-heading').textContent(),'이번 선택의 영향');
-    assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'인생 기록으로 돌아가기');
    }
+   assert.equal(await page.locator('#dailyPaperResult').count(),0,'routine decisions do not open a reward page');
+   assert.equal(await page.locator('#log .record-choice .continue-story').count(),0,'no extra acknowledgement click');
    if(itinerary==='creative-habit'&&choice.id==='high:tobacco-offer'&&!reloadedContact){
     const saved=await page.evaluate(()=>GukminGame.session.snapshot().persona);
     assert.equal(saved.attributes.habitStage,'first');assert.equal(saved.traits.includes('흡연'),false);
-    await page.reload();await page.locator('#log .continue-story').first().waitFor();reloadedContact=true;
+    await page.reload();await page.locator('#log .record-choice').first().waitFor();reloadedContact=true;
    }
   }else if(await page.locator('#lifeDecisionDialog').isVisible()){
    const category=await page.evaluate(()=>GukminGame.session.snapshot().choice?.presentation?.type);
@@ -164,14 +165,17 @@ try{
   }else if(await page.locator('#lifeCinematicDismiss').isVisible()){
    await page.locator('#lifeCinematicDismiss').click();
   }else if(state.reviewPending){
-   assert.ok(await page.locator('#log .continue-story').first().isVisible(),'a settled decision exposes its next-story action without another gesture');
+   assert.ok(await page.locator('#log .continue-story').first().isVisible(),'important major decisions retain explicit review');
    await page.locator('#log .continue-story').first().click();
+  }else if(state.choice?.layer==='일상 선택'){
+   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'new routine popup is never forced open');
+   await page.locator('#resumeDailyChoice').click();
   }else if(state.runtime.events['high:graduation']?.status==='completed'){
    completed=true;break;
   }else await page.waitForTimeout(30);
  }
  assert.ok(completed,'visible UI reaches the current chapter boundary');assert.ok(decisions>=30);
- assert.ok(sawMetricSummary,'real life decisions show at least one settled metric change on paper');
+ assert.ok(sawMetricSummary,'real decisions summarize settled metric changes in permanent history');
  assert.equal(await page.locator('.life-chapter-complete').isVisible(),true);
  assert.deepEqual(errors,[]);
  if(itinerary==='creative-habit'){
@@ -181,7 +185,7 @@ try{
   assert.ok(final.history.some(h=>h.title==='비워 둔 복습 시간'),'continued routine affects the later assessment');
  }
  await page.screenshot({path:`${artifacts}/mobile-complete-${itinerary}.png`,fullPage:true});
- console.log('PASS visible-controls '+itinerary+': '+decisions+' decisions, result acknowledgements, actual chapter completion');
+ console.log('PASS visible-controls '+itinerary+': '+decisions+' decisions, no routine reward clicks, actual chapter completion');
  await context.close();
  }
 }finally{await browser?.close();server.kill();}
