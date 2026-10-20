@@ -152,7 +152,7 @@ function cycle(pack,prefix,base,second=false){
   '한방 선택',{type:'grade-seal',category:'mock',term:'수능 성적 통지표'});
  event(pack,csat,withGate({not:{attributes:{admissionRoute:'employment'}}}));
  // The university board opens only if there was no successful early admission.
- const regularGuard=withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}}]});
+ const regularGuard=withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}},{attributes:{earlyStatus:'skipped'}}]});
  board(pack,prefix,routeAt+5,'regular',regularGuard);
  const done=S.selection(prefix+':destination',routeAt+7,'졸업 이후의 진로',
   '입시 결과가 나왔다. ==이번에는 합격한 대학이 없다.== 다음 선택은 새로운 시간을 요구한다.',
