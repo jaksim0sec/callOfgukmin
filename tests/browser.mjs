@@ -310,15 +310,20 @@ try{
    assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
-  // One confirmation settles the daily choice; history alone owns its effects.
+  // One confirmation settles inside the same daily paper; the reward claim closes it and resumes life.
   await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyPaperConfirm').isDisabled(),true);
   await page.locator('#dailyChoiceBody .inline-choice').first().click();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'marking a choice never settles it');
   assert.equal(await page.locator('#dailyPaperConfirm').isEnabled(),true);
   await page.locator('#dailyPaperConfirm').click();
+  await page.locator('#dailyChoiceDialog.is-reward .daily-reward-hero').waitFor();
+  assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'reward remains in the original daily paper');
+  assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'보상 받기');
+  assert.ok(await page.locator('#dailyChoiceDialog .daily-reward-tokens .token.token-icon-pill').count()>0,
+   'reward uses the existing shared token DOM, not separate stat cards');
+  await page.locator('#dailyPaperConfirm').click();
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
-  assert.equal(await page.locator('#dailyPaperResult').count(),0,'there is no extra reward paper or result acknowledgement');
   assert.equal(await page.locator('#log .record-choice').count()>=1,true,'choice and outcome are stored together in history');
   assert.ok((await page.locator('#log .record-choice').first().textContent()).includes('내 선택'));
   assert.equal(await page.locator('#log .record-choice .continue-story').count(),0,'ordinary choices require no next-story acknowledgement');
@@ -356,6 +361,9 @@ try{
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
   assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count()>0,
    'a real money change is visualized as shared metric pill before settlement');
+  await page.locator('#dailyPaperConfirm').click();
+  await page.locator('#dailyChoiceDialog.is-reward .daily-reward-hero').waitFor();
+  assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'보상 받기');
   await page.locator('#dailyPaperConfirm').click();
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().reviewPending),false,
