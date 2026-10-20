@@ -54,7 +54,7 @@ function board(pack,prefix,at,type,when){
  const isEarly=type==='early';
  const metric=isEarly?'schoolScore':'exam';
  const key=isEarly?'earlyChoice':'regularChoice';
- const x=S.selection(prefix+':application',at,isEarly?'수시 대학 지원서':'정시 대학 지원서',
+ const x=S.selection(prefix+':'+type+'-application',at,isEarly?'수시 대학 지원서':'정시 대학 지원서',
   isEarly?'학생부와 전형 요건을 확인했다. ==수능 전에 원서를 접수한다.== 한 학교에 집중하는 게임용 축약이다.':
   '수능 성적표가 나왔다. 이번 원서는 ==정시==다. 학교·전공마다 반영 방식이 다르며 여기에 나온 난도는 게임 규칙이다.',
   admissionOptions(groups.at(-1)[type],metric,key,type,prefix)
