@@ -16,7 +16,7 @@ const SCHOOL_KINDS = [
   {id:'uni',label:'대학교'}
 ];
 const METRIC_DEFS = {
-  stress:{label:'스트레스',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
+  stress:{label:'정신병',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
   health:{label:'건강',type:'progress',tone:'positive',icon:'heart',min:0,max:100},
   money:{label:'재산',type:'currency',icon:'savings'},
   allowance:{label:'용돈',type:'currency',icon:'coin'},
