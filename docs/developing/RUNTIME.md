@@ -1,5 +1,10 @@
 # 국민의 부름 — 정적 화면 기반 실행 구조
 
+## 2026-10-21 시각 진행바와 일상 선택 자동 노출
+
+`GukminDailyChoice`는 동일 토큰당 한 번만 5초 wall-clock 타이머를 시작한다. `document.visibilitychange`에서 남은 시간과 막대를 일시 정지하며, 수동 열기·접기·다른 선택·dispose 시 타이머를 취소한다. 5초 후의 유일한 부작용은 `dialog.showModal()`이고 `resolve`/정산은 절대 호출하지 않는다. 인생 진행바의 값은 기존 논리 턴에만 의존하고, UI 진행률은 CSS transform 보간으로 표시한다. `GukminStatus.showMetrics`는 각 게이지의 실제 현재 변환 값을 읽어 새 렌더에 이어 주고, 접근 가능한 `<progress>`의 값을 그대로 유지한다. 출생 화면도 원래의 10초 타이머와 Skip 버튼을 변경하지 않는다.
+
+
 ## 2026-10-21 일상 결과 UI 단일 출처
 
 일상 선택은 공통 시트 닫힘이 끝난 뒤 기존 `engine.resolve`로 정산한다. 엔진의 `pauseAfterChoice:true` 및 저장 계약은 **수정하지 않는다**. 인게임 UI만 이어서 기존 `startJourney()`를 호출해 `reviewPending`을 자동 정리한다. 이 과정에서 결과는 `runtime.choices[token].outcome`과 인생 기록으로 한 번 표시되고 결과 종이는 열지 않는다. 후속 소식이 진행되더라도 다음 일상 팝업은 사용자가 직접 열 때까지 닫혀 있다.

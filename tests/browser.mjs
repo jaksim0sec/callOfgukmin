@@ -36,6 +36,8 @@ try{
   assert.match(await page.locator('#birthIntroCountdown').textContent(),/초 후 출생/);
   assert.ok((await page.locator('#birthIntroTrait .token-icon').count())>0);
   assert.equal(await page.locator('#birthIntroProgress').getAttribute('max'),'10');
+  assert.equal(await page.locator('#birthIntroFill').count(),1,'birth screen has a smooth visual fill');
+  assert.ok(await page.locator('#birthIntroProgress').isVisible(),'semantic birth progress remains available');
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').textContent(),'#2살');
@@ -50,6 +52,11 @@ try{
   assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'first daily choice waits for the player to open it');
   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'one intentional entry point is available');
+  assert.equal(await page.locator('#resumeDailyChoice.is-auto-opening').count(),1,'one 5-second timed opener is visible');
+  assert.equal(await page.locator('#resumeDailyChoice .auto-choice-track').count(),1,'timed opener owns the only countdown gauge');
+  assert.ok(await page.locator('#gaugesList .gauge-progress-track').count()>0,'all progress-type status gauges expose smooth fill tracks');
+  assert.equal(await page.locator('#gaugesList .gauge-progress-track').count(),
+   await page.locator('#gaugesList progress.ui-progress-native').count(),'every visual stat gauge retains a semantic native progress');
   await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true);
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
@@ -351,6 +358,50 @@ try{
   page.once('dialog',dialog=>dialog.accept());await page.locator('#rerollPersona').click();const fresh=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(fresh.simulation,undefined);assert.equal(fresh.stats.money,0);
   assert.deepEqual(errors,[]);console.log(`PASS ${name}: A–F, reload, previews, save preservation, layout`);await context.close();
  }
+
+ // The countdown is presentation-only: the bar progresses for five seconds and never settles a choice.
+ const timedContext=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+ const timedPage=await timedContext.newPage(),timerErrors=[];
+ timedPage.on('pageerror',e=>timerErrors.push(e.message));
+ await timedPage.route('https://fonts.googleapis.com/**',route=>route.abort());
+ await timedPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+ await timedPage.locator('#resumeDailyChoice.is-auto-opening').waitFor();
+ const firstPending=await timedPage.evaluate(()=>GukminGame.session.snapshot().choice.token);
+ await timedPage.waitForTimeout(2500);
+ assert.equal(await timedPage.locator('#dailyChoiceDialog').isVisible(),false,'diary waits for the full countdown');
+ const midRatio=await timedPage.locator('.auto-choice-fill').evaluate(el=>{
+  const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
+ });
+ assert.ok(midRatio>.25&&midRatio<.85,'countdown bar advances continuously over real time');
+ await timedPage.locator('#dailyChoiceDialog[open]').waitFor({timeout:4500});
+ assert.equal(await timedPage.evaluate(()=>GukminGame.session.snapshot().choice?.token),firstPending,
+  'the timer only opens the diary and never commits a choice');
+ await timedPage.keyboard.press('Escape');
+ await timedPage.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+ assert.equal(await timedPage.locator('#resumeDailyChoice.is-auto-opening').count(),0,
+  'manual dismissal cancels auto reopening for the same token');
+ await timedPage.waitForTimeout(5300);
+ assert.equal(await timedPage.locator('#dailyChoiceDialog').isVisible(),false,
+  'a manually dismissed diary stays closed even past the old countdown deadline');
+ await timedPage.locator('#resumeDailyChoice').click();
+ assert.equal(await timedPage.locator('#dailyChoiceDialog').isVisible(),true,'manual re-entry works immediately');
+ const gaugeMotion=await timedPage.evaluate(()=>{
+  const before=GukminGame.session.snapshot().persona;
+  const person={...before,stats:{...before.stats,stress:55}};
+  GukminStatus.render(document,person);
+  const node=document.querySelector('.metric-stress .ui-progress-fill');
+  return {target:node.dataset.ratio,duration:getComputedStyle(node).transitionDuration};
+ });
+ assert.equal(gaugeMotion.target,'0.55','synthetic state change sets the correct real target');
+ assert.match(gaugeMotion.duration,/0\.5s/,'gauge transitions use shared half-second motion');
+ await timedPage.waitForTimeout(90);
+ const intermediate=await timedPage.locator('.metric-stress .ui-progress-fill').evaluate(el=>{
+  const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
+ });
+ assert.ok(intermediate>0&&intermediate<.55,'visual stat fill interpolates rather than jumping to its target');
+ assert.deepEqual(timerErrors,[]);
+ await timedContext.close();
+ console.log('PASS timed diary: smooth bar, 5-second auto-open, no auto-choice, dismiss stays dismissed');
 
  // Saved game visibility: continuing must not silently restart, resetting must be confirmed.
  const recall=await browser.newContext({viewport:{width:390,height:844}});
