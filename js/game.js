@@ -53,11 +53,27 @@ function mount(root,navigate,content=global.GukminContent){
  const sheet=$('lifeSheet');
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
 
+ // The compact snap fits its controls rather than a fixed fraction of the viewport.
+ function collapsedSheetHeight({rem}){
+  const visible=[$('sheetToggle'),sheet.querySelector('.sheet-head'),$('choiceTiming'),$('systemTools'),$('systemError')];
+  const controls=visible.reduce((sum,node)=>sum+(node?.getBoundingClientRect().height||0),0);
+  const safeBottom=Number.parseFloat(getComputedStyle(sheet).paddingBottom)||0;
+  const height=Math.ceil(Math.max(6*rem,controls+safeBottom+rem*.375));
+  root.style.setProperty('--life-sheet-peek-height',height+'px');
+  return height;
+ }
+ // Use the profile's page offset, not its scrolling screen offset, to avoid jumping.
+ function middleSheetHeight({viewportHeight,rem}){
+  const profile=root.querySelector('.desktop-right > .profile');
+  const top=profile.getBoundingClientRect().top+(global.scrollY||0)-rem*.5;
+  const boundary=Math.max(viewportHeight*.31,Math.min(viewportHeight*.65,top));
+  return Math.max(viewportHeight-boundary,collapsedSheetHeight({rem})+rem*3.25);
+ }
  const snapSheet=global.GukminSheet.create({
   element:sheet,handle:$('sheetToggle'),dragTargets:[$('sheetToggle'),sheet.querySelector('.sheet-head')],
   enabled:()=>mobileSheet.matches,initial:0,dismissible:false,
-  steps:[{name:'minimized',ratio:.2,minRem:8.5,maxRem:12},
-   {name:'middle',ratio:.55},{name:'expanded',ratio:.9,topGapRem:1}]
+  steps:[{name:'minimized',height:collapsedSheetHeight},
+   {name:'middle',height:middleSheetHeight},{name:'expanded',ratio:.9,topGapRem:1}]
  });
  const lifeSheet={...snapSheet,revealResults:()=>snapSheet.revealAtLeast(1)};
  let persona=global.GukminPlayer.ensure();
@@ -419,6 +435,7 @@ function mount(root,navigate,content=global.GukminContent){
   const progressValue=advancing?p.value||0:0;
   $('nextChoiceProgress').value=progressValue;
   $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
+  snapSheet.refresh(); // A visible progress bar changes the compact height.
   const current=$('currentChoice');
   // The major presenter owns its reopen button until the choice token changes.
   // Clearing it during a normal render stranded a folded exam after reload.

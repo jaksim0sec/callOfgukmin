@@ -213,6 +213,14 @@ try{
   if(name!=='desktop'){
    const old=await page.locator('#lifeSheet').boundingBox();
    assert.ok(old.height<viewport.height*.3,'sheet starts compact and does not cover most of the game');
+   const chrome=await page.evaluate(()=>{
+    const sheet=document.querySelector('#lifeSheet');
+    const parts=['#sheetToggle','.sheet-head','#choiceTiming','#systemTools','#systemError'];
+    return parts.map(sel=>sheet.querySelector(sel)).filter(Boolean)
+      .reduce((sum,node)=>sum+node.getBoundingClientRect().height,0)
+      +parseFloat(getComputedStyle(sheet).paddingBottom);
+   });
+   assert.ok(old.height>=chrome-1&&old.height<chrome+20,'minimized height fits the header and progress without a blank panel');
    assert.equal(await page.locator('#sheetToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#sheetToggle').click();
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-springing')),true,'tap starts spring motion');
@@ -221,6 +229,18 @@ try{
    const middle=await page.locator('#lifeSheet').boundingBox();
    assert.ok(middle.height>old.height+50&&middle.height<viewport.height*.7,'tap opens middle');
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true);
+   const split=await page.evaluate(()=>{
+    const vh=innerHeight,rem=parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const profile=document.querySelector('.desktop-right > .profile');
+    const boundary=Math.max(vh*.31,Math.min(vh*.65,profile.getBoundingClientRect().top+scrollY-rem*.5));
+    return {actual:document.querySelector('#lifeSheet').getBoundingClientRect().top,expected:boundary,
+      scrollable:document.documentElement.scrollHeight>vh,overflow:getComputedStyle(document.body).overflowY,
+      touch:getComputedStyle(document.querySelector('#sheetContent')).touchAction};
+   });
+   assert.ok(Math.abs(split.actual-split.expected)<4,'middle snap follows the status/profile boundary');
+   assert.equal(split.overflow,'auto','background remains scrollable');
+   assert.equal(split.touch,'pan-y','record scrolling is independent of sheet gestures');
+   assert.equal(split.scrollable,true,'profile remains reachable below the collapsed sheet');
    await page.locator('#sheetToggle').click();
    await page.waitForTimeout(260);
    const expanded=await page.locator('#lifeSheet').boundingBox();

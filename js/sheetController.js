@@ -5,14 +5,17 @@
 'use strict';
 function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=>true,dismissible=false,removeOnDismiss=false,onDismiss=()=>{}}){
  if(!element||!handle||!Array.isArray(steps)||!steps.length)throw new Error('Sheet requires an element, handle and snap steps');
- if(steps.some(s=>!s.name||!(s.ratio>0&&s.ratio<=1)))throw new Error('Invalid sheet snap step');
+ if(steps.some(s=>!s.name||!(s.ratio>0&&s.ratio<=1)&&typeof s.height!=='function'))throw new Error('Invalid sheet snap step');
  let level=Math.max(0,Math.min(steps.length-1,initial)),drag=null,dragFrame=0,springFrame=0,lastDragAt=-Infinity,disposed=false;
  const reduce=global.matchMedia('(prefers-reduced-motion: reduce)');
  const rootFont=()=>Number.parseFloat(getComputedStyle(document.documentElement).fontSize)||16;
  function heights(){
   const rem=rootFont(),height=global.innerHeight;
-  return steps.map(s=>Math.max(s.minRem?rem*s.minRem:0,Math.min(height*s.ratio,
-   s.maxRem?rem*s.maxRem:s.topGapRem?height-rem*s.topGapRem:height)));
+  return steps.map(s=>{
+   const target=typeof s.height==='function'?s.height({viewportHeight:height,rem}):height*s.ratio;
+   const ceiling=s.maxRem?rem*s.maxRem:s.topGapRem?height-rem*s.topGapRem:height;
+   return Math.max(s.minRem?rem*s.minRem:0,Math.min(target,ceiling));
+  });
  }
  function setLevel(index){
   level=Math.max(0,Math.min(steps.length-1,index));
@@ -46,7 +49,7 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
    if(Math.abs(target-x)<.5&&Math.abs(v)<.5){
     springFrame=0;element.classList.remove('is-springing','is-dismissing');
     element.style.removeProperty('--sheet-motion-height');
-    if(dismissing)finishDismiss();
+    if(dismissing)finishDismiss();else setLevel(level);
    }else springFrame=requestAnimationFrame(frame);
   }
   springFrame=requestAnimationFrame(frame);
@@ -114,7 +117,7 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   if(!enabled()||performance.now()-lastDragAt<180)return;
   springTo((level+1)%steps.length);
  }
- function resized(){if(!disposed){if(drag)return;setLevel(level);}}
+ function resized(){if(!disposed&&!drag&&!springFrame)setLevel(level);}
  for(const target of dragTargets){
   target.addEventListener('pointerdown',down);target.addEventListener('pointermove',move);
   target.addEventListener('pointerup',up);target.addEventListener('pointercancel',cancel);
@@ -137,7 +140,7 @@ function create({element,handle,dragTargets=[handle],steps,initial=0,enabled=()=
   element.classList.remove('is-dragging','is-dismissing','snap-controlled');
   element.style.removeProperty('--sheet-drag-height');element.style.removeProperty('--snap-height');
  }
- return Object.freeze({dispose,dismiss,setLevel:s=>springTo(s),reset:()=>springTo(initial),
+ return Object.freeze({dispose,dismiss,refresh:resized,setLevel:s=>springTo(s),reset:()=>springTo(initial),
   revealAtLeast:s=>{if(enabled()&&!drag)springTo(Math.max(level,s));},
   getLevel:()=>level,getStepCount:()=>steps.length});
 }
