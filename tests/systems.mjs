@@ -180,10 +180,11 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
  assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='elementary').status,'graduated');
  assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='middle').status,'graduated');
  assert.equal(P.schoolsOf(final.persona).find(x=>x.kind==='high').status,'graduated');
- assert.equal(final.runtime.events['high:graduation'].count,1);
+ const completionId=final.runtime.events['high:graduation'].count===1?'high:graduation':'admission:retry-graduation';
+ assert.equal(final.runtime.events[completionId].count,1);
  engine=D.create({persona:P.load(),persist:p=>P.save(p)});
  engine.run();
- assert.equal(engine.snapshot().runtime.events['high:graduation'].count,1);
+ assert.equal(engine.snapshot().runtime.events[completionId].count,1);
  assert.equal(engine.snapshot().runtime.turn,99);
 });
 test('special-school game thresholds lock options until grade requirements hold',()=>{
@@ -937,4 +938,35 @@ test('first tobacco invitation is followed by another choice before a habit and 
  assert.match(revealed.history.at(-1).detail,/쉬는 시간|계단|지출/,'the consequence points back to the routine');
  const turnedBack=env.E.apply(contact,sc.options.find(o=>o.id==='leave').result);
  assert.equal(env.P.hasTrait(env.E.apply(turnedBack,senior.result),'흡연'),false,'changing course interrupts the chain');
+});
+
+
+test('admission choices are two distinct applications with risk/reward costs and deferred results',()=>{
+ const {c,P}=setup(),pack=c.GukminDirector.content(P.generate());
+ const find=id=>pack.choices.find(x=>x.id===id);
+ const route=find('admission:first:route');
+ const early=find('admission:first:early-application'),regular=find('admission:first:regular-application');
+ const final=find('admission:first:destination');
+ assert.ok(route&&early&&regular&&final);
+ assert.deepEqual(plain(route.options.map(x=>x.id)),['early','regular','employment']);
+ assert.equal(route.presentation.type,'admission-route');
+ assert.ok(early.variants.length>=3&&regular.variants.length>=3);
+ assert.equal(early.presentation.type,'university');assert.equal(regular.presentation.type,'university');
+ assert.ok(early.variants.every(v=>v.options.some(o=>o.risk&&o.school?.name)));
+ assert.ok(regular.variants.every(v=>v.options.some(o=>o.risk&&o.school?.name)));
+ const submit=find('admission:first:final-report');
+ const csat=find('admission:first:csat');
+ assert.equal(submit.presentation.type,'grade-seal');assert.equal(csat.presentation.type,'grade-seal');
+ const schedule=id=>pack.events.find(e=>e.id===id);
+ assert.ok(schedule('admission:first:early-result').at<schedule('admission:first:regular-application').at);
+ assert.ok(plain(schedule('admission:first:regular-application').when).all.some(rule=>rule.any),'regular entry is gated');
+ const prep=find('admission:first:last-week').options;
+ assert.equal(prep.length,3);
+ assert.ok(prep[0].result.effects.stats.exam>prep[1].result.effects.stats.exam);
+ assert.ok(prep[0].result.effects.stats.health<0);
+ assert.ok(prep[2].result.effects.stats.health>0&&prep[2].result.effects.stats.study<0);
+ const repeat=find('admission:second:route');
+ assert.equal(repeat.options.length,4);
+ assert.equal(repeat.options[3].id,'repeat');
+ assert.ok(pack.events.some(e=>e.id==='admission:retry-graduation'));
 });
