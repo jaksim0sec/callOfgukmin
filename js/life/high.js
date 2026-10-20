@@ -380,7 +380,7 @@ global.GukminDirector.register({
   const ready={all:[{stats:{health:{gte:52},stress:{lte:75}}},
    {any:[{stats:{schoolScore:{gte:65}}},{traits:['언변']}]}]};
   const spotlight={id:'spotlight',label:'대표 발표를 맡고 남은 기간 전부 걸어 본다',
-   outlook:'대표 발표 기회 · 내신 지수 65 이상 또는 언변이 준비에 도움 · 건강 55 이상·스트레스 68 이하일 때 성과를 낼 수 있습니다',
+   outlook:'대표 발표 기회 · 내신 지수 65 이상 또는 언변이 준비에 도움 · 건강 55 이상·정신병 수치 68 이하일 때 성과를 낼 수 있습니다',
    risk:'다른 공부 시간을 비우고 연습을 떠맡음',
    effects:{stats:{study:-2,stress:7,health:-3},attributes:{projectStyle:'spotlight'}},
    detail:'최종 발표 명단에 이름을 올리고 며칠간 원고와 시연을 고쳤다. 내 시험 공부는 뒤로 밀렸다.',
