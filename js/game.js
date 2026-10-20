@@ -132,7 +132,7 @@ function mount(root,navigate,content=global.GukminContent){
       }
       bubble.append(tray);
      }
-     if(snapshot?.reviewPending&&group===lastClosed)nextButton(bubble);
+     if(snapshot?.reviewPending&&group===lastClosed&&group.layer==='한방 선택')nextButton(bubble);
      article.append(bubble);log.append(article);
      i=result.historyFrom;
      continue;
@@ -155,11 +155,11 @@ function mount(root,navigate,content=global.GukminContent){
         classes:'daily-result-chip impact-'+impact.tone}));
       article.append(tray);
      }
-     nextButton(article);
+     if(lastClosed?.layer==='한방 선택')nextButton(article);
     }
     log.append(article);
    }
-   if(snapshot?.reviewPending&&!continued){
+   if(snapshot?.reviewPending&&!continued&&lastClosed?.layer!=='일상 선택'){
     const banner=el('div','record-review-fallback');
     banner.append(el('strong','','선택 결과를 확인했어'));
     nextButton(banner);log.prepend(banner);
