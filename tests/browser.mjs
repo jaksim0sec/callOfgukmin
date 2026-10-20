@@ -302,7 +302,9 @@ try{
   // A: an opt-in test content pack uses the same engine as future content.
   await page.locator('#startSystemDemo').click();await page.locator('#advanceTurn').click();assert.ok((await page.locator('#log').textContent()).includes('검증 사건'));
   // B: actual progress and choice UI; paused clock and persisted pending choice.
-  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0.5);
+  assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().progress.value),0.5,
+   'logical event progress remains accurate even when the decorative bar is hidden');
+  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no redundant progress bar during manual verification');
   await page.locator('#advanceTurn').click();assert.equal(await page.locator('#advanceTurn').isDisabled(),true);
   await page.reload({waitUntil:'domcontentloaded'});await page.locator('#dailyChoiceBody .inline-choice').first().waitFor();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'saved pending choice does not cover the screen');
