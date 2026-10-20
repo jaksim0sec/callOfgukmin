@@ -17,7 +17,49 @@ const actions=[
  {label:'담당 선생님께 현재 상황을 설명한다',effects:{stats:{study:3,relations:2,stress:1}},detail:'직접 확인하고 현실적인 조언을 얻었다.'},
  {label:'맡은 만큼만 마무리하고 쉬기로 한다',effects:{stats:{health:3,stress:-4,study:-1}},detail:'완벽하진 않아도 무리하지 않았다.'}
 ];
-const trackOptions={"general":[{"label":"학교 공지 원문을 캡처해 단체방에 공유한다","detail":"제출 날짜가 하루 달랐다. 다른 반까지 정정 공지가 퍼졌다.","effects":{"stats":{"study":1}}},{"label":"공지 올린 친구에게만 먼저 알려준다","detail":"친구가 날짜를 고쳤다. 한동안 단체방은 '확인했습니다'로 가득 찼다.","effects":{"stats":{"relations":1}}},{"label":"내 숙제부터 제출하고 조용히 있는다","detail":"제출은 했다. 같은 반 두 명은 옛 공지를 믿고 있었다."}],"autonomous":[{"label":"관찰 가능한 주제로 탐구 범위를 줄인다","detail":"멋진 제목은 버렸지만 직접 확인할 자료가 남았다.","effects":{"stats":{"study":1}}},{"label":"조원들에게 각자 궁금한 점을 물어본다","detail":"회의는 길어졌지만 서로 동의하는 실험 하나를 골랐다.","effects":{"stats":{"relations":1}}},{"label":"기존 연구 사례를 비교하는 것으로 바꾼다","detail":"직접 실험보다 자료를 비교하는 데 시간을 썼다."}],"autonomous-public":[{"label":"지역 주민을 찾아가 직접 인터뷰한다","detail":"가게 세 곳에서 세 가지 다른 불편을 말했다. 발표 내용을 다시 줄였다.","effects":{"stats":{"study":1}}},{"label":"활동 예산부터 실제로 확인한다","detail":"장비 대여료만으로 절반이 나갔다. 기획서를 고쳤다.","effects":{"stats":{"relations":1}}},{"label":"학교 안에서 실행 가능한 규모로 조정한다","detail":"규모는 줄었지만 실제로 행사 안내문을 붙일 수 있었다."}],"foreign":[{"label":"못 알아들은 질문을 다시 말해 달라고 한다","detail":"다시 들으니 무슨 뜻인지 알았다. 준비하지 않은 표현으로 답했다.","effects":{"stats":{"study":1}}},{"label":"아는 외국어 표현으로 뜻을 바꿔 답한다","detail":"문장은 매끄럽지 않았지만 질문자가 고개를 끄덕였다.","effects":{"stats":{"relations":1}}},{"label":"준비한 발표 범위까지만 답한다","detail":"발표는 마쳤다. 질의응답에서는 아쉬운 점수를 받았다."}],"international":[{"label":"양쪽이 인정하는 자료부터 정리한다","detail":"출처에는 모두 동의했다. 발표 첫 장에 두 의견을 나란히 적었다.","effects":{"stats":{"study":1}}},{"label":"상반된 의견을 각각 발표하는 역할로 나눈다","detail":"조원들이 서로 반박했다. 덕분에 예상 질문은 많아졌다.","effects":{"stats":{"relations":1}}},{"label":"한쪽 주장만 선택해 내용을 줄인다","detail":"설명은 간결해졌다. 반대 의견을 충분히 다루지 못했다는 평이 남았다."}],"gifted":[{"label":"측정 장치를 점검하고 다시 실험한다","detail":"센서 위치를 바꾸니 그래프가 달라졌다. 원인을 보고서에 적었다.","effects":{"stats":{"study":1}}},{"label":"예상과 다른 수치를 그대로 제시한다","detail":"선생님은 틀린 가설보다 확인한 절차를 더 오래 물었다.","effects":{"stats":{"relations":1}}},{"label":"추가 실험을 접고 검증 가능한 결과만 낸다","detail":"결론은 짧아졌지만 설명할 수 없는 수치를 지어내지는 않았다."}],"science":[{"label":"변인 통제가 올바른지 실험을 재현한다","detail":"첫 시도와 준비 순서가 달랐다. 관찰 기록부터 다시 썼다.","effects":{"stats":{"study":1}}},{"label":"다른 가설을 조원들과 비교한다","detail":"가설이 세 개가 됐다. 가장 적은 실험으로 검증할 방법부터 골랐다.","effects":{"stats":{"relations":1}}},{"label":"남은 자료의 한계를 설명해 제출한다","detail":"결과를 과장하지 않았다. 다음 실험 계획을 부록에 남겼다."}],"vocational":[{"label":"실습 장비를 점검하고 필수 기능부터 마무리한다","detail":"외관은 덜 다듬었지만 핵심 기능은 시연됐다.","effects":{"stats":{"study":1}}},{"label":"팀과 작업을 나눠 시연 순서를 맞춘다","detail":"리허설에서 누락된 안전 점검 항목을 발견했다.","effects":{"stats":{"relations":1}}},{"label":"완료하지 못한 부분을 명시하고 제출한다","detail":"결함을 감추지 않았다. 남은 작업이 무엇인지는 확실했다."}]};
+// Each answer is a genuine allocation decision; no free dominant choice.
+const trackOptions={
+ general:[
+  {label:'단체방에 정정 공지를 올리고 질문까지 받는다',risk:'다른 과목 복습 시간이 줄고 잘못 안내하면 책임을 져야 함',effects:{stats:{relations:4,study:-2,stress:3}},detail:'여러 반에서 마감일을 다시 확인했다. 반 친구들에게 고맙다는 말을 들었지만 네 공부는 늦게 시작했다.'},
+  {label:'교무실에서 원문만 확인하고 내 준비를 끝낸다',effects:{stats:{study:3,relations:-2,stress:1}},detail:'틀린 날짜를 교사에게 알렸다. 답장은 짧게 보냈고, 급한 친구들에겐 조금 차갑게 보였다. 내 과제는 끝냈다.'},
+  {label:'친구 한 명과 확인해서 필요한 사람에게만 전달한다',effects:{stats:{relations:2,study:1,stress:2}},detail:'잘못된 공지를 믿던 친구들은 도왔다. 전체 단체방에는 소식이 늦게 퍼져 다음날 몇 명이 다시 물었다.'}
+ ],
+ autonomous:[
+  {label:'실험을 직접 설계하고 대표 발표까지 맡는다',risk:'실험 실패 시 추가 준비 부담',effects:{stats:{study:4,relations:2,stress:6,health:-1}},detail:'작은 질문으로 시작했지만 예상과 다른 측정값 때문에 두 번 더 실험했다. 발표는 마쳤고 다른 과목 준비는 늦었다.'},
+  {label:'조원별 역할을 나눠 공동 보고서로 정리한다',effects:{stats:{study:1,relations:4,stress:3}},detail:'서로 다른 자료를 한 형식으로 맞췄다. 보고서가 완성됐지만 개별 탐구의 깊이는 얕아졌다.'},
+  {label:'이미 검증된 자료로 범위를 줄여 마무리한다',effects:{stats:{study:2,stress:-3,relations:-2}},detail:'완성은 빨랐고 추가 실험은 없었다. 새로운 결과를 기대했던 조원은 아쉬워했다.'}
+ ],
+ 'autonomous-public':[
+  {label:'주민을 직접 찾아가 현장 조사를 넓힌다',risk:'예상하지 못한 인터뷰 취소와 이동 시간',effects:{stats:{study:3,relations:3,stress:5,health:-1}},detail:'인터뷰 두 건은 취소됐지만 가게 세 곳의 실제 불편을 들었다. 자료가 풍부해진 대신 주말을 거의 썼다.'},
+  {label:'학교 안에서 실현 가능한 소규모 행사로 바꾼다',effects:{stats:{relations:2,study:1,stress:-2}},detail:'행사는 작아졌지만 학생회와 시간표를 맞춰 실제 안내문을 붙였다. 큰 기획은 다음에 쓰기로 했다.'},
+  {label:'예산과 승인 조건부터 검토해 기획서를 정리한다',effects:{stats:{study:3,relations:-2,stress:2}},detail:'장비 대여료를 계산해 반쯤 불가능한 계획을 접었다. 조원들은 너무 보수적이라며 불평했지만 예산은 맞았다.'}
+ ],
+ foreign:[
+  {label:'즉석 질문을 받아 외국어로 끝까지 답한다',risk:'대답이 막히면 발표 인상이 크게 흔들림',effects:{stats:{study:4,stress:5,relations:1}},detail:'단어가 떠오르지 않아 말을 고쳐 가며 설명했다. 준비 범위를 넘는 질문에도 끝까지 답했지만 진이 빠졌다.'},
+  {label:'못 알아들은 질문은 확인한 뒤 정확한 부분만 답한다',effects:{stats:{study:2,relations:2,stress:2}},detail:'질문의 뜻을 다시 확인하고 아는 표현으로 짧게 답했다. 답변은 좁았지만 근거는 분명했다.'},
+  {label:'발표 시간을 줄이고 조원에게 질의응답을 나눈다',effects:{stats:{relations:4,study:-2,stress:-3}},detail:'질의응답은 조원과 나눠서 넘겼다. 팀의 호흡은 좋아졌지만 개인 발표 점수는 덜 받았다.'}
+ ],
+ international:[
+  {label:'양쪽 입장의 반론까지 자료를 모아 토론한다',risk:'자료 조사와 리허설 시간 초과',effects:{stats:{study:4,stress:6,relations:-1}},detail:'반론을 준비해 토론은 탄탄해졌다. 밤늦게까지 근거를 확인했고 한 조원은 분량이 너무 많다며 불만을 말했다.'},
+  {label:'서로 다른 입장을 맡겨 공동 발표를 진행한다',effects:{stats:{relations:4,study:1,stress:3}},detail:'조원들 의견을 각자 발표하도록 나눴다. 모두 무대에 섰지만 주장 하나를 깊게 파진 못했다.'},
+  {label:'쟁점을 하나로 좁혀 정확한 사실만 발표한다',effects:{stats:{study:2,stress:-2,relations:-2}},detail:'발표는 간결해졌다. 모호한 주장을 빼자 몇몇 조원은 자신이 준비한 부분이 사라졌다고 했다.'}
+ ],
+ gifted:[
+  {label:'센서를 검증하고 측정 실험을 처음부터 다시 한다',risk:'실험실 추가 예약이 실패하면 시간이 사라짐',effects:{stats:{study:5,stress:6,health:-2}},detail:'센서 위치가 오차 원인이었다. 장비를 다시 예약해 밤까지 측정했고 보고서의 수치는 바로잡혔다.'},
+  {label:'예상과 다른 결과 자체를 분석해 공동 발표한다',effects:{stats:{study:2,relations:3,stress:3}},detail:'가설이 틀린 이유를 조원과 설명했다. 발표는 설득력 있었지만 정확한 재현 실험까지 하지는 못했다.'},
+  {label:'재실험을 포기하고 검증된 범위만 제출한다',effects:{stats:{study:1,stress:-4,relations:-2}},detail:'자료에서 확인할 수 있는 값만 남겼다. 결과는 짧아졌고 탐구를 더 해 보자는 친구의 제안은 다음으로 미뤘다.'}
+ ],
+ science:[
+  {label:'변인을 다시 통제하고 반복 측정으로 검증한다',risk:'반복 실패 시 다른 과목 시험을 포기할 수 있음',effects:{stats:{study:5,stress:6,health:-2}},detail:'측정 순서를 하나씩 바꾸자 원인을 찾았다. 보고서는 탄탄해졌지만 시험 범위를 다 보지 못했다.'},
+  {label:'조원마다 다른 가설을 맡아 교차 검토한다',effects:{stats:{relations:4,study:2,stress:4}},detail:'세 가설 중 하나만 남았다. 서로 검산한 덕에 오류는 줄었고 보고서는 분량이 커졌다.'},
+  {label:'확인된 데이터만 정리해 제시간에 제출한다',effects:{stats:{stress:-3,study:1,relations:-2}},detail:'설명할 수 없는 수치를 뺐다. 마감은 지켰지만 추가 실험을 원한 조원은 아쉬워했다.'}
+ ],
+ vocational:[
+  {label:'실습 장비를 다시 점검해 시제품 기능을 완성한다',risk:'추가 장비 사용 시간과 늦은 귀가',effects:{stats:{study:4,stress:5,health:-1}},detail:'시연 직전 장비 문제를 고쳤다. 핵심 기능은 돌아갔지만 마감 전날까지 실습실에 남았다.'},
+  {label:'작업을 나눠 시연과 설명을 함께 준비한다',effects:{stats:{relations:4,study:1,stress:3}},detail:'실습과 설명 담당을 나눠 리허설을 마쳤다. 팀워크는 좋아졌지만 시제품의 보조 기능 하나를 포기했다.'},
+  {label:'검증된 핵심 기능만 제출하고 정리 시간을 확보한다',effects:{stats:{study:2,stress:-3,relations:-2}},detail:'완료되지 않은 부분을 분명히 적었다. 결과물은 작아졌고 더 해 보자던 조원과는 의견이 갈렸다.'}
+ ]
+};
 function choiceAt(id,at,title,body,options,when){
  const x=S.selection(id,at,title,body,options);
  x.event.when={all:[{turn:{eq:at}},...(when?[when]:[])]};
