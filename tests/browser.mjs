@@ -91,6 +91,43 @@ try{
   assert.equal(semanticPill.icon,'rgb(255, 255, 255)','metric pill icon is white');
   assert.equal(semanticPill.arrow,'svg','delta direction uses SVG');
   assert.match(semanticPill.readable,/관계.*증가.*2/);
+  // Every semantic badge, including exam effects and preview tags, shares one DOM factory and visual contract.
+  const tokenContract=await page.evaluate(()=>{
+   const kinds=[
+    GukminStatus.createToken({type:'metric',id:'relations',amount:2}),
+    GukminStatus.createToken({type:'trait',name:'예체능'}),
+    GukminStatus.createToken({type:'trait',name:'흙수저'}),
+    GukminStatus.createToken({type:'school',label:'검증중학교',state:'enrolled'}),
+    GukminStatus.createToken({type:'attribute',label:'경기도',icon:'pin'}),
+    GukminStatus.createToken({type:'context',label:'학교 태그',icon:'school'})
+   ];
+   const values=kinds.map(el=>{
+    document.body.append(el);
+    const s=getComputedStyle(el),svg=el.querySelector('.token-icon'),g=getComputedStyle(svg);
+    const result={kind:el.dataset.tokenKind,base:el.classList.contains('token-icon-pill'),
+      hasSvg:!!svg,hasName:!!el.querySelector('.token-name'),borderRadius:s.borderRadius,
+      background:s.backgroundColor,text:s.color,icon:g.color};
+    el.remove();return result;
+   });
+   return values;
+  });
+  assert.deepEqual(tokenContract.map(x=>x.kind),['metric','trait','trait','school','attribute','context']);
+  for(const token of tokenContract){
+   assert.ok(token.base&&token.hasSvg&&token.hasName,'all tokens share the exact icon-and-name structure');
+   assert.equal(token.text,'rgb(255, 255, 255)','token labels are white');
+   assert.equal(token.icon,'rgb(255, 255, 255)','token SVG icons are white');
+   assert.notEqual(token.background,'rgba(0, 0, 0, 0)','every token has a solid semantic background');
+  }
+  assert.equal(tokenContract[0].borderRadius,tokenContract[1].borderRadius,'all tokens share the same pill geometry');
+  assert.equal(tokenContract[1].background,'rgb(235, 131, 192)','trait uses its intrinsic custom color');
+  const schoolKindColor=await page.evaluate(()=>{
+   const el=GukminStatus.createToken({type:'context',label:'과학고',icon:'graduation',classes:'token-school-kind school-kind-science'});
+   document.body.append(el);
+   const rgb=getComputedStyle(el).backgroundColor;el.remove();return rgb;
+  });
+  assert.equal(schoolKindColor,'rgb(50, 125, 131)','context fallback never overrides distinct school-type color');
+  assert.ok(await page.locator('#attributeRows .token[data-token-kind=attribute]').count()>0,'main status uses the shared factory');
+
   const testMarkup=await page.evaluate(()=>{
    const el=document.createElement('p');GukminMarkup.render(el,'**강조** ==표시== ~~삭제~~');
    return [el.querySelector('strong')?.textContent,el.querySelector('mark')?.textContent,el.querySelector('del')?.textContent].join('|');
@@ -362,6 +399,8 @@ try{
  await examPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
  await examPage.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
  assert.equal(await examPage.locator('#lifeDecisionDialog .life-answer').count(),5);
+ assert.ok(await examPage.locator('#lifeDecisionDialog .life-effects .token[data-token-kind=metric]').count()>0,
+ 'exam forecast uses the same semantic token DOM, not independent text badges');
  await examPage.locator('#lifeDecisionDialog .life-answer').nth(2).click();
  await examPage.locator('#lifeDecisionDialog .life-submit').click();
  assert.equal(await examPage.locator('#lifeDecisionDialog[open]').count(),0);

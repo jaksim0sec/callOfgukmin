@@ -78,8 +78,11 @@ try{
    const projected=GukminEffects.apply(snap.persona,option.result,{turn:snap.runtime.turn});
    return projected.stats.schoolScore-snap.persona.stats.schoolScore;
   });
-  const badges=await page.locator('#lifeDecisionDialog .life-answer').nth(2).locator('.life-effects').textContent();
-  assert.ok(badges.includes('내신 +'+realPreview),'exam badges include real conditional and trait bonuses');
+  const effect=await page.locator('#lifeDecisionDialog .life-answer').nth(2).locator('.life-effects .metric-schoolScore').first();
+  assert.equal(await effect.locator('.impact-amount').textContent(),Math.abs(realPreview).toLocaleString('ko-KR'),
+   'exam preview calculates the same actual numeric value including conditional trait modifiers');
+  assert.ok(await effect.locator('.impact-arrow').count()>0,'exam direction is rendered with the shared triangle SVG');
+  assert.match(await effect.getAttribute('aria-label'),/내신.*증가/,'the arrow includes accessible direction text');
   await page.screenshot({path:`${artifacts}/${name}-exam.png`});
   await page.locator('#lifeDecisionDialog .life-submit').click();
   assert.ok(await page.locator('#lifeCinematicDismiss').isVisible(),'result remains until acknowledged');

@@ -144,8 +144,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
       chip=S.traitToken(item.trait);
       chip.classList.add('daily-paper-impact','daily-trait-preview');
      }else{
-      chip=S.pill(item.text,item.icon||'sparkle','daily-paper-impact impact-'+item.tone);
-      if(item.color)chip.style.setProperty('--trait-color',item.color);
+      chip=S.createToken({type:'context',label:item.text,icon:item.icon||'sparkle',
+       classes:'daily-paper-impact impact-'+item.tone});
      }
      chips.append(chip);
     }
@@ -197,7 +197,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
       :option.requirement?'필요 · '+option.requirement:'현재 조건에서는 선택할 수 없음'));
    }
    if(option.available&&option.requirement)
-    text.append(S.pill('활용 · '+option.requirement,'sparkle','daily-choice-advantage'));
+    text.append(S.createToken({type:'context',label:'활용 · '+option.requirement,icon:'sparkle',
+     classes:'daily-choice-advantage'}));
    const indicators=el('span','daily-choice-effects');
    // Ordinary choices show the exact projection. A declared uncertain outlook
    // reveals known costs, leaving conditional success/failure for the result.
@@ -215,8 +216,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
     const def=P.traitDefinition(name);
     if(def.hidden&&name.startsWith('관심-')){
      const interest=name.slice(3);
-     const preview=S.pill('관심 발견 · '+interest,'sparkle','daily-trait-preview');
-     preview.style.setProperty('--trait-color',P.traitDefinitions[interest]?.color||'#89a4d2');
+     const preview=S.createToken({type:'interest',name:interest,label:'관심 발견 · '+interest,
+      classes:'daily-trait-preview'});
      indicators.append(preview);
     }else if(!def.hidden){
      const reward=S.traitToken(name);
@@ -229,8 +230,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
     const name=typeof trait==='string'?trait:trait.name;
     if(P.hasTrait(projected,name)||P.traitDefinition(name).hidden)continue;
     const def=P.traitDefinition(name);
-    indicators.append(S.pill((def.negative?'해소 · ':'상실 · ')+name,def.icon||'sparkle',
-     'daily-choice-effect '+(def.negative?'is-positive':'is-negative')));
+    indicators.append(S.createToken({type:'context',label:(def.negative?'해소 · ':'상실 · ')+name,
+     icon:def.icon||'sparkle',classes:'daily-choice-effect '+(def.negative?'is-positive':'is-negative')}));
    }
    if(indicators.childElementCount)text.append(indicators);
    else text.append(el('small','daily-choice-note',Object.keys(option.result?.effects?.attributes||{}).length?'이 행동을 이후 이야기에서 기억합니다':'수치 변화 없이 이야기를 이어갑니다'));
