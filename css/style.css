@@ -889,6 +889,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 :root .token.token-icon-pill.trait-tier-silver{--token-fill:#667b8f}
 :root .token.token-icon-pill.trait-tier-gold{--token-fill:#b58b39}
 :root .token.token-icon-pill.trait-tier-diamond{--token-fill:#397c96}
+:root .token.token-icon-pill.token-context{--token-fill:#695a78}
 :root .token.token-icon-pill.school-kind-science{--token-fill:#327d83}
 :root .token.token-icon-pill.school-kind-foreign{--token-fill:#696ab0}
 :root .token.token-icon-pill.school-kind-international{--token-fill:#537ba5}
@@ -896,7 +897,6 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 :root .token.token-icon-pill.school-kind-vocational{--token-fill:#997449}
 :root .token.token-icon-pill.school-kind-autonomous{--token-fill:#7a6098}
 :root .token.token-icon-pill.school-kind-autonomous-public{--token-fill:#588c86}
-:root .token.token-icon-pill.token-context{--token-fill:#695a78}
 :root .token.token-icon-pill.daily-choice-advantage{--token-fill:#458878}
 :root .token.token-icon-pill.impact-bad{--token-fill:#a85c63}
 :root .token.token-icon-pill.impact-good{--token-fill:#418f76}
