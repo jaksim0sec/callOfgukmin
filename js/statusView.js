@@ -128,6 +128,13 @@ function showAttributes(root,s){
      createToken({type:'attribute',label:item[1],icon:item[2]}));
     attributes.append(line);
   }
+  // Current role ends at school transition, but a completed elected term is a permanent career memory.
+  if(s.attributes?.classElection==='elected'&&!s.roles?.includes('반장')){
+    const line=node('div','attribute-row');
+    line.append(node('span','attribute-label','지난 역할'),
+      createToken({type:'attribute',label:'초등학교 반장 역임',icon:'flag'}));
+    attributes.append(line);
+  }
   const roles=Array.isArray(s.roles)?s.roles:[];
   if(roles.length){
     const line=node('div','attribute-row');
