@@ -41,30 +41,73 @@ function icon(name){
   el.classList.add('token-icon');
   return el;
 }
-function pill(label,iconName,kind=''){
-  const el=node('span','token token-icon-pill'+(kind?' '+kind:''));
-  el.append(icon(iconName),node('span','token-name',label));
-  return el;
+// Single DOM-returning factory for all visible semantic pills.
+// Screen renderers provide meaning and optional classes; geometry and SVG always stay identical.
+function createToken({type='context',label='',name='',id='',icon:iconName='',amount=null,
+ classes='',state='',entry={}}={}){
+ const P=global.GukminPlayer;
+ const el=node('span','token token-icon-pill');
+ el.dataset.tokenKind=type;
+ const add=classes.split(/\s+/).filter(Boolean);
+ let text=label,glyph=iconName||'sparkle';
+ if(type==='metric'){
+  const def=P.metricDefinition(id);
+  text=def.label;glyph=def.icon||'sparkle';
+  add.push('metric-impact','metric-'+id);
+ }else if(type==='trait'){
+  const def=P.traitDefinitions[name]||{};
+  const negative=entry.negative===true||def.negative===true;
+  text=label||name;glyph=entry.icon||def.icon||'sparkle';
+  add.push('token-trait',negative?'trait-negative':'trait-positive');
+  if(def.tier)add.push('trait-tier-'+def.tier);
+  if(def.aptitude)add.push('trait-aptitude-'+def.aptitude);
+  if(def.color)el.style.setProperty('--trait-color',def.color);
+  el.title=entry.description||def.description||name;
+  el.setAttribute('aria-label',text+(def.tier?' · 출생 배경':negative?' · 디버프':' · 특성'));
+ }else if(type==='interest'){
+  const def=P.traitDefinitions[name]||{};
+  text=label||'관심 · '+name;glyph=iconName||def.icon||'sparkle';
+  add.push('token-trait','trait-developing');
+  if(def.color)el.style.setProperty('--trait-color',def.color);
+ }else if(type==='school'){
+  text=label;glyph=iconName||'school';
+  add.push('school-token','school-token-'+(state||'complete'));
+ }else if(type==='attribute'){
+  add.push('attribute-token');
+ }else{
+  add.push('token-context');
+ }
+ el.classList.add(...add);
+ el.append(icon(glyph),node('span','token-name',text));
+ if(type==='metric'&&Number.isFinite(amount)){
+  const up=amount>=0;
+  const triangle=document.createElementNS(NS,'svg');
+  triangle.setAttribute('viewBox','0 0 12 12');
+  triangle.setAttribute('aria-hidden','true');
+  triangle.setAttribute('focusable','false');
+  triangle.classList.add('impact-arrow');
+  const path=document.createElementNS(NS,'path');
+  path.setAttribute('d',up?'M6 1 11 10H1Z':'M1 2h10L6 11Z');
+  path.setAttribute('fill','currentColor');
+  triangle.append(path);
+  const numeric=Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:2})+
+   (['money','allowance','income'].includes(id)?'원':'');
+  el.append(triangle,node('span','impact-amount',numeric));
+  el.setAttribute('aria-label',text+' '+(up?'증가 ':'감소 ')+numeric);
+ }
+ if(type==='school'){
+  if(state==='active'){
+   el.append(node('span','school-active-dot'));
+  }
+ }
+ return el;
 }
-// One visual source for metric changes in choices, final paper and history.
+// Compatibility signatures deliberately delegate to the single DOM constructor.
+function pill(label,iconName,kind=''){
+ return createToken({type:'context',label,icon:iconName,classes:kind});
+}
 function metricImpact(id,amount,kind=''){
- const def=global.GukminPlayer.metricDefinition(id);
- const up=amount>=0;
- const token=pill(def.label,def.icon||'sparkle','metric-impact metric-'+id+(kind?' '+kind:''));
- const arrow=document.createElementNS(NS,'svg');
- arrow.setAttribute('viewBox','0 0 12 12');
- arrow.setAttribute('aria-hidden','true');
- arrow.setAttribute('focusable','false');
- arrow.classList.add('impact-arrow');
- const triangle=document.createElementNS(NS,'path');
- triangle.setAttribute('d',up?'M6 1 11 10H1Z':'M1 2h10L6 11Z');
- triangle.setAttribute('fill','currentColor');
- arrow.append(triangle);
- const numeric=Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:2})+
-  (['money','allowance','income'].includes(id)?'원':'');
- token.append(arrow,node('span','impact-amount',numeric));
- token.setAttribute('aria-label',def.label+' '+(up?'증가 ':'감소 ')+numeric);
- return token;
+ return createToken({type:'metric',id,amount,classes:kind});
 }
 const metricRenderers=new Map();
 function registerMetricRenderer(type,render){
@@ -81,7 +124,8 @@ function showAttributes(root,s){
     ['집안',s.family||'미정','home']
   ]){
     const line=node('div','attribute-row');
-    line.append(node('span','attribute-label',item[0]),pill(item[1],item[2],'attribute-token'));
+    line.append(node('span','attribute-label',item[0]),
+     createToken({type:'attribute',label:item[1],icon:item[2]}));
     attributes.append(line);
   }
   const roles=Array.isArray(s.roles)?s.roles:[];
@@ -89,13 +133,13 @@ function showAttributes(root,s){
     const line=node('div','attribute-row');
     line.append(node('span','attribute-label','역할'));
     const tokens=node('span','attribute-tokens');
-    roles.forEach(role=>tokens.append(pill(typeof role==='string'?role:role.label||role.name||'역할','flag','attribute-token')));
+    roles.forEach(role=>tokens.append(createToken({type:'attribute',label:typeof role==='string'?role:role.label||role.name||'역할',icon:'flag'})));
     line.append(tokens);attributes.append(line);
   }
   for(const [id,def] of Object.entries(global.GukminPlayer.attributeDefinitions)){
     if(!def.custom||def.hidden||s.attributes?.[id]===undefined)continue;
     const line=node('div','attribute-row');
-    line.append(node('span','attribute-label',def.label),pill(s.attributes[id],def.icon||'flag','attribute-token'));
+    line.append(node('span','attribute-label',def.label),createToken({type:'attribute',label:s.attributes[id],icon:def.icon||'flag'}));
     attributes.append(line);
   }
   const records=global.GukminPlayer.schoolsOf(s);
@@ -108,11 +152,10 @@ function showAttributes(root,s){
     for(const record of matches){
       const active=['enrolled','active','attending'].includes(record.status);
       const completed=record.status==='graduated';
-      const token=pill(record.name,'school','school-token '+(active?'school-token-active':completed?'school-token-complete':'school-token-ended'));
+      const token=createToken({type:'school',label:record.name,state:active?'active':completed?'complete':'ended'});
       const label=active?'재학 중':completed?'졸업':record.status==='dropout'?'중퇴':'기록';
       token.title=record.name+' · '+label;
       token.setAttribute('aria-label',record.name+' '+label);
-      if(active){token.append(node('span','school-active-dot')); }
       tokens.append(token);
     }
     line.append(tokens);schools.append(line);
@@ -159,13 +202,7 @@ function showMetrics(root,s){
 }
 
 function traitToken(name,entry={}){
- const def=global.GukminPlayer.traitDefinitions[name]||{};
- const negative=entry.negative===true||def.negative===true;
- const token=pill(name,entry.icon||def.icon||'sparkle','token-trait '+(negative?'trait-negative':'trait-positive')+(def.tier?' trait-tier-'+def.tier:'')+(def.aptitude?' trait-aptitude-'+def.aptitude:''));
- if(def.color)token.style.setProperty('--trait-color',def.color);
- token.title=entry.description||def.description||name;
- token.setAttribute('aria-label',name+(def.tier?' · 출생 배경':negative?' · 디버프':' · 특성'));
- return token;
+ return createToken({type:'trait',name,entry});
 }
 function showTraits(root,s){
   const traits=root.querySelector('#traits');traits.replaceChildren();
@@ -197,9 +234,7 @@ function showTraits(root,s){
       if(name.startsWith('관심-')){
        const field=name.slice(3),learned=global.GukminPlayer.hasTrait(s,field);
        if(!learned){
-        const developing=pill('관심 · '+field,'sparkle','token-trait trait-developing');
-        const tint=global.GukminPlayer.traitDefinitions[field]?.color;
-        if(tint)developing.style.setProperty('--trait-color',tint);
+        const developing=createToken({type:'interest',name:field});
         developing.title=field+' 활동을 다시 이어 가면 정식 특성으로 발전할 수 있어';
         traits.append(inspect(developing,developing.title));
        }
@@ -218,7 +253,7 @@ function showTraits(root,s){
    const labels={science:'과학고',foreign:'외국어고',international:'국제고',gifted:'영재학교',
     vocational:'특성화고',autonomous:'자율형 사립고','autonomous-public':'자율형 공립고'};
    if(labels[kind]){
-    const token=pill(labels[kind],'graduation','token-trait token-school-kind school-kind-'+kind);
+    const token=createToken({type:'context',label:labels[kind],icon:'graduation',classes:'token-school-kind school-kind-'+kind});
     token.title=enrolled.name+' · 재학 중';
     token.setAttribute('aria-label',enrolled.name+' 재학 중 · '+labels[kind]);
     traits.append(token);
@@ -234,5 +269,5 @@ function render(root,persona){
   showMetrics(root,persona);
   showTraits(root,persona);
 }
-global.GukminStatus=Object.freeze({render,registerMetricRenderer,pill,traitToken,metricImpact});
+global.GukminStatus=Object.freeze({render,registerMetricRenderer,createToken,pill,traitToken,metricImpact});
 })(window);
