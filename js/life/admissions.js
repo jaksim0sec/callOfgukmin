@@ -45,7 +45,7 @@ function admissionOptions(candidates,metric,key,type,cycle){
   return option(id,name,
    name+'에 원서를 접수했다. 결과는 아직 모른다. 이제 합격 발표를 기다린다.',
    {attributes:{[key]:id,[type+'Status']:'pending'},stats:Object.fromEntries(Object.entries(costs[index]).filter(([,n])=>n!==0))},
-   {school:{name,typeLabel:tiers[index]+' · 게임 난도 '+score,gameTarget:score,kind:type,scoreMetric:metric},
+   {school:{name,typeLabel:tiers[index]+' · 게임 판정선 '+score+(minimum?' · 수능 기준 '+minimum+' 이상':''),gameTarget:score,kind:type,scoreMetric:metric},
     risk:index===0?'가장 높은 성취가 필요하며, 떨어지면 이 원서의 기회를 잃음':index===1?'합격 여부는 누적 성적과 준비 상태에 달림':'안정성을 택하는 대신 높은 목표의 기회를 포기',
     outlook:'게임 난도는 실제 입학 성적이나 공식 합격선이 아님'});
  });
