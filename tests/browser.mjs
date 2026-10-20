@@ -101,6 +101,21 @@ try{
    await page.mouse.up();await page.waitForTimeout(370);
    // Restore the initial top snap for later actions.
    await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+   // Close by dragging, without jumping back up at pointer release.
+   await page.locator('#dailyPaperGrip').click();await page.waitForTimeout(370);
+   const closingGrip=await page.locator('#dailyPaperGrip').boundingBox();
+   const cx=closingGrip.x+closingGrip.width/2,cy=closingGrip.y+closingGrip.height/2;
+   await page.mouse.move(cx,cy);await page.mouse.down();
+   await page.mouse.move(cx,cy+145,{steps:12});await page.waitForTimeout(40);
+   const beforeRelease=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   await page.mouse.up();
+   const afterRelease=(await page.locator('#dailyChoiceDialog').boundingBox()).height;
+   assert.ok(afterRelease<beforeRelease+35,'releasing downward swipe must not jump paper back to its first snap');
+   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
+   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'drag dismiss keeps a pending choice');
+   await page.locator('#resumeDailyChoice').click();
+   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'pending choice reopens after swipe dismiss');
+
 
   }
 
