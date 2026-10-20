@@ -159,6 +159,10 @@ try{
    }
   }else if(await page.locator('#lifeDecisionDialog').isVisible()){
    const category=await page.evaluate(()=>GukminGame.session.snapshot().choice?.presentation?.type);
+   if(category==='grade-seal'){
+    assert.equal(await page.locator('#lifeDecisionDialog .life-paper-estimate').count(),0,'sealed result has no grade forecast');
+    assert.equal(await page.locator('#lifeDecisionDialog .admission-big-grade').count(),0,'grade hidden until submission');
+   }
    if(category!=='grade-seal'){
     const index=category==='exam'?2:0;
     const selector=['exam','school'].includes(category)?'.life-answer:not(:disabled)':
@@ -166,6 +170,11 @@ try{
     await page.locator('#lifeDecisionDialog '+selector).nth(index).click();
    }
    await page.locator('#lifeDecisionDialog .life-submit').click();decisions++;
+   if(category==='grade-seal'){
+    const grade=page.locator('.life-cinematic-card.is-sealed .life-cinematic-grade strong');
+    await grade.waitFor({state:'visible'});
+    assert.match(await grade.textContent(),/[1-9]등급!/,'actual grade appears only after submit');
+   }
   }else if(await page.locator('#lifeCinematicDismiss').isVisible()){
    await page.locator('#lifeCinematicDismiss').click();
   }else if(state.reviewPending){
