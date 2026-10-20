@@ -55,6 +55,9 @@ try{
   const size=await page.locator('#dailyChoiceDialog').boundingBox();assert.ok(size.y>=0&&size.y+size.height<=viewport.height+1);
   await page.screenshot({path:`${artifacts}/${name}-daily.png`});
   await page.locator('#dailyChoiceBody .inline-choice').nth(2).click();
+  await page.locator('#dailyPaperConfirm').click();
+  await page.locator('#dailyModalCollapse').click();
+  await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.match(await page.locator('#log .record-choice').first().textContent(),/관심.*예체능/,'exploration is described as an interest in the result');
   await walk('exam');
   await page.locator('#lifeDecisionDialog[open]').waitFor();
@@ -111,6 +114,7 @@ try{
   const state=await page.evaluate(()=>GukminGame.session.snapshot());
   assert.equal(await page.evaluate(()=>!document.getElementById('lifeCinematic').hidden&&!!document.querySelector('dialog[open]')),false,'a transition never competes with a native choice dialog');
   if(await page.locator('#dailyChoiceDialog').isVisible()){
+   if(state.reviewPending){await page.locator('#dailyPaperConfirm').click();continue;}
    const choice=await page.evaluate(()=>GukminGame.session.snapshot().choice);
    if(!choice)continue;
    let option=choice.options.find(o=>o.available);
@@ -137,7 +141,8 @@ try{
      sawRevelation=true;await page.screenshot({path:`${artifacts}/habit-revelation.png`});
     }
    }
-   await page.locator('#dailyChoiceBody .inline-choice').nth(choice.options.findIndex(o=>o.id===option.id)).click();decisions++;
+   await page.locator('#dailyChoiceBody .inline-choice').nth(choice.options.findIndex(o=>o.id===option.id)).click();
+   await page.locator('#dailyPaperConfirm').click();decisions++;
    if(itinerary==='creative-habit'&&choice.id==='high:tobacco-offer'&&!reloadedContact){
     const saved=await page.evaluate(()=>GukminGame.session.snapshot().persona);
     assert.equal(saved.attributes.habitStage,'first');assert.equal(saved.traits.includes('흡연'),false);
