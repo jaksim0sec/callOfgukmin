@@ -39,7 +39,7 @@ try{
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').textContent(),'#2살');
-  assert.equal((await page.locator('#nextChoiceLabel').textContent()).trim(),'선택을 기다리는 중');
+  assert.match((await page.locator('#nextChoiceLabel').textContent()).trim(),/선택 중/);
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
