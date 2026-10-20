@@ -344,7 +344,8 @@ function mount(root,navigate,content=global.GukminContent){
     'infant:school-entry':'초등학교 입학',
     'elementary:middle-entry':'초등학교 졸업 · 중학교 입학',
     'high:graduation':'고등학교 졸업',
-    'admission:retry-graduation':'재도전 이후의 졸업'
+    'admission:repeat-year':'고등학교 졸업 · 재수 시작',
+    'admission:retry-graduation':'입시 재도전 마무리'
    };
    for(const item of added)if(events[item.source])
     queueCinematic({title:events[item.source],detail:item.detail});
