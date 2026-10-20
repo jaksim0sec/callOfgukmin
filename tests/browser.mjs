@@ -120,6 +120,12 @@ try{
   }
   assert.equal(tokenContract[0].borderRadius,tokenContract[1].borderRadius,'all tokens share the same pill geometry');
   assert.equal(tokenContract[1].background,'rgb(235, 131, 192)','trait uses its intrinsic custom color');
+  const schoolKindColor=await page.evaluate(()=>{
+   const el=GukminStatus.createToken({type:'context',label:'과학고',icon:'graduation',classes:'token-school-kind school-kind-science'});
+   document.body.append(el);
+   const rgb=getComputedStyle(el).backgroundColor;el.remove();return rgb;
+  });
+  assert.equal(schoolKindColor,'rgb(50, 125, 131)','context fallback never overrides distinct school-type color');
   assert.ok(await page.locator('#attributeRows .token[data-token-kind=attribute]').count()>0,'main status uses the shared factory');
 
   const testMarkup=await page.evaluate(()=>{
