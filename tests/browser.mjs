@@ -385,6 +385,20 @@ try{
   'a manually dismissed diary stays closed even past the old countdown deadline');
  await timedPage.locator('#resumeDailyChoice').click();
  assert.equal(await timedPage.locator('#dailyChoiceDialog').isVisible(),true,'manual re-entry works immediately');
+ const gaugeMotion=await timedPage.evaluate(()=>{
+  const before=GukminGame.session.snapshot().persona;
+  const person={...before,stats:{...before.stats,stress:55}};
+  GukminStatus.render(document,person);
+  const node=document.querySelector('.metric-stress .ui-progress-fill');
+  return {target:node.dataset.ratio,duration:getComputedStyle(node).transitionDuration};
+ });
+ assert.equal(gaugeMotion.target,'0.55','synthetic state change sets the correct real target');
+ assert.match(gaugeMotion.duration,/0\\.5s/,'gauge transitions use shared half-second motion');
+ await timedPage.waitForTimeout(90);
+ const intermediate=await timedPage.locator('.metric-stress .ui-progress-fill').evaluate(el=>{
+  const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
+ });
+ assert.ok(intermediate>0&&intermediate<.55,'visual stat fill interpolates rather than jumping to its target');
  assert.deepEqual(timerErrors,[]);
  await timedContext.close();
  console.log('PASS timed diary: smooth bar, 5-second auto-open, no auto-choice, dismiss stays dismissed');
