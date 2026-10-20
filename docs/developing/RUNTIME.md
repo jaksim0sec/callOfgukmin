@@ -1,5 +1,10 @@
 # 국민의 부름 — 정적 화면 기반 실행 구조
 
+## 2026-10-21 일상 결과 UI 단일 출처
+
+`GukminTimeline.create`의 `pauseAfterChoice`는 기존 boolean 정책 외에 `(choiceDefinition, selectedOption)=>boolean`도 받는다. 인생 감독 `GukminDirector`는 일상 선택은 즉시 정산, 한방 선택만 검토 대기. 일상 `resolve`는 모달 공통 스프링 닫힘 완료 후 실행하며, 정산 내역은 `runtime.choices[token].outcome`와 인생 기록에 한 번만 표시한다. 일상 선택이 닫힌 직후 후속 소식 진행은 허용하되 다음 일상 팝업은 명시적 열기로만 나타난다. 20/55/90 기록 시트와 시험지 연출 정책은 유지한다. 이전에 저장된 일상 검토 대기는 진입 시 기존 감독 `run()`으로 안전하게 이어진다.
+
+
 ## 2026-10-20 범용 시트 컨트롤러
 
 `js/sheetController.js`는 시트 `element`, `handle`, `dragTargets`, `steps: [{name,ratio,minRem?,maxRem?,topGapRem?}]`, `initial`, `enabled`, `dismissible`, `removeOnDismiss`, `onDismiss`를 받아 재사용 가능한 스냅/관성/해제 정책을 제공한다. `dispose`, `dismiss`, `setLevel`, `reset`, `revealAtLeast`, `getLevel` 메서드를 제공한다. 스타일 변경은 각 시트 클래스로 격리한다.
