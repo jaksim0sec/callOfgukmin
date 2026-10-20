@@ -70,36 +70,82 @@ function differences(before,after){
  return result;
 }
 function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed}){
- let token=null,folded=false,review=false,delta=[];
+ let token=null,folded=false,review=false,delta=[],selectedId=null,currentChoice=null;
+ const confirm=dialog.querySelector('#dailyPaperConfirm');
+ const mobile=global.matchMedia('(max-width: 47.5em)');
+ const paper=global.GukminSheet.create({
+  element:dialog,handle:dialog.querySelector('#dailyPaperGrip'),
+  dragTargets:[dialog.querySelector('#dailyPaperGrip'),dialog.querySelector('.daily-modal-head')],
+  enabled:()=>mobile.matches,initial:1,dismissible:true,
+  steps:[{name:'middle',ratio:.62},{name:'expanded',ratio:.94,topGapRem:.5}],
+  onDismiss:closeNow
+ });
  function sync(){
   resumeButton.hidden=token===null||review||dialog.open;
   resumeButton.textContent='선택 진행 중 · 열기';
+  confirm.textContent=review?'결과 확인하기':'이 선택으로 기록하기';
+  confirm.disabled=!review&&!selectedId;
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
-  folded=false;dialog.showModal();sync();
+  folded=false;dialog.showModal();paper.reset();sync();
   heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});
  }
- function fold(){
-  folded=true;if(dialog.open)dialog.close();sync();
+ function closeNow(){
+  if(dialog.open)dialog.close();
+  sync();
   if(!resumeButton.hidden)resumeButton.focus({preventScroll:true});
  }
- function reset(){if(dialog.open)dialog.close();body.replaceChildren();token=null;folded=false;review=false;delta=[];sync();}
+ function fold(){folded=true;if(dialog.open)paper.dismiss();else sync();}
+ function reset(){
+  if(dialog.open)dialog.close();
+  body.replaceChildren();token=null;folded=false;review=false;delta=[];selectedId=null;currentChoice=null;
+  sync();
+ }
  function cancel(event){event.preventDefault();fold();}
  function backdrop(event){
   if(event.target!==dialog)return;
   const r=dialog.getBoundingClientRect();
   if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)fold();
  }
+ function confirmSelection(){
+  if(review){fold();return;}
+  if(!selectedId||!currentChoice)return;
+  const option=currentChoice.options.find(item=>item.id===selectedId);
+  if(option?.available)resolve(currentChoice.token,option.id);
+ }
  collapseButton.addEventListener('click',fold);
  resumeButton.addEventListener('click',open);
+ confirm.addEventListener('click',confirmSelection);
  dialog.addEventListener('cancel',cancel);
  dialog.addEventListener('click',backdrop);
  dialog.addEventListener('close',sync);
  function capture(before,after,choice,reviewPending){
   if(choice?.layer!=='일상 선택'||!reviewPending)return;
-  delta=differences(before,after);review=true;folded=true;
-  if(dialog.open)dialog.close();
+  delta=differences(before,after);review=true;folded=false;
+  if(dialog.open){
+   body.replaceChildren();
+   const page=el('section','daily-paper-result');
+   page.id='dailyPaperResult';
+   page.append(el('small','daily-paper-note','나의 선택'));
+   const option=choice.options?.find(item=>item.id===selectedId);
+   page.append(el('h3','daily-paper-result-title',option?.label||'오늘의 선택'));
+   page.append(el('small','daily-paper-note','오늘의 기록'));
+   const records=after.history?.slice(before.history?.length||0)||[];
+   const last=records.filter(item=>item.display!=='hidden').at(-1);
+   page.append(rich('p','daily-paper-result-story',last?.detail||'선택이 인생 기록에 남았다.'));
+   if(delta.length){
+    page.append(el('small','daily-paper-note','변화한 것들'));
+    const chips=el('div','daily-paper-impacts');
+    for(const item of delta){
+     const chip=S.pill(item.text,item.icon||'sparkle','daily-paper-impact '+(item.tone==='bad'?'impact-bad':''));
+     if(item.color)chip.style.setProperty('--trait-color',item.color);
+     chips.append(chip);
+    }
+    page.append(chips);
+   }
+   body.append(page);body.scrollTop=0;
+  }
   sync();
  }
  function restore(snapshot){
@@ -110,7 +156,8 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   delta=snapshot.runtime.reviewBefore?differences(snapshot.runtime.reviewBefore,snapshot.persona):[];
  }
  function showChoice(choice,host,persona){
-  if(token!==choice.token){token=choice.token;folded=false;review=false;delta=[];}
+  if(token!==choice.token){token=choice.token;folded=false;review=false;delta=[];selectedId=null;}
+  currentChoice=choice;
   heading.textContent=choice.title;body.replaceChildren();
   const stage=P.phaseOf(persona),labels={infant:'유년기',elementary:'초등학교',middle:'중학교',high:'고등학교'};
   dialog.querySelector('.daily-modal-head small').textContent=persona.age+'살 · '+(labels[stage]||P.phaseDefinition(stage).label);
@@ -127,7 +174,9 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
   list.setAttribute('role','group');list.setAttribute('aria-label','일상 선택지');
   for(const [index,option] of choice.options.entries()){
    const button=el('button','inline-choice');button.type='button';button.disabled=!option.available;
-   const number=el('span','daily-choice-number',String(index+1).padStart(2,'0'));
+   const number=el('span','daily-choice-number','');number.setAttribute('aria-hidden','true');
+   button.setAttribute('aria-pressed',String(selectedId===option.id));
+   if(selectedId===option.id)button.classList.add('is-selected');
    const text=el('span','daily-choice-copy');
    text.append(rich('strong','daily-choice-title',option.label));
    if(option.available===false){
@@ -180,7 +229,15 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
    if(option.outlook)text.append(rich('small','daily-choice-outlook',option.outlook));
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
    button.append(number,text,el('span','daily-choice-chevron','›'));
-   button.addEventListener('click',()=>resolve(choice.token,option.id));
+   button.addEventListener('click',()=>{
+    selectedId=option.id;
+    for(const candidate of list.querySelectorAll('.inline-choice')){
+     const pressed=candidate===button;
+     candidate.classList.toggle('is-selected',pressed);
+     candidate.setAttribute('aria-pressed',String(pressed));
+    }
+    sync();
+   });
    list.append(button);
   }
   body.append(list);
@@ -200,7 +257,9 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
  }
  function dispose(){
   reset();
+  paper.dispose();
   collapseButton.removeEventListener('click',fold);resumeButton.removeEventListener('click',open);
+  confirm.removeEventListener('click',confirmSelection);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }
  return Object.freeze({showChoice,changesFor,capture,restore,highlight,reset,dispose,isReview:()=>review});
