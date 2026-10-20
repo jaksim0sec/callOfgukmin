@@ -7,7 +7,7 @@
   <title>국민의 부름 · 대기</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=character-paths-20261020">
+  <link rel="stylesheet" href="css/style.css?v=countdown-progress-20261021">
 </head>
 <body data-screen="waiting">
 <main class="waiting-screen" aria-label="게임 대기 화면">
@@ -46,7 +46,10 @@
     </dl>
     <div class="birth-intro-timing">
       <span id="birthIntroCountdown" aria-live="off">10초 후 출생</span>
-      <progress id="birthIntroProgress" max="10" value="0" aria-label="출생까지 남은 시간"></progress>
+      <div class="ui-progress-frame">
+        <progress id="birthIntroProgress" class="ui-progress-native" max="10" value="0" aria-label="출생까지 남은 시간"></progress>
+        <span class="ui-progress-track" aria-hidden="true"><span class="ui-progress-fill" id="birthIntroFill"></span></span>
+      </div>
     </div>
     <button type="button" class="birth-intro-skip" id="birthIntroSkip">출생하기 <span aria-hidden="true">↗</span></button>
   </div>
@@ -69,6 +72,6 @@
 <script src="js/statusView.js?v=character-paths-20261020" defer></script>
 <script src="js/game.js?v=character-paths-20261020" defer></script>
 <script src="js/majorView.js?v=character-paths-20261020" defer></script>
-<script src="js/boot.js?v=character-paths-20261020" defer></script>
+<script src="js/boot.js?v=countdown-progress-20261021" defer></script>
 </body>
 </html>
