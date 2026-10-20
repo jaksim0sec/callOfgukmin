@@ -196,6 +196,8 @@ function mount(root,navigate,content=global.GukminContent){
  let selection=-1,dialogOptions=[],dialogCommit=null,engine=null;
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
  let dailyUI=null;
+ let journeyTimer=null,journeyActive=false,newsTimer=null;
+ const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
  $('systemTools').hidden=!verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
@@ -221,7 +223,7 @@ function mount(root,navigate,content=global.GukminContent){
     if(continued)return;
     continued=true;
     const next=el('button','continue-story','다음 이야기 보기 →');
-    next.type='button';next.addEventListener('click',safely(()=>engine.run()));
+    next.type='button';next.addEventListener('click',safely(startJourney));
     host.append(next);
    }
    for(let i=history.length-1;i>=0;i--){
@@ -293,7 +295,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!global.confirm('현재 인물 정보를 초기화하고 다시 생성할까?'))return;
   const fresh=global.GukminPlayer.generate();
   if(!global.GukminPlayer.save(fresh))throw new Error('저장 실패');
-  clearCinematics();clearMajor();dailyUI.reset();persona=fresh;engine=null;snapshot=null;connectLife();render();
+  stopJourney();clearCinematics();clearMajor();dailyUI.reset();persona=fresh;engine=null;snapshot=null;connectLife();render();
  }
  function openDialog(type,options,{title,body,kicker,commit}){
   selection=-1;dialogOptions=options;dialogCommit=commit;
@@ -389,7 +391,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
   const completed=currentCinematic;
   currentCinematic=null;cinematic.hidden=true;cinematicShown=false;
-  if(completed?.kind==='grade'&&snapshot?.reviewPending)engine.run();
+  if(completed?.kind==='grade'&&snapshot?.reviewPending)startJourney();
   nextCinematic();
  }
  function clearCinematics(){
@@ -403,6 +405,10 @@ function mount(root,navigate,content=global.GukminContent){
   const added=s.persona.history.slice(before.history?.length||0);
   dailyUI.capture(before,s.persona,choice,s.reviewPending);
   snapshot=s;persona=s.persona;render();
+  if(added.length){$('log')?.firstElementChild?.classList.add('record-arrived');
+   if(journeyActive){const news=added.filter(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
+    if(news.length)showJourneyNews(news.at(-1));}
+  }
    if(s.reviewPending&&dailyUI.isReview()){
     lifeSheet.revealResults();$('sheetContent').scrollTop=0;
     dailyUI.highlight(root);
@@ -433,6 +439,42 @@ function mount(root,navigate,content=global.GukminContent){
   for(const item of added)if(events[item.source])
    queueCinematic({title:events[item.source],detail:item.detail});
  }
+ function stopJourney(){
+  journeyActive=false;
+  if(journeyTimer!==null){global.clearTimeout(journeyTimer);journeyTimer=null;}
+  if(newsTimer!==null){global.clearTimeout(newsTimer);newsTimer=null;}
+  const toast=$('lifeNewsToast');if(toast)toast.hidden=true;
+ }
+ function showJourneyNews(item){
+  const toast=$('lifeNewsToast');if(!toast)return;
+  if(newsTimer!==null)global.clearTimeout(newsTimer);
+  toast.replaceChildren(el('small','','새 소식'),el('strong','',item.title||'인생의 한 페이지'));
+  if(item.detail){
+   const detail=el('p','');global.GukminMarkup.render(detail,item.detail);
+   toast.append(detail);
+  }
+  toast.hidden=false;toast.classList.remove('is-arriving');void toast.offsetWidth;
+  toast.classList.add('is-arriving');
+  newsTimer=global.setTimeout(()=>{toast.hidden=true;newsTimer=null;},prefersLessMotion?350:1100);
+ }
+ function startJourney(){
+  stopJourney();
+  if(!engine?.step){engine?.run();return;}
+  journeyActive=true;
+  function tick(){
+   if(disposed||!journeyActive)return;
+   const before=engine.snapshot(),had=before.persona.history.length;
+   if(before.choice&&!before.reviewPending){stopJourney();renderProgress();return;}
+   const changed=engine.step();
+   const now=engine.snapshot();
+   if(!changed||now.choice||now.reviewPending){
+    stopJourney();renderProgress();return;
+   }
+   const news=now.persona.history.slice(had).some(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
+   journeyTimer=global.setTimeout(tick,prefersLessMotion?0:news?1250:170);
+  }
+  tick();
+ }
  function connect(definition,freshSession=false){
   const source={...persona};
   if(freshSession)delete source.simulation;
@@ -451,7 +493,7 @@ function mount(root,navigate,content=global.GukminContent){
    else engine.run();
  }
  function startDemo(){
-  dailyUI.reset();clearCinematics();clearMajor();
+  stopJourney();dailyUI.reset();clearCinematics();clearMajor();
   connect(global.GukminSystemDemo.config(),true);
   engine.advance(0);
  }
@@ -467,10 +509,13 @@ function mount(root,navigate,content=global.GukminContent){
   $('action').hidden=!choice;
   $('lifeSheet')?.classList.toggle('has-current-choice',!!choice||reviewing);
   text('currentTitle',reviewing?'':choice?.title||'');
-  const showCountdown=!reviewing&&!choice&&Number.isFinite(p?.remaining)&&p.remaining>0;
-  $('choiceTiming').hidden=!showCountdown;
-  text('nextChoiceLabel',showCountdown?p.remaining+'턴 남음':reviewing?'다음 이야기로 진행':p?.waiting?'선택을 기다리는 중':demo?'예정된 선택 없음':'이야기 준비 중');
-  $('nextChoiceProgress').value=showCountdown?p.value||0:0;
+  const hasTarget=Number.isFinite(p?.remaining);
+  $('choiceTiming').hidden=!hasTarget&&!choice&&!reviewing&&!journeyActive;
+  $('choiceTiming').classList.toggle('is-paused',!!choice||reviewing);
+  text('nextChoiceLabel',reviewing?'선택 결과 확인 중':choice?'선택 중 · 진행 일시정지':hasTarget?p.remaining+'턴 남음':journeyActive?'인생 소식 확인 중':demo?'예정된 선택 없음':'이야기 준비 중');
+  const progressValue=choice||reviewing?1:hasTarget?p.value||0:0;
+  $('nextChoiceProgress').value=progressValue;
+  $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
   const current=$('currentChoice');current.replaceChildren();
   if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
@@ -508,7 +553,7 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),dispose

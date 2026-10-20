@@ -196,3 +196,7 @@ Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새�
 - `resolve(token,optionId)`는 기존 `runtime.choices[token]` 항목에 선택적 `outcome`을 기록한다. `label`, `historyFrom`, `historyTo`, `before`, `after`는 선택이 확정된 시점의 실제 관찰값이다.
 - 결과 전/후 관찰값은 스탯·특성·학교·역할에 한정되며, 인생 기록에서 나중에 다시 열람해도 이후 턴의 변화를 잘못 표시하지 않도록 한다. `reviewBefore`와 `awaitingContinuation` 의미는 변경하지 않는다.
 - `risk`는 `GukminStory.selection`이 복사하는 선택적 콘텐츠 표시 필드이며 확률·조건 판정에는 관여하지 않는다. UI는 실제 정산 효과와 별도로 이를 미리 알 수 있는 부담으로 제시한다.
+
+## 2026-10-20 특성 프리뷰와 선택 진행
+- `dailyChoice.showChoice`는 선택 `result`를 `GukminEffects.apply`로 **복사본에만** 계산하여 정산 이후의 스탯 차이 및 신규 특성을 표시한다. 조건부 결과를 무시한 가짜 미리보기나 영향 없는 뱃지 생성을 피한다. 관심- 계열은 가시적 준비 특성으로 표시하지만 정식 특성과 구별한다.
+- `director.step()`은 화면 애니메이션에만 쓰는 논리 턴 1회 진행. `run()`은 기존과 같이 동기적으로 미래 선택까지 진행한다. 저장된 턴은 실제로 진행했을 때만 바뀌며 실시간 대기 시간은 게임 사건 조건에 사용하지 않는다.

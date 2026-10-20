@@ -10,14 +10,22 @@ function el(tag,cls,text){
 function renderRich(target,input){
  const source=String(input??''),pattern=/\*\*([^*\n]+)\*\*|==([^=\n]+)==|~~([^~\n]+)~~|\*([^*\n]+)\*/g;
  const fragment=document.createDocumentFragment();let pos=0,match;
+ // Preserve author-written Markdown line breaks as DOM breaks, not collapsed spaces.
+ function plain(value){
+  const rows=value.split(/\r?\n/);
+  for(const [i,row] of rows.entries()){
+   if(i)fragment.append(document.createElement('br'));
+   if(row)fragment.append(document.createTextNode(row));
+  }
+ }
  while((match=pattern.exec(source))){
-  fragment.append(document.createTextNode(source.slice(pos,match.index)));
+  plain(source.slice(pos,match.index));
   const tag=match[1]!==undefined?'strong':match[2]!==undefined?'mark':match[3]!==undefined?'del':'em';
   const node=document.createElement(tag);
   node.textContent=match[1]??match[2]??match[3]??match[4];
   fragment.append(node);pos=pattern.lastIndex;
  }
- fragment.append(document.createTextNode(source.slice(pos)));
+ plain(source.slice(pos));
  target.replaceChildren(fragment);return target;
 }
 function rich(tag,cls,text){return renderRich(el(tag,cls),text);}
@@ -125,12 +133,30 @@ function create({dialog,body,heading,collapseButton,resumeButton,resolve,proceed
       :'현재 조건에서는 선택할 수 없음'));
    }
    const indicators=el('span','daily-choice-effects');
-   for(const [id,amount] of Object.entries(option.result?.effects?.stats||{})){
+   // Show the *actual* projected outcome, including conditional traits and modifiers.
+   const projected=global.GukminEffects.apply(persona,option.result,{turn:choice.openedAt||0});
+   for(const [id,next] of Object.entries(projected.stats||{})){
+    const amount=Number.isFinite(next)&&Number.isFinite(persona.stats?.[id])?next-persona.stats[id]:0;
     if(!Number.isFinite(amount)||amount===0)continue;
     const def=P.metricDefinition(id),good=id==='stress'?amount<0:amount>0;
     indicators.append(S.pill(def.label+' '+(amount>0?'+':'')+amount+
      (['money','allowance','income'].includes(id)?'원':''),def.icon||'sparkle',
      'daily-choice-effect metric-'+id+' '+(good?'is-positive':'is-negative')));
+   }
+   for(const trait of projected.traits||[]){
+    const name=typeof trait==='string'?trait:trait.name;
+    if(P.hasTrait(persona,name))continue;
+    const def=P.traitDefinition(name);
+    if(def.hidden&&name.startsWith('관심-')){
+     const interest=name.slice(3);
+     const preview=S.pill('관심 발견 · '+interest,'sparkle','daily-trait-preview');
+     preview.style.setProperty('--trait-color',P.traitDefinitions[interest]?.color||'#89a4d2');
+     indicators.append(preview);
+    }else if(!def.hidden){
+     const reward=S.traitToken(name);
+     reward.classList.add('daily-trait-preview');
+     indicators.append(reward);
+    }
    }
    if(indicators.childElementCount)text.append(indicators);
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));

@@ -46,7 +46,9 @@ try{
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').evaluate(e=>e.hidden),false,'compact decision status is mounted on all viewports');
-  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no countdown while choosing');
+  assert.equal(await page.locator('#choiceTiming').isVisible(),true,'progress remains visible and paused while choosing');
+  assert.match((await page.locator('#nextChoiceLabel').textContent()).trim(),/선택 중/);
+  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),1);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'daily choice modal opens automatically');
   assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').textContent(),'어떻게 할까?');
@@ -54,13 +56,28 @@ try{
   const escapedMarkup=await page.evaluate(()=>{
    const root=document.createElement('p');
    window.GukminMarkup.render(root,'<img src=x> **중요** *기울임* ~~삭제~~ ==형광==');
+   const breaks=document.createElement('div');window.GukminMarkup.render(breaks,'첫 줄\n두 번째 줄\n\n마지막 줄');
    return {htmlImage:root.querySelector('img')!==null,strong:root.querySelector('strong')?.textContent,
-    em:root.querySelector('em')?.textContent,del:root.querySelector('del')?.textContent,mark:root.querySelector('mark')?.textContent};
+    em:root.querySelector('em')?.textContent,del:root.querySelector('del')?.textContent,mark:root.querySelector('mark')?.textContent,breaks:breaks.querySelectorAll('br').length};
   });
-  assert.deepEqual(escapedMarkup,{htmlImage:false,strong:'중요',em:'기울임',del:'삭제',mark:'형광'},'story marks are parsed safely');
+  assert.deepEqual(escapedMarkup,{htmlImage:false,strong:'중요',em:'기울임',del:'삭제',mark:'형광',breaks:3},
+   'story markup preserves line breaks while safely escaping HTML');
+  const traitTint=await page.evaluate(()=>{
+   const sample=GukminStatus.traitToken('예체능');return sample.style.getPropertyValue('--trait-color');
+  });
+  assert.equal(traitTint,'#EB83C0','trait owns its distinct color');
+  assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).animationName),/daily-dialog-rise/,
+   'daily choice enters gently from below');
   const shownEffects=await page.locator('#dailyChoiceBody .daily-choice-effect').count();
-  const realEffects=await page.evaluate(()=>window.GukminGame.session.snapshot().choice.options.reduce((sum,option)=>
-   sum+Object.values(option.result?.effects?.stats||{}).filter(Number.isFinite).filter(v=>v!==0).length,0));
+  const realEffects=await page.evaluate(()=>{
+   const snapshot=GukminGame.session.snapshot();
+   return snapshot.choice.options.reduce((sum,option)=>{
+    const projected=GukminEffects.apply(snapshot.persona,option.result,{turn:snapshot.choice.openedAt||0});
+    return sum+Object.keys(projected.stats).filter(id=>
+      Number.isFinite(projected.stats[id])&&Number.isFinite(snapshot.persona.stats[id])&&
+      projected.stats[id]!==snapshot.persona.stats[id]).length;
+   },0);
+  });
   assert.equal(shownEffects,realEffects,'preview never invents rewards when a narrative choice has no numeric effect');
   await page.locator('#dailyModalCollapse').click();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'modal collapses without settling');

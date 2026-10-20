@@ -525,17 +525,17 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  padding:1rem 1.15rem .85rem;border-bottom:.0625rem solid #ffffff1a;flex:none}
 .daily-modal-head>div{min-width:0}
 .daily-modal-head small{display:block;font-size:.65rem;letter-spacing:.12em;font-weight:850;color:#a7b9c8;margin-bottom:.2rem}
-.daily-modal-head h2{font-size:1.17rem;line-height:1.35;margin:0;overflow-wrap:anywhere}
+.daily-modal-head h2{font-size:1.13rem;line-height:1.45;margin:0;font-weight:770;overflow-wrap:anywhere}
 .daily-modal-collapse{flex:none;min-height:2.4rem;padding:.45rem .7rem;border:.0625rem solid #546474;
  background:#2d3741;color:#e8f0f8;border-radius:.55rem;font-size:.77rem;font-weight:800}
 .daily-modal-body{padding:1rem 1.15rem 1.2rem;min-height:0;overflow-y:auto;overscroll-behavior:contain;
  scrollbar-width:thin;scrollbar-color:#576674 transparent}
 .daily-choice-dialog .daily-scenario{padding:0 0 .8rem;border-bottom:.0625rem solid #ffffff1a}
-.daily-choice-dialog .daily-scenario-title{font-size:1.05rem}
-.daily-choice-dialog .daily-choice-story{font-size:.87rem;line-height:1.6}
+.daily-choice-dialog .daily-scenario-title{display:none} /* already shown in heading */
+.daily-choice-dialog .daily-choice-story{font-size:.92rem;line-height:1.75;letter-spacing:-.012em;color:#d6dce5}
 .daily-choice-dialog .daily-choice-prompt{margin:.9rem 0 .4rem;color:#d3dce6;font-weight:800;font-size:.83rem}
 .daily-choice-dialog .inline-choices{display:flex;flex-direction:column;gap:0}
-.daily-choice-dialog .inline-choice{padding:.9rem .35rem;min-height:3.55rem;border-color:#ffffff18}
+.daily-choice-dialog .inline-choice{padding:1rem .5rem;min-height:3.75rem;border-color:#ffffff1a;transition:background .16s ease,transform .16s ease}
 .daily-choice-dialog .daily-choice-effects{opacity:1}
 .daily-choice-dialog .daily-choice-effect{color:color-mix(in srgb,var(--gauge-color,#7A8593) 86%,white)}
 .daily-choice-dialog .daily-choice-locked{color:#eba690}
@@ -606,3 +606,60 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .record-impacts .daily-result-chip.token-icon-pill{font-size:.65rem}
 }
 @media(prefers-reduced-motion:reduce){.record-impacts .daily-result-chip{animation:none!important}}
+
+
+/* Story rhythm: logical-turn gauge remains visible during choices and review. */
+.choice-timing{position:relative;background:linear-gradient(90deg,#b88cdd0c,#4d789d0b)}
+.choice-progress-track{height:.34rem;border-radius:10rem;overflow:hidden;background:#ffffff16;position:relative;margin-top:.45rem}
+.choice-progress-fill{display:block;height:100%;width:100%;background:linear-gradient(90deg,#8b68bf,#66bbaf);
+ transform:scaleX(0);transform-origin:left;transition:transform .19s cubic-bezier(.2,.7,.1,1);border-radius:inherit;box-shadow:0 0 .8rem #9a74d558}
+.choice-timing.is-paused .choice-progress-fill{background:linear-gradient(90deg,#9d85b7,#b9a4cb)}
+.choice-timing #nextChoiceProgress{position:absolute;inset:auto auto 0 0;height:.01rem;opacity:0;pointer-events:none}
+.choice-timing .timing-label{display:flex;justify-content:space-between;gap:.75rem;align-items:center;font-size:.72rem;color:#c5c1d1}
+.choice-timing #nextChoiceLabel{font-variant-numeric:tabular-nums;font-weight:750;color:#d9c4e9}
+@keyframes daily-dialog-rise{from{opacity:0;transform:translateY(1.65rem) scale(.986)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes daily-backdrop-on{from{opacity:0}to{opacity:1}}
+.daily-choice-dialog[open]{animation:daily-dialog-rise .3s cubic-bezier(.16,.84,.25,1) both;will-change:transform,opacity}
+.daily-choice-dialog[open]::backdrop{animation:daily-backdrop-on .24s ease both}
+.daily-choice-dialog .daily-scenario{border-bottom:0;padding:0 0 .65rem}
+.daily-choice-dialog .daily-scenario-kicker{color:#ab93c0;letter-spacing:.035em;margin-bottom:.25rem}
+.daily-choice-dialog .daily-choice-prompt{border-top:.0625rem solid #ffffff18;padding-top:.9rem;margin:.35rem 0 .3rem}
+.daily-choice-dialog .daily-choice-title{font-size:.96rem;font-weight:690;line-height:1.48;letter-spacing:-.012em}
+.daily-choice-dialog .daily-choice-number{color:#b9a2d4;font-weight:800;font-size:.7rem;margin-top:.18rem}
+.daily-choice-dialog .inline-choice:hover:not(:disabled),.daily-choice-dialog .inline-choice:focus-visible{background:#ffffff0c;transform:translateX(.15rem)}
+.daily-choice-dialog .inline-choice:active:not(:disabled){transform:scale(.99)}
+.daily-choice-dialog .daily-choice-effects{gap:.28rem .48rem;margin-top:.24rem}
+.daily-choice-dialog .daily-choice-effect{font-size:.68rem}
+.daily-trait-preview.token-trait,.daily-trait-preview.token-icon-pill{font-size:.67rem;padding:.22rem .45rem;border-radius:.5rem}
+.token-trait[style*="--trait-color"],.daily-trait-preview[style*="--trait-color"]{
+ background:color-mix(in srgb,var(--trait-color) 23%,#17202b);
+ border-color:color-mix(in srgb,var(--trait-color) 62%,#14171e);
+ color:color-mix(in srgb,var(--trait-color) 72%,white);
+ box-shadow:inset 0 0 0 .04rem color-mix(in srgb,var(--trait-color) 25%,transparent)
+}
+.token-trait[style*="--trait-color"] .token-icon,.daily-trait-preview[style*="--trait-color"] .token-icon{color:var(--trait-color)}
+.token-trait{transition:transform .18s ease,filter .18s ease}
+.token-trait:hover{transform:translateY(-.09rem);filter:brightness(1.13)}
+@keyframes story-news-arrive{from{opacity:0;transform:translateY(.9rem) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes story-record-arrive{from{opacity:.3;transform:translateY(.65rem)}to{opacity:1;transform:translateY(0)}}
+.record-arrived{animation:story-record-arrive .3s cubic-bezier(.16,.85,.22,1) both}
+.life-news-toast{position:fixed;z-index:12;right:1rem;bottom:calc(env(safe-area-inset-bottom) + 1.3rem);width:min(22rem,calc(100% - 2rem));
+ pointer-events:none;max-height:10rem;overflow:hidden;background:#222633f2;border:.0625rem solid #9d83bb70;
+ border-left:.22rem solid #ab8acd;border-radius:.85rem;padding:.8rem 1rem;color:#f5f1fb;
+ box-shadow:0 .8rem 2.8rem #0009;backdrop-filter:blur(.8rem)}
+.life-news-toast[hidden]{display:none}
+.life-news-toast.is-arriving{animation:story-news-arrive .35s cubic-bezier(.15,.8,.2,1) both}
+.life-news-toast small{display:block;color:#cda9ef;font-weight:800;font-size:.68rem;letter-spacing:.08em;margin-bottom:.32rem}
+.life-news-toast strong{display:block;font-size:.92rem;line-height:1.35}
+.life-news-toast p{margin:.3rem 0 0;color:#d4cbdf;font-size:.74rem;line-height:1.5;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+@media(max-width:47.5em){
+ .life-news-toast{left:.8rem;right:.8rem;bottom:calc(env(safe-area-inset-bottom) + 9.5rem);width:auto}
+ .daily-choice-dialog{max-height:calc(100dvh - 1.25rem);width:calc(100% - 1.3rem);border-radius:1.15rem}
+ .daily-modal-head{align-items:center}
+ .daily-modal-head h2{font-size:1.12rem}
+ .daily-choice-dialog .inline-choice{padding:.83rem .25rem;min-height:3.65rem}
+}
+@media(prefers-reduced-motion:reduce){
+ .choice-progress-fill,.token-trait{transition:none!important}
+ .daily-choice-dialog[open],.daily-choice-dialog[open]::backdrop,.life-news-toast.is-arriving,.record-arrived{animation:none!important}
+}

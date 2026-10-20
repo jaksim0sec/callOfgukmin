@@ -88,9 +88,9 @@ global.GukminDirector.register({
      {id:'ordinary-chat',priority:0,
       body:'반 단톡방에서 수행평가 질문이 올라왔다. 너는 이미 끝냈다. ==그런데 아무도 답장을 하지 않는다.== ~~다들 자나?~~',
       options:[
-       {label:'정답 대신 풀이 방법을 알려 준다',effects:{stats:{relations:2}},detail:'"오 그러면 되는 거냐"라는 답이 왔다. 친구는 직접 남은 부분을 채워 제출했다.'},
-       {label:'나도 못 했다며 같이 하자고 한다',effects:{stats:{relations:1}},detail:'답장이 쏟아졌다. "지금 디코?" ==끝낸 과제를 다시 설명하게 생겼다.=='},
-       {label:'조용히 휴대폰을 덮는다',detail:'아침에 메시지는 47개. 과제는 제출했고 너는 제시간에 잤다.'}
+       {label:'정답 대신 풀이 방법을 알려 준다',effects:{stats:{relations:2,study:1,stress:1}},detail:'"오 그러면 되는 거냐"라는 답이 왔다. 친구는 직접 남은 부분을 채워 제출했다. 대신 내 복습 시간이 조금 줄었다.'},
+       {label:'나도 못 했다며 같이 하자고 한다',effects:{stats:{relations:3,stress:2}},detail:'답장이 쏟아졌다. "지금 디코?" ==끝낸 과제를 다시 설명하게 생겼다.== 서로 도왔지만 저녁 시간이 줄었다.'},
+       {label:'조용히 휴대폰을 덮는다',effects:{stats:{stress:-2}},detail:'아침에 메시지는 47개. 과제는 제출했고 너는 제시간에 잤다. 다음 날 질문은 직접 설명하기로 했다.'}
       ]}
     ]),
   S.branch(S.selection('middle:resources',59,'시험 대비 방법을 고른다',family?'유료 학원이 부담스럽다. 학교 프로그램도 이용할 수 있다.':'다양한 공부 방식 중 하나를 고를 수 있다.',[

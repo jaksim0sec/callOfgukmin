@@ -461,6 +461,59 @@ test('story traits remain obtainable from sustained actions and modify the next 
  const plain=Effects.apply(person,exam.result).stats.exam;
  assert.equal(modified-plain,2);
 });
+test('arts aptitude becomes a visible real trait only after consistent activities',()=>{
+ const {c,P}=setup(),D=c.GukminDirector,E=c.GukminEffects;
+ const pack=D.content(P.generate());
+ const first=pack.choices.find(x=>x.id==='elementary:interest-exploration');
+ const later=pack.choices.find(x=>x.id==='elementary:interest-followup');
+ const base=P.generate(),early=E.apply(base,first.options[2].result);
+ assert.ok(early.traits.includes('관심-예체능'),'arts interest is recorded');
+ assert.ok(!early.traits.includes('예체능'),'one try does not grant a permanent aptitude');
+ const emerged=E.apply(early,later.options[2].result);
+ assert.ok(emerged.traits.includes('예체능'),'related second activity grants the actual aptitude');
+ assert.equal(P.traitDefinition('예체능').color,'#EB83C0');
+ assert.ok(!E.apply(base,later.options[2].result).traits.includes('예체능'),
+  'an unrelated one-off choice does not grant arts expertise');
+});
+test('smoking trait is a persistent downside and support can remove it',()=>{
+ const {c,P}=setup(),D=c.GukminDirector,E=c.GukminEffects,T=c.GukminTimeline;
+ const content=D.content(P.generate()),scene=content.choices.find(x=>x.id==='high:tobacco-offer');
+ assert.equal(scene.options.length,3);
+ const p=P.generate();p.age=17;p.phase='high';p.stats.money=20000;
+ const reluctant=E.apply(p,scene.options[2].result);
+ assert.ok(reluctant.traits.includes('흡연'));
+ assert.ok(reluctant.stats.health<p.stats.health);
+ assert.equal(P.traitDefinition('흡연').negative,true);
+ const timeline=T.create({persona:reluctant,events:[],choices:[]});
+ timeline.advance(4);
+ assert.ok(timeline.snapshot().persona.stats.money<reluctant.stats.money,
+  'the retained habit causes a later cost');
+ const follow=content.choices.find(x=>x.id==='high:smoking-followup');
+ const recovered=E.apply(reluctant,follow.options[0].result);
+ assert.ok(!recovered.traits.includes('흡연'));
+});
+test('a paced director step saves real intermediary news without skipping the next choice',()=>{
+ const {c,P}=setup(),D=c.GukminDirector;
+ let engine=D.create({persona:P.generate()});
+ engine.run();
+ const first=engine.snapshot().choice;
+ engine.resolve(first.token,first.options[0].id);
+ const before=engine.snapshot();assert.equal(before.reviewPending,true);
+ let previousTurn=before.runtime.turn,observedHistory=false,steps=0;
+ for(;steps<28;steps++){
+  const snapshot=engine.step();
+  if(!snapshot)break;
+  const now=engine.snapshot();
+  assert.ok(now.runtime.turn>=previousTurn);
+  assert.ok(now.runtime.turn<=previousTurn+1,'one paced beat advances at most one turn');
+  if(now.persona.history.length>before.persona.history.length)observedHistory=true;
+  previousTurn=now.runtime.turn;
+  if(now.choice)break;
+ }
+ assert.ok(steps<28,'the loop reaches a new choice promptly');
+ assert.ok(engine.snapshot().choice,'the next choice is still presented');
+ assert.ok(observedHistory,'intermediate stories were saved');
+});
 test('extreme student stress schedules non-blocking restorative rest without repeat settlement',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
  const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';

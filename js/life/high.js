@@ -198,6 +198,18 @@ global.GukminDirector.register({
       ]}
     ]),
    unique,
+   S.selection('high:tobacco-offer',71,'옥상에서 들려온 권유',
+    '점심시간 뒤. 복도에서 알게 된 선배가 나가자고 손짓한다. ==담배를 권하는 분위기다.==\n\n"한 번쯤은 괜찮다니까."\n\n~~괜찮다는 사람은 책임져 주지 않는다.~~',[
+     {label:'싫다고 분명히 말하고 자리를 뜬다',risk:'선배와 잠시 어색해질 수 있음',
+      effects:{traits:{add:['자기주장']},stats:{relations:-1}},
+      detail:'"그래, 됐다." 선배는 더는 말을 걸지 않았다. ==관계는 잠깐 어색해졌지만 스스로 선을 지킨 기억이 남았다.=='},
+     {label:'피우지 않겠다고 하고 친구와 함께 나온다',
+      effects:{stats:{relations:1,stress:1}},
+      detail:'친구도 따라 나왔다. "와, 저런 얘기 갑자기 하면 난감하네." 둘은 말없이 교실로 돌아왔다.'},
+     {label:'거절하지 못하고 권유에 넘어간다',risk:'건강·돈에 손해가 남는 습관으로 이어질 수 있음',
+      effects:{stats:{health:-2,money:-3000},traits:{add:['흡연']}},
+      detail:'처음부터 불편했다. ==건강에 부담을 주는 습관이 남았다.== 관계가 좋아진 것도 아니었다. ~~괜찮을 거라던 말은 어디 갔지.~~'}
+   ]),
    S.branch(choiceAt('high:teamwork',72,'수행평가 전날, 조원 연락이 끊겼다',
     '발표가 내일인데 한 조원이 맡은 자료를 보내지 않는다. 단체방 분위기가 험악해진다.',[
      {label:'자료를 나눠서 재정리하고 발표를 준비한다',effects:{stats:{study:3,relations:4,stress:4}},detail:'불필요한 다툼 없이 발표 준비를 마쳤다.'},
@@ -208,20 +220,20 @@ global.GukminDirector.register({
    body:'윤세아가 실험 결과 파일을 열었다. 마지막 그래프의 단위가 틀렸다. ==이미 보고서를 인쇄했다.==',
    options:[
     {label:'세아와 원본 데이터를 다시 계산한다',risk:'늦은 밤까지 재작업',
-      effects:{stats:{study:2,stress:3}},
+      effects:{stats:{study:3,stress:3,health:-1}},
       detail:'세아와 측정값을 하나씩 대조해 단위 오류를 찾아냈다. 한밤중에 정정본을 인쇄했지만 다음 날 둘 다 피곤한 얼굴이었다.'},
      {label:'교사에게 오류를 알리고 정정본을 낸다',risk:'수정 기한을 넘겨 감점 가능',
-      effects:{stats:{stress:1}},
+      effects:{stats:{stress:1,relations:1}},
       detail:'정정 가능 여부를 물었더니 교사는 기록을 남기고 다시 내라고 했다. 감점 가능성은 남았지만 잘못된 데이터를 사실처럼 발표하지 않았다.'},
      {label:'틀린 그래프를 제외하고 확인된 자료만 낸다',risk:'발표 분량과 설득력이 줄어듦',
-      effects:{stats:{stress:2}},
+      effects:{stats:{stress:-1,schoolScore:-1}},
       detail:'그래프를 빼자 결론을 뒷받침할 설명도 줄었다. 질문 시간에 빠진 그래프의 이유를 설명하느라 진땀을 뺐다.'}
    ]},
   {id:'team-harin',priority:20,when:{attributes:{highPeer:'하린'}},
    body:'최하린과 준비한 토론 발표에서 한 조원이 맡은 슬라이드를 보내지 않았다. 그런데 단체방 프로필 사진은 방금 바뀌었다.',
    options:[
     {label:'조원에게 필요한 자료와 마감을 명확히 전달한다',detail:'조원이 절반을 보내 왔다. 나머지는 너와 하린이 다시 확인했다.'},
-    {label:'하린과 발표 분량을 줄여 마무리한다',effects:{stats:{relations:1}},detail:'둘이 자료를 고쳤다. 하린은 마지막 장에 출처를 직접 달았다.'},
+    {label:'하린과 발표 분량을 줄여 마무리한다',risk:'발표 완성도 일부를 포기',effects:{stats:{relations:2,schoolScore:-1},traits:{add:['친화력']}},detail:'지난 학기부터 함께 고친 자료를 다시 나눴다. 분량은 줄었지만 ==일을 나누고 마무리하는 습관==이 남았다.'},
     {label:'담당 교사에게 역할별 진행 상황을 알린다',detail:'교사는 작업 기록을 확인했다. 단체방은 며칠 동안 조용했다.'}
    ]},
   {id:'team-jaeho',priority:0,
@@ -237,10 +249,16 @@ global.GukminDirector.register({
    examWithPrelude(18,3,75,'mock'),
    choiceAt('high:family-time',76,'토요일 오후에 걸려 온 가족의 전화',
     familyNeeds?'가게에 사람이 몰려 가족이 급하게 도와 달라고 한다. 내일 시험 준비도 남았다.':'가족이 오래전 잡은 모임에 오라고 한다. 일요일에는 공부하려고 했는데 돌아오는 시간이 늦어질 듯하다.',[
-     {label:'필요한 시간만 돕고 돌아와 남은 과제를 마친다',effects:{stats:{relations:1}},detail:'가족이 일을 나눠 맡았다. 돌아왔을 때 책상 위 계획표에는 아직 빈칸이 있었다.'},
-     {label:'내일 일정이 있다며 대신 가능한 시간을 제안한다',detail:'가족이 처음엔 아쉬워했지만 시간을 다시 잡았다. 약속은 지키기로 했다.'},
-     {label:'오늘은 가족과 함께 보내고 내일 계획을 다시 짠다',detail:'오랜만에 함께 저녁을 먹었다. 미뤄 둔 공부는 내일 할 일이 됐다.'}
+     {label:'필요한 시간만 돕고 돌아와 남은 과제를 마친다',effects:{stats:{relations:2,stress:2}},detail:'가족과 시간을 나눠 일을 마쳤다. 돌아왔을 때 책상 위 계획표에는 아직 빈칸이 있었다. ==오늘 밤은 조금 늦어졌다.=='},
+     {label:'내일 일정이 있다며 대신 가능한 시간을 제안한다',effects:{stats:{study:2,relations:-1}},detail:'가족이 조금 아쉬워했다. 대신 공부 계획을 마무리했고, 다음 주엔 함께하기로 했다.'},
+     {label:'오늘은 가족과 함께 보내고 내일 계획을 다시 짠다',effects:{stats:{stress:-3,relations:2,study:-1}},detail:'오랜만에 같이 저녁을 먹었다. ==머릿속은 조금 가벼워졌지만 공부는 내일로 밀렸다.=='}
     ]),
+   {...S.selection('high:smoking-followup',76,'남아 있는 습관',
+    '어느 날 계단에서 숨이 차다는 걸 느꼈다. 예전의 선택이 ==가끔이 아니라 습관==이 됐다는 걸 깨달았다. 도움을 구할 수 있는 곳이 있다.',[
+      {label:'상담과 주변의 도움을 받아 끊는 데 시간을 쓴다',effects:{stats:{stress:2},traits:{remove:['흡연']}},detail:'몇 달 동안 도움을 받고 생활을 바꿨다. ==흡연 특성이 사라졌다.== 이미 사용한 돈과 지나간 시간은 돌아오지 않는다.'},
+      {label:'혼자 미루다가 다시 도움을 찾아본다',effects:{stats:{stress:2}},detail:'한 번에 해결되진 않았다. 상담 안내를 다시 찾아 봤다. 흡연 습관은 아직 남아 있다.'},
+      {label:'아직은 바꿀 생각이 없다',effects:{stats:{health:-2,stress:1}},detail:'일상이 달라지는 줄 알면서도 미뤘다. 이후의 부담은 계속된다.'}
+    ]),event:{...S.selection('high:smoking-followup',76,'','',[{label:'확인'}]).event,when:{turn:{eq:76},traits:['흡연']}}},
    choiceAt('high:graduation-photo',77,'졸업앨범 촬영 날',
     '담임이 열 번 넘게 줄을 맞추라 했는데 박재호는 계속 뒤에서 장난을 친다. ==마지막 사진이라고 다들 갑자기 친한 척한다.==',[
      {label:'오래 함께한 친구에게 작은 쪽지를 남긴다',detail:'친구는 쪽지를 읽고 웃었다. 답장은 졸업식 날 주겠다고 했다.'},

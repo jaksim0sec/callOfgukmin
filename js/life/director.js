@@ -97,8 +97,24 @@ function create({persona,persist,onChange}){
    }
    return decorate(timeline.snapshot());
  }
+ // UI-only paced progression: advance one saved logical turn per animation beat.
+ // run() remains synchronous for tests, reload recovery and non-visual consumers.
+ function step(){
+   if(timeline.snapshot().reviewPending)timeline.resume();
+   const before=timeline.snapshot();
+   if(before.choice)return decorate(before);
+   const future=definitions.events.some(event=>{
+    const r=before.runtime.events[event.id];
+    return event.every===undefined&&r?.status!=='completed'&&
+      (event.at??0)>before.runtime.turn&&
+      global.GukminEffects.matches(before.persona,event.when,event.at);
+   });
+   if(!future)return false;
+   timeline.advance(1);
+   return decorate(timeline.snapshot());
+ }
  return Object.freeze({
-   snapshot:()=>decorate(timeline.snapshot()),
+   step,snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
    resolve:(token,optionId)=>timeline.resolve(token,optionId),
    apply:(id,result)=>{const applied=timeline.apply(id,result);if(applied)run();return applied;},

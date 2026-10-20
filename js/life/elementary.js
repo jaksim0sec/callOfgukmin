@@ -54,10 +54,10 @@ global.GukminDirector.register({
    ]),
    S.notice('elementary:age8',32,'초등학교 2학년','혼자 할 수 있는 일이 조금 더 늘었다.',{attributes:{age:8}}),
    S.selection('elementary:interest-exploration',34,'내가 재미있어하는 활동','학교에서 관심 있는 활동을 골라 체험해 보기로 했다.',[
-    {label:'이야기를 쓰고 토론해 본다',effects:{traits:{add:['관심-문과']}},tags:['humanities']},
-    {label:'과학 실험과 수학 퍼즐에 도전한다',effects:{traits:{add:['관심-이과']}},tags:['science']},
-    {label:'그림과 음악을 만들어 본다',effects:{traits:{add:['관심-예체능']}},tags:['arts']},
-    {label:'친구들과 운동을 해 본다',effects:{traits:{add:['관심-체육']}},tags:['sports']}
+    {label:'이야기를 쓰고 토론해 본다',effects:{traits:{add:['관심-문과']}},tags:['humanities'],detail:'짧은 이야기를 썼다. ==문과 분야의 관심이 발견됐다.== 관련 활동을 계속하면 진짜 특성으로 발전할 수 있다.'},
+    {label:'과학 실험과 수학 퍼즐에 도전한다',effects:{traits:{add:['관심-이과']}},tags:['science'],detail:'실험을 끝내고 결과를 적었다. ==이과 분야의 관심이 발견됐다.== 다음에도 해 본다면 적성이 될지 모른다.'},
+    {label:'그림과 음악을 만들어 본다',effects:{traits:{add:['관심-예체능']}},tags:['arts'],detail:'만든 작품을 교실 뒤에 걸었다. ==예체능 분야의 관심이 발견됐다.== 다음 학년에도 창작을 이어 가면 특성으로 발전할 수 있다.'},
+    {label:'친구들과 운동을 해 본다',effects:{traits:{add:['관심-체육']}},tags:['sports'],detail:'체육 시간 외에도 공을 차러 나갔다. ==체육 분야의 관심이 발견됐다.== 꾸준히 운동하면 특성이 될 수 있다.'}
    ]),
    S.notice('elementary:age9',36,'초등학교 3학년','수업과 숙제가 점점 다양해진다.',{attributes:{age:9}}),
     S.branch(S.selection('elementary:lunch',36,'급식 닭강정이 품절됐다',
@@ -104,7 +104,7 @@ global.GukminDirector.register({
       effects:{stats:{relations:-1,stress:1}},
       detail:'축제 사진을 삭제하자 조원이 왜 말도 없이 뺐냐며 따졌다. 너는 확인된 내용만 발표하겠다고 설명했다. 자료는 정확했지만 **조별 분위기는 냉랭해졌다.**'}
    ]),
-   S.selection('elementary:interest-followup',43,'관심 분야를 더 깊이 해볼 기회','학교 축제에서 한 분야의 활동을 다시 맡아 볼 수 있다.',[
+   S.selection('elementary:interest-followup',43,'관심 분야를 더 깊이 해볼 기회','학교 축제에서 활동을 고른다. ==2학년 때 관심을 가졌던 분야를 다시 연습하면 정식 특성이 된다.== 다른 분야를 탐색해도 괜찮다.',[
     {label:'발표문을 쓰고 토론을 진행한다',detail:'짝과 서로 다른 주장을 발표했다. 질문을 받자 미처 준비하지 못한 반론이 있었다.',tags:['humanities'],
      conditional:[{when:{traits:['관심-문과']},result:{effects:{traits:{add:['문과']}},history:{title:'문과 적성 발견',detail:'몇 차례 활동을 통해 표현 분야의 흥미가 자랐다.'}}}]},
     {label:'탐구 실험과 수학 문제를 함께 풀어 본다',detail:'계산이 맞지 않아 다시 측정했다. 예상했던 답과 다른 값도 그대로 기록했다.',tags:['science'],

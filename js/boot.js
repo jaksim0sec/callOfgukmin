@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='story-balance-20261020';
+const RELEASE='ui-motion-traits-20261020';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);

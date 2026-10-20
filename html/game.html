@@ -7,7 +7,7 @@
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=story-balance-20261020">
+  <link rel="stylesheet" href="css/style.css?v=ui-motion-traits-20261020">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -43,6 +43,7 @@
       </div>
       <div class="choice-timing" id="choiceTiming">
         <div class="timing-label"><span>다음 선택까지</span><span id="nextChoiceLabel">이야기 준비 중</span></div>
+        <div class="choice-progress-track" aria-hidden="true"><span class="choice-progress-fill" id="choiceProgressFill"></span></div>
         <progress id="nextChoiceProgress" max="1" value="0" aria-label="다음 선택까지 진행도"></progress>
       </div>
       <section id="systemTools" class="system-tools" aria-label="개발 검증 도구" hidden>
@@ -74,30 +75,31 @@
   <div class="modal-body"><h2 class="modal-title" id="modalTitle"></h2><p class="modal-story" id="modalStory"></p><div class="options" id="options"></div></div>
   <div class="modal-foot"><span class="summary" id="summary">항목을 선택하세요</span><button type="button" class="confirm" id="confirm" disabled>선택 확인</button></div>
 </dialog>
+<aside id="lifeNewsToast" class="life-news-toast" role="status" aria-live="polite" hidden></aside>
 <dialog id="dailyChoiceDialog" class="daily-choice-dialog" aria-labelledby="dailyModalHeading">
   <header class="daily-modal-head"><div><small>국민의 선택</small><h2 id="dailyModalHeading">어떻게 할까?</h2></div><button type="button" class="daily-modal-collapse" id="dailyModalCollapse">접기⌄</button></header>
   <div class="daily-modal-body" id="dailyChoiceBody" aria-live="polite"></div>
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
-<script src="js/poster.js?v=story-balance-20261020" defer></script>
-<script src="js/data/base.js?v=story-balance-20261020" defer></script>
-<script src="js/data/regions.js?v=story-balance-20261020" defer></script>
-<script src="js/data/schools.js?v=story-balance-20261020" defer></script>
-<script src="js/data/grades.js?v=story-balance-20261020" defer></script>
-<script src="js/playerState.js?v=story-balance-20261020" defer></script>
-<script src="js/effects.js?v=story-balance-20261020" defer></script>
-<script src="js/timeline.js?v=story-balance-20261020" defer></script>
-<script src="js/life/director.js?v=story-balance-20261020" defer></script>
-<script src="js/life/story.js?v=story-balance-20261020" defer></script>
-<script src="js/life/infant.js?v=story-balance-20261020" defer></script>
-<script src="js/life/elementary.js?v=story-balance-20261020" defer></script>
-<script src="js/life/middle.js?v=story-balance-20261020" defer></script>
-<script src="js/life/high.js?v=story-balance-20261020" defer></script>
-<script src="js/systemDemo.js?v=story-balance-20261020" defer></script>
-<script src="js/statusView.js?v=story-balance-20261020" defer></script>
-<script src="js/dailyChoice.js?v=story-balance-20261020" defer></script>
-<script src="js/game.js?v=story-balance-20261020" defer></script>
-<script src="js/majorView.js?v=story-balance-20261020" defer></script>
-<script src="js/boot.js?v=story-balance-20261020" defer></script>
+<script src="js/poster.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/data/base.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/data/regions.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/data/schools.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/data/grades.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/playerState.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/effects.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/timeline.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/life/director.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/life/story.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/life/infant.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/life/elementary.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/life/middle.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/life/high.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/systemDemo.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/statusView.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/dailyChoice.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/game.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/majorView.js?v=ui-motion-traits-20261020" defer></script>
+<script src="js/boot.js?v=ui-motion-traits-20261020" defer></script>
 </body>
 </html>

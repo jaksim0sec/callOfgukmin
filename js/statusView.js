@@ -142,6 +142,7 @@ function traitToken(name,entry={}){
  const def=global.GukminPlayer.traitDefinitions[name]||{};
  const negative=entry.negative===true||def.negative===true;
  const token=pill(name,entry.icon||def.icon||'sparkle','token-trait '+(negative?'trait-negative':'trait-positive')+(def.tier?' trait-tier-'+def.tier:'')+(def.aptitude?' trait-aptitude-'+def.aptitude:''));
+ if(def.color)token.style.setProperty('--trait-color',def.color);
  token.title=entry.description||def.description||name;
  token.setAttribute('aria-label',name+(def.tier?' · 출생 배경':negative?' · 디버프':' · 특성'));
  return token;
@@ -158,7 +159,20 @@ function showTraits(root,s){
     const name=typeof entry==='string'?entry:entry.name;
     if(!name)continue;
     const def=global.GukminPlayer.traitDefinitions[name]||{};
-    if(def.hidden)continue;
+    if(def.hidden){
+      // An interest is a visible seed, not a silently missing aptitude.
+      if(name.startsWith('관심-')){
+       const field=name.slice(3),learned=global.GukminPlayer.hasTrait(s,field);
+       if(!learned){
+        const developing=pill('관심 · '+field,'sparkle','token-trait trait-developing');
+        const tint=global.GukminPlayer.traitDefinitions[field]?.color;
+        if(tint)developing.style.setProperty('--trait-color',tint);
+        developing.title=field+' 활동을 다시 이어 가면 정식 특성으로 발전할 수 있어';
+        traits.append(developing);
+       }
+      }
+      continue;
+    }
     const negative=entry.negative===true||def.negative===true;
     const token=traitToken(name,entry);
     token.title=entry.description||def.description||name;
