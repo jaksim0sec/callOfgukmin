@@ -157,7 +157,8 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    r.status='confirmed';r.optionId=optionId;
    // Only one review can be pending. Save its before-state until explicit resume
    // so reload can show the real applied differences rather than guessed badges.
-   const reviewBefore=pauseAfterChoice?outcomeState(s.persona):null;
+   const requiresReview=typeof pauseAfterChoice==='function'?!!pauseAfterChoice(def,option):!!pauseAfterChoice;
+   const reviewBefore=requiresReview?outcomeState(s.persona):null;
    const before=outcomeState(s.persona),historyFrom=s.persona.history.length;
    settlement(s,`choice:${token}`,option.result||{},'choice:'+r.choiceId);
    // Preserve real settled deltas and the related log range after future turns.
@@ -167,7 +168,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    delete s.runtime.events[r.eventId].waitingToken;
    finish(s,r.eventId);r.status='closed';r.closedAt=s.runtime.turn;
    if(def.progress!==false&&def.blocksTime!==false)s.runtime.progressStart=s.runtime.turn;
-   if(pauseAfterChoice){
+   if(requiresReview){
     s.runtime.awaitingContinuation=true;
     s.runtime.reviewBefore=reviewBefore;
    }
