@@ -72,6 +72,65 @@ function differences(before,after){
 function create({dialog,body,heading,resumeButton,resolve,proceed}){
  let token=null,folded=true,review=false,delta=[],selectedId=null,currentChoice=null,pendingDecision=null;
  const confirm=dialog.querySelector('#dailyPaperConfirm');
+ const AUTO_OPEN_MS=5000;
+ let autoReady=false,autoRemaining=AUTO_OPEN_MS,autoStarted=0,autoTimeout=0,autoTicker=0;
+ const autoLabel=el('span','auto-choice-label','선택 열기');
+ const autoTime=el('small','auto-choice-time','5초 후 자동 열림');
+ const autoTrack=el('span','auto-choice-track');
+ const autoFill=el('span','auto-choice-fill');
+ autoTrack.append(autoFill);
+ resumeButton.replaceChildren(autoLabel,autoTime,autoTrack);
+ function stopClock(){
+  if(autoTimeout)global.clearTimeout(autoTimeout);
+  if(autoTicker)global.clearInterval(autoTicker);
+  autoTimeout=0;autoTicker=0;
+ }
+ function paintClock(){
+  autoTime.textContent=Math.max(0,Math.ceil(autoRemaining/1000))+'초 후 자동 열림';
+  autoLabel.textContent='선택 바로 열기';
+  autoTime.hidden=!autoReady;
+  autoTrack.hidden=!autoReady;
+ }
+ function pauseClock(){
+  if(!autoReady)return;
+  if(autoStarted)autoRemaining=Math.max(0,autoRemaining-(performance.now()-autoStarted));
+  autoStarted=0;stopClock();
+  autoFill.style.transition='none';
+  autoFill.style.transform='scaleX('+(1-autoRemaining/AUTO_OPEN_MS)+')';
+  paintClock();
+ }
+ function cancelClock(){
+  autoReady=false;autoStarted=0;stopClock();
+  autoFill.style.transition='none';autoFill.style.transform='scaleX(0)';
+  paintClock();
+ }
+ function startClock(){
+  if(!autoReady||autoStarted||!token||dialog.open||document.hidden)return;
+  if(autoRemaining<=0){open();return;}
+  const currentToken=token;
+  autoStarted=performance.now();
+  autoFill.style.transition='none';
+  autoFill.style.transform='scaleX('+(1-autoRemaining/AUTO_OPEN_MS)+')';
+  // Flush the initial scale before animating to the deadline.
+  void autoFill.offsetWidth;
+  autoFill.style.transition='transform '+autoRemaining+'ms linear';
+  autoFill.style.transform='scaleX(1)';
+  autoTimeout=global.setTimeout(()=>{
+   if(!autoReady||token!==currentToken)return;
+   cancelClock();
+   if(!document.hidden&&!dialog.open)open();
+  },autoRemaining);
+  autoTicker=global.setInterval(()=>{
+   if(!autoReady)return;
+   const left=Math.max(0,autoRemaining-(performance.now()-autoStarted));
+   autoTime.textContent=Math.ceil(left/1000)+'초 후 자동 열림';
+  },250);
+  paintClock();
+ }
+ function handleVisibility(){
+  if(document.hidden)pauseClock();
+  else startClock();
+ }
  const mobile=global.matchMedia('(max-width: 47.5em)');
  const paper=global.GukminSheet.create({
   element:dialog,handle:dialog.querySelector('#dailyPaperGrip'),
@@ -82,12 +141,15 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  });
  function sync(){
   resumeButton.hidden=token===null||review||dialog.open;
-  resumeButton.textContent='선택 진행 중 · 열기';
+  resumeButton.classList.toggle('is-auto-opening',autoReady);
+  if(!autoReady){autoLabel.textContent='선택 열기';autoTime.hidden=true;autoTrack.hidden=true;}
+  else paintClock();
   confirm.textContent='이 선택으로 기록하기';
   confirm.disabled=!selectedId||!!pendingDecision;
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
+  cancelClock();
   folded=false;dialog.showModal();paper.reset();sync();
   heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});
  }
@@ -98,8 +160,9 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   sync();
   if(!resumeButton.hidden&&!decision)resumeButton.focus({preventScroll:true});
  }
- function fold(){folded=true;if(dialog.open)paper.dismiss();else sync();}
+ function fold(){folded=true;cancelClock();if(dialog.open)paper.dismiss();else sync();}
  function reset(){
+  cancelClock();
   if(dialog.open)dialog.close();
   body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;
   sync();
@@ -120,6 +183,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   paper.dismiss(); // Finish closing before settling, so the story never swaps behind an open modal.
  }
  resumeButton.addEventListener('click',open);
+ document.addEventListener('visibilitychange',handleVisibility);
  confirm.addEventListener('click',confirmSelection);
  dialog.addEventListener('cancel',cancel);
  dialog.addEventListener('click',backdrop);
@@ -138,16 +202,18 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   delta=snapshot.runtime.reviewBefore?differences(snapshot.runtime.reviewBefore,snapshot.persona):[];
  }
  function showChoice(choice,host,persona){
-  if(token!==choice.token){token=choice.token;folded=true;review=false;delta=[];selectedId=null;}
+  if(token!==choice.token){
+   cancelClock();token=choice.token;folded=true;review=false;delta=[];selectedId=null;
+   autoReady=true;autoRemaining=AUTO_OPEN_MS;
+  }
   currentChoice=choice;
   heading.textContent=choice.title;body.replaceChildren();
   const stage=P.phaseOf(persona),labels={infant:'유년기',elementary:'초등학교',middle:'중학교',high:'고등학교'};
   dialog.querySelector('.daily-modal-head small').textContent=persona.age+'살 · '+(labels[stage]||P.phaseDefinition(stage).label);
   const compact=el('div','daily-choice-compact');
-  compact.append(el('strong','',choice.title),el('p','','선택 진행 중 · 결정을 기다리고 있어'));
-  const reopen=el('button','daily-choice-reopen','선택 창 열기 →');
-  reopen.type='button';reopen.addEventListener('click',open);
-  compact.append(reopen);host.append(compact);
+  compact.append(el('strong','',choice.title),
+   el('p','','일기장이 잠시 후 열려. 위 버튼을 누르면 바로 시작할 수 있어.'));
+  host.append(compact);
   const situation=el('section','daily-scenario');
   situation.append(el('span','daily-scenario-kicker','지금 상황'),el('strong','daily-scenario-title',choice.title));
   if(choice.body)situation.append(rich('p','daily-choice-story',choice.body));
@@ -222,7 +288,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    list.append(button);
   }
   body.append(list);
-  sync(); // The player opens the next story intentionally, never via an automatic modal.
+  sync();
+  startClock(); // Starts once per choice token; re-renders do not restart the countdown.
  }
  function changesFor(outcome){
   return outcome?.before&&outcome?.after?differences(outcome.before,outcome.after):review?delta:[];
@@ -239,6 +306,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  function dispose(){
   reset();
   paper.dispose();
+  document.removeEventListener('visibilitychange',handleVisibility);
   resumeButton.removeEventListener('click',open);
   confirm.removeEventListener('click',confirmSelection);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
