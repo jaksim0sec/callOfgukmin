@@ -1,8 +1,11 @@
 # 게임 공통 시스템 — 구현 계약
 
-## 2026-10-21 일상 결과 검토 UI 정책
+## 현행 선택 정산·검토 흐름 (2026-10-21)
 
-엔진의 `pauseAfterChoice`는 기존 boolean 계약을 그대로 유지한다. 인생 감독은 모든 선택을 기존처럼 정확히 한 번 정산·저장하고 `reviewPending`을 만든다. **일상 선택만 인게임 UI에서** 정산 완료 직후 `startJourney()`를 자동 호출해 검토 대기를 지나가며 기존 로그에서 결과를 읽게 한다. 시험/진학 등 한방 선택의 명시적 결과 확인은 유지한다. 엔진/저장 구조 변경 없이 과거에 저장된 일상 결과 대기도 UI 로드 시 기존 `run()`으로 처리한다.
+- **공통 엔진**: `GukminTimeline.resolve()`는 선택을 한 번만 정산·저장하고 `runtime.choices[token].outcome`에 선택 문구·기록 구간·정산 전후 상태를 남긴다. 생애 감독의 `pauseAfterChoice:true`는 `awaitingContinuation`/`reviewPending`을 유지한다.
+- **일상 UI**: 기존 `#dailyChoiceDialog` 모눈종이에서 선택을 확정하면 종이를 닫지 않고 **같은 시트의 보상 상태**로 전환한다. 체크·획득 제목, 실제 서술과 `GukminStatus` 공통 알약 토큰을 보여 준다. `보상 받기` 또는 시트 닫힘 완료 이후에만 `startJourney()`를 재개한다. 새로고침 시 저장된 `outcome.before/after`로 보상 시트를 복원한다. 차이가 없으면 보상을 만들어내지 않는다.
+- **한방 UI**: 시험·학교·수시/정시·최종 진로는 기존 `majorView.js` 및 성적표/결과 확인 정책을 유지한다. 일상처럼 즉시 확인하지 않는다.
+- **기본 타임라인/검증 콘텐츠**: `pauseAfterChoice`는 기본 꺼짐이고 일반 `advance`/테스트와 UI 재개는 별개다. 확정 결과는 인생 기록에도 누적된다.
 
 ## 2026-10-20 선택 조건·전망과 기존 슬롯 확장
 
@@ -12,15 +15,15 @@
 - `GukminStory.paths(pack, choiceId, scenarios)`는 기존 사건/선택을 찾아 시나리오를 추가한다. 기존 시나리오와 기본 옵션은 지우지 않으며 없는 슬롯은 오류다. 신규 시나리오 선정은 기존 사건 개시 시점·우선순위 계약을 따른다.
 - 활동 경험·후속 부탁·습관 진행은 등록 속성으로 저장하며, 지연 결과는 후속 사건의 조건부 효과로 처리한다. 새로운 정산 엔진·확률 재추첨·저장 버전은 도입하지 않는다.
 
-2026-10-19 공통 엔진 계약. 이 문서의 핵심 API는 유지하며, 별도 `LIFE.md`의 0~19세 시연 콘텐츠가 추가되었다. 정치·성인·엔딩은 미구현이다.
+2026-10-19 공통 엔진을 바탕으로 `LIFE.md`의 0~19세 학생기와 `js/life/admissions.js`의 내신·수능·대입·2회차 진로 분기가 연결됐다. 대학 생활·성인·정치·엔딩은 미구현이다. 아래 초창기 문단과 UI가 충돌하면 위 **현행 흐름**을 우선한다.
 
 ## 확정한 이벤트 3종류·선택 2종류
 
 | 이벤트 `layer` | 연결 가능한 선택 `layer` | 처리 |
 |---|---|---|
 | `소식 이벤트` | 없음 | 선택 없이 발생 효과·기록·완료 처리 |
-| `일상 이벤트` | `일상 선택` | 인생 기록 아래에 데이터의 N개 선택지 표시 |
-| `한방 이벤트` | `한방 선택` | 전용 UI의 응답을 기다림. 이번 작업에서는 팝업을 만들지 않음 |
+| `일상 이벤트` | `일상 선택` | N개 선택지를 종이 시트에서 결정하고 같은 시트에서 실제 보상 확인 |
+| `한방 이벤트` | `한방 선택` | 시험·고교/대학 지원·진로 전용 표시기의 응답/검토 대기 |
 
 종류가 맞지 않으면 등록 오류다. 중요도·확률·우선순위·나이 배율을 종류에서 추론하지 않는다. 같은 턴 사건은 데이터 등록 순서로 처리한다. 일상 선택을 다음 한방 선택까지 미루지 않는다. 선택의 `blocksTime`은 개별 데이터로 지정하며 생략하면 대기 중 턴 진행을 막는다.
 
@@ -28,7 +31,7 @@
 
 - `playerState.js`: 속성·상태 스탯·특성 정의 등록/조회, 기존 인물 생성·저장 호환. `registerMetric`, `registerTrait`, `registerAttribute`, `hasTrait`, `activeMetrics`, `schoolsOf`.
 - `effects.js`: DOM/저장소와 무관한 `GukminEffects.apply(persona,result,context)` 및 `matches(persona,condition,turn)`. 원본을 변경하지 않고 정산한 인물을 반환한다.
-- `timeline.js`: `GukminTimeline.create({persona,contentId,metrics,traits,attributes,events,choices,persist,onChange})`. 반환값은 `snapshot()`, `advance(turns)`, `resolve(token,optionId)`, `apply(transactionId,result)`.
+- `timeline.js`: `GukminTimeline.create({persona,contentId,metrics,traits,attributes,events,choices,persist,onChange})`. 반환값은 `snapshot()`, `advance(turns)`, `resolve(token,optionId)`, `resume()`, `apply(transactionId,result)`.
 - `game.js`: 확정된 스냅샷을 기존 포스터·상태·학력·특성·기록 렌더러와 선택 UI에 반영. `GukminGame.session`으로 연결된 세션의 `snapshot/advance/resolve/apply/dispose`를 사용할 수 있다. 인게임 외 화면에서는 세션이 없다.
 - `systemDemo.js`: 명시적으로 시작하는 테스트 콘텐츠. 실제 생애·학교·밸런스가 아니다.
 
@@ -129,7 +132,7 @@ traits: {
 
 인생 기록 타이틀 바로 아래의 진행도는 다음 시간 차단 선택의 실제 예정 턴과 연결된다. `blocksTime:false` 또는 `progress:false`인 선택은 해당 진행도 목표에서 제외되며, 그 사건 자체의 예정 시점에는 독립적으로 발생한다. 예정 선택이 없으면 임의의 가짜 카운트다운을 만들지 않는다.
 
-한방 팝업은 후속 콘텐츠 작업에서 아래 인터페이스에 연결한다:
+한방 UI는 현재 `majorView.js`가 다음 인터페이스에 등록되어 있다. 새 UI도 이를 재사용한다:
 
 ```js
 GukminGame.registerMajorPresenter(({choice, resolve, root}) => {
@@ -165,7 +168,7 @@ node tests/browser.mjs
 
 Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새로고침 중복 방지, 화면 이동, 새 인물, 미리보기의 비변경, 기존 세이브 보존과 레이아웃을 확인한다. 한방 UI 연결 테스트는 팝업 없이 대기/복구/콜백 정산만 검증한다. 실기기·다른 브라우저 호환성 전체를 검증한 것은 아니다.
 
-최종 로컬 검증: Node.js v24.19.0에서 시스템 테스트 16개 및 스모크 통과. 실제 Chromium에서 A–F(PC/모바일 3개 해상도), 한방 대기·복구·중복 콜백 및 표시기 교체·종료 테스트 통과. CI는 Node.js 22에서 스모크와 시스템 테스트를 실행하도록 구성했다. 원격 Pages 검증은 네트워크 정책의 도메인 접근이 허용되어야 한다.
+2026-10-19 당시 로컬 검증 기록: Node.js v24.19.0에서 시스템 테스트 16개 및 스모크 통과. 실제 Chromium에서 A–F(PC/모바일 3개 해상도), 한방 대기·복구·중복 콜백 및 표시기 교체·종료 테스트 통과. CI는 Node.js 22에서 스모크와 시스템 테스트를 실행하도록 구성했다. 원격 Pages 검증은 네트워크 정책의 도메인 접근이 허용되어야 한다.
 
 ## 기본 인생 관제탑 (2026-10-19)
 
@@ -173,7 +176,7 @@ Chromium에서는 PC 1365×900 / 모바일 390×844·360×640에서 A–F, 새�
 
 ## 생애 자동진행과 한방 UI 확장
 
-기존 `timeline.js`의 수동 `advance(n)` 계약은 유지한다. 게임 기본 관제탑은 `js/life/director.js`가 제시된 사건의 시점까지만 `advance()`를 호출한다. 선택이 발생하면 즉시 중지한다. 고교 졸업 후 추가 사건이 없으면 시간은 증가하지 않는다. 생애 시연의 나이는 각 마일스톤 사건 효과로 **명시적** 변경하고, 정수 턴을 현실 1시간·1일·1년으로 해석하지 않는다.
+기존 `timeline.js`의 수동 `advance(n)` 계약은 유지한다. 게임 기본 관제탑은 `js/life/director.js`가 제시된 사건의 시점까지만 `advance()`를 호출한다. 선택이 발생하면 즉시 중지한다. 고교 졸업 및 대입 진로 결정까지 등록된 사건이 끝나면 추가 턴을 만들지 않는다. 생애 시연의 나이는 각 마일스톤 사건 효과로 **명시적** 변경하고, 정수 턴을 현실 1시간·1일·1년으로 해석하지 않는다.
 
 `GukminStory.exam`은 5단계 준비량과 `presentation.type='exam'`을 가진 데이터 정의를 생성한다. 지역 고교 지원서는 `presentation.type='school'` 및 선택지마다 `school` 메타데이터를 갖는다. `majorView.js`는 데이터만 읽어 UI를 만들고, 유효한 응답을 그대로 `resolve(token,optionId)`에 전달한다. `presentation`이 없는 기존 한방 선택은 과거처럼 외부 표시기를 기다릴 수 있다.
 

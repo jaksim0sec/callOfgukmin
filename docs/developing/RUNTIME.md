@@ -5,18 +5,21 @@
 `GukminDailyChoice`는 동일 토큰당 한 번만 5초 wall-clock 타이머를 시작한다. `document.visibilitychange`에서 남은 시간과 막대를 일시 정지하며, 수동 열기·접기·다른 선택·dispose 시 타이머를 취소한다. 5초 후의 유일한 부작용은 `dialog.showModal()`이고 `resolve`/정산은 절대 호출하지 않는다. 인생 진행바의 값은 기존 논리 턴에만 의존하고, UI 진행률은 CSS transform 보간으로 표시한다. `GukminStatus.showMetrics`는 각 게이지의 실제 현재 변환 값을 읽어 새 렌더에 이어 주고, 접근 가능한 `<progress>`의 값을 그대로 유지한다. 출생 화면도 원래의 10초 타이머와 Skip 버튼을 변경하지 않는다.
 
 
-## 2026-10-21 일상 결과 UI 단일 출처
+## 현행 일상 보상 시트·진행 연결 (2026-10-21)
 
-일상 선택은 공통 시트 닫힘이 끝난 뒤 기존 `engine.resolve`로 정산한다. 엔진의 `pauseAfterChoice:true` 및 저장 계약은 **수정하지 않는다**. 인게임 UI만 이어서 기존 `startJourney()`를 호출해 `reviewPending`을 자동 정리한다. 이 과정에서 결과는 `runtime.choices[token].outcome`과 인생 기록으로 한 번 표시되고 결과 종이는 열지 않는다. 후속 소식이 진행되더라도 다음 일상 팝업은 사용자가 직접 열 때까지 닫혀 있다.
+- `GukminDailyChoice`는 기존 `engine.resolve(token,id)`로 **정산·저장한 뒤 모눈종이 `#dailyChoiceDialog`를 열린 채 유지**한다. 본문만 체크 표시/획득 제목/실제 결과·통합 알약 토큰으로 교체한다.
+- `#dailyPaperConfirm`은 기존 `.daily-paper-confirm` 스타일에서 문구만 `보상 받기`로 바뀐다. 탭·Escape·아래 드래그 등으로 닫힘이 완료된 뒤 `startJourney()`를 호출한다. 보상을 보기 전에 다음 사건을 진행시키지 않는다.
+- 정산 영향은 `runtime.choices[token].outcome.before/after`와 인생 기록에 남는다. `reviewPending`을 새로고침으로 복원하면 같은 보상 종이를 다시 열고, 실제 결과가 없는 구세이브에서는 가짜 보상 없이 레거시 복구를 실행한다.
+- 다음 일상은 새 토큰의 **5초 자동 열림** 또는 직접 열기 중 먼저 발생한 것으로 열린다. 5초는 UI 전용 실시간 카운트다운이며 턴/정산을 진행시키지 않는다. 한방은 별도 화면이다.
 
 ## 2026-10-20 범용 시트 컨트롤러
 
 `js/sheetController.js`는 시트 `element`, `handle`, `dragTargets`, `steps: [{name,ratio,minRem?,maxRem?,topGapRem?}]`, `initial`, `enabled`, `dismissible`, `removeOnDismiss`, `onDismiss`를 받아 재사용 가능한 스냅/관성/해제 정책을 제공한다. `dispose`, `dismiss`, `setLevel`, `reset`, `revealAtLeast`, `getLevel` 메서드를 제공한다. 스타일 변경은 각 시트 클래스로 격리한다.
 
-기록 시트는 3단계 비삭제형, 일상 모눈 선택지는 2단계 접기 허용형이다. 후자의 선택 확정은 명시적 버튼을 거치고 결과는 같은 종이 안에 표시한 뒤 기존 기록/리뷰로 돌아간다.
+기록 시트는 3단계 비삭제형, 일상 모눈 선택지는 2단계 접기 허용형이다. 후자는 명시적 버튼으로 선택을 확정한 뒤 **같은 종이에서 보상**을 보여 주고, 수령/닫기 이후에만 진행한다.
 
 
-> 현행: 정적 3화면·공통 정산 기반과 출생~19세 학생 생애 콘텐츠. 성인·정치·전체 게임 엔딩은 연결하지 않았다. 아래는 날짜별 개발 이력이므로 최신 LIFE/STORY/UI/CSS 계약을 우선한다.
+> **2026-10-21 현행:** 정적 3화면, 출생~19세 학생 사건과 대입 수시/정시·최대 2회차 입시 결산까지 연결됐다. 대학 생활·성인·정치·엔딩은 미구현이다. **아래 날짜별 개발 이력은 당시 상태**로, 현행 안내와 충돌하면 실제 소스·맨 앞 계약을 우선한다.
 
 ## 2026-10-20 사용성 회귀 보강
 
@@ -36,16 +39,18 @@
 | `html/result.html` | 종료 판정이 없는 결과 화면 **미리보기** |
 | `js/boot.js` | 독립 HTML 화면별 초기화·화면 이동. 런타임 HTML fetch 사용 안 함 |
 | `js/playerState.js` | 인물 생성/보존·스탯 정의/단계별 활성 조건·학력/특성 기반 데이터 |
-| `js/statusView.js` | 왼쪽 속성·학력 토큰 / 오른쪽 상태 스탯·특성 렌더링 |
+| `js/statusView.js` | 오른쪽 속성·학력 토큰과 왼쪽 상태 스탯·특성 렌더링(PC 기준) |
 | `js/poster.js` | 기존 독립 DOM 포스터 `GukminPoster.create/update` |
-| `js/game.js` | 공통 세션의 확정 상태 렌더, 일상 선택, 한방 UI 연결, 검증용 도구 |
+| `js/game.js` | 인게임 상태·기록·일상/한방 연결·컷신·진행·검증 도구 |
+| `js/dailyChoice.js` / `js/sheetController.js` | 일상 선택/동일 시트 보상·5초 열기 / 공통 시트 스냅·접기 |
+| `js/life/admissions.js` | 수시/정시·수능/내신 제출·진로 및 입시 재도전 |
 | `js/effects.js` / `js/timeline.js` | 공통 정산·이벤트 3종·선택 2종·턴 및 대기 |
 | `js/systemDemo.js` | 명시적으로 실행하는 공통 기반 검증 데이터 |
 | `css/style.css` | 정적 세 화면 및 반응형·팝업·토큰 스타일 |
 | `tests/smoke.mjs` | 독립 HTML/JS 상대경로·구문·ID·CSS 단위와 fetch 제거 확인 |
 
 - `index.html` → `html/waiting.html` 리다이렉트. 각 `html/{waiting|game|result}.html`은 `<!doctype html>`이 있는 독립 문서이며 공통 JS/CSS는 정적 `<base href="../">`로 Pages의 `/callOfgukmin/` 및 로컬 상위 폴더를 기준으로 불러온다. 동적 base 삽입 전 잘못된 경로로 발생하는 브라우저 선행 요청을 방지한다. `boot.js`는 `document.baseURI`를 기준으로 페이지 네비게이션만 처리하며 `fetch()`를 사용하지 않는다. 루트 진입점도 상대 경로로 이동하므로 로컬 루트와 Pages 하위 경로에서 모두 작동한다.
-- 스크립트 순서: `poster.js`, `playerState.js`, `effects.js`, `timeline.js`, `systemDemo.js`, `statusView.js`, `game.js`, `boot.js`. 일반 `defer` 스크립트, 번들러/외부 런타임 프레임워크 없음.
+- 실제 인게임 `defer` 로드 순서: `poster → data/base → data/regions → data/schools → data/grades → playerState → effects → timeline → life/director → life/story → life/infant → life/elementary → life/middle → life/high → life/admissions → systemDemo → statusView → sheetController → dailyChoice → game → majorView → boot`. `html/game.html`을 기준으로 유지하며 번들러는 없다.
 - 독립 HTML 파일이므로 `fetch()` 없이 직접 페이지가 열린다. HTTP 정적 서버 권장: 루트에서 `python3 -m http.server 8000`. GitHub Pages 호스팅 경로는 루트 `index.html` 유지.
 - 초기 화면은 **대기**. 시작 클릭은 인트로 후 인게임으로 이동하고, 기본 생애 관제탑이 등록 콘텐츠의 마지막 시점까지만 자동 정산한다. 현재 출생 사건은 0턴이어서 턴·나이가 증가하지 않는다. 결과 화면은 대기에서 테스트용으로만 접근.
 - 페이지 이동마다 브라우저가 새 HTML 문서를 로드하고, 공통 `localStorage` UI 키로 동일 인물을 다시 읽는다.
@@ -56,14 +61,14 @@
 - `GukminPlayer.generate/load/save/ensure`는 현재 UI 세이브 키 `callOfgukmin__ui__v1`만 사용. 기존 플레이 기록 키 `callOfgukmin__playable__v1`은 읽거나 덮어쓰지 않는다.
 - 출생 시 `phase:'infant'` / `stats.stress=0, health=100, money=0`인 **UI 테스트 인물**을 생성. 초기값은 게임 밸런스 확정값이 아니다.
 - 예전 UI 스키마(`school`, `stats`, `history` 등)는 유효하면 읽을 수 있도록 유지. `family`는 **집안 속성**으로 표시되며 신규 특성으로 지급하지 않는다.
-- `activeMetrics`는 단계 기본값과 명시적 활성/종료를 반영한 목록을 반환하며 `GukminStatus.render`가 이를 그린다. 직업·학력·역할 데이터는 추후 확장 가능. 실제 생애 성장 콘텐츠는 없으며 공통 정산·획득 기능은 [SYSTEMS.md](SYSTEMS.md)에 정의한다.
+- `activeMetrics`는 단계 기본값과 명시적 활성/종료를 반영하고 `GukminStatus.render`가 표시한다. 유년기~고교·대입 분기는 구현됐지만 대학 캠퍼스 및 성인 직업·정치 활동은 연결되지 않았다. 정산 규칙은 [SYSTEMS.md](SYSTEMS.md)를 따른다.
 - `schoolHistory`: 학교별 `kind,name,status` 기록 배열. `enrolled`는 활성 알약 토큰, `graduated`는 일반/완료 토큰. 학력이 '텍스트+커다란 카드'가 되는 별도 UI가 아니다.
-- `traits`: 별도 특성 토큰 목록. 버프·디버프를 데이터로 정의할 수 있으며 구체적인 기본 특성 밸런스는 미정. 상태 스탯 오른쪽 패널 **하단** 배치.
+- `traits`: 별도 특성 토큰 목록. 버프·디버프를 데이터로 정의할 수 있으며 구체적인 기본 특성 밸런스는 미정. 상태 스탯과 같은 패널의 **상단** 배치.
 - 과거 게임 코드의 학업·정치 스탯과 새 [PLAYER_STATE.md](../notes/PLAYER_STATE.md)의 제안을 합쳐서 활성 게임플레이로 오해하지 않는다.
 
 ## 화면·회귀 검증
 
-- PC: 왼쪽 포스터·프로필(속성/학교 토큰), 오른쪽 상태 스탯·특성 및 기록. 모바일: 포스터·속성 영역 가로 배치 + 상태·특성 + **항상 열린 하단 바텀시트**.
+- PC: 왼쪽 포스터와 상태 스탯·특성, 오른쪽 속성·학교 토큰과 인생 기록. 모바일: 포스터·상태가 상단 2열, 아래에 속성·학교, 화면 아래에 **항상 남는 인생 기록 시트**. 일상 종이는 별도 접을 수 있는 모달이다.
 - CSS 작업 시 [CSS.md](CSS.md) 우선. 스탯이 많은 시기의 실제 UI 높이·터치 영역은 별도 점검.
 - `node tests/smoke.mjs`에서 정적 경로/스크립트/구문/필수 ID/버프 토큰·화면 호스트 계약을 검사한다.
 - 자동 스모크 통과는 실제 브라우저에서의 화면 전환·팝업·모바일 UI 확인과 동의어가 아니다. 실제 생애 콘텐츠·선거·엔딩은 미구현. 검증용 턴 진행은 명시적으로 시작한다.
@@ -76,14 +81,14 @@
 
 - `js/playerState.js`의 `lifeStages`가 기존 7개 생애 ID, 화면 표시명, 대표 후속 경로, 단계별 기본 스탯 목록을 소유한다. `birthDefaults`는 출생 초기 상태값의 단일 원천이다. 인물 생성 시 기존 이름·가정 샘플에서 선택하며 실제 인구통계 확률을 의미하지 않는다.
 - `js/effects.js`의 단계 ID 검증은 같은 등록 데이터를 참조한다. 효과 `attributes.phase`로 단계 변경은 가능하나, 자동 성장·나이/턴 대응·조건별 콘텐츠 실행은 추가하지 않았다.
-- `html/waiting.html`의 `#birthIntro`는 시작 클릭 뒤 나타나는 출생 연출 전용 오버레이다. `boot.js`는 저장 인물의 이름·출생 배경만 읽고 약 3초 후 게임으로 화면 이동한다. `#birthIntroSkip`, Escape, 동작 줄이기 선호는 즉시 이동한다. 인트로 자체는 시간을 진행하거나 재추첨·저장하지 않는다.
+- `html/waiting.html`의 `#birthIntro`는 시작 클릭 뒤 나타나는 출생 연출 전용 오버레이다. `boot.js`는 저장 인물의 출생 배경을 읽고 **10초 후** 게임으로 이동한다. `#birthIntroSkip` 또는 Escape로 즉시 이동할 수 있다. 동작 줄이기 설정은 화면 애니메이션만 축소하며 10초 대기를 자동 생략하지 않는다. 인트로 자체는 시간을 진행하거나 재추첨·저장하지 않는다.
 - 구체적인 데이터와 보류한 결정은 [LIFE.md](LIFE.md) 참조.
 
 ## 기본 생애 관제탑 연결 (2026-10-19)
 
 - 로드: `data/base.js`는 `playerState.js` 앞, `life/director.js`와 `life/infant.js`는 `timeline.js` 뒤·`game.js` 앞. 3개 독립 페이지의 스크립트 참조를 같이 유지한다.
 - 인게임은 기존 시연 데이터 `GukminContent`가 없으면 `GukminDirector.create(...).run()`으로 시작한다. 인생 기록/스탯/포스터 렌더러는 그대로 사용한다.
-- 선택 대기 또는 제공된 콘텐츠가 끝나면 자동 턴 진행을 중단하고 진행도에 `이야기 준비 중`을 표시한다. 시계·나이 증가의 공식은 없다.
+- 선택 대기나 제공된 콘텐츠의 끝에서는 자동 턴 진행을 멈춘다. 실제 턴 진행 중일 때만 선택 진행도를 보이며 콘텐츠가 소진됐다고 가짜 100% 막대를 표시하지 않는다. 시계·나이 증가의 공식은 없다.
 - 명시적으로 `?systems=1`을 열면 기존 검증 버튼을 표시한다. 이미 생애 세션이 저장되었더라도 검증 시작을 누를 때 **개발용 세션만** 새로 시작하고, 기본 생애를 별도로 진행시키지는 않는다.
 - 구조/경계는 [LIFE.md](LIFE.md). 오래된 `callOfgukmin__playable__v1` 키는 불변.
 
@@ -94,8 +99,8 @@
 
 ## 고교까지 플레이 흐름 (2026-10-19)
 
-- 정적 로드 순서: `data/base → data/regions → data/schools → playerState → effects → timeline → life/director → life/story → life/infant → life/elementary → life/middle → life/high → systemDemo → statusView → game → majorView → boot`. 대기/결과 HTML도 같은 로드 순서를 유지하여 스모크 검증을 공유한다.
-- 기본 인생은 첫 선택(2세 가족 이벤트)까지 자동 진행하며 이후 선택을 해결할 때마다 관제탑이 다음 사건 시점까지 진행한다. 해당 시대 이벤트가 없으면 멈춘다. 고3 기말고사와 졸업까지 처리된 뒤 추가 운영자(operator) 등록을 기다린다.
+- **당시(2026-10-19) 로드 이력**: 이후 `data/grades`, `life/admissions`, `sheetController`, `dailyChoice`가 추가됐다. 현행의 정확한 로드 순서는 위 `진입·화면 책임`에서 확인한다. 세 화면은 각자 필요한 스크립트를 `defer`로 로드한다.
+- 기본 인생은 첫 선택(2세 가족 이벤트)까지 자동 진행한다. 이후 일상 보상을 받거나 한방 결과를 확인하면 다음 등록 사건을 진행한다. 현재는 고교 졸업뿐 아니라 **대입·최대 2회차 진로 결산**까지 콘텐츠가 있고, 이후에는 새 오퍼레이터를 기다린다.
 - 한방 팝업은 `majorView.js`가 게임 뷰의 `#lifeDecisionDialog`에 실험실과 별도로 표시한다. 기존 학교/정당 UI는 여전히 검증 모드 전용 미리보기이며 기본 게임에서 접근할 수 없다.
 - 구버전 저장 데이터·legacy 키를 삭제하지 않는다. 동일 `life-main-v1` 콘텐츠 ID를 유지하고 과거에 완료된 출생 사건은 중복 실행하지 않는다.
 
@@ -109,7 +114,7 @@
 
 - HTML 3개에서 data/schools.js 다음, playerState.js 전에 data/grades.js를 로드한다.
 - statusView.js는 기본 스탯 ID별 SVG/색을 부여하고 내신과 모의고사에 게임 예상 등급을 보인다.
-- 기존 79턴/19세 고교 졸업까지의 자동 진행과 저장 키는 그대로 유지한다. 신규 고교 학년별 시험은 6회이다.
+- **2026-10-19 당시** 79턴을 마지막 학생 콘텐츠 경계로 사용했다. 현재 고교 졸업은 **88턴**이고 이후 입시 재도전·진로 사건이 등록되어 있다. 고교 연간 한방 시험은 학년당 2회, 총 6회다.
 
 
 ## 2026-10-19 화면·저장 동작 수정
@@ -129,7 +134,7 @@
 
 오퍼레이터가 런타임 이전에 반환하는 스토리 정의에는 조건부 `variants` 후보가 포함될 수 있으나, 실제 후보의 `scenarioId`는 `timeline.pump()`의 이벤트 시작 순간 저장된다. 새로고침 시 기존 시나리오를 계속 쓰고 구 저장 선택은 `choiceId`에 연결된 원래 옵션을 유지한다. `contentId`, 저장 키, `simulation.version` 불변.
 
-`GukminDailyChoice.restore(snapshot)`는 일상 선택의 저장된 `awaitingContinuation` 리뷰와 `reviewBefore`를 복원한다. 기록·결과 마크업은 `GukminMarkup.render` 안전 DOM 전용. 상세 제약은 [STORY.md](STORY.md) 참조.
+`GukminDailyChoice.restore(snapshot)`는 저장된 일상 검토 대기에서 `outcome.before/after`를 읽어 실제 보상 시트를 복구한다. 기록·결과 마크업은 `GukminMarkup.render` 안전 DOM 전용. 상세 제약은 [STORY.md](STORY.md) 참조.
 
 ## 2026-10-20 스토리·가격 판본 전환
 - 세 화면의 게임 스크립트와 CSS URL, 루트 대기 이동에 `?v=story-balance-20261020`를 붙였다. 이전 버전의 브라우저 캐시가 최근 분기를 숨기지 않도록 한다.
