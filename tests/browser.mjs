@@ -34,6 +34,12 @@ try{
    await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
   }
+  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{stats:{money:1575000,allowance:45000,stress:51,health:-12,relations:30}}}));
+  assert.equal(await page.locator('.gauges-heading').count(),0,'status heading and its layout box are removed');
+  assert.ok(await page.locator('#gaugesList .gauge').last().evaluate(el=>el.classList.contains('metric-money')),'money is the final metric');
+  const cards=await page.locator('#gaugesList .gauge').evaluateAll(items=>items.map(el=>({background:getComputedStyle(el).backgroundColor,padding:parseFloat(getComputedStyle(el).paddingLeft)})));
+  assert.ok(cards.every(card=>card.background!=='rgba(0, 0, 0, 0)'&&card.padding>0),'every stat has a padded card');
+  assert.equal(await page.locator('#gaugesList .gauge').evaluateAll(items=>items.some(card=>{const bounds=card.getBoundingClientRect();return [...card.querySelectorAll('.gauge-label,.gauge-value,.gauge-progress-track')].some(el=>{const r=el.getBoundingClientRect();return r.left<bounds.left-1||r.right>bounds.right+1;});})),false,'stat contents remain within their own card');
   await page.evaluate(()=>{document.querySelector('#resumeMajorChoice').hidden=false;});
   const dimensions=await page.locator('#lifeHeadline').evaluate(el=>{const r=el.getBoundingClientRect(),head=el.parentElement.getBoundingClientRect(),style=getComputedStyle(el);return {font:parseFloat(style.fontSize),right:r.right,headRight:head.right,height:r.height};});
   assert.ok(dimensions.font>26.4,'headline is larger than the previous 1.65rem');

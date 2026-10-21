@@ -200,7 +200,8 @@ function showMetrics(root,s){
   return content;
  }
  const phase=global.GukminPlayer.phaseOf(s);
- for(const metric of global.GukminPlayer.activeMetrics(s)){
+ const metrics=global.GukminPlayer.activeMetrics(s);
+ for(const metric of [...metrics.filter(item=>item.id!=='money'),...metrics.filter(item=>item.id==='money')]){
   // Keep study internally for admissions and earlier saves; do not duplicate school grades.
   if(metric.id==='study'&&(phase==='middle'||phase==='high'))continue;
   const wrap=node('div','gauge metric-'+metric.id);
@@ -242,6 +243,10 @@ function showMetrics(root,s){
   if(metric.type==='currency')wrap.classList.add('gauge-currency');
   if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
   groupContent(metricGroup(metric)).append(wrap);
+ }
+ // Keep money last regardless of phase-specific activation or registration order.
+ for(const kind of ['vitals','other','academics','finance']){
+  const content=groups.get(kind);if(content)list.append(content.parentElement);
  }
  // The DOM is mounted before transitioning. Re-rendering no longer flashes a native bar.
  if(nextFills.length){
