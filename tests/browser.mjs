@@ -36,6 +36,12 @@ try{
   }
   await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:80,exam:60},stats:{money:1575000,allowance:45000,stress:51,health:-12,relations:30}}}));
   assert.equal(await page.locator('.gauges-heading').count(),0,'status heading and its layout box are removed');
+  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-health').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'mental health and health share one flex row');
+  const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
+  await page.locator('#traits .trait-control').first().click();
+  await page.locator('#traitDialog[open]').waitFor();assert.ok((await page.locator('#traitInfo').textContent()).trim());
+  assert.equal(await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height),heightBefore,'description popup does not reflow the panel');
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#traitDialog').isVisible(),false);
   assert.equal(await page.locator('.gauge-group-heading').count(),0,'academic heading and its space are removed');
   const panel=await page.locator('.status').evaluate(el=>{const poster=el.querySelector('#playerPosterMount').getBoundingClientRect(),stats=el.querySelector('.gauges');return {width:poster.width,height:poster.height,statsHeight:stats.getBoundingClientRect().height,overflow:getComputedStyle(stats).overflowY,scrollable:stats.scrollHeight>stats.clientHeight};});
   if(name!=='desktop'){assert.ok(Math.abs(panel.height-panel.statsHeight)<1,'poster fixes the entire top-row height');assert.ok(Math.abs(panel.width/panel.height-.7)<.015,'poster is slightly taller');assert.ok(panel.scrollable,'long stats stay inside their scroll container');assert.equal(panel.overflow,'auto');

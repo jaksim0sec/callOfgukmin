@@ -54,13 +54,14 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .status>.gauges>.trait-section,.status>.gauges>.gauges-list{flex-shrink:0}
 .gauges-list .gauge{padding:.5rem .55rem;background:#ffffff07;border-radius:.5625rem}
 .gauge-group-content{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem}
-.gauge-group-vitals .gauge-group-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.gauge-group-vitals .gauge-group-content{display:flex;gap:.5rem}
+.gauge-group-vitals .gauge{flex:1;display:flex;flex-direction:column;min-width:0}
+.gauge-group-vitals .gauge-progress-track{margin-top:auto}
 .gauge-group-vitals .gauge-label,.gauge-group-other .gauge-label{margin-bottom:.3rem}
 .gauge-group-finance .gauge-group-content{gap:.5rem}
 .gauge-group-finance .gauge-label{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.25rem;flex-wrap:nowrap;margin:0}
 .gauge-group-finance .gauge-value{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 .gauge-group-academics .gauge-group-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:.375rem}
-@container(max-width:17rem){.gauge-group-vitals .gauge-group-content{grid-template-columns:minmax(0,1fr)}}
 .gauge-currency{border-radius:0.5rem}
 .gauge-currency .gauge-label{margin-bottom:0}
 .gauge-currency .gauge-label b{color:#f1e4ff}
@@ -1054,3 +1055,8 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .paper-choice-sheet .daily-reward-seal svg path{stroke-dashoffset:0}
  .paper-choice-sheet.is-reward .daily-paper-confirm{transition:none!important}
 }
+
+.trait-dialog{width:min(25rem,calc(100% - 2rem));max-height:75dvh}
+.trait-dialog .modal-head{gap:1rem}.trait-dialog h2{font-size:1.125rem;margin:0;overflow-wrap:anywhere}
+.trait-dialog form{margin:0;flex:none}
+.trait-dialog #traitInfo{padding:1.25rem;margin:0;line-height:1.75;font-size:.9375rem;white-space:pre-line;overflow-y:auto}

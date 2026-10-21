@@ -27,8 +27,8 @@ try{
   await page.keyboard.press('Escape');
   await page.locator('#traits .trait-control').first().click();
   assert.ok(await page.locator('#traitInfo').isVisible(),'trait explanation works without hover');
-  await page.locator('#traits .trait-control').first().click();
-  assert.equal(await page.locator('#traitInfo').isVisible(),false);
+  await page.locator('#traitDialog .close').click();
+  assert.equal(await page.locator('#traitDialog').isVisible(),false);
   const record=page.locator('#log .record').first();
   await record.evaluate(el=>el.dataset.identity='keep');
   await page.evaluate(()=>GukminGame.session.run());

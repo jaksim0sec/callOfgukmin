@@ -266,18 +266,28 @@ function showTraits(root,s){
   const traits=root.querySelector('#traits'),rendered=traits.dataset.rendered==='true';
   const previous=new Set([...traits.children].map(token=>token.dataset.traitKey)),scrollLeft=traits.scrollLeft;
   traits.replaceChildren();traits.dataset.rendered='true';
-  function appendTrait(token,key){token.dataset.traitKey=key;traits.append(token);}
-  const info=root.querySelector('#traitInfo');
-  if(info){info.hidden=true;info.textContent='';}
+  function appendTrait(token,key){token.dataset.traitKey=key;if(token.classList.contains('trait-control'))token.setAttribute('aria-expanded',String(dialog?.open&&dialog.dataset.traitKey===key));traits.append(token);}
+  const dialog=root.querySelector('#traitDialog'),info=root.querySelector('#traitInfo');
+  if(dialog&&!dialog.dataset.bound){
+   dialog.dataset.bound='true';
+   dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close();});
+   dialog.addEventListener('close',()=>{
+    traits.querySelectorAll('.trait-control').forEach(button=>button.setAttribute('aria-expanded','false'));
+    [...traits.children].find(button=>button.dataset.traitKey===dialog.dataset.traitKey)?.focus({preventScroll:true});
+   });
+  }
   function inspect(token,description){
-   if(!info||!description)return token;
+   if(!dialog||!info||!description)return token;
    const button=node('button','trait-control');button.type='button';
-   button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','traitInfo');
+   button.setAttribute('aria-expanded','false');button.setAttribute('aria-controls','traitDialog');button.setAttribute('aria-haspopup','dialog');
    button.append(token);
    button.addEventListener('click',()=>{
-    const open=button.getAttribute('aria-expanded')!=='true';
     traits.querySelectorAll('.trait-control').forEach(b=>b.setAttribute('aria-expanded','false'));
-    button.setAttribute('aria-expanded',String(open));info.hidden=!open;info.textContent=open?description:'';
+    button.setAttribute('aria-expanded','true');
+    dialog.dataset.traitKey=button.dataset.traitKey;
+    root.querySelector('#traitDialogTitle').textContent=token.querySelector('.token-name')?.textContent||token.textContent;
+    info.textContent=description;
+    if(!dialog.open)dialog.showModal();
    });return button;
   }
   const entries=Array.isArray(s.traits)?s.traits.filter(Boolean):[];
