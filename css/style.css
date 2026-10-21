@@ -1157,7 +1157,7 @@ body.cinematic-open{overflow:hidden}
 .gk-poster::before{display:none}
 .gk-poster-canvas{display:block;width:100%;height:100%;object-fit:contain}
 .gk-poster-accessible{position:absolute;clip-path:inset(50%);width:.0625rem;height:.0625rem;overflow:hidden;white-space:nowrap}
-.gk-poster-save{position:absolute;right:.45rem;bottom:.45rem;z-index:3;font-size:.7rem;line-height:1.1;min-height:1.75rem;padding:.3rem .48rem;border:1px solid #ffffff80;border-radius:.4rem;color:#fff;background:#27292abb;backdrop-filter:blur(.5rem);opacity:0;transition:opacity .2s}
+.gk-poster-save{position:absolute;right:.45rem;bottom:.45rem;z-index:3;font-size:.7rem;line-height:1.1;min-height:1.75rem;padding:.3rem .48rem;border:.0625rem solid #ffffff80;border-radius:.4rem;color:#fff;background:#27292abb;backdrop-filter:blur(.5rem);opacity:0;transition:opacity .2s}
 .gk-poster:hover .gk-poster-save,.gk-poster:focus-within .gk-poster-save{opacity:1}
 @media(hover:none){.gk-poster-save{bottom:auto;top:.2rem;opacity:.86;font-size:.57rem;min-height:1.4rem;padding:.2rem .3rem;right:.2rem;bottom:.2rem}}
 @media(min-width:47.501em){.player-poster-mount{height:min(54dvh,calc(100cqw / (2 / 3)))} }
