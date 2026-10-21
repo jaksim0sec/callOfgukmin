@@ -1,3 +1,7 @@
+## 2026-10-22 화면 정리 릴리스 (현행)
+
+진입/화면 이동·수정 자산·서비스 워커 버전은 `life-scenes-20261022`이다. 변경된 `life/story.js`도 같은 버전으로 갱신한다. 기존 저장·선택·정산·원본 아이콘은 보존한다. 검증은 smoke/systems 및 ui-refresh의 PC·모바일·소형 화면에서 스크롤, 사망→회고, 故 크기/비사망 구분, 파비콘 투명 모서리를 포함한다.
+
 ## 2026-10-21 PWA·아이콘·오프라인 (현행)
 
 진입/화면 이동과 이번 변경 자산은 `pwa-icons-20261021`을 사용한다. 사용자 제공8483.jpg 원본을 `assets/icons/app-icon-source.jpg`로 보존하고 PNG192/512·maskable512·Apple180·ICO16/32/48·PNG 파비콘을 생성했다. 모든 화면은 `<base>` 다음에 동일한 manifest/아이콘을 참조한다. `manifest.json`의 상대 `id/start_url/scope`는 GitHub Pages 저장소 하위 경로에서도 동작한다.

@@ -1,5 +1,15 @@
 /* Read-only life recap and 4:5 result composition. Game state remains owned by the runtime. */
 (function(global){'use strict';
+function isDeceased(persona){const a=persona.attributes||{};return !!a.lifeEndReason||a.retryEndReason==='정신병 한계';}
+function memoriesOf(history){
+ const seen=new Set(),visible=(history||[]).filter(h=>{
+  const title=String(h.title||'').replace(/\*\*|==/g,'').trim();
+  if(h.display==='hidden'||/exam-prelude:|exam-classroom:/.test(h.source||'')||/시험 기간이 다가|교실의 시험 준비 분위기/.test(title)||!title||seen.has(title))return false;
+  seen.add(title);return true;
+ });
+ const major=visible.filter(h=>h.importance==='major'),pool=major.length>=3?major:visible;
+ return pool.length<=5?pool:Array.from({length:5},(_,i)=>pool[Math.round(i*(pool.length-1)/4)]);
+}
 function mount({navigate,renderPoster}){
  const P=global.GukminPlayer,saved=P.load(),persona=saved||P.generate(),a=persona.attributes||{};
  const reason=a.lifeEndReason||a.retryEndReason;
@@ -10,7 +20,7 @@ function mount({navigate,renderPoster}){
  const summary=!saved?'대기 화면에서 당신의 첫 인생을 시작해 보세요.':reason?persona.name+' · '+persona.age+'살 · '+reason:persona.name+' · '+persona.age+'살 · '+(finished?'학생 시절의 기록을 남깁니다. 다음 생애 콘텐츠는 준비 중입니다.':'현재까지의 선택을 모았습니다. 이야기는 계속됩니다.');
  const put=(id,value)=>document.getElementById(id).textContent=value;
  const node=(tag,text)=>{const el=document.createElement(tag);el.textContent=text;return el;};
- put('resultCardName',persona.name);put('resultCardStage',persona.age+'살 · '+(reason||persona.job||'성장 중'));
+ put('resultCardName',persona.name);if(isDeceased(persona)){const mark=node('small','故');mark.className='deceased-mark';document.getElementById('resultCardName').append(mark);}put('resultCardStage',persona.age+'살 · '+(reason||persona.job||'성장 중'));
  put('resultTitle',title);put('resultSummary',summary);put('resultEyebrow',finished?'LIFE RECORD · 한 장의 마침표':'LIFE RECORD · 지금까지의 나');
  renderPoster(document.getElementById('resultPosterMount'),persona,finished?'기록 완료':'진행 중',reason?'여기까지,\n나의 이야기':destination==='college'?'새로운 문 앞에\n서 있는 나':destination==='employment'?'교문 밖에서\n시작하는 내일':undefined);
  const facts=[['살아온 시간',persona.age+'년'],['마지막 학교',school?.name||'입학 전'],['남은 재산',persona.stats.money.toLocaleString('ko-KR')+'원'],['나의 선택',Object.values(persona.simulation?.choices||{}).filter(c=>c.status==='closed').length+'번']];
@@ -37,8 +47,7 @@ function mount({navigate,renderPoster}){
  if(shownTraits.length>6){document.getElementById('resultTraitArchive').hidden=false;for(const name of shownTraits)document.getElementById('resultAllTraits').append(global.GukminStatus.traitToken(name));}
  if(shownTraits.length>6)document.getElementById('resultTraits').append(global.GukminStatus.createToken({label:'외 '+(shownTraits.length-6)+'개',icon:'sparkle'}));
  const history=(persona.history||[]).filter(h=>h.display!=='hidden');
- const major=history.filter(h=>h.importance==='major');
- const memories=(major.length?major:history).slice(-5);
+ const memories=memoriesOf(history);
  for(const h of memories){const li=node('li','');li.append(node('small',(h.age??persona.age)+'살'),node('strong',h.title||'선택의 순간'));document.getElementById('resultHistory').append(li);}
  if(!memories.length)document.getElementById('resultHistory').append(node('li','첫 번째 선택을 기다리고 있습니다.'));
  const shareText=['국민의 부름',title,summary,...facts.map(([k,v])=>k+' · '+v)].join('\n');
@@ -65,18 +74,19 @@ function mount({navigate,renderPoster}){
 function recap(persona,memories,title){
  const dialog=document.getElementById('resultRecap');
  const clean=s=>String(s||'').replace(/\*\*|==/g,'');
- const frames=[{age:0,title:persona.name+'의 이야기가 시작됐다',detail:'작은 선택들이 하나의 삶이 되었습니다.'},...memories.slice(-4),{age:persona.age,title,detail:persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||'지금까지의 선택을 한 장에 담았습니다.'}];
+ const death=isDeceased(persona),cause=persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason;
+ const frames=[...(death?[{scene:'death',age:persona.age,title:cause+'로 사망했습니다.',detail:persona.name+'의 이야기를 돌아봅니다.'}]:[]),{age:0,title:persona.name+'의 이야기가 시작됐다',detail:'작은 선택들이 하나의 삶이 되었습니다.'},...memories,{age:persona.age,title,detail:persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||'지금까지의 선택을 한 장에 담았습니다.'}];
  const reduce=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  let index=0,timer;
  const finish=()=>{global.clearTimeout(timer);if(dialog.open)dialog.close();};
  const show=()=>{
-  const frame=frames[index];document.getElementById('recapAge').textContent=(frame.age??persona.age)+'살 · LIFE CHAPTER';
+  const frame=frames[index];dialog.dataset.scene=frame.scene||'life';document.getElementById('skipResultRecap').textContent=frame.scene==='death'?'인생 돌아보기 →':'건너뛰기 ↗';document.getElementById('recapAge').textContent=(frame.age??persona.age)+'살 · LIFE CHAPTER';
   document.getElementById('recapTitle').textContent=clean(frame.title);document.getElementById('recapDetail').textContent=clean(frame.detail);
   document.getElementById('recapCount').textContent=(index+1)+' / '+frames.length;document.getElementById('recapProgress').max=frames.length;document.getElementById('recapProgress').value=index+1;
   if(!reduce)document.getElementById('resultRecapFrame').animate([{opacity:0,transform:'translate(-50%,calc(-50% + .6rem))'},{opacity:1,transform:'translate(-50%,-50%)'}],{duration:450,easing:'ease-out'});
-  timer=global.setTimeout(()=>{index++;if(index<frames.length)show();else finish();},reduce?700:1900);
+  timer=global.setTimeout(()=>{index++;if(index<frames.length)show();else finish();},reduce?700:frame.scene==='death'?2600:1900);
  };
- document.getElementById('skipResultRecap').addEventListener('click',finish);dialog.addEventListener('cancel',event=>{event.preventDefault();finish();});
+ document.getElementById('skipResultRecap').addEventListener('click',()=>{if(frames[index]?.scene==='death'){global.clearTimeout(timer);index++;show();}else finish();});dialog.addEventListener('cancel',event=>{event.preventDefault();finish();});
  dialog.addEventListener('close',()=>{global.clearTimeout(timer);document.getElementById('downloadResult').focus({preventScroll:true});});
  global.addEventListener('pagehide',()=>global.clearTimeout(timer),{once:true});dialog.showModal();show();
 }
@@ -84,7 +94,7 @@ async function compose({persona,title,reason,offer,schools,traits}){
  const poster=await global.GukminPoster.ready(document.querySelector('#resultPosterMount .gk-poster'));
  const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const ctx=canvas.getContext('2d');
  if(!ctx)throw new Error('Canvas unavailable');
- const text=(value,x,y,size=30,color='#37323b',width=950,weight=650)=>{ctx.font=weight+' '+size+'px system-ui,sans-serif';const sizeFit=Math.min(size,size*width/Math.max(1,ctx.measureText(String(value)).width));ctx.font=weight+' '+sizeFit+'px system-ui,sans-serif';ctx.fillStyle=color;ctx.fillText(String(value),x,y);};
+ const text=(value,x,y,size=30,color='#37323b',width=950,weight=650)=>{ctx.font=weight+' '+size+'px system-ui,sans-serif';const sizeFit=Math.min(size,size*width/Math.max(1,ctx.measureText(String(value)).width));ctx.font=weight+' '+sizeFit+'px system-ui,sans-serif';ctx.fillStyle=color;ctx.fillText(String(value),x,y);return sizeFit;};
  const box=(x,y,w,h,color,r=18)=>{ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();};
  const lines=(value,x,y,width,size=28,maxLines=3)=>{
   ctx.font='650 '+size+'px system-ui,sans-serif';let line='',row=0;
@@ -96,7 +106,7 @@ async function compose({persona,title,reason,offer,schools,traits}){
  text('국민의 부름',60,108,27,'#69557d',600);text('MY LIFE / 4:5',810,108,22,'#817586',220);
  text(title,60,164,42,'#29252d',960,850);
  ctx.save();ctx.beginPath();ctx.roundRect(60,205,440,660,22);ctx.clip();ctx.drawImage(poster,60,205,440,660);ctx.restore();
- text(persona.name,542,255,52,'#29252d',476,900);
+ const nameSize=text(persona.name,542,255,52,'#29252d',isDeceased(persona)?430:476,900);if(isDeceased(persona)){const w=ctx.measureText(persona.name).width;text('故',542+Math.min(w,430)+8,255,nameSize*.5,'#655175',38,650);}
  pill(persona.age+'살 · '+(reason||persona.job||'성장 중'),542,280,476,'#655175',62,25);
  let y=395;
  const kind={elementary:'초등학교',middle:'중학교',high:'고등학교',university:'대학교'};
@@ -113,5 +123,5 @@ async function compose({persona,title,reason,offer,schools,traits}){
  text('THE PEOPLE CALL',60,1300,22,'#7c6d83',430);text('나의 선택으로 남은 삶',650,1300,24,'#7c6d83',370);
  return canvas;
 }
-global.GukminResultView=Object.freeze({mount});
+global.GukminResultView=Object.freeze({mount,memoriesOf,isDeceased});
 })(window);

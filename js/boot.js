@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='pwa-icons-20261021';
+const RELEASE='life-scenes-20261022';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
@@ -29,7 +29,7 @@ function initWaiting(){
  const progressed=p=>!!(p.simulation||p.age>0);
  function show(){
    const s=player.ensure();
-   name.textContent=s.name;input.value=s.name;gender.value=player.genderOf(s);gender.disabled=progressed(s);input.disabled=progressed(s);document.getElementById('randomName').disabled=progressed(s);
+   name.textContent=s.name;if(s.attributes?.lifeEndReason||s.attributes?.retryEndReason==='정신병 한계'){const mark=document.createElement('small');mark.className='deceased-mark';mark.textContent='故';name.append(mark);}input.value=s.name;gender.value=player.genderOf(s);gender.disabled=progressed(s);input.disabled=progressed(s);document.getElementById('randomName').disabled=progressed(s);
    hint.textContent=progressed(s)?'진행 중인 인생의 이름은 유지됩니다.':'1~12자 · 출생 전에 이름을 정할 수 있습니다.';
    background.textContent=s.birthplace+' · '+s.family;
    const saved=progressed(s);

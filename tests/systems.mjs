@@ -392,7 +392,7 @@ test('exam preludes announce middle and annual high assessments without replacin
  assert.equal(classroom.length,12);
  assert.ok(classroom.every(e=>e.history.display==='hidden'),'repetitive classroom notes remain addressable for old saves but do not clutter history');
  assert.ok(preludes.every(e=>e.layer==='소식 이벤트'&&e.when.all.some(w=>w.turn?.eq===e.at)));
- assert.ok(preludes.every(e=>e.history.importance==='major'));
+ assert.ok(preludes.every(e=>e.history.importance!=='major'&&e.title.endsWith('준비 기간')),'routine exam reminders name the exam and do not dominate the life recap');
  assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.stage==='middle').length,6);
  assert.equal(s.choices.filter(x=>x.presentation?.type==='exam'&&x.presentation.annual).length,6);
 });
@@ -1251,4 +1251,14 @@ test('candidacy costs two pressure and only victory grants leadership and the cl
   const e=openLifeScene(env,'elementary:representative',p),s=e.snapshot();assert.match(s.choice.title,/반장 선거/);assert.equal(s.choice.options.length,3);e.resolve(s.choice.token,s.choice.options[0].id);const q=e.snapshot().persona;
   assert.equal(q.stats.stress,2);assert.equal(q.attributes.classElection,outcome);assert.equal(env.P.hasTrait(q,'리더십'),outcome==='elected');assert.equal(q.roles.includes('반장'),outcome==='elected');assert.equal(q.traits.includes('열정'),false);
  }
+});
+
+
+test('result memories sample the life and exclude repeated exam preparation, without changing history',()=>{
+ const c=vm.createContext({});c.window=c;vm.runInContext(readFileSync('js/resultView.js','utf8'),c);
+ const history=[{title:'태어났다',age:0,importance:'major'},...Array.from({length:3},(_,i)=>({title:'시험 기간이 다가옵니다',age:16+i,importance:'major'})),{title:'첫 친구',age:4,importance:'major'},{title:'새 학교 준비 기간',source:'exam-prelude:high',importance:'major'},{title:'반장 당선',age:11,importance:'major'},{title:'고교 입학',age:16,importance:'major'},{title:'고교 입학',age:16,importance:'major'},{title:'학교 졸업',age:19,importance:'major'},{title:'대학 합격',age:19,importance:'major'}];
+ const copy=JSON.stringify(history),memories=c.GukminResultView.memoriesOf(history);
+ assert.equal(memories.length,5);assert.equal(memories[0].title,'태어났다');assert.equal(memories.at(-1).title,'대학 합격');assert.equal(new Set(memories.map(x=>x.title)).size,5);assert.ok(memories.every(x=>!x.title.includes('준비 기간')&&!x.title.includes('다가옵니다')));assert.equal(JSON.stringify(history),copy);
+ for(const reason of ['나이 제한','준비 자금 소진'])assert.equal(c.GukminResultView.isDeceased({attributes:{retryEndReason:reason}}),false);
+ assert.equal(c.GukminResultView.isDeceased({attributes:{retryEndReason:'정신병 한계'}}),true);assert.equal(c.GukminResultView.isDeceased({attributes:{lifeEndReason:'정신병 한계'}}),true);
 });

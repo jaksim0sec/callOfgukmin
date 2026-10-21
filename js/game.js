@@ -60,7 +60,7 @@ function posterData(persona){
  }
  const portraitVariant=global.GukminPlayer.genderOf(persona);
  return {
-  age:persona.age,name:persona.name,stage,phrase,portraitStage,portraitVariant,
+  age:persona.age,name:persona.name,deceased:!!a.lifeEndReason||a.retryEndReason==='정신병 한계',stage,phrase,portraitStage,portraitVariant,
   partyName:persona.party||'무소속',number:persona.number,imageSrc:persona.portraitSrc||null,
   color:persona.partyColor,partyIcon:persona.partyIcon
  };
@@ -471,7 +471,7 @@ function mount(root,navigate,content=global.GukminContent){
    if(s.runtime.cinematic&&!previousCinematic)queueCinematic(s.runtime.cinematic);
    if(choice?.presentation?.type==='school'&&s.reviewPending){
     const school=global.GukminPlayer.schoolsOf(s.persona).find(item=>item.kind==='high'&&item.status==='enrolled');
-    queueCinematic({title:'고등학교 입학',detail:school?.name||'새로운 학교생활이 시작됐다.'});
+    queueCinematic({title:(school?.name||'고등학교')+' 입학',detail:'새로운 학교생활이 시작됐다.'});
    }
    const events={
     'infant:school-entry':'초등학교 입학',
@@ -481,7 +481,7 @@ function mount(root,navigate,content=global.GukminContent){
     'admission:retry-graduation':'입시 재도전 마무리'
    };
    for(const item of added)if(events[item.source])
-    queueCinematic({title:events[item.source],detail:item.detail});
+    {const kind={'infant:school-entry':'elementary','elementary:middle-entry':'middle','high:graduation':'high'}[item.source],school=kind&&global.GukminPlayer.schoolsOf(s.persona).find(x=>x.kind===kind);queueCinematic({title:school?school.name+(item.source==='high:graduation'?' 졸업':' 입학'):events[item.source],detail:item.detail});}
   }
   render();
   if(added.length){$('log')?.firstElementChild?.classList.add('record-arrived');

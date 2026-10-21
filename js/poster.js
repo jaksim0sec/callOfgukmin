@@ -117,7 +117,8 @@ function identity(ctx,data,p){
  fit(ctx,(data.stage||'').trim(),rightX,1203,570,30,{color:p.accent,fontFamily:plain});
  ctx.fillStyle=rgb(p.ink,.16);ctx.fillRect(317,1209,2,214);
  fit(ctx,value,leftX,baseline,230,value.length>1?216:270,{color:p.accent});
- fit(ctx,String(data.name||'이름 미정'),rightX,baseline,570,166,{color:p.ink});
+ const name=String(data.name||'이름 미정'),nameSize=fit(ctx,name,rightX,baseline,data.deceased?480:570,166,{color:p.ink});
+ if(data.deceased){const end=rightX+ctx.measureText(name).width+12;fit(ctx,'故',end,baseline,80,nameSize*.5,{color:p.ink,fontFamily:plain});}
  ctx.fillStyle=p.accent;ctx.fillRect(rightX,1443,584,5);
 }
 function paint(el){
@@ -129,11 +130,11 @@ function paint(el){
 }
 function update(el,data={}){
  if(!el?.classList?.contains('gk-poster'))throw new TypeError('Expected GukminPoster.create element');
- const signature=JSON.stringify([data.name,data.age,data.number,data.partyName,data.stage,data.phrase,data.portraitStage,data.portraitVariant,data.imageSrc]);
+ const signature=JSON.stringify([data.name,data.deceased,data.age,data.number,data.partyName,data.stage,data.phrase,data.portraitStage,data.portraitVariant,data.imageSrc]);
  if(el._posterSignature===signature)return el;
  el._posterSignature=signature;el._posterData={...data};el.dataset.age=data.portraitStage||'infant';
  const text=el.querySelector('.gk-poster-accessible');
- if(text)text.textContent=[data.stage,data.phrase,data.name].filter(Boolean).join(' · ');
+ if(text)text.textContent=[data.stage,data.phrase,data.name,data.deceased?'故':null].filter(Boolean).join(' · ');
  paint(el);return el;
 }
 function create(data={}){
