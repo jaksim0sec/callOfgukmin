@@ -53,5 +53,20 @@ if(/\d+(?:\.\d+)?px\b/.test(css))errors.push('Non-root px in CSS');
 for(const selector of ['.school-token-active','.trait-section','.gauges-list','.waiting-screen','.result-screen','.birth-intro']){
  if(!css.includes(selector))errors.push('Missing UI CSS: '+selector);
 }
+const manifest=JSON.parse(read('manifest.json'));
+if(manifest.scope!=='./'||manifest.start_url!=='./index.html'||manifest.display!=='standalone')errors.push('PWA manifest scope/start/display invalid');
+const worker=read('sw.js'),shellMatch=/const SHELL=(\[[\s\S]*?\]);/.exec(worker);
+const shell=new Set(shellMatch?JSON.parse(shellMatch[1]):[]);
+try{new vm.Script(worker,{filename:'sw.js'});}catch(e){errors.push('Service worker syntax: '+e.message);}
+for(const asset of shell)if(!exists(asset))errors.push('Offline shell asset missing: '+asset);
+for(const path of ['index.html',...screens.map(name=>'html/'+name+'.html')]){
+ const html=read(path);
+ if(!html.includes('rel="manifest"')||!html.includes('rel="apple-touch-icon"')||!html.includes('favicon.ico'))errors.push('PWA/icon metadata missing: '+path);
+ for(const m of html.matchAll(/<(?:script|link)\b[^>]*\b(?:src|href)="([^"]+)"/g)){
+  const url=new URL(m[1],'https://test.invalid/callOfgukmin/');if(url.origin!=='https://test.invalid')continue;
+  const asset=url.pathname.replace('/callOfgukmin/','');if(!shell.has(asset))errors.push('Asset absent from offline shell: '+asset);
+ }
+}
+for(const icon of manifest.icons||[]){if(!shell.has(icon.src))errors.push('PWA icon absent from shell: '+icon.src);}
 if(errors.length){console.error('Smoke FAIL:\n'+errors.map(x=>'- '+x).join('\n'));process.exitCode=1}
 else console.log('Smoke OK: 3 standalone screens, asset paths, route navigation, state UI, static syntax.');

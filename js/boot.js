@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='elementary-choices-20261021';
+const RELEASE='pwa-icons-20261021';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
@@ -125,5 +125,11 @@ try{
  notice.append(link);
  document.body.replaceChildren(notice);
 }
+function registerOffline(){
+ if(!('serviceWorker' in navigator))return;
+ const worker=new URL('sw.js',document.baseURI);worker.searchParams.set('v',RELEASE);
+ navigator.serviceWorker.register(worker.href,{scope:new URL('./',document.baseURI).pathname,updateViaCache:'none'}).catch(error=>console.warn('오프라인 준비를 완료하지 못했습니다.',error));
+}
+if(document.readyState==='complete')registerOffline();else global.addEventListener('load',registerOffline,{once:true});
 global.GukminScreens=Object.freeze({navigate});
 })(window);

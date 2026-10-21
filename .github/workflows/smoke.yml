@@ -3,6 +3,9 @@ on:
   push:
     paths:
       - 'index.html'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'assets/**'
       - 'html/**'
       - 'css/**'
       - 'js/**'
@@ -11,6 +14,9 @@ on:
   pull_request:
     paths:
       - 'index.html'
+      - 'manifest.json'
+      - 'sw.js'
+      - 'assets/**'
       - 'html/**'
       - 'css/**'
       - 'js/**'
@@ -43,6 +49,9 @@ jobs:
         env:
           BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser
       - run: node tests/ui-refresh.mjs
+        env:
+          BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser
+      - run: node tests/pwa.mjs
         env:
           BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser
       - run: node tests/experience.mjs
