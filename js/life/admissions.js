@@ -62,31 +62,30 @@ function cycle(pack,n){
  const reset={admissionAttempts:n,earlyStatus:null,regularStatus:null,earlyOffer:null,regularOffer:null,earlyChoice:null,regularChoice:null,csatSubmitted:false,admissionDestination:null};
  add(pack,S.selection(pre+':route',routeAt,'대입 지원 경로','학생부 중심 수시와 수능 중심 정시 중 준비할 경로를 고르자.',[
  option('early','수시 지원','학생부 평가와 수능 최저를 준비한다.',{attributes:{...reset,admissionRoute:'early'},stats:{stress:2}}),
- option('regular','정시 집중','수능 기출 풀이에 집중하는 대신 수시 기회는 포기했다.',{attributes:{...reset,admissionRoute:'regular'},stats:{exam:1,stress:4,health:-1}}),
+ option('regular','정시 집중','수능 기출 풀이에 집중하는 대신 수시 기회는 포기했다.',{attributes:{...reset,admissionRoute:'regular'},stats:{exam:1,stress:4}}),
  option('employment','바로 사회 진출 준비','입시 대신 실무와 구직 정보를 살핀다.',{attributes:{...reset,admissionRoute:'employment'},stats:{stress:-4,relations:1}})
  ],'한방 선택',{type:'admission-route',term:'대입 지원 경로'}),withGate());
  const studying=withGate({not:{attributes:{admissionRoute:'employment'}}});
  add(pack,S.selection(pre+':peer-practice',routeAt+1,'원서철의 단체방','친구가 기출문제의 풀이를 보내 왔다.\n\n오늘 남은 두 시간을 함께 검토할지, 혼자 복습할지 정하자.',[
  option('team','친구와 틀린 이유를 설명한다','친구와 검산하며 단원을 다시 익혔다.',{stats:{exam:1,relations:2,stress:2}}),
- option('intense','연락을 줄이고 기출을 집중 복습한다','문제를 다시 풀었지만 다른 약속은 줄었다.',{stats:{exam:2,relations:-2,stress:4,health:-1}}),
- option('rest','기본 문제만 풀고 수면을 확보한다','추가 복습 대신 컨디션을 회복했다.',{stats:{exam:-1,health:3,stress:-5}})
+ option('intense','연락을 줄이고 기출을 집중 복습한다','문제를 다시 풀었지만 다른 약속은 줄었다.',{stats:{exam:2,relations:-2,stress:4}}),
+ option('rest','기본 문제만 풀고 수면을 확보한다','추가 복습 대신 컨디션을 회복했다.',{stats:{exam:-1,stress:-5}})
  ]),studying);
  board(pack,pre,routeAt+1,'early',withGate({attributes:{admissionRoute:'early'}}));
  const last=add(pack,S.selection(pre+':last-week',routeAt+2,'수능을 앞둔 마지막 일주일','수험표와 시험장 안내를 확인했다.\n\n새 단원 대신 오답·기출·컨디션을 점검한다. 수시 지원자는 수능 최저를 위해, 정시 지원자는 지원 성적을 위해 응시한다.',[
- option('cram','기출을 끝까지 복습한다','오답을 다시 풀었지만 피로가 쌓였다.',{stats:{exam:2,stress:8,health:-3}}),
+ option('cram','기출을 끝까지 복습한다','오답을 다시 풀었지만 피로가 쌓였다.',{stats:{exam:2,stress:8}}),
  option('target','틀린 문제만 추려 반복한다','범위를 좁혀 실수를 줄였다.',{stats:{exam:1,stress:2}}),
- option('recover','수면 리듬을 회복한다','추가 문제량보다 컨디션을 우선했다.',{stats:{exam:-1,stress:-7,health:5}})
+ option('recover','수면 리듬을 회복한다','추가 문제량보다 컨디션을 우선했다.',{stats:{exam:-1,stress:-7}})
  ]),studying);
  const csat=add(pack,S.selection(pre+':csat',routeAt+3,'대학수학능력시험 성적표','응시한 수능의 확정 성적을 확인하자.',[option('submit','수능 점수 확인하기','수능 성적을 확정했다. 이후 생활은 이번 점수를 바꾸지 않는다.',{attributes:{csatSubmitted:true},stats:{stress:2}},{conditional:[
  {before:true,when:{attributes:{preExamStrategy:'exam'}},result:{effects:{stats:{exam:3,stress:2}}}},
  {before:true,when:{attributes:{preExamStrategy:'balanced'}},result:{effects:{stats:{exam:1}}}},
- {before:true,when:{all:[{stats:{stress:{gte:85}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-5}}}},
- {before:true,when:{stats:{health:{lte:35}}},result:{effects:{stats:{exam:-4}}}}
+ {before:true,when:{all:[{stats:{stress:{gte:85}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-5}}}}
  ]})],'한방 선택',{type:'grade-seal',category:'mock',term:'대학수학능력시험 성적표'}),studying);
  add(pack,S.selection(pre+':exam-evening',routeAt+3,'시험이 끝난 저녁','답안을 제출했다. 지금은 성적을 고칠 수 없다.\n\n발표까지 일상을 회복하고 다음 계획을 정하자.',[
  option('review','친구와 다음 지원 일정을 정리한다','일정을 대조했지만 결과 걱정도 나눴다.',{stats:{relations:3,stress:3}}),
- option('family','가족과 저녁을 먹는다','함께 식사하며 긴 시험을 마무리했다.',{stats:{relations:2,stress:-4,health:1}}),
- option('sleep','연락을 미루고 충분히 쉰다','쉬는 동안 단체방의 대화는 놓쳤다.',{stats:{health:4,stress:-5,relations:-1}})
+ option('family','가족과 저녁을 먹는다','함께 식사하며 긴 시험을 마무리했다.',{stats:{relations:2,stress:-4}}),
+ option('sleep','연락을 미루고 충분히 쉰다','쉬는 동안 단체방의 대화는 놓쳤다.',{stats:{stress:-5,relations:-1}})
  ]),studying);
  board(pack,pre,routeAt+5,'regular',withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}},{attributes:{earlyStatus:'skipped'}}]}));
  const retryOption=option('retry','다음 해 입시에 다시 도전한다','다음 연도 준비를 선택했다.',{}, {retryYear:true,risk:'나이 +1 · 연간 기본 준비비 30만원 · 정신병 +8. 정신병100·돈0·나이30 도달 시 종료'});

@@ -12,7 +12,7 @@ const plain=x=>JSON.parse(JSON.stringify(x));
 function config(P){
  P.registerMetric('focus',{label:'검증 집중',type:'progress',min:0,max:10});
  P.registerTrait('검증 습관',{icon:'savings',periodic:{every:2,result:{effects:{stats:{money:2}}}},modifiers:[{tags:['income'],stats:{money:{multiply:2}}}]});
- return {contentId:'test',choices:[{id:'gift',layer:'일상 선택',title:'검증 선택',blocksTime:true,options:[{id:'save',label:'저축',result:{effects:{stats:{health:-5,money:10},traits:{add:['검증 습관']},activate:{focus:1}},history:{title:'선택 결과'}}}]}],events:[
+ return {contentId:'test',choices:[{id:'gift',layer:'일상 선택',title:'검증 선택',blocksTime:true,options:[{id:'save',label:'저축',result:{effects:{stats:{stress:5,money:10},traits:{add:['검증 습관']},activate:{focus:1}},history:{title:'선택 결과'}}}]}],events:[
  {id:'notice',layer:'소식 이벤트',at:1,title:'사건 발생',history:{title:'사건 발생'}},
  {id:'gift',layer:'일상 이벤트',at:2,title:'선택 사건',choice:'gift'},
  {id:'school',layer:'소식 이벤트',at:3,title:'학교 입학',result:{effects:{schools:[{id:'test-middle',kind:'middle',name:'검증중',status:'enrolled'}],stats:{focus:2}},history:{title:'입학'}}},
@@ -26,14 +26,14 @@ test('A–E: events, choice settlement, periodic trait, schools and dynamic metr
  assert.ok(engine.snapshot().persona.history.some(h=>h.title==='사건 발생'&&h.turn===1));
  engine.advance(10);let s=engine.snapshot();assert.equal(s.runtime.turn,2);assert.equal(s.choice.layer,'일상 선택');assert.equal(s.progress.waiting,true);
  const token=s.choice.token;assert.equal(engine.resolve(token,'save'),true);assert.equal(engine.resolve(token,'save'),false);
- s=engine.snapshot();assert.equal(s.persona.stats.health,95);assert.equal(s.persona.stats.money,10);assert.ok(P.hasTrait(s.persona,'검증 습관'));assert.ok(P.activeMetrics(s.persona).some(m=>m.id==='focus'));
+ s=engine.snapshot();assert.equal(s.persona.stats.stress,5);assert.equal(s.persona.stats.money,10);assert.ok(P.hasTrait(s.persona,'검증 습관'));assert.ok(P.activeMetrics(s.persona).some(m=>m.id==='focus'));
  engine.advance(1);s=engine.snapshot();assert.equal(s.persona.stats.focus,3);assert.equal(P.schoolsOf(s.persona)[0].status,'enrolled');
  engine.advance(1);s=engine.snapshot();assert.equal(s.persona.stats.money,12);assert.equal(P.schoolsOf(s.persona)[0].status,'graduated');assert.equal(P.activeMetrics(s.persona).some(m=>m.id==='focus'),false);assert.equal(s.persona.metricHistory.at(-1).value,3);
  assert.equal(P.load().simulation.turn,4);assert.equal(storage.get('callOfgukmin__playable__v1'),'legacy-sentinel');assert.ok(notifications>=4);
 });
 test('atomic settlement rejects unknown IDs, invalid values and attributes without partial mutation',()=>{
  const {P,T}=setup();const engine=T.create({...config(P),persona:P.generate()});const before=plain(engine.snapshot());
- for(const result of [{effects:{stats:{health:-1,missing:2}}},{effects:{traits:{add:['missing']}}},{effects:{stats:{money:NaN}}},{effects:{attributes:{stats:{money:999}}}},{effects:{activate:{missing:0}}}]){
+ for(const result of [{effects:{stats:{stress:1,missing:2}}},{effects:{traits:{add:['missing']}}},{effects:{stats:{money:NaN}}},{effects:{attributes:{stats:{money:999}}}},{effects:{activate:{missing:0}}}]){
   assert.throws(()=>engine.apply('bad',result));assert.deepEqual(plain(engine.snapshot()),before);
  }
  engine.apply('once',{effects:{stats:{money:10}},tags:['income']});assert.equal(engine.apply('once',{effects:{stats:{money:10}}}),false);assert.equal(engine.snapshot().persona.stats.money,10);
@@ -53,7 +53,7 @@ test('same-time choices retain their own layers; nonblocking daily choice does n
  const engine=T.create({...cfg,persona:P.generate()});engine.advance(4);assert.equal(engine.snapshot().runtime.turn,1);assert.equal(engine.snapshot().choice.layer,'일상 선택');engine.resolve(engine.snapshot().choice.token,'save');assert.equal(engine.snapshot().choice.layer,'한방 선택');engine.resolve(engine.snapshot().choice.token,'save');assert.equal(engine.snapshot().choice,null);
 });
 test('conditions, completion effects and trait modifiers use content data; histories are append-only',()=>{
- const {P,T}=setup();const cfg=config(P);cfg.events=[{id:'wait',layer:'소식 이벤트',at:1,title:'기다림',when:{traits:['검증 습관']},completeWhen:{stats:{money:{gte:20}}},result:{effects:{stats:{health:-1}}},completion:{effects:{attributes:{job:'검증 직업'}},history:{title:'완료'}}}];
+ const {P,T}=setup();const cfg=config(P);cfg.events=[{id:'wait',layer:'소식 이벤트',at:1,title:'기다림',when:{traits:['검증 습관']},completeWhen:{stats:{money:{gte:20}}},result:{effects:{stats:{stress:1}}},completion:{effects:{attributes:{job:'검증 직업'}},history:{title:'완료'}}}];
  const engine=T.create({...cfg,persona:P.generate()});engine.advance(1);assert.equal(engine.snapshot().runtime.events.wait.status,'pending');engine.apply('trait',{effects:{traits:{add:['검증 습관']}}});engine.advance(0);assert.equal(engine.snapshot().runtime.events.wait.status,'running');engine.apply('income',{tags:['income'],effects:{stats:{money:10}}});engine.advance(0);assert.equal(engine.snapshot().runtime.events.wait.status,'completed');assert.equal(engine.snapshot().persona.job,'검증 직업');assert.equal(engine.snapshot().persona.stats.money,20);
  engine.apply('remove',{effects:{traits:{remove:['검증 습관']}}});engine.advance(2);assert.equal(engine.snapshot().persona.stats.money,20);
 });
@@ -73,8 +73,8 @@ test('school changes preserve legacy entries and reject rewriting a completed sc
 test('conditional outcomes and quiet history retain context; removing a trait stops its future effects',()=>{
  const {P,T}=setup();const engine=T.create({...config(P),events:[],persona:P.generate()});
  engine.apply('gain',{effects:{traits:{add:['검증 습관']}}});
- engine.apply('branch',{effects:{stats:{money:1}},conditional:[{when:{traits:['검증 습관']},result:{effects:{stats:{health:-2}},history:{title:'내부 기록',display:'hidden',importance:'minor'}}}]});
- const s=engine.snapshot().persona;assert.equal(s.stats.health,98);assert.equal(s.history.at(-1).display,'hidden');assert.equal(s.history.at(-1).turn,0);assert.equal(s.history.at(-1).phase,'infant');
+ engine.apply('branch',{effects:{stats:{money:1}},conditional:[{when:{traits:['검증 습관']},result:{effects:{stats:{stress:2}},history:{title:'내부 기록',display:'hidden',importance:'minor'}}}]});
+ const s=engine.snapshot().persona;assert.equal(s.stats.stress,2);assert.equal(s.history.at(-1).display,'hidden');assert.equal(s.history.at(-1).turn,0);assert.equal(s.history.at(-1).phase,'infant');
  engine.apply('remove',{effects:{traits:{remove:['검증 습관']}}});engine.advance(2);assert.equal(engine.snapshot().persona.stats.money,1);
 });
 test('content can supply mechanics for an existing trait without editing the registry source',()=>{
@@ -105,14 +105,14 @@ test('birth defaults and stage routes are data-owned without triggering a clock 
  assert.deepEqual(plain(P.nextPhases('political')),['adult']);
  assert.throws(()=>P.phaseDefinition('unknown'),/생애 단계/);
  assert.equal(birth.phase,'infant');assert.equal(birth.age,0);assert.equal(birth.job,'아기');
- assert.equal(birth.stats.health,P.birthDefaults.stats.health);
+ assert.equal(birth.stats.health,undefined);assert.throws(()=>P.metricDefinition('health'));
  assert.equal(birth.stats.money,P.birthDefaults.stats.money);
  assert.equal(Number.isFinite(birth.stats.allowance),true);
  assert.equal(Number.isFinite(birth.stats.relations),true);
  assert.equal(birth.traits.length,1);
  assert.ok(P.wealthTiers.some(t=>t.name===birth.traits[0]));
- assert.deepEqual(plain(P.activeMetrics(birth).map(metric=>metric.id)),['stress','health','money']);
- birth.stats.health=45;assert.equal(P.birthDefaults.stats.health,100);
+ assert.deepEqual(plain(P.activeMetrics(birth).map(metric=>metric.id)),['stress','relations','money']);
+ birth.stats.stress=45;assert.equal(P.birthDefaults.stats.stress,0);
  const older=E.apply(birth,{effects:{attributes:{age:22}}});
  assert.equal(older.phase,'infant','Changing age alone must not advance the stage');
  const next=E.apply(birth,{effects:{attributes:{phase:'elementary'}}});
@@ -220,7 +220,7 @@ test('special-school game thresholds lock options until grade requirements hold'
  const exam=pack.choices.find(c=>c.id.startsWith('high:1:3월-모의고사'));
  assert.equal(exam.options.length,5);
  assert.equal(exam.presentation.type,'exam');
- assert.ok(c.GukminGrades.assessment(P.generate(),exam.options[4].result.assessment).stats.health<0);
+ assert.ok(c.GukminGrades.assessment(P.generate(),exam.options[4].result.assessment).stats.stress>0);
 });
 
 test('region catalogue and independent wealth presets generate tagged births',()=>{
@@ -442,10 +442,10 @@ test('every exam strategy offers a different tangible tradeoff and academic hist
  const sample=P.generate();sample.age=17;sample.phase='high';sample.stats.study=80;sample.stats.exam=60;
  const results=choice.options.map(opt=>Effects.apply(sample,opt.result).stats);
  assert.equal(results.length,5);
- assert.ok(results[0].health>sample.stats.health-1&&results[0].stress<=sample.stats.stress,'resting is not a dead choice');
+ assert.ok(results[0].stress<=sample.stats.stress,'resting is not a dead choice');
  assert.equal(results[1].exam,sample.stats.exam-1,'short review trades a small decline for recovery');
  assert.ok(results[2].exam>results[1].exam&&results[3].exam>results[2].exam);
- assert.ok(results[4].health<results[3].health,'intensive strategy pays a cost');
+ assert.ok(results[4].stress>results[3].stress,'intensive strategy pays a cost');
  assert.equal(results[2].exam,sample.stats.exam,'maintaining a plan avoids automatic inflation');
 });
 test('story traits remain obtainable from sustained actions and modify the next assessment',()=>{
@@ -484,7 +484,7 @@ test('smoking trait is a persistent downside and support can remove it',()=>{
  const p=P.generate();p.age=17;p.phase='high';p.stats.money=20000;
  const reluctant=E.apply(p,scene.options[2].result);
  assert.ok(reluctant.traits.includes('흡연'));
- assert.ok(reluctant.stats.health<p.stats.health);
+ assert.equal(reluctant.stats.health,undefined);
  assert.equal(P.traitDefinition('흡연').negative,true);
  const timeline=T.create({persona:reluctant,events:[],choices:[]});
  timeline.advance(4);
@@ -516,17 +516,19 @@ test('a paced director step saves real intermediary news without skipping the ne
  assert.ok(engine.snapshot().choice,'the next choice is still presented');
  assert.ok(observedHistory,'intermediate stories were saved');
 });
-test('extreme student stress schedules non-blocking restorative rest without repeat settlement',()=>{
+test('recovery is voluntary, can be ignored and never automatically rescues a life',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
- const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';
- p.stats.stress=99;p.stats.study=45;p.stats.schoolScore=50;
- const engine=D.create({persona:p,persist:x=>P.save(x)});
- const first=engine.run(),items=first.persona.history.filter(x=>x.source==='wellness:high-pressure-rest');
- assert.equal(items.length,1,'extreme stress triggers a restorative rest');
- assert.ok(first.persona.stats.stress<95,'rest reduces stress');
- assert.equal(first.runtime.events['wellness:high-pressure-rest'].count,1);
- engine.run();
- assert.equal(engine.snapshot().runtime.events['wellness:high-pressure-rest'].count,1,'no repeat without renewed high stress');
+ const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';p.stats.stress=99;
+ const engine=D.create({persona:p});const first=engine.run();
+ assert.equal(first.persona.stats.stress,99);assert.equal(first.runtime.events['wellness:high-pressure-rest'],undefined);
+ for(const id of ['elementary:recover','middle:recover','high:recover']){
+  const opt=D.content(p).choices.find(x=>x.id===id).options.find(x=>x.id==='ignore');assert.ok(opt);
+  assert.equal(c.GukminEffects.apply(p,opt.result).stats.stress,99);
+ }
+ engine.apply('limit',{effects:{stats:{stress:1}}});
+ const ended=engine.snapshot();assert.equal(ended.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(ended.persona.stats.stress,100);assert.equal(ended.choice,null);
+ const saved={...ended.persona,simulation:plain(ended.runtime)};
+ assert.equal(D.create({persona:saved}).run().persona.attributes.lifeEndReason,'정신병 한계');
 });
 test('aptitude comes from repeated related activities and applies tagged modifiers',()=>{
  const {c,P}=setup(),D=c.GukminDirector,E=c.GukminEffects;
@@ -615,7 +617,7 @@ test('early behavior changes a later play scene without rerolling or immediate s
  assert.equal(curious.choice.scenarioId,'curious-play');
  const before=curious.persona.stats.stress;
  a.resolve(curious.choice.token,'choice-1');
- assert.equal(a.snapshot().persona.stats.stress,before+2,'cooperation carries a small effort cost');
+ assert.equal(a.snapshot().persona.stats.stress,before,'childhood cooperation develops traits without mental-health charges');
  const b=D.create({persona:plain(seed)});b.run();
  b.resolve(b.snapshot().choice.token,'choice-1');b.run();
  assert.equal(b.snapshot().choice.scenarioId,'cautious-play');
@@ -790,8 +792,8 @@ test('settled choice saves its observed outcome and reply without a second settl
  engine.resolve(token,'save');
  let snap=engine.snapshot(),result=snap.runtime.choices[token].outcome;
  assert.equal(result.label,'저축');
- assert.equal(result.before.stats.health,100);
- assert.equal(result.after.stats.health,95);
+ assert.equal(result.before.stats.stress,0);
+ assert.equal(result.after.stats.stress,5);
  assert.equal(result.after.stats.money-result.before.stats.money,10);
  assert.equal(snap.persona.history[result.historyFrom].title,'선택 결과');
  assert.equal(result.historyTo,result.historyFrom);
@@ -896,7 +898,7 @@ test('project gambles reward preparation and can fail when exhausted with no rer
  const good=openLifeScene(env,'high:teamwork',p),c=good.snapshot().choice;
  assert.ok(c.options.find(o=>o.id==='spotlight')?.outlook,'a gamble is described without promising a guaranteed reward');
  good.resolve(c.token,'spotlight');const won=good.snapshot().persona;
- assert.equal(won.attributes.projectResult,'recognized');assert.ok(won.stats.health<p.stats.health&&won.stats.stress>p.stats.stress);
+ assert.equal(won.attributes.projectResult,'recognized');assert.ok(won.stats.stress>p.stats.stress);
  p.stats.health=30;p.stats.stress=80;
  const bad=openLifeScene(env,'high:teamwork',p),b=bad.snapshot().choice;
  bad.resolve(b.token,'spotlight');assert.equal(bad.snapshot().persona.attributes.projectResult,'overextended');
@@ -927,7 +929,7 @@ test('first tobacco invitation is followed by another choice before a habit and 
  const first=openLifeScene(env,'high:tobacco-offer',p),fc=first.snapshot().choice;
  first.resolve(fc.token,'choice-2');const contact=first.snapshot().persona;
  assert.equal(env.P.hasTrait(contact,'흡연'),false,'one invitation does not silently become a long-term habit');
- assert.equal(contact.stats.health,p.stats.health-1);assert.equal(contact.stats.money,p.stats.money);
+ assert.equal(contact.stats.health,undefined);assert.equal(contact.stats.money,p.stats.money);
  assert.doesNotMatch(fc.body,/책임져|건강.*손해|디버프/,'the scene is not a warning label');
  const second=openLifeScene(env,'high:break-routine',contact),sc=second.snapshot().choice;
  assert.match(sc.options.find(o=>o.id==='repeat').label,/담배|피우/,'continuing tobacco use is a deliberate action, not just meeting friends');
@@ -964,8 +966,8 @@ test('admission choices are two distinct applications with risk/reward costs and
  const prep=find('admission:first:last-week').options;
  assert.equal(prep.length,3);
  assert.ok(prep[0].result.effects.stats.exam>prep[1].result.effects.stats.exam);
- assert.ok(prep[0].result.effects.stats.health<0);
- assert.ok(prep[2].result.effects.stats.health>0&&prep[2].result.effects.stats.exam<0);
+ assert.ok(prep[0].result.effects.stats.stress>0);
+ assert.ok(prep[2].result.effects.stats.stress<0&&prep[2].result.effects.stats.exam<0);
  const repeat=find('admission:second:route');
  assert.equal(repeat.options.length,3);
  assert.ok(find('admission:attempt-3:route'),'later years use the same real cycle');
@@ -1044,7 +1046,7 @@ test('high-school counseling is consumed once and admission requires actual prep
 test('smoking pre-state thresholds and patience grace are exact and research schools exclude the chain',()=>{
  const env=setup();for(const stress of [69,70])for(const patient of [false,true]){
   const p=env.P.generate();p.phase='high';p.age=17;p.stats.stress=stress;p.stats.health=80;p.attributes={schoolTrack:'general'};p.traits=patient?['인내심']:[];
-  const first=openLifeScene(env,'high:tobacco-offer',p),fc=first.snapshot().choice;assert.equal(fc.options[0].id,'choice-2');first.resolve(fc.token,'choice-2');let s=first.snapshot().persona;assert.equal(env.P.hasTrait(s,'흡연'),stress===70);assert.equal(s.stats.health,79);
+  const first=openLifeScene(env,'high:tobacco-offer',p),fc=first.snapshot().choice;assert.equal(fc.options[0].id,'choice-2');first.resolve(fc.token,'choice-2');let s=first.snapshot().persona;assert.equal(env.P.hasTrait(s,'흡연'),stress===70);assert.equal(s.stats.health,undefined);
   if(stress===69){const second=openLifeScene(env,'high:break-routine',s);second.resolve(second.snapshot().choice.token,'repeat');s=second.snapshot().persona;assert.equal(env.P.hasTrait(s,'흡연'),!patient);if(patient){assert.equal(s.attributes.habitStage,'grace');const third=openLifeScene(env,'high:smoking-reconsider',s);third.resolve(third.snapshot().choice.token,'repeat');assert.equal(env.P.hasTrait(third.snapshot().persona,'흡연'),true);}}
  }
  const p=env.P.generate(),pack=env.c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);
@@ -1099,4 +1101,21 @@ test('full humanities/science lives can prepare for science school and retain th
 });
 test('legacy completed retry resumes into the next year exactly once without deleting prior history',()=>{
  const env=setup(),p=env.P.generate();p.phase='high';p.age=18;p.stats.money=1000000;p.stats.stress=20;p.attributes={admissionAttempts:1,admissionDestination:'retry'};const pack=env.c.GukminDirector.content(p);const t=env.T.create({...pack,persona:p}),saved=t.snapshot().persona;saved.simulation=plain(t.snapshot().runtime);saved.simulation.turn=87;for(const r of Object.values(saved.simulation.events)){r.status='completed';r.count=1;}for(const id of ['admission:second:annual-preparation','admission:second:route']){saved.simulation.events[id].status='unseen';saved.simulation.events[id].count=0;}saved.simulation.choices.old={token:'old',choiceId:'admission:first:destination',eventId:'admission:first:destination',status:'closed',layer:'한방 선택',optionId:'retry'};const before=saved.history.length;let e=env.c.GukminDirector.create({persona:saved,persist:p=>env.P.save(p)});e.run();assert.equal(e.snapshot().persona.age,19);assert.equal(e.snapshot().persona.stats.money,700000);assert.equal(e.snapshot().persona.attributes.admissionAttempts,2);assert.ok(e.snapshot().persona.history.length>before);e=env.c.GukminDirector.create({persona:env.P.load()});e.run();assert.equal(e.snapshot().persona.age,19);assert.equal(e.snapshot().persona.stats.money,700000);
+});
+
+test('health retirement migrates old stats, flags, waiting scripts and review deltas without deleting history',()=>{
+ const {P,T}=setup(),cfg=config(P),old=P.generate();old.stats.health=87;old.metricActive={health:true};old.metricHistory=[{id:'health',value:87},{id:'money',value:5}];old.history.push({title:'이전 삶의 기록'});
+ const t=T.create({...cfg,persona:old});t.advance(2);const saved={...t.snapshot().persona,simulation:plain(t.snapshot().runtime)};
+ const waiting=Object.values(saved.simulation.choices)[0];waiting.script.options[0].result.effects.stats.health=-9;
+ P.save(saved);const loaded=P.load();assert.equal(loaded.stats.health,undefined);assert.equal(loaded.metricActive.health,undefined);assert.equal(loaded.metricHistory.length,1);assert.ok(loaded.history.some(x=>x.title==='이전 삶의 기록'));
+ const resumed=T.create({...cfg,persona:loaded});resumed.resolve(resumed.snapshot().choice.token,'save');assert.equal(resumed.snapshot().persona.stats.health,undefined);assert.equal(resumed.snapshot().persona.stats.stress,5);
+});
+test('childhood observation and school preparation grant fitting traits without unrelated stat rewards',()=>{
+ const {c,P,E}=setup(),pack=c.GukminDirector.content(P.generate());
+ for(const choice of pack.choices.filter(x=>x.id.startsWith('infant:')))for(const script of [choice,...choice.variants||[]])for(const o of script.options)assert.equal(o.result.effects.stats?.stress,undefined);
+ const curious=pack.choices.find(x=>x.id==='infant:play').variants.find(v=>v.id==='curious-play');
+ assert.deepEqual(plain(curious.options[0].result.effects),{traits:{add:['꼼꼼함']}});assert.ok(curious.options[1].result.effects.traits.add.includes('배려심'));
+ const prep=pack.choices.find(x=>x.id==='infant:prepare');assert.ok(prep.options[1].result.effects.traits.add.includes('꼼꼼함'));assert.deepEqual(plain(prep.options[2].result.effects),{});
+ const watch=pack.choices.find(x=>x.id==='elementary:representative').variants.find(v=>v.id==='open-election').options[2];
+ for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);const seed=P.generate();assert.deepEqual(plain(E.apply(seed,watch.result).stats),plain(seed.stats),'a neutral pass has no fabricated social penalty');
 });

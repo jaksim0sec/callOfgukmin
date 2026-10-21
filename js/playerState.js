@@ -54,7 +54,19 @@ function valid(s) {
     typeof s.family==='string'&&s.school&&typeof s.school==='object'&&s.stats&&
     typeof s.stats==='object'&&Array.isArray(s.traits)&&Array.isArray(s.history));
 }
+function withoutHealth(value){
+ if(Array.isArray(value))return value.filter(x=>x!=='health'&&x?.id!=='health').map(withoutHealth);
+ if(!value||typeof value!=='object')return value;
+ const copy={};
+ for(const [key,item] of Object.entries(value)){
+  if(key==='health')continue;
+  // A retired health gate must not become an unconditional legacy penalty.
+  copy[key]=key==='conditional'?item.filter(b=>!JSON.stringify(b.when||{}).includes('"health"')).map(withoutHealth):withoutHealth(item);
+ }
+ return copy;
+}
 function normalize(s) {
+ s=withoutHealth(s);
   // Compatible with the previous UI-only save. A family is an attribute, not a buff.
   const copy={...s,stats:{...s.stats},school:{...s.school}};
   copy.traits=s.traits.filter(t=>typeof t==='string'?t!==s.family:!!(t&&typeof t==='object'&&t.name!==s.family));
@@ -71,7 +83,7 @@ function load() {
 }
 function save(persona) {
   if(!valid(persona))throw new TypeError('Invalid persona');
-  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(persona));return true;}
+  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(withoutHealth(persona)));return true;}
   catch(error){return false;}
 }
 function ensure() {
@@ -90,6 +102,7 @@ function phaseOf(s) {
 function activeMetrics(s) {
   const ids=new Set(PHASE_METRICS[phaseOf(s)]);
   for(const [id,active] of Object.entries(s.metricActive||{})){
+    if(id==='health')continue;
     metricDefinition(id);
     if(active)ids.add(id);else ids.delete(id);
   }
@@ -151,7 +164,7 @@ function schoolsOf(s) {
   return [...records,...legacy.filter(old=>!records.some(r=>r.kind===old.kind&&r.name===old.name))];
 }
 global.GukminPlayer=Object.freeze({
-  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,phaseOf,activeMetrics,schoolsOf,
+  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,phaseOf,activeMetrics,schoolsOf,
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   birthContext,wealthTiers:DATA.wealthTiers,

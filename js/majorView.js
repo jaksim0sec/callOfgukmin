@@ -57,9 +57,9 @@ function presentAdmission({choice,resolve,root}){
  const choices=make('div','admission-choices'+(p.type==='admission-route'?' is-route':''));
  if(p.type==='admission-route'){
   const gradeStrip=make('div','admission-grade-strip');
-  for(const [metric,label] of [['schoolScore','현재 내신'],['exam','모의고사']]){
+  for(const [metric,label] of [['schoolScore','현재 내신'],['exam','수능']]){
    const score=person?.stats?.[metric];
-   const value=global.GukminGrades.report(metric,score,'high').display;
+   const value=metric==='exam'&&!person.attributes?.csatSubmitted?'미응시':global.GukminGrades.report(metric,score,'high').display;
    const cell=make('span','admission-grade-piece');
    cell.append(make('small','',label),make('strong','',value));gradeStrip.append(cell);
   }
@@ -87,7 +87,7 @@ function presentAdmission({choice,resolve,root}){
   if(isRoute&&primary){
    const metric=entry.id==='early'?'schoolScore':'exam';
    const score=person?.stats?.[metric];
-   const grade=make('span','admission-big-grade',global.GukminGrades.report(metric,score,'high').display);
+   const grade=make('span','admission-big-grade',metric==='exam'&&!person.attributes?.csatSubmitted?'응시 전':global.GukminGrades.report(metric,score,'high').display);
    row.append(grade);
   }
   if(entry.school?.typeLabel){const chance=global.GukminAdmissions.probability(person,entry.school,p.category);row.append(make('small','admission-type-label',entry.school.typeLabel+' · 게임 내 합격 가능성 '+chance+'%'+(entry.school.minimum?' · 수능 최저 '+global.GukminGrades.report('exam',entry.school.minimum,'high').display+' 수준':'')));}

@@ -15,8 +15,8 @@ function config(){
  definitions();
  return {contentId,choices:[{
   id:'demo-saving',layer:'일상 선택',presentation:'inline',blocksTime:true,title:'검증용 용돈을 어떻게 쓸까?',body:'공통 결과 정산과 특성 획득을 확인하는 테스트 선택이다.',
-  options:[{id:'save',label:'저축하며 습관 익히기',result:{effects:{stats:{health:-5,money:10000},activate:{demoFocus:1},traits:{add:['검증용 저축습관']}},history:{title:'검증 선택 결과',detail:'건강 −5, 재산 +10,000원, 검증 집중 활성화, 검증용 저축습관 획득.'}}},
-   {id:'rest',label:'쉬면서 습관 익히기',result:{effects:{stats:{money:10000},activate:{demoFocus:1},traits:{add:['검증용 저축습관']}},history:{title:'검증 선택 결과',detail:'건강은 유지하고 동일한 기반 기능을 검증한다.'}}}]
+  options:[{id:'save',label:'저축하며 습관 익히기',result:{effects:{stats:{money:10000},activate:{demoFocus:1},traits:{add:['검증용 저축습관']}},history:{title:'검증 선택 결과',detail:'재산 +10,000원, 검증 집중 활성화, 검증용 저축습관 획득.'}}},
+   {id:'rest',label:'쉬면서 습관 익히기',result:{effects:{stats:{money:10000},activate:{demoFocus:1},traits:{add:['검증용 저축습관']}},history:{title:'검증 선택 결과',detail:'동일한 기반 기능을 검증한다.'}}}]
  }],events:[
   {id:'demo-notice',layer:'소식 이벤트',at:1,title:'검증 사건',history:{title:'검증 사건',detail:'선택 없는 사건도 공통 처리 후 인생 기록에 남는다.'}},
   {id:'demo-choice',layer:'일상 이벤트',at:2,title:'검증 선택',choice:'demo-saving'},

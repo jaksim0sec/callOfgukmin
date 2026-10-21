@@ -15,7 +15,7 @@ const trackScenes={
 const actions=[
  {label:'친구들과 사실과 자료를 확인하고 함께 정리한다',effects:{stats:{relations:5,study:3,stress:3}},detail:'자료를 검증하고 함께 문제를 풀었다.'},
  {label:'담당 선생님께 현재 상황을 설명한다',effects:{stats:{study:3,relations:2,stress:1}},detail:'직접 확인하고 현실적인 조언을 얻었다.'},
- {label:'맡은 만큼만 마무리하고 쉬기로 한다',effects:{stats:{health:3,stress:-4,study:-1}},detail:'완벽하진 않아도 무리하지 않았다.'}
+ {label:'맡은 만큼만 마무리하고 쉬기로 한다',effects:{stats:{stress:-4,study:-1}},detail:'완벽하진 않아도 무리하지 않았다.'}
 ];
 // Each answer is a genuine allocation decision; no free dominant choice.
 const trackOptions={
@@ -25,12 +25,12 @@ const trackOptions={
   {label:'친구 한 명과 확인해서 필요한 사람에게만 전달한다',effects:{stats:{relations:2,study:1,stress:2}},detail:'잘못된 공지를 믿던 친구들은 도왔다. 전체 단체방에는 소식이 늦게 퍼져 다음날 몇 명이 다시 물었다.'}
  ],
  autonomous:[
-  {label:'실험을 직접 설계하고 대표 발표까지 맡는다',risk:'실험 실패 시 추가 준비 부담',effects:{stats:{study:4,relations:2,stress:6,health:-1}},detail:'작은 질문으로 시작했지만 예상과 다른 측정값 때문에 두 번 더 실험했다. 발표는 마쳤고 다른 과목 준비는 늦었다.'},
+  {label:'실험을 직접 설계하고 대표 발표까지 맡는다',risk:'실험 실패 시 추가 준비 부담',effects:{stats:{study:4,relations:2,stress:6}},detail:'작은 질문으로 시작했지만 예상과 다른 측정값 때문에 두 번 더 실험했다. 발표는 마쳤고 다른 과목 준비는 늦었다.'},
   {label:'조원별 역할을 나눠 공동 보고서로 정리한다',effects:{stats:{study:1,relations:4,stress:3}},detail:'서로 다른 자료를 한 형식으로 맞췄다. 보고서가 완성됐지만 개별 탐구의 깊이는 얕아졌다.'},
   {label:'이미 검증된 자료로 범위를 줄여 마무리한다',effects:{stats:{study:2,stress:-3,relations:-2}},detail:'완성은 빨랐고 추가 실험은 없었다. 새로운 결과를 기대했던 조원은 아쉬워했다.'}
  ],
  'autonomous-public':[
-  {label:'주민을 직접 찾아가 현장 조사를 넓힌다',risk:'예상하지 못한 인터뷰 취소와 이동 시간',effects:{stats:{study:3,relations:3,stress:5,health:-1}},detail:'인터뷰 두 건은 취소됐지만 가게 세 곳의 실제 불편을 들었다. 자료가 풍부해진 대신 주말을 거의 썼다.'},
+  {label:'주민을 직접 찾아가 현장 조사를 넓힌다',risk:'예상하지 못한 인터뷰 취소와 이동 시간',effects:{stats:{study:3,relations:3,stress:5}},detail:'인터뷰 두 건은 취소됐지만 가게 세 곳의 실제 불편을 들었다. 자료가 풍부해진 대신 주말을 거의 썼다.'},
   {label:'학교 안에서 실현 가능한 소규모 행사로 바꾼다',effects:{stats:{relations:2,study:1,stress:-2}},detail:'행사는 작아졌지만 학생회와 시간표를 맞춰 실제 안내문을 붙였다. 큰 기획은 다음에 쓰기로 했다.'},
   {label:'예산과 승인 조건부터 검토해 기획서를 정리한다',effects:{stats:{study:3,relations:-2,stress:2}},detail:'장비 대여료를 계산해 반쯤 불가능한 계획을 접었다. 조원들은 너무 보수적이라며 불평했지만 예산은 맞았다.'}
  ],
@@ -45,17 +45,17 @@ const trackOptions={
   {label:'쟁점을 하나로 좁혀 정확한 사실만 발표한다',effects:{stats:{study:2,stress:-2,relations:-2}},detail:'발표는 간결해졌다. 모호한 주장을 빼자 몇몇 조원은 자신이 준비한 부분이 사라졌다고 했다.'}
  ],
  gifted:[
-  {label:'센서를 검증하고 측정 실험을 처음부터 다시 한다',risk:'실험실 추가 예약이 실패하면 시간이 사라짐',effects:{stats:{study:5,stress:6,health:-2}},detail:'센서 위치가 오차 원인이었다. 장비를 다시 예약해 밤까지 측정했고 보고서의 수치는 바로잡혔다.'},
+  {label:'센서를 검증하고 측정 실험을 처음부터 다시 한다',risk:'실험실 추가 예약이 실패하면 시간이 사라짐',effects:{stats:{study:5,stress:6}},detail:'센서 위치가 오차 원인이었다. 장비를 다시 예약해 밤까지 측정했고 보고서의 수치는 바로잡혔다.'},
   {label:'예상과 다른 결과 자체를 분석해 공동 발표한다',effects:{stats:{study:2,relations:3,stress:3}},detail:'가설이 틀린 이유를 조원과 설명했다. 발표는 설득력 있었지만 정확한 재현 실험까지 하지는 못했다.'},
   {label:'재실험을 포기하고 검증된 범위만 제출한다',effects:{stats:{study:1,stress:-4,relations:-2}},detail:'자료에서 확인할 수 있는 값만 남겼다. 결과는 짧아졌고 탐구를 더 해 보자는 친구의 제안은 다음으로 미뤘다.'}
  ],
  science:[
-  {label:'변인을 다시 통제하고 반복 측정으로 검증한다',risk:'반복 실패 시 다른 과목 시험을 포기할 수 있음',effects:{stats:{study:5,stress:6,health:-2}},detail:'측정 순서를 하나씩 바꾸자 원인을 찾았다. 보고서는 탄탄해졌지만 시험 범위를 다 보지 못했다.'},
+  {label:'변인을 다시 통제하고 반복 측정으로 검증한다',risk:'반복 실패 시 다른 과목 시험을 포기할 수 있음',effects:{stats:{study:5,stress:6}},detail:'측정 순서를 하나씩 바꾸자 원인을 찾았다. 보고서는 탄탄해졌지만 시험 범위를 다 보지 못했다.'},
   {label:'조원마다 다른 가설을 맡아 교차 검토한다',effects:{stats:{relations:4,study:2,stress:4}},detail:'세 가설 중 하나만 남았다. 서로 검산한 덕에 오류는 줄었고 보고서는 분량이 커졌다.'},
   {label:'확인된 데이터만 정리해 제시간에 제출한다',effects:{stats:{stress:-3,study:1,relations:-2}},detail:'설명할 수 없는 수치를 뺐다. 마감은 지켰지만 추가 실험을 원한 조원은 아쉬워했다.'}
  ],
  vocational:[
-  {label:'실습 장비를 다시 점검해 시제품 기능을 완성한다',risk:'추가 장비 사용 시간과 늦은 귀가',effects:{stats:{study:4,stress:5,health:-1}},detail:'시연 직전 장비 문제를 고쳤다. 핵심 기능은 돌아갔지만 마감 전날까지 실습실에 남았다.'},
+  {label:'실습 장비를 다시 점검해 시제품 기능을 완성한다',risk:'추가 장비 사용 시간과 늦은 귀가',effects:{stats:{study:4,stress:5}},detail:'시연 직전 장비 문제를 고쳤다. 핵심 기능은 돌아갔지만 마감 전날까지 실습실에 남았다.'},
   {label:'작업을 나눠 시연과 설명을 함께 준비한다',effects:{stats:{relations:4,study:1,stress:3}},detail:'실습과 설명 담당을 나눠 리허설을 마쳤다. 팀워크는 좋아졌지만 시제품의 보조 기능 하나를 포기했다.'},
   {label:'검증된 핵심 기능만 제출하고 정리 시간을 확보한다',effects:{stats:{study:2,stress:-3,relations:-2}},detail:'완료되지 않은 부분을 분명히 적었다. 결과물은 작아졌고 더 해 보자던 조원과는 의견이 갈렸다.'}
  ]
@@ -147,8 +147,8 @@ global.GukminDirector.register({
    examWithPrelude(16,1,65,'mock'),
    choiceAt('high:recover',65,'학교생활을 다시 조율한다',
     '시험과 여러 활동이 겹쳐 몸과 마음이 지쳤다. 부담을 나누고 쉬어 갈 방법을 찾자.',[
-     {label:'상담 뒤 한 달 동안 학습량과 수면 시간을 조정한다',effects:{stats:{stress:-18,health:2}},detail:'상담만으로 달라지진 않았다. 과제 시간을 줄이고 잠드는 시간을 지키자 몇 주 뒤부터 버틸 여유가 생겼다.'},
-     {label:'무리한 일정을 줄이고 실제로 며칠 휴식한다',effects:{stats:{stress:-12,health:4}},detail:'휴식 기간에는 밀린 일을 억지로 처리하지 않았다. 돌아와서 남은 과제부터 다시 순서를 잡았다.'},
+     {label:'상담 뒤 한 달 동안 학습량과 수면 시간을 조정한다',effects:{stats:{stress:-18}},detail:'상담만으로 달라지진 않았다. 과제 시간을 줄이고 잠드는 시간을 지키자 몇 주 뒤부터 버틸 여유가 생겼다.'},
+     {label:'무리한 일정을 줄이고 실제로 며칠 휴식한다',effects:{stats:{stress:-12}},detail:'휴식 기간에는 밀린 일을 억지로 처리하지 않았다. 돌아와서 남은 과제부터 다시 순서를 잡았다.'},
      {label:'가족과 도움받을 수 있는 일과 없는 일을 나눠 본다',effects:{stats:{stress:-9,relations:1}},detail:'가족이 집안일 일부를 맡았다. 시험 걱정은 그대로지만 그동안 하던 일 하나는 내려놓을 수 있었다.'}
     ],{stats:{stress:{gte:75}}}),
    S.branch(choiceAt('high:commute',66,'아침부터 꼬인 학교 일정',
@@ -179,7 +179,7 @@ global.GukminDirector.register({
     '친구가 학교생활과 진로에 대한 불안을 털어놓았다. 어떻게 이야기를 이어갈까?',[
      {label:'판단을 미루고 친구 이야기를 충분히 듣는다',effects:{stats:{relations:6,stress:1}},detail:'친구가 마음을 정리하는 데 함께했다.'},
      {label:'담임이나 상담 선생님께 도움을 청하자고 제안한다',effects:{stats:{relations:4,stress:-1}},detail:'상담받을 수 있는 방법을 함께 살폈다.'},
-     {label:'산책하면서 다른 이야기도 나눈다',effects:{stats:{relations:3,health:2,stress:-2}},detail:'조금 편안한 시간을 보냈다.'}
+     {label:'산책하면서 다른 이야기도 나눈다',effects:{stats:{relations:3,stress:-2}},detail:'조금 편안한 시간을 보냈다.'}
     ]),[
   {id:'career-sea',priority:30,when:{attributes:{highPeer:'세아'}},
    title:'세아의 전공 수업 목록',body:'윤세아가 학과 안내서를 펴고 묻는다. "좋아하는 과목하고 잘하는 과목이 다르면 뭘 골라?"',
@@ -235,8 +235,8 @@ global.GukminDirector.register({
      {label:'피우지 않겠다고 하고 친구와 함께 나온다',
       effects:{stats:{relations:1,stress:1}},
       detail:'친구도 따라 나왔다. "와, 저런 얘기 갑자기 하면 난감하네." 둘은 말없이 교실로 돌아왔다.'},
-     {label:'거절하지 못하고 권유에 넘어간다',risk:'반복되면 건강·재산에 지속적인 부담',
-      effects:{stats:{health:-2},traits:{add:['흡연']}},
+     {label:'거절하지 못하고 권유에 넘어간다',risk:'반복되면 정신병·재산에 지속적인 부담',
+      effects:{stats:{},traits:{add:['흡연']}},
       detail:'처음에는 공짜 권유였지만 이후에도 같은 무리에 어울리며 반복했다. 몇 주 뒤에는 ==흡연 습관==이 남았다. 잠깐 거절하기 어려웠던 일이 계속 신경 쓸 일이 됐다.'}
    ]),
    S.branch(choiceAt('high:teamwork',72,'수행평가 전날, 조원 연락이 끊겼다',
@@ -249,7 +249,7 @@ global.GukminDirector.register({
    title:'세아가 찾은 실험 오류',body:'윤세아가 실험 결과 파일을 열었다. 마지막 그래프의 단위가 틀렸다. ==이미 보고서를 인쇄했다.==',
    options:[
     {label:'세아와 원본 데이터를 다시 계산한다',tags:['team','science'],risk:'늦은 밤까지 재작업',
-      effects:{stats:{study:3,stress:3,health:-1}},
+      effects:{stats:{study:3,stress:3}},
       detail:'세아와 측정값을 하나씩 대조해 단위 오류를 찾아냈다. 한밤중에 정정본을 인쇄했지만 다음 날 둘 다 피곤한 얼굴이었다.'},
      {label:'교사에게 오류를 알리고 정정본을 낸다',risk:'수정 기한을 넘겨 감점 가능',
       effects:{stats:{stress:1,relations:1}},
@@ -286,7 +286,7 @@ global.GukminDirector.register({
     '어느 날 계단에서 숨이 차다는 걸 느꼈다. 예전의 선택이 ==가끔이 아니라 습관==이 됐다는 걸 깨달았다. 도움을 구할 수 있는 곳이 있다.',[
       {label:'상담과 주변의 도움을 받아 끊는 데 시간을 쓴다',effects:{stats:{stress:2},traits:{remove:['흡연']}},detail:'몇 달 동안 도움을 받고 생활을 바꿨다. ==흡연 특성이 사라졌다.== 이미 사용한 돈과 지나간 시간은 돌아오지 않는다.'},
       {label:'혼자 미루다가 다시 도움을 찾아본다',effects:{stats:{stress:2}},detail:'한 번에 해결되진 않았다. 상담 안내를 다시 찾아 봤다. 흡연 습관은 아직 남아 있다.'},
-      {label:'아직은 바꿀 생각이 없다',effects:{stats:{health:-2,stress:1}},detail:'일상이 달라지는 줄 알면서도 미뤘다. 이후의 부담은 계속된다.'}
+      {label:'아직은 바꿀 생각이 없다',effects:{stats:{stress:1}},detail:'일상이 달라지는 줄 알면서도 미뤘다. 이후의 부담은 계속된다.'}
     ]),event:{...S.selection('high:smoking-followup',76,'','',[{label:'확인'}]).event,when:{turn:{eq:76},traits:['흡연']}}},
    choiceAt('high:graduation-photo',77,'졸업앨범 촬영 날',
     '담임이 열 번 넘게 줄을 맞추라 했는데 뒷줄 친구들은 계속 장난을 친다. ==마지막 사진이라고 다들 갑자기 친한 척한다.==',[
@@ -357,19 +357,19 @@ global.GukminDirector.register({
     action:'토론 때 연습한 질의응답으로 발표를 다시 짠다',tags:['humanities'],stats:{study:1,relations:3,stress:2},
     detail:'긴 슬라이드를 줄이고 예상 질문을 나눴다. 반복해서 받아 본 반론이 이번에는 답변이 됐다. 발표 연습 때문에 개인 공부는 늦게 시작했다.'},
    {id:'sports',traits:['체육'],requirement:'체육 또는 대표팀 훈련 경험',role:'시연으로 보여주는 사람',
-    action:'체육 활동에서 익힌 동작 시연을 비교 자료로 쓴다',tags:['sports'],stats:{study:-1,health:-1,relations:4,stress:1},
+    action:'체육 활동에서 익힌 동작 시연을 비교 자료로 쓴다',tags:['sports'],stats:{study:-1,relations:4,stress:1},
     detail:'움직임을 직접 시연하며 원리를 설명했다. 꾸준히 연습한 동작이라 새 대본을 외울 필요는 적었다. 리허설에 쓴 시간만큼 문제풀이가 밀렸다.'},
    {id:'organizing',traits:['리더십','친화력'],requirement:'리더십 또는 친화력',role:'사람을 모아 마무리하는 사람',
     action:'친구들이 잘하는 일을 나눠 역할을 다시 맡긴다',tags:['team'],stats:{study:1,relations:3,stress:1},
     detail:'혼자 채울 분량을 친구들에게 나눠 맡겼다. 쌓아 둔 신뢰 덕에 이번 마감은 지켰다. 다음번 조 편성에서는 모두 네 이름부터 불렀다.'}
   ];
   const modeWhen=mode=>({any:[{attributes:{projectSkill:mode.id}},...mode.traits.map(trait=>({traits:[trait]}))]});
-  const ready={all:[{stats:{health:{gte:52},stress:{lte:75}}},
+  const ready={all:[{stats:{stress:{lte:75}}},
    {any:[{stats:{schoolScore:{gte:65}}},{traits:['언변']}]}]};
   const spotlight={id:'spotlight',label:'대표 발표를 맡고 남은 기간 전부 걸어 본다',
-   outlook:'대표 발표 기회 · 내신 지수 65 이상 또는 언변이 준비에 도움 · 건강 55 이상·정신병 수치 68 이하일 때 성과를 낼 수 있습니다',
+   outlook:'대표 발표 기회 · 내신 지수 65 이상 또는 언변이 준비에 도움 · 정신병 수치 75 이하일 때 성과를 낼 수 있습니다',
    risk:'다른 공부 시간을 비우고 연습을 떠맡음',
-   effects:{stats:{study:-2,stress:7,health:-3},attributes:{projectStyle:'spotlight'}},
+   effects:{stats:{study:-2,stress:7},attributes:{projectStyle:'spotlight'}},
    detail:'최종 발표 명단에 이름을 올리고 며칠간 원고와 시연을 고쳤다. 내 시험 공부는 뒤로 밀렸다.',
    conditional:[
     {when:ready,result:{effects:{stats:{schoolScore:4,relations:6},attributes:{projectResult:'recognized',projectObligation:'speaking',schoolRole:'대표 발표 경험'}},
@@ -422,7 +422,7 @@ global.GukminDirector.register({
   const smoking=stages.choices.find(c=>c.id==='high:tobacco-offer');
   const invitation=smoking.variants.find(v=>v.id==='senior-invitation');
   invitation.body='방과 후 선배와 친구가 잠깐 이야기를 나누고 있다. 같은 수업 이야기에 웃다가 선배가 담배를 권한다.\n\n곧 집에 가야 한다. 권유를 넘기거나 한 번 받아들이고 먼저 돌아갈 수 있다.';
-  const accept=invitation.options.pop();accept.label='한 번만 받아들이고 먼저 자리를 나온다';accept.result.effects={stats:{relations:2,stress:-1,health:-1},attributes:{habitStage:'first'}};accept.result.conditional=[{before:true,when:{stats:{stress:{gte:70}}},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}},history:{title:'흡연 습관이 시작됐다',detail:'짧은 만남 이후에도 같은 권유를 찾게 됐다. 건강과 재산에 주기적인 부담이 남는다.'}}}];invitation.options.unshift(accept);
+  const accept=invitation.options.pop();accept.label='한 번만 받아들이고 먼저 자리를 나온다';accept.result.effects={stats:{relations:2,stress:-1},attributes:{habitStage:'first'}};accept.result.conditional=[{before:true,when:{stats:{stress:{gte:70}}},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}},history:{title:'흡연 습관이 시작됐다',detail:'짧은 만남 이후에도 같은 권유를 찾게 됐다. 정신병과 재산에 주기적인 부담이 남는다.'}}}];invitation.options.unshift(accept);
   invitation.options[1].result.effects.stats={relations:-1,stress:-1};invitation.options[2].result.effects.stats={relations:1,stress:1};
   const routine=choiceAt('high:break-routine',73,'점심 뒤, 익숙해진 자리',
    '점심을 먹고 나면 선배들이 먼저 연락한다. ==시험이 끝난 날에도 같은 자리에 모였다.== 선배가 아무렇지 않게 또 담배를 권한다.\n\n오늘은 반 친구가 같이 운동장에 가자고 한다. 쉬는 시간을 어디에 쓸까?',[
@@ -431,13 +431,13 @@ global.GukminDirector.register({
     {id:'leave',label:'오늘부터 다른 약속을 잡고 그 모임에는 나가지 않는다',effects:{stats:{relations:-1,stress:1,study:1},attributes:{habitStage:'away'}},detail:'처음 며칠은 심심했다. 연락은 조금씩 줄었고 점심 뒤 시간이 다시 비었다.'}
    ],{attributes:{habitStage:'first'}});
   routine.event.when={all:[notResearch,routine.event.when]};
-  const repeat=routine.choice.options[0];repeat.result.effects.stats={relations:2,stress:-1,health:-1};
+  const repeat=routine.choice.options[0];repeat.result.effects.stats={relations:2,stress:-1};
   repeat.result.conditional=[{before:true,when:{traits:['인내심']},result:{effects:{attributes:{habitStage:'grace'}}}},{before:true,when:{withoutTraits:['인내심']},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}}}}];
-  const reconsider=choiceAt('high:smoking-reconsider',74,'다시 생각할 마지막 약속','인내심으로 잠시 거리를 뒀지만 다시 연락이 왔다. 이번에도 반복할지 결정해야 한다.',[{id:'repeat',label:'다시 권유를 받아들인다',effects:{traits:{add:['흡연']},stats:{health:-1},attributes:{habitStage:'revealed'}},detail:'다시 반복한 생활이 흡연 습관으로 남았다.'},{id:'leave',label:'거절하고 모임에서 거리를 둔다',effects:{stats:{relations:-1,stress:1},attributes:{habitStage:'away'}},detail:'연락을 줄이고 다른 약속을 잡았다.'}],{all:[notResearch,{attributes:{habitStage:'grace'}}]});
+  const reconsider=choiceAt('high:smoking-reconsider',74,'다시 생각할 마지막 약속','인내심으로 잠시 거리를 뒀지만 다시 연락이 왔다. 이번에도 반복할지 결정해야 한다.',[{id:'repeat',label:'다시 권유를 받아들인다',effects:{traits:{add:['흡연']},stats:{stress:1},attributes:{habitStage:'revealed'}},detail:'다시 반복한 생활이 흡연 습관으로 남았다.'},{id:'leave',label:'거절하고 모임에서 거리를 둔다',effects:{stats:{relations:-1,stress:1},attributes:{habitStage:'away'}},detail:'연락을 줄이고 다른 약속을 잡았다.'}],{all:[notResearch,{attributes:{habitStage:'grace'}}]});
   stages.events.push(reconsider.event);stages.choices.push(reconsider.choice);
   stages.events.push(routine.event);stages.choices.push(routine.choice);
   senior.result.conditional.push({when:{all:[notResearch,{attributes:{habitStage:'routine'}}]},result:{
-   effects:{stats:{health:-6,money:-12000,stress:3},traits:{add:['흡연']},attributes:{habitStage:'revealed'}},
+   effects:{stats:{money:-12000,stress:3},traits:{add:['흡연']},attributes:{habitStage:'revealed'}},
    history:{title:'짧던 쉬는 시간이 길어졌다',detail:'처음에는 선배를 따라 잠깐 나갔을 뿐이었다. 몇 달 뒤, 계단에서 숨을 고르다가 쉬는 시간과 지출이 전부 그 습관에 맞춰진 걸 깨달았다. ==이제는 어울리는 자리보다 흡연 습관 자체가 남아 있었다.=='}}});
   S.paths(stages,'high:smoking-followup',[{id:'habit-aftermath',priority:50,when:{traits:['흡연']},
    title:'시험보다 먼저 떠오르는 쉬는 시간',body:'중간에 자꾸 자리를 뜨니 복습 흐름이 끊긴다. 지출도 눈에 띈다. ==한 번의 선택보다 반복한 생활이 더 크게 남았다.==\n\n익숙한 모임과 생활을 어떻게 바꿀까?',
@@ -469,6 +469,8 @@ global.GukminDirector.register({
   byId('high:whimoon-electives').variants[0].options.forEach((o,i)=>o.result.effects={attributes:{electiveRoute:['alternate','shared','petition'][i]},stats:[{stress:-1,relations:-1},{stress:2},{relations:2,stress:2}][i]});
   byId('high:graduation-photo').options.forEach((o,i)=>o.result.effects=i===0?{stats:{relations:2,stress:1}}:i===1?{attributes:{preExamStrategy:'record'},stats:{stress:1}}:{stats:{relations:-1,stress:-1}});
   S.schoolwork(stages,{"high:age18":"schoolScore","high:teamwork": "schoolScore", "high:bdja-science": "schoolScore", "high:track-general": "schoolScore", "high:track-autonomous": "schoolScore", "high:track-autonomous-public": "schoolScore", "high:track-foreign": "schoolScore", "high:track-international": "schoolScore", "high:track-gifted": "schoolScore", "high:track-science": "schoolScore", "high:track-vocational": "schoolScore"});
+  const recovery=stages.choices.find(c=>c.id==='high:recover');
+  recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   return {...stages,attributes:{projectStyle:{label:'수행평가 해결 방식',hidden:true},projectResult:{label:'수행평가 결과',hidden:true},projectObligation:{label:'다음 부탁',hidden:true},habitStage:{label:'쉬는 시간의 선택',hidden:true},highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }
 });

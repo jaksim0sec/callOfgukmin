@@ -309,7 +309,6 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 /* One semantic tint per metric; grades have unmistakably different hues. */
 .gauge{--gauge-color:#7A8593}
 .metric-stress{--gauge-color:#D65B62}
-.metric-health{--gauge-color:#32A878}
 .metric-money,.metric-allowance,.metric-income{--gauge-color:#D7A13C}
 .metric-relations{--gauge-color:#8769D8}
 .metric-study{--gauge-color:#6F82BA}
@@ -1120,3 +1119,27 @@ body.cinematic-open{overflow:hidden}
 }
 
 .admission-choices>button{flex-shrink:0}
+
+/* Feedback revision: one academic color and a chalkboard election reveal. */
+.gauge.metric-schoolScore,.gauge.metric-exam{--gauge-color:#bdb2c9}
+.gauge.metric-schoolScore .gauge-value,.gauge.metric-exam .gauge-value{color:var(--ink)}
+.is-election{position:relative;isolation:isolate;border:.55rem solid #98744e;border-bottom-width:.9rem;box-shadow:inset 0 0 3rem #071f1a99,0 1.5rem 4rem #0005;background:radial-gradient(ellipse at 20% 30%,#a9c7b719,transparent 55%),repeating-linear-gradient(174deg,#ffffff04 0 .0625rem,transparent .0625rem .6rem),#204b40;font-family:'Noto Serif KR','Batang','바탕',serif;text-shadow:.035rem .025rem .08rem #fff4}
+.is-election:before{content:'';position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 70% 65%,#e5ecce10,transparent 45%);pointer-events:none}
+.is-election:after{content:'';position:absolute;bottom:-.58rem;right:1.4rem;width:2.3rem;height:.3rem;background:#f5eddb;border-radius:.1rem;box-shadow:-3rem 0 0 #dbbd8e;transform:rotate(-3deg)}
+.is-election .life-cinematic-kicker{color:#d8dbc8;letter-spacing:.2em}
+.is-election .life-cinematic-title{font-family:inherit;font-weight:600;letter-spacing:.15em;text-decoration:underline;text-decoration-thickness:.07rem;text-underline-offset:.5rem;margin-bottom:.6rem}
+.election-caption{font-size:.85rem;color:#d5dccc;margin:.7rem 0 1rem}
+.election-ballot-box{font-family:inherit;border-color:#d6d8b4;border-style:dashed;transform:rotate(-2deg);font-size:.85rem}
+.election-candidate{border-color:#e9ebcb35;padding:.8rem .2rem}
+.election-tally{font-family:'Noto Serif KR','Batang','바탕',serif;font-weight:500}
+.election-result{display:grid;gap:.35rem;min-height:6rem;margin:1.3rem 0 .3rem;opacity:0;transform:translateY(.5rem)}
+.election-result small,.election-result span{font-size:.85rem;font-weight:400;color:#e0dfc9}
+.election-result strong{font:600 clamp(1.45rem,5vw,2.2rem)/1.5 'Noto Serif KR','Batang','바탕',serif;letter-spacing:.05em}
+.is-counted .election-result{animation:election-reveal .85s ease-out forwards}
+.is-elected .election-result strong{color:#ffe4a0}
+.admission-guidance{padding:1rem;border-radius:.4rem;background:#ede8df;color:#403b35;text-align:left;line-height:1.9}
+.admission-guidance strong{display:inline-block;color:#403552;font-size:1.02em}
+.admission-guidance mark{background:#e7deaa;color:#373123;padding:.05em .2em}
+@keyframes election-reveal{to{opacity:1;transform:none}}
+@media(max-width:35em){.is-election{padding:.85rem;border-width:.35rem;border-bottom-width:.65rem}.is-election .life-cinematic-title{font-size:1.75rem}.election-result{min-height:5rem}}
+@media(prefers-reduced-motion:reduce){.is-counted .election-result{animation:none;opacity:1;transform:none}}

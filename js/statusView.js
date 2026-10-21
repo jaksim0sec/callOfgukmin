@@ -184,7 +184,7 @@ function showMetrics(root,s){
  // Preserve metric definitions while grouping only their presentation.
  const groups=new Map();
  function metricGroup(metric){
-  if(metric.id==='stress'||metric.id==='health')return 'vitals';
+  if(metric.id==='stress'||metric.id==='relations')return 'vitals';
   if(metric.type==='currency')return 'finance';
   if(metric.id==='schoolScore'||metric.id==='exam')return 'academics';
   return 'other';
@@ -218,7 +218,7 @@ function showMetrics(root,s){
   const formatted=result?result.display:Number.isFinite(number)?
    metric.type==='currency'?Number(number).toLocaleString('ko-KR')+'원':String(number):'—';
   const value=node('b','gauge-value',formatted);
-  if(result){value.title=result.detail;wrap.style.setProperty('--grade-color',global.GukminGrades.color(result.display));}
+  if(result){value.title=result.detail;}
   line.append(value);
   wrap.append(line);
   // Categorical grades must not look like completion percentages.

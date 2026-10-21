@@ -34,9 +34,9 @@ try{
    await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
   }
-  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:80,exam:60},stats:{money:1575000,allowance:45000,stress:51,health:-12,relations:30}}}));
+  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:80,exam:60},stats:{money:1575000,allowance:45000,stress:51,relations:30}}}));
   assert.equal(await page.locator('.gauges-heading').count(),0,'status heading and its layout box are removed');
-  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-health').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'mental health and health share one flex row');
+  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-relations').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'mental health and relationships share one flex row');
   const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
   await page.locator('#traits .trait-control').first().click();
   await page.locator('#traitDialog[open]').waitFor();assert.ok((await page.locator('#traitInfo').textContent()).trim());
@@ -67,7 +67,7 @@ try{
   await page.evaluate(()=>{const names=Object.keys(GukminPlayer.traitDefinitions).filter(name=>!GukminPlayer.traitDefinitions[name].hidden).slice(0,10);GukminGame.session.apply('trait-row',{effects:{traits:{add:names}}});});
   assert.equal(await page.locator('#traits').evaluate(el=>getComputedStyle(el).flexWrap),'nowrap');
   await page.locator('#traits').evaluate(el=>{el.scrollLeft=0;});
-  await page.evaluate(()=>GukminGame.session.apply('keep-trait-scroll',{effects:{stats:{health:-1}}}));
+  await page.evaluate(()=>GukminGame.session.apply('keep-trait-scroll',{effects:{stats:{relations:-1}}}));
   assert.equal(await page.locator('#traits').evaluate(el=>el.scrollLeft),0,'ordinary updates preserve manual position');
   await page.evaluate(()=>{GukminPlayer.registerTrait('검증 새 특성',{description:'가로 스크롤 검증'});GukminGame.session.apply('new-trait',{effects:{traits:{add:['검증 새 특성']}}});});
   assert.ok(await page.locator('#traits').evaluate(el=>{const r=el.getBoundingClientRect(),last=el.lastElementChild.getBoundingClientRect();return el.scrollLeft>0&&last.left>=r.left-1&&last.right<=r.right+1;}),'new trait is automatically revealed');
@@ -424,9 +424,9 @@ try{
    'system demo is intentionally configured without a post-choice pause');
   assert.ok(await page.locator('#log .record-impacts .metric-impact.metric-money .impact-arrow').count()>0,
    'instant demo choices retain the same money arrow in permanent history');
-  assert.ok(await page.locator('#log .record-impacts .metric-impact.metric-health').count()>0,
-   'instant demo history retains its actual health cost');
-  assert.match(await page.locator('.gauge.metric-money').textContent(),/10,000원/);assert.match(await page.locator('.gauge.metric-health').textContent(),/95/);
+  assert.ok(await page.locator('#log .record-impacts .metric-impact.metric-money').count()>0,
+   'instant demo history retains its actual money gain');
+  assert.match(await page.locator('.gauge.metric-money').textContent(),/10,000원/);assert.equal(await page.locator('.gauge.metric-health').count(),0);
   assert.ok((await page.locator('#log').textContent()).includes('검증 선택 결과'));
   // C–E: one event pack drives traits, periodic effect, schools and custom metric.
   assert.ok((await page.locator('#traits').textContent()).includes('검증용 저축습관'));
@@ -535,11 +535,11 @@ try{
   window.GukminContent={
    contentId:'exam-view-check',events:[{id:'exam-view',layer:'한방 이벤트',at:0,choice:'exam-view'}],
    choices:[{id:'exam-view',layer:'한방 선택',title:'중간고사',presentation:{type:'exam',grade:1,term:'1학기 중간고사',category:'school'},options:[
-    {id:'0',label:'쉰다',result:{effects:{stats:{health:2}}}},
+    {id:'0',label:'쉰다',result:{effects:{stats:{stress:-2}}}},
     {id:'1',label:'조금',result:{effects:{stats:{study:1}}}},
     {id:'2',label:'꾸준히',result:{effects:{stats:{study:3}}}},
     {id:'3',label:'집중',result:{effects:{stats:{study:6}}}},
-    {id:'4',label:'매우 집중',result:{effects:{stats:{health:-3}}}}
+    {id:'4',label:'매우 집중',result:{effects:{stats:{stress:3}}}}
    ]}]
   };
  });

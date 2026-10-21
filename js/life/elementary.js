@@ -13,10 +13,10 @@ function stand(label){
   ]};
 }
 function support(label){
- return {label,effects:{attributes:{classElection:'supported'},stats:{relations:1,stress:1}},
+ return {label,effects:{attributes:{classElection:'supported'},stats:{relations:3,stress:2}},
   detail:'후보가 부탁한 포스터를 함께 붙였다. 친구는 다음날 간식을 하나 건넸다.'};
 }
-const watch={label:'출마를 거절하고 내 일정을 지킨다',effects:{attributes:{classElection:'observed'},stats:{relations:-1}},
+const watch={label:'출마를 거절하고 내 일정을 지킨다',effects:{attributes:{classElection:'observed'},stats:{}},
  detail:'출마 추천은 사양했다. 친구는 아쉬워했지만 너는 준비해 둔 일정을 지켰다. 투표에는 유권자로 참여했다.'};
 global.GukminDirector.register({
  id:'elementary',when:{phase:'elementary'},
@@ -30,7 +30,7 @@ global.GukminDirector.register({
    S.notice('elementary:welcome',28,'처음 받은 교과서','읽기·쓰기·수학뿐 아니라 친구와 약속을 배우기 시작했다.',{activate:{study:45}}),
    S.branch(S.selection('elementary:friends',29,'급식실에서 친구를 만났다','친구가 자리에 앉아도 되냐고 묻는다.',[
     {label:'함께 앉아 이야기를 나눈다',effects:{stats:{relations:6,stress:-2}},detail:'새로운 친구를 사귀었다.'},
-    {label:'조용히 밥을 먹는다',effects:{stats:{health:2,relations:-1}},detail:'잠깐 혼자 있는 시간이 필요했다.'}
+    {label:'조용히 밥을 먹는다',effects:{stats:{relations:-1}},detail:'잠깐 혼자 있는 시간이 필요했다.'}
    ]),[
     {id:'first-friend',priority:25,when:{traits:['호기심']},
      title:'첫 급식날의 민서',body:'첫 급식날, 민서가 네 공책의 그림을 보고 옆자리에 앉아도 되냐고 묻는다.',
@@ -81,8 +81,8 @@ global.GukminDirector.register({
        ]}
      ]),
    {...S.selection('elementary:recover',30,'잠시 쉬어 갈 때','요즘 긴장과 피로가 쌓였다. 몸과 마음을 돌볼 방법을 정해 보자.',[
-    {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-15,health:3}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
-    {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-14,health:4,study:-2}},detail:'모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
+    {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-15}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
+    {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-14,study:-2}},detail:'모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
     {label:'가까운 친구에게 최근 힘든 일을 말하고 도움을 구한다',effects:{stats:{stress:-10,relations:1}},detail:'친구가 쉬는 시간마다 잠깐 같이 있자고 했다. 문제는 남아 있지만 혼자 감당할 일이 조금 줄었다.'}
    ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},stats:{stress:{gte:65}}}}},
    S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
@@ -171,18 +171,16 @@ global.GukminDirector.register({
     ]
    })
   );
-  for(const id of ['elementary:friends','elementary:lunch']){
-   const c=stages.choices.find(c=>c.id===id);
-   for(const script of [c,...c.variants||[]])script.options.forEach((o,i)=>{
-    o.result.effects.stats=id==='elementary:friends'?[{relations:3,stress:2},{relations:1},{relations:-1,stress:-2}][i]||{relations:-1,stress:-2}:[{relations:3,stress:3},{relations:2,stress:1},{relations:-1,stress:-2}][i];
-   });
-  }
-  // Two-answer cautious scenes still offer solitude as a real recovery alternative.
-  for(const v of stages.choices.find(c=>c.id==='elementary:friends').variants){
-   if(v.options.length===2){v.options[1].result.effects.stats={relations:-1,stress:-2};}
-  }
+  const friends=stages.choices.find(c=>c.id==='elementary:friends');
+  const sociable=friends.variants.find(v=>v.id==='first-friend');
+  sociable.options[0].label='민서에게 그림을 설명하고 먼저 대화를 이끈다';
+  sociable.options[0].result.effects.stats={relations:3,stress:2};
+  sociable.options[0].result.history.detail='이야깃거리를 계속 찾느라 조금 긴장했지만 민서와 금세 가까워졌다.';
   for(const v of stages.choices.find(c=>c.id==='elementary:lunch').variants){
-   v.options[1].label='친구와 남은 메뉴를 나눠 먹는다';v.options[1].result.history.detail='남은 반찬을 함께 나눠 먹고 다음 급식은 함께 줄을 서기로 했다.';
+   v.options[0].result.effects.stats={relations:3,stress:2};
+   v.options[1].label='친구와 남은 메뉴를 나눠 먹는다';v.options[1].result.effects.stats={relations:2,stress:1};
+   v.options[1].result.history.detail='서로 먹을 몫을 덜어 나눴다. 더 먹고 싶었지만 함께 줄을 서기로 했다.';
+   v.options[2].result.effects.stats={};
   }
   stages.choices.find(c=>c.id==='elementary:representative').presentation={type:'election'};
   for(const id of ['election-lost','campaign-followup','graduation-ordinary']){
@@ -205,6 +203,8 @@ global.GukminDirector.register({
     result:{effects:{traits:{add:['관심-'+field]}},history:{title:field+' 분야를 새로 탐색했다',detail:'이번에는 새로운 분야에 시간을 써 봤다. 아직 적성으로 단정하진 않지만 관심의 기록이 남았다.'}}
    });
   }
+  const recovery=stages.choices.find(c=>c.id==='elementary:recover');
+  recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   return {...stages,attributes:{afterschoolPath:{label:'방과 후 활동',hidden:true},friendRoute:{label:'첫 친구의 기억',hidden:true},classElection:{label:'학급 대표 선거',hidden:true}}};
  }
 });

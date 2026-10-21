@@ -17,7 +17,6 @@ const SCHOOL_KINDS = [
 ];
 const METRIC_DEFS = {
   stress:{label:'정신병',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
-  health:{label:'건강',type:'progress',tone:'positive',icon:'heart',min:0,max:100},
   money:{label:'재산',type:'currency',icon:'savings'},
   allowance:{label:'용돈',type:'currency',icon:'coin'},
   income:{label:'수입',type:'currency',icon:'coin'},
@@ -31,19 +30,19 @@ const METRIC_DEFS = {
 // This is a content-facing progression map, not a clock or a legal-age rule.
 // The college/adult overlap and the circumstances of each move remain story-owned.
 const LIFE_STAGES = Object.freeze([
-  {id:'infant',label:'출생·유년기',next:['elementary'],metrics:['stress','health','money']},
-  {id:'elementary',label:'초등학생',next:['middle'],metrics:['stress','health','money','allowance','relations']},
-  {id:'middle',label:'중학생',next:['high'],metrics:['stress','health','money','allowance','relations','schoolScore']},
-  {id:'high',label:'고등학생',next:['university','adult'],metrics:['stress','health','money','allowance','relations','schoolScore','exam']},
-  {id:'university',label:'대학생',next:['adult'],metrics:['stress','health','money','income','relations','support','awareness']},
-  {id:'adult',label:'사회생활',next:['political'],metrics:['stress','health','money','income','support','awareness']},
-  {id:'political',label:'정치활동',next:['adult'],metrics:['stress','health','money','income','support','awareness']}
+  {id:'infant',label:'출생·유년기',next:['elementary'],metrics:['stress','relations','money']},
+  {id:'elementary',label:'초등학생',next:['middle'],metrics:['stress','money','allowance','relations']},
+  {id:'middle',label:'중학생',next:['high'],metrics:['stress','money','allowance','relations','schoolScore']},
+  {id:'high',label:'고등학생',next:['university','adult'],metrics:['stress','money','allowance','relations','schoolScore','exam']},
+  {id:'university',label:'대학생',next:['adult'],metrics:['stress','money','income','relations','support','awareness']},
+  {id:'adult',label:'사회생활',next:['political'],metrics:['stress','relations','money','income','support','awareness']},
+  {id:'political',label:'정치활동',next:['adult'],metrics:['stress','relations','money','income','support','awareness']}
 ].map(stage=>Object.freeze({...stage,next:Object.freeze(stage.next),metrics:Object.freeze(stage.metrics)})));
 const BIRTH_DEFAULTS = Object.freeze({
   age:0,phase:'infant',job:'아기',traits:Object.freeze([]),
   // Values are placeholders from the existing UI, NOT balanced game probabilities.
   stats:Object.freeze({
-    stress:0,health:100,money:0,allowance:null,relations:null,study:null,
+    stress:0,money:0,allowance:null,relations:null,study:null,
     schoolScore:null,exam:null,income:null,support:null,awareness:null
   })
 });
@@ -71,7 +70,7 @@ const TRAIT_DEFS = {
   '리더십':{color:'#E6A245',icon:'flag',description:'협업에서 관계 보너스를 얻는다. 수행평가 분담과 추가 부탁의 범위 조율에 활용할 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
   '언변':{color:'#A994FF',icon:'speech',description:'토론·질의응답 방식으로 수행평가를 해결할 수 있다. 대표 발표의 준비 부족을 보완하지만 컨디션은 따로 관리해야 한다.'},
   '친화력':{color:'#F68CB8',icon:'users',description:'친구들과 협력할 때 관계 보너스를 얻는다. 수행평가를 분담할 수 있지만 이후 부탁도 늘어날 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
-  '흡연':{icon:'pulse',negative:true,color:'#DD756A',description:'흡연 습관은 건강과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{health:-1,money:-2000}}}}},
+  '흡연':{icon:'pulse',negative:true,color:'#DD756A',description:'흡연 습관은 정신병과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{stress:1,money:-2000}}}}},
   '자기주장':{icon:'speech',color:'#79C5EE',description:'자신의 한계를 표현한 경험. 추가 부탁을 전부 수락하거나 거절하는 대신 범위를 조율할 수 있다.'},
   '미루는 습관':{color:'#DD756A',icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'},
   '호기심':{color:'#EBC65F',icon:'sparkle',description:'새로운 물건과 상황을 먼저 탐색하는 성격'},
@@ -86,7 +85,7 @@ const TRAIT_DEFS = {
   '문과':{color:'#AE94EF',icon:'graduation',aptitude:'humanities',description:'읽기·토론 활동을 이어 왔다. 토론 동아리와 질의응답 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['humanities'],stats:{schoolScore:{add:2}}}]},
   '이과':{color:'#56D0C2',icon:'graduation',aptitude:'science',description:'과학·수학 탐구를 이어 왔다. 수행평가에서 누적 기록으로 근거를 검증하는 해결법을 사용할 수 있다.',modifiers:[{tags:['science'],stats:{schoolScore:{add:2},study:{add:1}}}]},
   '예체능':{color:'#EB83C0',icon:'graduation',aptitude:'arts',description:'창작 활동을 이어 왔다. 수행평가를 영상으로 구성하는 해결법을 사용할 수 있다. 제작 시간은 필요하다.',modifiers:[{tags:['arts'],stats:{relations:{add:2}}}]},
-  '체육':{color:'#7AD783',icon:'graduation',aptitude:'sports',description:'운동과 연습을 이어 왔다. 대표팀 활동과 실물 시연 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['sports'],stats:{health:{add:2}}}]}
+  '체육':{color:'#7AD783',icon:'graduation',aptitude:'sports',description:'운동과 연습을 이어 왔다. 대표팀 활동과 실물 시연 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['sports'],stats:{relations:{add:1}}}]}
 };
 
 const freezeCopy=value=>{

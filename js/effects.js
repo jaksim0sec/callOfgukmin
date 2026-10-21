@@ -45,7 +45,7 @@ function apply(persona,result={},context={}){
   if(persona.attributes?.admissionResearch==='paid'&&!persona.attributes?.counselingUsed){prepared.effects.stats={...prepared.effects.stats,stress:(prepared.effects.stats?.stress||0)-2};prepared.effects.attributes={...prepared.effects.attributes,counselingUsed:true};}
  }
  if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};}
- const s=clone(persona),effects=prepared.effects||{},turn=context.turn??0;
+ const s=P.withoutHealth(persona),effects=prepared.effects||{},turn=context.turn??0;
  keys(effects,['activate','stats','attributes','schools','traits','deactivate'],'효과');
  s.metricActive??={};s.metricHistory??=[];s.attributeHistory??=[];s.traitSince??={};s.attributes??={};
  for(const [id,value] of Object.entries(effects.activate||{})){

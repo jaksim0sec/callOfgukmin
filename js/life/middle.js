@@ -39,7 +39,7 @@ global.GukminDirector.register({
    S.branch(S.selection('middle:friends',55,'새로운 동아리 모집','수업 외에 함께할 활동을 찾는다.',[
     {label:'친구와 봉사 동아리에 참가한다',effects:{stats:{relations:6,stress:2}},detail:'봉사 활동을 통해 새로운 친구를 알게 됐다.'},
     {label:'독서·토론 모임을 신청한다',effects:{stats:{study:4,stress:2}},detail:'토론과 발표 경험을 쌓았다.'},
-    {label:'방과 후는 쉬기로 한다',effects:{stats:{health:3,stress:-5}},detail:'공부와 휴식의 균형을 잡았다.'}
+    {label:'방과 후는 쉬기로 한다',effects:{stats:{stress:-5}},detail:'공부와 휴식의 균형을 잡았다.'}
    ]),[
     {id:'science-group',priority:30,when:{traits:['이과']},
      title:'계측기 하나와 다섯 명',body:'과학 동아리 부장 민호가 실험 보고서를 들고 왔다. "계측기 하나로 다섯 명이 실험하래." 뒤에서 선배가 한숨을 쉰다.',
@@ -60,12 +60,12 @@ global.GukminDirector.register({
      options:[
       {label:'예린이 있는 방송부에서 행사 영상을 만든다',effects:{attributes:{clubPath:'media'},stats:{relations:1}},detail:'카메라 사용법부터 배웠다. 첫 작품에는 친구 얼굴 대신 신발만 찍혔다.'},
       {label:'민호가 있는 과학부에서 실험을 돕는다',effects:{attributes:{clubPath:'science'},stats:{study:2}},detail:'센서가 말을 안 들어서 장비 설명서를 읽었다. 민호가 기록을 맡겼다.'},
-      {label:'스포츠 동아리에서 몸을 움직인다',effects:{attributes:{clubPath:'sports'},stats:{health:1}},detail:'매주 연습이 시작됐다. 첫날은 기본 자세만 익혔다.'}
+      {label:'스포츠 동아리에서 몸을 움직인다',effects:{attributes:{clubPath:'sports'},stats:{}},detail:'매주 연습이 시작됐다. 첫날은 기본 자세만 익혔다.'}
      ]}
    ]),
    {...S.selection('middle:recover',55,'학교생활을 조절할 시간','시험과 활동이 겹치면서 피로가 쌓였다. 부담을 줄일 방법을 선택하자.',[
     {label:'상담을 거쳐 시험 준비량을 조정하고 몇 주간 실천한다',effects:{stats:{stress:-16}},detail:'교사와 적당한 분량으로 계획을 줄였다. 몇 주 동안 무리하지 않으니 계속 밀리던 숙제가 조금씩 줄었다.'},
-    {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-14,health:4}},detail:'몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
+    {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-14}},detail:'몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
     {label:'친구에게 부담을 털어놓고 과제 진행을 함께 점검한다',effects:{stats:{stress:-8,relations:1}},detail:'친구와 제출 날짜를 대조한 뒤 할 수 있는 것부터 나눴다. 불안이 완전히 사라지진 않았지만 다음 주 일정은 보였다.'}
    ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},stats:{stress:{gte:65}}}}},
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
@@ -170,7 +170,7 @@ global.GukminDirector.register({
     title:'대표팀 명단과 방과 후',body:'체육 동아리 선배가 대표팀 연습을 권한다. 매주 두 번 남아야 하고 대회 전에는 주말 연습도 있다.',
     options:[
      {label:'정기 연습에 참가하고 대표팀에 도전한다',tags:['sports'],effects:{attributes:{clubPath:'sports'},stats:{study:-1,relations:2}},detail:'기본 훈련부터 다시 했다. 팀에 이름이 올라갔지만 연습날에는 친구들의 다른 약속을 놓쳤다.'},
-     {label:'대표팀 대신 친구들과 가볍게 운동한다',effects:{attributes:{clubPath:'none'},stats:{health:2,stress:-1}},detail:'정해진 훈련은 없었다. 편한 만큼 대회 명단에도 들어가지는 않았다.'},
+     {label:'대표팀 대신 친구들과 가볍게 운동한다',effects:{attributes:{clubPath:'none'},stats:{stress:-1}},detail:'정해진 훈련은 없었다. 편한 만큼 대회 명단에도 들어가지는 않았다.'},
      {label:'연습 시간에는 학교 보충 수업을 듣는다',effects:{attributes:{clubPath:'none'},stats:{study:3,relations:-1}},detail:'놓친 단원을 채웠다. 팀 단체방에는 새 유니폼 사진이 올라왔다.'}
     ]}
   ]);
@@ -194,7 +194,7 @@ global.GukminDirector.register({
   }
   const friends=stages.choices.find(c=>c.id==='middle:friends');
   friends.variants.find(v=>v.id==='science-group').options[0].result.effects.stats={relations:2,stress:2};
-  friends.variants.find(v=>v.id==='science-group').options[1].result.effects.stats={relations:1,health:1};
+  friends.variants.find(v=>v.id==='science-group').options[1].result.effects.stats={relations:1};
   friends.variants.find(v=>v.id==='science-group').options[2].result.effects.stats={stress:-2,relations:-1};
   friends.variants.find(v=>v.id==='arts-group').options[0].result.effects.stats={relations:3,stress:3};friends.variants.find(v=>v.id==='arts-group').options[1].result.effects.stats={relations:1,stress:1};
   friends.variants.find(v=>v.id==='arts-group').options[2].result.effects.stats={stress:-2,relations:-1};
@@ -202,6 +202,8 @@ global.GukminDirector.register({
   const chat=stages.choices.find(c=>c.id==='middle:group-chat');chat.options[2].result.effects={stats:{stress:-1,relations:-1}};
   chat.variants.find(v=>v.id==='science-chat').options[2].result.effects={stats:{schoolScore:1,relations:-1,stress:1}};
   S.schoolwork(stages,{"middle:resources": "schoolScore", "middle:group-chat": "schoolScore"});
+  const recovery=stages.choices.find(c=>c.id==='middle:recover');
+  recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   return {...stages,attributes:{
    schoolTrack:{label:'고교 유형',hidden:true},
    schoolProgram:{label:'학교 교육과정 유형',hidden:true},
