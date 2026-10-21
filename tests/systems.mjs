@@ -354,7 +354,7 @@ test('turn-based allowance accrues after elementary enrollment, does not duplica
 
 test('paid academy everyday choice uses wallet, charges once and preserves allowance',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
- const persona=P.generate();persona.familyTier='soil';persona.stats.allowance=2000;
+ const persona=P.generate();persona.familyTier='silver';persona.stats.allowance=2000;
  let engine=D.create({persona,persist:p=>P.save(p)}),s=engine.run();
  for(let attempt=0;attempt<30&&s.choice?.id!=='elementary:afterschool';attempt++){
   if(s.choice)engine.resolve(s.choice.token,s.choice.options.find(o=>o.available).id);
@@ -363,16 +363,16 @@ test('paid academy everyday choice uses wallet, charges once and preserves allow
  }
  assert.equal(s.choice?.id,'elementary:afterschool');
  const token=s.choice.token,academy=s.choice.options.find(o=>o.id==='academy');
- assert.equal(academy.when.stats.money.gte,160000);
+ assert.equal(academy.when.stats.money.gte,10000);
  assert.equal(academy.when.stats.allowance,undefined,'income rate must not gate a purchase');
- engine.apply('test:low-funds',{effects:{stats:{money:159999-s.persona.stats.money}}});
+ engine.apply('test:low-funds',{effects:{stats:{money:9999-s.persona.stats.money}}});
  s=engine.snapshot();
  assert.equal(s.choice.token,token);
  assert.equal(s.choice.options.find(o=>o.id==='academy').available,false);
  assert.throws(()=>engine.resolve(token,'academy'),/선택 조건/);
  engine.apply('test:enough-funds',{effects:{stats:{money:1}}});
  s=engine.snapshot();
- assert.equal(s.persona.stats.money,160000);
+ assert.equal(s.persona.stats.money,10000);
  assert.equal(s.choice.options.find(o=>o.id==='academy').available,true);
  assert.equal(engine.resolve(token,'academy'),true);
  s=engine.snapshot();
@@ -859,9 +859,9 @@ test('chosen learning resources are recorded for later daily stories',()=>{
  const after=pack.choices.find(x=>x.id==='elementary:afterschool');
  const p=P.generate();p.stats.money=200000;c.GukminDirector.create({persona:p});
  const learned=E.apply(p,after.options.find(o=>o.id==='library').result);
- assert.equal(learned.attributes.afterschoolPath,'library');
+ assert.equal(learned.attributes.afterschoolPath,'friends');
  const project=pack.choices.find(x=>x.id==='elementary:project');
- assert.ok(project.variants?.some(v=>v.when?.attributes?.afterschoolPath==='library'));
+ assert.ok(project.variants?.some(v=>v.when?.attributes?.afterschoolPath==='friends'));assert.ok(project.variants?.some(v=>v.when?.attributes?.afterschoolPath==='library'),'past library choices retain their follow-up');
 });
 
 function openLifeScene({c,P,T},id,persona){
@@ -1231,4 +1231,24 @@ test('special-school aptitude shields pressure without changing the score for th
   p.traits=[trait];const fit=c.GukminGrades.assessment(p,{metric,effort:4});assert.equal(unfit.stats[metric],fit.stats[metric]);assert.equal(unfit.stats.stress,6);assert.equal(fit.stats.stress,3);assert.ok(fit.applied.some(s=>s.trait===trait&&s.tone==='shield'));
  }
  p.attributes={schoolTrack:'science',admissionAttempts:2};assert.equal(c.GukminGrades.assessment(p,{metric:'exam',effort:4}).stats.stress,4,'graduated N-year candidates do not pay former school costs');
+});
+
+test('corrected after-school choices settle exact tradeoffs and enforce parent tier plus cash',()=>{
+ const env=setup(),{P,E}=env,p=P.generate();p.phase='elementary';p.age=9;p.traits=[];p.stats={...p.stats,study:10,relations:8,stress:4,money:20000};
+ for(const tier of ['soil','bronze','silver','gold','diamond'])for(const money of [9999,10000,20000]){
+  p.familyTier=tier;p.stats.money=money;const e=openLifeScene(env,'elementary:afterschool',p),s=e.snapshot(),option=s.choice.options.find(o=>o.id==='academy');
+  const allowed=['silver','gold','diamond'].includes(tier)&&money>=10000;assert.equal(option.available,allowed,tier+' / '+money);
+  if(!allowed){assert.throws(()=>e.resolve(s.choice.token,'academy'),/조건/);assert.equal(e.snapshot().persona.stats.money,money);continue;}
+  e.resolve(s.choice.token,'academy');const q=e.snapshot().persona;assert.equal(q.stats.relations,9);assert.equal(q.stats.study,13);assert.equal(q.stats.stress,7);assert.equal(q.stats.money,money-10000);assert.equal(e.resolve(s.choice.token,'academy'),false);
+ }
+ const pack=env.c.GukminDirector.content(p);for(const [id,expected] of [['school',{relations:1,study:1,stress:1}],['library',{relations:2,study:-1}]]){
+  const option=pack.choices.find(c=>c.id==='elementary:afterschool').options.find(o=>o.id===id),q=E.apply(p,option.result);for(const metric of ['relations','study','stress','money'])assert.equal(q.stats[metric]-p.stats[metric],expected[metric]||0);
+ }
+});
+test('candidacy costs two pressure and only victory grants leadership and the class-president role',()=>{
+ for(const [relations,outcome] of [[10,'lost'],[16,'elected']]){
+  const env=setup(),p=env.P.generate();p.phase='elementary';p.age=11;p.traits=[];Object.assign(p.stats,{relations,stress:0});p.attributes={friendRoute:'shared'};
+  const e=openLifeScene(env,'elementary:representative',p),s=e.snapshot();assert.match(s.choice.title,/반장 선거/);assert.equal(s.choice.options.length,3);e.resolve(s.choice.token,s.choice.options[0].id);const q=e.snapshot().persona;
+  assert.equal(q.stats.stress,2);assert.equal(q.attributes.classElection,outcome);assert.equal(env.P.hasTrait(q,'리더십'),outcome==='elected');assert.equal(q.roles.includes('반장'),outcome==='elected');assert.equal(q.traits.includes('열정'),false);
+ }
 });

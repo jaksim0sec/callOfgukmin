@@ -1316,3 +1316,6 @@ body:has(#resultRecap[open]){overflow:hidden}
 .life-exam-paper .assessment-source{display:grid;grid-template-columns:max-content minmax(0,1fr);align-items:start;margin:0;gap:.45rem}
 .life-exam-paper .assessment-source .token{font-size:.65rem;padding:.25rem .4rem}
 .life-exam-paper .assessment-sources>small{font-size:.65rem;font-weight:600;text-align:left}
+
+/* Election answers have stronger hierarchy than their supporting reward tokens. */
+.paper-choice-sheet[data-choice-kind=election] .daily-choice-title{font-size:1.05rem;line-height:1.6;font-weight:750}

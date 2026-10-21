@@ -5,7 +5,7 @@ const S=global.GukminStory;
 // The class election remembers candidacy, outcome and service separately.
 const winner={any:[{stats:{relations:{gte:15}}},{all:[{traits:['리더십']},{stats:{relations:{gte:14}}}]}]};
 function stand(label){
- return {label,outlook:'당선 시 반장·리더십을 얻는다. 친구들의 지지는 개표로 확인한다.',risk:'선거 준비와 학급 일을 맡을 시간 필요',effects:{attributes:{classElection:'ran'},stats:{stress:1}},
+ return {label,outlook:'당선 시 반장·리더십을 얻는다. 친구들의 지지는 개표로 확인한다.',risk:'선거 준비와 학급 일을 맡을 시간 필요',effects:{attributes:{classElection:'ran'},stats:{stress:2}},
   detail:'출마 신청서에 이름을 적었다. 개표 결과는 잠시 뒤 나온다.',
   conditional:[
    {when:winner,result:{effects:{attributes:{classElection:'elected',roles:['반장']},traits:{add:['리더십']}},history:{title:'반장에 뽑혔다',detail:'점심시간까지 이어진 투표에서 과반을 얻었다. 이제 학급 공지를 책임질 차례다.'}}},
@@ -23,9 +23,6 @@ global.GukminDirector.register({
  generate:persona=>{
   const region=persona.regionTags||[];
   const area=region.includes('어촌')?'갯벌 체험':region.includes('농촌')?'마을 행사':region.includes('산업')?'지역 진로 체험':'동네 문화 행사';
-  const wealthy=['gold','diamond'].includes(persona.familyTier);
-   const funded=['silver','gold','diamond'].includes(persona.familyTier);
-   const fee=funded?0:160000;
   const stages=S.pack(
    S.notice('elementary:welcome',28,'처음 받은 교과서','읽기·쓰기·수학뿐 아니라 친구와 약속을 배우기 시작했다.',{activate:{study:11}}),
    S.branch(S.selection('elementary:friends',29,'급식실에서 친구를 만났다','친구가 자리에 앉아도 되냐고 묻는다.',[
@@ -86,10 +83,10 @@ global.GukminDirector.register({
     {label:'가까운 친구에게 최근 힘든 일을 말하고 도움을 구한다',effects:{stats:{stress:-2,study:-1,relations:1}},detail:'복습 한 번을 미루고 친구와 이야기했다. 친구가 쉬는 시간마다 잠깐 같이 있자고 했다. 문제는 남아 있지만 혼자 감당할 일이 조금 줄었다.'}
    ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},any:[{stats:{stress:{gte:16}}},{stats:{illness:{gte:1}}}]}}},
    S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
-    '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
-    {id:'school',label:'학교 방과 후 교실에서 과제를 함께 푼다',risk:'정해진 요일에는 다른 약속을 잡기 어려움',effects:{attributes:{afterschoolPath:'school'},stats:{study:1,relations:1,stress:1}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
-    {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{attributes:{afterschoolPath:'library'},stats:{study:1,stress:-1,relations:-1}},detail:'방과 후 친구들과 노는 대신 도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
-    {id:'academy',label:'한 달간 방과 후 학원을 다닌다 (16만 원'+(funded?' · 가족 부담':' · 직접 부담')+')',risk:'주 3회 수업 · 다른 방과 후 활동 시간이 줄어듦',...(fee?{when:{stats:{money:{gte:fee}}}}:{}),effects:{attributes:{afterschoolPath:'academy'},stats:{study:2,stress:2,...(fee?{money:-fee}:{})}},detail:fee?'첫 달 수강료 16만 원을 직접 냈다. 매주 교재를 풀었다.':'가족이 첫 달 수강료 16만 원을 부담했다. 매주 교재를 풀었다.'}
+    '학교에서 방과 후 활동 신청서를 가져왔다. 방과 후 시간이 남는다. 무엇을 할까?',[
+    {id:'school',label:'학교에서 받은 방과 후 활동 신청서에서 고른다',effects:{attributes:{afterschoolPath:'school'},stats:{relations:1,study:1,stress:1}},detail:'신청서에서 관심 있는 수업을 골랐다. 정해진 날에는 학교에 남아 친구들과 배우고 과제를 풀었다.'},
+    {id:'library',label:'친구들과 놀러 다닌다',effects:{attributes:{afterschoolPath:'friends'},stats:{relations:2,study:-1}},detail:'친구들과 놀며 가까워졌다. 대신 복습에 쓸 시간이 줄었다.'},
+    {id:'academy',label:'가족과 상의해 학원에 다닌다',requirement:'부모 등급 은수저 이상',risk:'재산 1만 원 · 수업과 숙제 부담',when:{stats:{money:{gte:10000}},any:['silver','gold','diamond'].map(familyTier=>({attributes:{familyTier}}))},effects:{attributes:{afterschoolPath:'academy'},stats:{relations:1,study:3,money:-10000,stress:3}},detail:'가족과 상의한 뒤 학원에 다니기 시작했다. 새 친구를 만나고 더 많이 배웠지만 수업과 숙제가 늘었다. 재산 1만 원을 사용했다.'}
    ]),
    S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:10}}),
    S.selection('elementary:project',41,'우리 동네 발표에 생긴 빈칸',
@@ -115,7 +112,7 @@ global.GukminDirector.register({
      conditional:[{when:{traits:['관심-체육']},result:{effects:{traits:{remove:['관심-체육'],add:['체육']}},history:{title:'체육 적성 발견',detail:'꾸준한 활동이 운동의 즐거움을 더했다.'}}}]}
    ]),
    S.notice('elementary:age11',44,'초등학교 5학년','반 친구들과의 관계가 더 복잡해졌다.',{attributes:{age:11}}),
-   S.branch(S.selection('elementary:representative',45,'학급 대표를 뽑는 날','반장이 되어보라는 권유를 받았다.',[
+   S.branch(S.selection('elementary:representative',45,'반장 선거 · 학급 공약을 정하는 날','반장이 되어보라는 권유를 받았다.',[
     {label:'학급 대표에 도전한다',effects:{stats:{relations:1,stress:1},traits:{add:['리더십']}},detail:'작은 책임을 맡아 보았다.'},
     {label:'친구의 준비를 도와준다',effects:{stats:{relations:1,stress:1}},detail:'친구의 이야기를 함께 들어주었다.'},
     {label:'조용히 내 공부에 집중한다',effects:{stats:{study:1,relations:-1}},detail:'학업 습관을 지켰다.'}
@@ -185,8 +182,11 @@ global.GukminDirector.register({
    v.options[2].result.effects.stats={};
   }
   stages.choices.find(c=>c.id==='elementary:representative').presentation={type:'election'};
-  const campaign=stand('공약을 다듬고 친구들을 한 명씩 찾아 설득한다');campaign.id='campaign';campaign.effects.stats={stress:4,relations:3};campaign.detail='쉬는 시간까지 공약 설명에 썼다. 부담은 컸지만 그동안 잘 몰랐던 친구들과도 이야기했다.';
-  for(const script of stages.choices.find(c=>c.id==='elementary:representative').variants)script.options.push(S.selection('campaign',0,'반장 선거','',[campaign]).choice.options[0]);
+  const election=stages.choices.find(c=>c.id==='elementary:representative');
+  for(const script of election.variants){
+   if(!script.title.includes('반장 선거'))script.title='반장 선거 · '+script.title;
+   if(!script.body.includes('반장 선거'))script.body='반장 선거가 공지됐다.\n\n'+script.body;
+  }
   stages.choices.find(c=>c.id==='elementary:graduation').variants.find(v=>v.id==='representative-followup').options[0].result.effects.stats={relations:2,stress:1};
   for(const id of ['election-lost','campaign-followup','graduation-ordinary']){
    const v=stages.choices.find(c=>c.id==='elementary:graduation').variants.find(v=>v.id===id);
@@ -195,6 +195,7 @@ global.GukminDirector.register({
   // Retain the player's chosen resource in a later problem, without adding another stop.
   const project=stages.choices.find(choice=>choice.id==='elementary:project');
   project.variants=[
+   {id:'friends-outing',priority:25,when:{attributes:{afterschoolPath:'friends'}},title:'친구들과 봤던 축제 장소',body:'조원이 가져온 축제 사진의 장소가 이상하다. 방과 후 친구들과 놀러 다니며 봤던 동네와는 다르다. 발표 전에 함께 확인할까?',options:project.options},
    {id:'library-records',priority:20,when:{attributes:{afterschoolPath:'library'}},
     title:'도서관에서 본 축제 사진',body:'조원이 넣은 축제 사진이 이상하다. 방과 후 도서관에서 봤던 지역 안내 책자와 장소가 다르다. ==발표는 내일이다.== 이미 표지에 들어간 사진을 어떻게 할까?',options:project.options},
    {id:'school-teammates',priority:10,when:{attributes:{afterschoolPath:'school'}},

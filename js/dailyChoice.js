@@ -275,7 +275,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    cancelClock();token=choice.token;folded=true;review=false;delta=[];selectedId=null;reward=null;
    dialog.classList.remove('is-reward');autoReady=true;autoRemaining=AUTO_OPEN_MS;
   }
-  currentChoice=choice;
+  currentChoice=choice;dialog.dataset.choiceKind=choice.presentation?.type||'daily';
   heading.textContent=choice.title;body.replaceChildren();
   const stage=P.phaseOf(persona),labels={infant:'유년기',elementary:'초등학교',middle:'중학교',high:'고등학교'};
   dialog.querySelector('.daily-modal-head small').textContent=persona.age+'살 · '+(labels[stage]||P.phaseDefinition(stage).label);
@@ -299,7 +299,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    if(option.available===false){
     const needed=option.when?.stats?.money?.gte,held=persona.stats.money;
     text.append(el('small','daily-choice-locked',
-     Number.isFinite(needed)&&Number.isFinite(held)
+     Number.isFinite(needed)&&Number.isFinite(held)&&held<needed
       ?'재산 부족 · '+held.toLocaleString('ko-KR')+'원 / '+needed.toLocaleString('ko-KR')+'원 필요'
       :option.requirement?'필요 · '+option.requirement:'현재 조건에서는 선택할 수 없음'));
    }
