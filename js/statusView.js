@@ -192,7 +192,7 @@ function showMetrics(root,s){
  function groupContent(kind){
   if(groups.has(kind))return groups.get(kind);
   const group=node('section','gauge-group gauge-group-'+kind);
-  if(kind==='academics')group.append(node('div','gauge-group-heading','학업 성적'));
+  if(kind==='academics')group.setAttribute('aria-label','학업 성적');
   const content=node('div','gauge-group-content');
   group.append(content);
   list.append(group);

@@ -4,6 +4,7 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:0.125rem solid #
 .game{margin:auto;width:100%;max-width:107.5em}
 .desktop-left,.desktop-right,.status{min-width:0;min-height:0}.block{background:var(--panel);border-radius:1.0625rem;min-width:0;min-height:0}
 .player-poster-mount{min-width:0;min-height:0}
+.status{container-type:inline-size}
 .gk-poster{font-size:1rem;--poster-party:#677181;position:relative;overflow:hidden;isolation:isolate;container-type:inline-size;background:var(--poster-party);color:white;border-radius:1.0625rem;width:100%;height:100%;font-family:'Do Hyeon',system-ui,sans-serif}
 .gk-poster:before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#ffffff25,transparent 60%);z-index:0;pointer-events:none}
 .gk-poster-head{position:absolute;top:5%;left:6%;right:6%;z-index:4;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;font-size:1.5em}
@@ -48,6 +49,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 
 .gauges-list{display:grid;grid-template-columns:minmax(0,1fr);gap:.625rem;min-width:0}
 .gauges-list .gauge,.gauge-group,.gauge-group-content{min-width:0}
+.status>.gauges>.trait-section,.status>.gauges>.gauges-list{flex-shrink:0}
 .gauges-list .gauge{padding:.5rem .55rem;background:#ffffff07;border-radius:.5625rem}
 .gauge-group-content{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem}
 .gauge-group-vitals .gauge-group-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
@@ -56,7 +58,6 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .gauge-group-finance .gauge-label{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.25rem;flex-wrap:nowrap;margin:0}
 .gauge-group-finance .gauge-value{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
 .gauge-group-academics .gauge-group-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:.375rem}
-.gauge-group-heading{font-size:.7rem;color:#b7a7bf;font-weight:750;margin-bottom:.35rem}
 @container(max-width:17rem){.gauge-group-vitals .gauge-group-content{grid-template-columns:minmax(0,1fr)}}
 .gauge-currency{border-radius:0.5rem}
 .gauge-currency .gauge-label{margin-bottom:0}
@@ -169,29 +170,30 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .desktop-left,.desktop-right{min-height:0;min-width:0}
  .status{height:100%;display:flex;flex-direction:column;align-items:stretch;gap:0.75rem}
  .player-poster-mount,.status>.gauges{width:100%;min-width:0;min-height:0;flex-basis:0;align-self:stretch}
- .player-poster-mount{flex-grow:1.06;flex-shrink:1;overflow:hidden}
- .status>.gauges{flex-grow:.94;flex-shrink:1;overflow:auto}
+ .player-poster-mount{flex:0 0 auto;height:min(54dvh,calc(100cqw / .7));overflow:hidden}
+ .status>.gauges{flex-grow:1;flex-shrink:1;overflow:auto}
  .gk-poster{width:100%;height:100%;aspect-ratio:auto}
  .desktop-right>.profile{height:auto;max-height:37dvh;min-height:10rem;overflow-y:auto}
  .desktop-right{display:grid;grid-template-rows:minmax(0,auto) minmax(0,1fr);gap:0.75rem}
  .status>.gauges{display:flex;flex-direction:column;gap:.75rem;align-content:start}
+
  .resources{grid-column:1/-1}
  .sheet{height:100%}
 }
-@media(min-width:47.5625em) and (max-height:40.625em){.player-poster-mount{flex-grow:1}.status>.gauges{flex-grow:1}.gauges{padding:0.8125rem 1.1875rem;gap:0.5625rem 1.25rem}.sheet-head{min-height:3.375em}.action-area{padding:0.75rem 1.1875rem}.record{padding:0.6875rem 0}}
+@media(min-width:47.5625em) and (max-height:40.625em){.status>.gauges{flex-grow:1}.gauges{padding:0.8125rem 1.1875rem;gap:0.5625rem 1.25rem}.sheet-head{min-height:3.375em}.action-area{padding:0.75rem 1.1875rem}.record{padding:0.6875rem 0}}
 @media(max-width:47.5em){
  body{overflow-y:auto}.game{padding:0.625rem 0.625rem calc(var(--life-sheet-peek-height,clamp(6rem,16dvh,10rem)) + 1.125rem)}
- .status{display:grid;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);gap:0.5rem;align-items:stretch}
- .player-poster-mount,.status>.gauges{height:clamp(12.125rem,41vw,16.5625rem)}.desktop-right>.profile{height:auto;max-height:none;padding:.875rem;overflow:visible}
+ .status{--status-gap:.5rem;display:grid;grid-template-columns:minmax(0,.87fr) minmax(0,1.13fr);gap:var(--status-gap);align-items:stretch}
+ .player-poster-mount,.status>.gauges{height:calc((100cqw - var(--status-gap)) * .435 / .7);min-height:0}.desktop-right>.profile{height:auto;max-height:none;padding:.875rem;overflow:visible}
  .gk-poster{font-size:.58rem;border-radius:0.9375rem}.gk-poster-stage{font-size:.82em;max-width:45%}.gk-portrait{inset:8% -14% 0 12%}
  .job{font-size:0.6875rem}.school-list{gap:0.4375rem}.school-row{gap:0.3125rem}.label{font-size:0.6875rem;width:3.5625rem}.token{font-size:0.6875rem;padding:0.25rem 0.5rem}.traits{gap:0.375rem}
- .status>.gauges{display:flex;flex-direction:column;gap:.4rem;margin-top:0;padding:.625rem;min-height:12.0625rem;height:auto;overflow:visible}
+ .status>.gauges{display:flex;flex-direction:column;gap:.4rem;margin-top:0;padding:.625rem;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
  .gauge-label{font-size:0.625rem;flex-wrap:wrap;gap:0.0625rem}.gauge-label b{font-size:0.625rem}.gauges progress,.spectrum{height:0.4375rem}.gauge-locked{opacity:.38}.ends{font-size:0.5625rem}.resources{grid-column:1/-1;font-size:0.6875rem;padding-top:0.5rem}.resources b{font-size:0.6875rem}.resources #economyHint{font-size:0.5625rem}
  .sheet{--sheet-min-ratio:.2;--sheet-mid-ratio:.55;--sheet-max-ratio:.9;--sheet-small-height:clamp(6rem,16dvh,10rem);--sheet-middle-height:calc(100dvh * var(--sheet-mid-ratio));--sheet-large-height:min(calc(100dvh * var(--sheet-max-ratio)),calc(100dvh - 1rem));position:fixed;left:0;right:0;bottom:0;z-index:5;height:var(--sheet-small-height);min-height:0;border-radius:1.3125rem 1.3125rem 0 0;border-color:#52415b;box-shadow:0 -1rem 3.125rem #0009;padding-bottom:env(safe-area-inset-bottom);overscroll-behavior:contain;transition:height .28s cubic-bezier(.22,.9,.28,1)}
  .sheet-grip{display:flex;align-items:center;justify-content:center;flex:none;border:0;background:transparent;width:100%;height:1.65rem;margin:0;touch-action:none;user-select:none;cursor:grab}.sheet-grip span{display:block;width:2.45rem;height:.34rem;border-radius:.5rem;background:#77617e;pointer-events:none}.sheet-head{padding:0.6875rem 1rem;min-height:3.625em}.sheet-head strong{font-size:1.5rem}.chapter-meta{font-size:0.6875rem}.mode-chip{font-size:0.625rem}.mini-reset{font-size:1.25rem}.log{padding:0 1rem}.record{padding:0.75rem 0}.record strong{font-size:0.9375rem}.record-age{font-size:0.75rem}.record p{font-size:0.8125rem;margin-left:0}.action-area{padding:0.75rem 0.9375rem 0.875rem}.current-line strong{font-size:0.875rem}.preview-btn{font-size:0.75rem;padding:0.625rem;min-height:2.75em}.fine{font-size:0.625rem}
  .modal-body{padding:0.9375rem}.modal-title{font-size:1.6875rem}
 }
-@media(max-width:27.5em){.game{padding:0.5rem 0.5rem calc(var(--life-sheet-peek-height,clamp(6rem,16dvh,10rem)) + 0.9375rem)}.status{gap:0.4375rem}.player-poster-mount{height:12.0625rem}.gk-poster-phrase{font-size:1.8em}.gk-poster-name{font-size:4em}.gauge-label{font-size:0.6875rem}.gauges{grid-template-columns:repeat(2,minmax(0,1fr));min-height:12.9375em}.resources{grid-column:1/-1}.school-row{flex-wrap:wrap}.label{width:3.1875rem}.token{font-size:0.625rem}.chapter-meta .mode-chip{display:none}.preview-actions{gap:0.375rem}.preview-btn{font-size:0.6875rem}.fine{font-size:0.625rem}}
+@media(max-width:27.5em){.game{padding:0.5rem 0.5rem calc(var(--life-sheet-peek-height,clamp(6rem,16dvh,10rem)) + 0.9375rem)}.status{--status-gap:.4375rem}.gk-poster-phrase{font-size:1.8em}.gk-poster-name{font-size:4em}.gauge-label{font-size:0.6875rem}.gauges{grid-template-columns:repeat(2,minmax(0,1fr));min-height:12.9375em}.resources{grid-column:1/-1}.school-row{flex-wrap:wrap}.label{width:3.1875rem}.token{font-size:0.625rem}.chapter-meta .mode-chip{display:none}.preview-actions{gap:0.375rem}.preview-btn{font-size:0.6875rem}.fine{font-size:0.625rem}}
 @media(prefers-reduced-motion:reduce){.school-dialog{animation:none}}
 /* Shared progression stays inside the existing log sheet on every viewport. */
 .choice-timing{padding:0.625rem 1.375rem;flex:none;border-bottom:0.0625rem solid #ffffff10}
@@ -320,10 +322,9 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .gauge-name{font-weight:650;overflow-wrap:anywhere}
 .gauge-label .gauge-value{color:color-mix(in srgb,var(--gauge-color) 84%,white);text-align:right;white-space:nowrap;flex:none}
 .gauge-grade-detail{display:block;font-size:.59rem;color:#baaec5;margin-top:.38rem;line-height:1.3}
-.gauge.metric-schoolScore,.gauge.metric-exam{padding:.45rem .5rem;background:#ffffff07;
- border:.0625rem solid #ffffff13;border-left:.16rem solid var(--gauge-color);border-radius:.5625rem}
-.gauge.metric-schoolScore .gauge-label,.gauge.metric-exam .gauge-label{display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;flex-wrap:nowrap;margin:0}
-.gauge.metric-schoolScore .gauge-value,.gauge.metric-exam .gauge-value{font-size:1.03rem;font-weight:800;line-height:1.2;white-space:nowrap}
+.gauge.metric-schoolScore,.gauge.metric-exam{border:0}
+.gauge.metric-schoolScore .gauge-label,.gauge.metric-exam .gauge-label{display:flex;align-items:center;justify-content:space-between;gap:.3rem;flex-wrap:wrap;margin:0}
+.gauge.metric-schoolScore .gauge-value,.gauge.metric-exam .gauge-value{font-size:.875rem;font-weight:700;line-height:1.3;white-space:nowrap}
 .gauge.metric-schoolScore .gauge-title,.gauge.metric-exam .gauge-title{gap:.25rem}
 .gauge.metric-schoolScore .gauge-grade-detail,.gauge.metric-exam .gauge-grade-detail{margin-top:.35rem}
 
@@ -374,9 +375,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .daily-choice-effect{font-size:.61rem}
  .gauge-metric-icon{width:.9rem;height:.9rem}
  .gauge-grade-detail{font-size:.56rem}
- .gauge.metric-schoolScore,.gauge.metric-exam{padding:.375rem .4rem}
  .gauges-list .gauge{padding:.375rem .45rem}
- .gauge-group-heading{font-size:.625rem;margin-bottom:.25rem}
  .gauge-group-academics .gauge-value{font-size:.875rem}
  .gauge-group-academics .gauge-title{font-size:.6rem}
  .life-exam-paper .life-modal-title{font-size:1.03rem}

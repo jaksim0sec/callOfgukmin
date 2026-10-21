@@ -91,10 +91,10 @@ try{
   await walk('school');await page.locator('#lifeDecisionDialog[open]').waitFor();
   if(name!=='desktop'){
    const metrics=await page.locator('.status>.gauges').evaluate(card=>{
-    const last=card.querySelector('.gauges-list').lastElementChild;
-    return {card:card.getBoundingClientRect().bottom,last:last.getBoundingClientRect().bottom};
+    card.scrollTop=card.scrollHeight;
+    return {height:card.clientHeight,scrollHeight:card.scrollHeight,scrolled:card.scrollTop,overflow:getComputedStyle(card).overflowY};
    });
-   assert.ok(metrics.last<=metrics.card+1,'all student metrics fit inside their natural-height card');
+   assert.ok(metrics.height>0&&metrics.scrollHeight>metrics.height&&metrics.scrolled>0&&metrics.overflow==='auto','long student stats scroll inside the fixed poster-height panel');
   }
   const locked=page.locator('#lifeDecisionDialog .life-answer-locked');
   if(await locked.count())assert.equal(await locked.first().evaluate(e=>getComputedStyle(e).opacity),'1','unavailable school requirements stay legible');

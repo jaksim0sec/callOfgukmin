@@ -34,8 +34,15 @@ try{
    await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
   }
-  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{stats:{money:1575000,allowance:45000,stress:51,health:-12,relations:30}}}));
+  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:80,exam:60},stats:{money:1575000,allowance:45000,stress:51,health:-12,relations:30}}}));
   assert.equal(await page.locator('.gauges-heading').count(),0,'status heading and its layout box are removed');
+  assert.equal(await page.locator('.gauge-group-heading').count(),0,'academic heading and its space are removed');
+  const panel=await page.locator('.status').evaluate(el=>{const poster=el.querySelector('#playerPosterMount').getBoundingClientRect(),stats=el.querySelector('.gauges');return {width:poster.width,height:poster.height,statsHeight:stats.getBoundingClientRect().height,overflow:getComputedStyle(stats).overflowY,scrollable:stats.scrollHeight>stats.clientHeight};});
+  if(name!=='desktop'){assert.ok(Math.abs(panel.height-panel.statsHeight)<1,'poster fixes the entire top-row height');assert.ok(Math.abs(panel.width/panel.height-.7)<.015,'poster is slightly taller');assert.ok(panel.scrollable,'long stats stay inside their scroll container');assert.equal(panel.overflow,'auto');
+   const bottom=await page.locator('.status>.gauges').evaluate(el=>{el.scrollTop=el.scrollHeight;const box=el.getBoundingClientRect(),money=el.querySelector('.metric-money').getBoundingClientRect();const visible=money.top>=box.top&&money.bottom<=box.bottom+1;const moved=el.scrollTop>0;el.scrollTop=0;return {visible,moved};});assert.ok(bottom.visible&&bottom.moved,'the last money card is reachable by scrolling the stats');
+   await page.locator('#sheetToggle').click();await page.waitForFunction(()=>!document.querySelector('#lifeSheet').classList.contains('is-springing'));
+   const snap=await page.evaluate(()=>({actual:document.querySelector('#lifeSheet').getBoundingClientRect().top,expected:document.querySelector('.status').getBoundingClientRect().bottom+scrollY+parseFloat(getComputedStyle(document.documentElement).fontSize)*.5}));assert.ok(Math.abs(snap.actual-snap.expected)<4,'middle snap aligns with the poster row');
+  }
   assert.ok(await page.locator('#gaugesList .gauge').last().evaluate(el=>el.classList.contains('metric-money')),'money is the final metric');
   const cards=await page.locator('#gaugesList .gauge').evaluateAll(items=>items.map(el=>({background:getComputedStyle(el).backgroundColor,padding:parseFloat(getComputedStyle(el).paddingLeft)})));
   assert.ok(cards.every(card=>card.background!=='rgba(0, 0, 0, 0)'&&card.padding>0),'every stat has a padded card');
@@ -260,12 +267,11 @@ try{
    await page.waitForFunction(()=>!document.querySelector('#lifeSheet').classList.contains('is-springing'),null,{timeout:3500});
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-springing')),false,'spring settles and cleans up');
    const middle=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(middle.height>old.height+50&&middle.height<viewport.height*.7,'tap opens middle');
+   assert.ok(middle.height>old.height+50&&middle.height<viewport.height*.9,'tap opens middle');
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true);
    const split=await page.evaluate(()=>{
     const vh=innerHeight,rem=parseFloat(getComputedStyle(document.documentElement).fontSize);
-    const profile=document.querySelector('.desktop-right > .profile');
-    const boundary=Math.max(vh*.31,Math.min(vh*.65,profile.getBoundingClientRect().top+scrollY-rem*.5));
+    const boundary=document.querySelector('.status').getBoundingClientRect().bottom+scrollY+rem*.5;
     return {actual:document.querySelector('#lifeSheet').getBoundingClientRect().top,expected:boundary,
       scrollable:document.documentElement.scrollHeight>vh,overflow:getComputedStyle(document.body).overflowY,
       touch:getComputedStyle(document.querySelector('#sheetContent')).touchAction};

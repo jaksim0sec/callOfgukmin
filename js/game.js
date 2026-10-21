@@ -71,12 +71,10 @@ function mount(root,navigate,content=global.GukminContent){
   root.querySelector('.game').style.setProperty('--life-sheet-peek-height',height+'px');
   return height;
  }
- // Use the profile's page offset, not its scrolling screen offset, to avoid jumping.
+ // Anchor the middle snap to the fixed poster row, independent of stat content or page scroll.
  function middleSheetHeight({viewportHeight,rem}){
-  const profile=root.querySelector('.desktop-right > .profile');
-  const top=profile.getBoundingClientRect().top+(global.scrollY||0)-rem*.5;
-  const boundary=Math.max(viewportHeight*.31,Math.min(viewportHeight*.65,top));
-  return Math.max(viewportHeight-boundary,collapsedSheetHeight({rem})+rem*3.25);
+  const boundary=root.querySelector('.status').getBoundingClientRect().bottom+(global.scrollY||0)+rem*.5;
+  return Math.min(viewportHeight-rem,Math.max(viewportHeight-boundary,collapsedSheetHeight({rem})+rem*3.25));
  }
  const snapSheet=global.GukminSheet.create({
   element:sheet,handle:$('sheetToggle'),dragTargets:[$('sheetToggle'),sheet.querySelector('.sheet-head')],
