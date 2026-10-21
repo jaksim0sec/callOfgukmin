@@ -1032,7 +1032,7 @@ test('assessment maintenance, diminishing returns and integer trait costs share 
  const result={assessment:{metric:'schoolScore',effort:2}};let s=p;for(let i=0;i<6;i++)s=E.apply(s,result);assert.equal(s.stats.schoolScore,17);
  for(const effort of [0,1,2,3,4]){const a=c.GukminGrades.assessment(p,{metric:'schoolScore',effort}),after=E.apply(p,{assessment:{metric:'schoolScore',effort}});assert.equal(after.stats.schoolScore-p.stats.schoolScore,a.actual);assert.ok(Number.isInteger(after.stats.stress));}
  p.phase='high';p.attributes={schoolTrack:'science'};p.traits=['문과','인내심','꼼꼼함'];p.stats.schoolScore=19;
- let a=c.GukminGrades.assessment(p,{metric:'schoolScore',effort:3});assert.equal(a.stats.stress,2);assert.equal(a.stats.schoolScore,2);assert.equal(a.applied.length,3);
+ let a=c.GukminGrades.assessment(p,{metric:'schoolScore',effort:3});assert.equal(a.stats.stress,3);assert.equal(a.stats.schoolScore,2);assert.equal(a.applied.length,3);
  a=c.GukminGrades.assessment(p,{metric:'schoolScore',effort:0});assert.equal(a.stats.stress,-2);assert.equal(a.stats.schoolScore,-2);assert.equal(a.applied.length,0);
  p.stats.exam=21;let recovered=E.apply(E.apply(p,{assessment:{metric:'exam',effort:0}}),{assessment:{metric:'exam',effort:0}});assert.equal(recovered.stats.exam,17);
  p.stats.schoolScore=25;const capped=c.GukminGrades.assessment(p,{metric:'schoolScore',effort:4});assert.equal(capped.actual,0);assert.equal(capped.limited,true);
@@ -1222,4 +1222,13 @@ test('mental choices change the visible illness stage before hidden pressure, in
  const direct=E.apply(p,{tags:['pressure-only'],effects:{stats:{stress:-1}}});assert.equal(direct.stats.illness,2);assert.equal(direct.stats.stress,8,'explicit shop pressure products retain their advertised effect');
  const cfg={contentId:'mental-recovery',events:[{id:'rest',layer:'일상 이벤트',at:0,title:'회복',choice:'rest'}],choices:[{id:'rest',layer:'일상 선택',title:'회복',blocksTime:true,options:[{id:'rest',label:'쉰다',result:rest}]}]};
  let t=T.create({...cfg,persona:p});t.advance(0);const save=t.snapshot(),token=save.choice.token;t=T.create({...cfg,persona:{...save.persona,simulation:save.runtime}});t.resolve(token,'rest');assert.equal(t.snapshot().persona.stats.illness,1);assert.equal(t.resolve(token,'rest'),false);
+});
+
+test('special-school aptitude shields pressure without changing the score for the same effort',()=>{
+ const {P,c}=setup(),p=P.generate();p.phase='high';p.age=17;p.stats.schoolScore=19;p.stats.exam=19;
+ for(const [track,trait] of [['science','이과'],['gifted','이과'],['foreign','문과'],['international','문과']])for(const metric of ['schoolScore','exam']){
+  p.attributes={schoolTrack:track};p.traits=[];const unfit=c.GukminGrades.assessment(p,{metric,effort:4});
+  p.traits=[trait];const fit=c.GukminGrades.assessment(p,{metric,effort:4});assert.equal(unfit.stats[metric],fit.stats[metric]);assert.equal(unfit.stats.stress,6);assert.equal(fit.stats.stress,3);assert.ok(fit.applied.some(s=>s.trait===trait&&s.tone==='shield'));
+ }
+ p.attributes={schoolTrack:'science',admissionAttempts:2};assert.equal(c.GukminGrades.assessment(p,{metric:'exam',effort:4}).stats.stress,4,'graduated N-year candidates do not pay former school costs');
 });

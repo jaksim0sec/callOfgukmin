@@ -73,7 +73,7 @@ try{
   await page.locator('#resumeMajorChoice').click();
   assert.ok(await page.locator('#lifeDecisionDialog').isVisible());
   assert.ok(await page.locator('#lifeDecisionDialog .life-modal-collapse').isVisible(),'touch users can collapse the exam');
-  await page.locator('#lifeDecisionDialog .life-answer').nth(3).click();
+  await page.locator('#lifeDecisionDialog .life-answer[data-choice=effort-3]').click();
   await page.locator('#lifeDecisionDialog .life-modal-collapse').click();
   await page.locator('#resumeMajorChoice').click();
   assert.equal(await page.locator('#lifeDecisionDialog .life-answer[aria-pressed=true]').count(),1,'folding retains the selection');
@@ -82,7 +82,7 @@ try{
    const projected=GukminEffects.apply(snap.persona,option.result,{turn:snap.runtime.turn});
    return projected.stats.schoolScore-snap.persona.stats.schoolScore;
   });
-  const effect=await page.locator('#lifeDecisionDialog .life-answer').nth(3).locator('.life-effects .metric-schoolScore').first();
+  const effect=await page.locator('#lifeDecisionDialog .life-answer[data-choice=effort-3]').locator('.life-effects .metric-schoolScore').first();
   assert.equal(await effect.locator('.impact-amount').textContent(),Math.abs(realPreview).toLocaleString('ko-KR'),
    'exam preview calculates the same actual numeric value including conditional trait modifiers');
   assert.ok(await effect.locator('.impact-arrow').count()>0,'exam direction is rendered with the shared triangle SVG');
@@ -175,7 +175,7 @@ try{
     if(category==='admission-finish'){const button=page.locator('#lifeDecisionDialog [data-choice=employment]');if(await button.count())await button.click();}
     const selector=['exam','school'].includes(category)?'.life-answer:not(:disabled)':
      '.admission-choices button:not([hidden]):not(:disabled)';
-    if(category!=='admission-finish')await page.locator('#lifeDecisionDialog '+selector).nth(index).click();
+    if(category==='exam')await page.locator('#lifeDecisionDialog [data-choice=effort-'+index+']').click();else if(category!=='admission-finish')await page.locator('#lifeDecisionDialog '+selector).nth(index).click();
    }
    await page.locator('#lifeDecisionDialog .life-submit').click();decisions++;
    if(category==='grade-seal'){
@@ -216,6 +216,7 @@ try{
  if(process.env.EXPERIENCE_SCOPE!=='balance')for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
   const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());await page.goto(base+'html/game.html');
   const seed=async(id,patch={})=>{
+   if(!page.url().includes('/game.html')){await page.evaluate(()=>GukminPlayer.save(GukminPlayer.generate()));await page.goto(base+'html/game.html');}
    await page.evaluate(({id,patch})=>{
     const p=GukminPlayer.generate();Object.assign(p,{phase:'high',age:18,job:'고등학생',traits:['문과','꼼꼼함','인내심'],schoolHistory:[{id:'fixture-high',kind:'high',name:'세종과학고등학교',status:'enrolled'}]});p.stats={...p.stats,schoolScore:23,exam:24,money:1000000,stress:8,health:80,relations:16,...patch.stats};p.attributes={admissionAttempts:1,schoolTrack:'science',admissionResearch:'official',pressureGuideSeen:true,pressureNoticeBand:6,...patch.attributes};Object.assign(p,Object.fromEntries(Object.entries(patch).filter(([k])=>!['stats','attributes','accepted'].includes(k))));
     const pack=GukminDirector.content(p),target=pack.events.find(e=>e.id===id);if(!target)throw new Error('fixture event missing '+id);
@@ -225,7 +226,7 @@ try{
   };
   const checkPaper=async()=>{const d=page.locator('#lifeDecisionDialog[open]');await d.waitFor();const b=await d.boundingBox();assert.ok(b.x>=0&&b.x+b.width<=viewport.width+1&&b.y>=0&&b.y+b.height<=viewport.height+1);assert.ok(await d.locator('.life-submit').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;}),'confirmation stays reachable');assert.equal(await d.evaluate(e=>e.scrollWidth>e.clientWidth+1),false);assert.ok(await d.locator('.admission-row').evaluateAll(rows=>rows.every(row=>row.scrollHeight<=row.clientHeight+1)),'application rows retain enough height for their cost and probability text');};
   await seed('elementary:interest-followup',{phase:'elementary',age:10,job:'초등학생',traits:['관심-이과'],schoolHistory:[]});await page.locator('#resumeDailyChoice').click();const follow=page.locator('#dailyChoiceBody .inline-choice').nth(1);assert.equal(await follow.locator('.interest-transition').count(),1);await follow.click();await page.locator('#dailyPaperConfirm').click();await page.locator('#dailyChoiceDialog.is-reward').waitFor();assert.equal(await page.locator('.daily-reward-tokens .interest-transition').count(),1);assert.equal(await page.locator('.daily-reward-tokens .token-trait:not(.trait-developing)').count(),1,'formal aptitude is not duplicated');await page.screenshot({path:`${artifacts}/${name}-interest-conversion.png`});
-  await seed('high:2:2학년-내신-종합-준비',{age:17});await checkPaper();assert.ok(await page.locator('.assessment-source .token-trait').count()>0);await page.screenshot({path:`${artifacts}/${name}-applied-traits.png`});
+  await seed('high:2:2학년-내신-종합-준비',{age:17});await checkPaper();assert.deepEqual(await page.locator('.life-exam-paper .life-answer').evaluateAll(nodes=>nodes.map(n=>n.dataset.choice)),['effort-4','effort-3','effort-2','effort-1','effort-0']);assert.match(await page.locator('.exam-fit-note').textContent(),/압박/);assert.ok(await page.locator('.assessment-source .token-trait').count()>0);await page.screenshot({path:`${artifacts}/${name}-applied-traits.png`});
   await seed('admission:first:final-report');await checkPaper();await page.locator('.life-submit').click();await page.locator('#lifeCinematic:not([hidden])').waitFor();assert.equal(await page.locator('.life-cinematic-arrow').count(),0);assert.match(await page.locator('.life-cinematic-grade').textContent(),/최종 내신.*등급/);await page.screenshot({path:`${artifacts}/${name}-final-report.png`});
   await seed('admission:first:early-application',{attributes:{admissionRoute:'early',highFinalSubmitted:true}});await checkPaper();assert.ok(await page.locator('.admission-row .school-placeholder').count()>1);await page.locator('[data-field=science]').click();assert.match(await page.locator('.admission-choice-title').first().textContent(),/자연·공학/);await page.screenshot({path:`${artifacts}/${name}-university.png`});await page.locator('.admission-row').first().click();await page.locator('.life-submit').click();assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.attributes.admissionField),'science');
   for(const elected of [true,false]){
@@ -235,11 +236,11 @@ try{
    await seed('admission:first:early-result',{accepted,attributes:{admissionRoute:'early'}});await page.locator('.is-admission-result').waitFor();assert.equal(await page.locator('.admission-verdict').textContent(),accepted?'합격':'불합격');assert.equal(await page.locator('.cinematic-stamp').textContent(),accepted?'합격':'불합격');assert.equal(await page.locator('.cinematic-stamp').evaluate(e=>e.scrollWidth>e.clientWidth+1),false,'stamp text fits on one line');const state=await page.evaluate(()=>GukminGame.session.snapshot());assert.equal(state.persona.attributes.earlyStatus,accepted?'accepted':'failed');assert.equal(await page.locator('dialog[open]').count(),0);await page.reload();await page.locator('.is-admission-result').waitFor();assert.deepEqual(await page.evaluate(()=>GukminGame.session.snapshot().persona.attributes),state.persona.attributes);await page.screenshot({path:`${artifacts}/${name}-admission-${accepted}.png`});
   }
   for(const [reason,patch] of [['준비 자금 소진',{stats:{money:300000}}],['정신병 한계',{stats:{stress:25,illness:3}}],['나이 제한',{age:29}]]){
-   await seed('admission:second:destination',{age:20,job:'N수생',attributes:{admissionAttempts:2,admissionRoute:'regular',highFinalSubmitted:true},...patch});await checkPaper();await page.locator('[data-choice=retry]').click();await page.locator('.life-submit').click();await page.locator('#log .continue-story').first().click();await page.locator('.life-chapter-complete').waitFor();assert.match(await page.locator('.life-chapter-complete').textContent(),new RegExp(reason));assert.equal(await page.locator('#job').textContent(),'입시 종료');await page.screenshot({path:`${artifacts}/${name}-retake-${reason}.png`});
+   await seed('admission:second:destination',{age:20,job:'N수생',attributes:{admissionAttempts:2,admissionRoute:'regular',highFinalSubmitted:true},...patch});await checkPaper();await page.locator('[data-choice=retry]').click();await page.locator('.life-submit').click();await page.waitForURL('**/result.html?*');await page.locator('#skipResultRecap').click();assert.match(await page.locator('#resultSummary').textContent(),new RegExp(reason));await page.screenshot({path:`${artifacts}/${name}-retake-${reason}.png`});
   }
   await seed('middle:admission-prep',{phase:'middle',age:15,job:'중학생',stats:{schoolScore:21},attributes:{schoolTrack:'general'}});await page.locator('#resumeDailyChoice').click();await page.locator('#dailyChoiceBody .inline-choice').nth(2).click();await page.locator('#dailyPaperConfirm').click();await page.locator('.admission-guidance').waitFor();assert.ok(await page.locator('.admission-guidance strong').count()>=3,'counseling has actual structured headings');await page.screenshot({path:`${artifacts}/${name}-counseling.png`});
   await seed('admission:first:route',{attributes:{admissionAttempts:1,csatSubmitted:false}});assert.match(await page.locator('.admission-grade-strip').textContent(),/수능미응시/);assert.equal(await page.locator('[data-choice=regular] .admission-big-grade').textContent(),'응시 전');
-  await seed('high:recover',{stats:{stress:25,illness:5},attributes:{schoolTrack:'general'}});await page.locator('.life-chapter-complete').waitFor();assert.match(await page.locator('.life-chapter-complete').textContent(),/정신병 한계/);assert.equal(await page.locator('#resumeDailyChoice').isVisible(),false);
+  await seed('high:recover',{stats:{stress:25,illness:5},attributes:{schoolTrack:'general'}});await page.waitForURL('**/result.html?*');await page.locator('#skipResultRecap').click();assert.match(await page.locator('#resultSummary').textContent(),/정신병 한계/);
   if(name==='short'){
    await page.emulateMedia({reducedMotion:'no-preference'});
    await seed('elementary:representative',{phase:'elementary',age:11,job:'초등학생',traits:[],schoolHistory:[],stats:{relations:16},attributes:{schoolTrack:'general'}});await page.locator('#resumeDailyChoice').click();await page.locator('#dailyChoiceBody .inline-choice').first().click();await page.locator('#dailyPaperConfirm').click();await page.locator('.election-ballot-box').waitFor();assert.equal(await page.locator('#lifeCinematicDismiss').textContent(),'건너뛰기');const settled=await page.evaluate(()=>GukminGame.session.snapshot().persona.stats);await page.locator('#lifeCinematicDismiss').click();assert.match(await page.locator('.election-tally').first().textContent(),/16표/);assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'skip stops at the result');await page.locator('#lifeCinematicDismiss').click();await page.locator('#dailyChoiceDialog.is-reward').waitFor();assert.deepEqual(await page.evaluate(()=>GukminGame.session.snapshot().persona.stats),settled);

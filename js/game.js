@@ -107,12 +107,13 @@ function mount(root,navigate,content=global.GukminContent){
  let dailyUI=null;
  let renderedHistory=null;
  let journeyTimer=null,journeyActive=false,newsTimer=null;
- let adviceToStore=false;
+ let adviceToStore=false,resultRouted=false;
  const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
  $('systemTools').hidden=!verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
+  if(!verificationMode&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason)){if(!resultRouted){resultRouted=true;stopJourney();clearCinematics();clearMajor();dailyUI?.reset();navigate('result');}return;}
   global.GukminStatus.render(root,persona);
   renderStore();
   const headline=$('lifeHeadline'),label=headlineFor(persona);

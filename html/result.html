@@ -7,7 +7,7 @@
   <title>국민의 부름 · 결과</title>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=gu-recovery-20261021">
+  <link rel="stylesheet" href="css/style.css?v=life-card-20261021">
 </head>
 <body data-screen="result">
 <main class="result-screen" aria-label="게임 결과 화면">
@@ -15,36 +15,47 @@
     <span class="view-eyebrow" id="resultEyebrow">A LIFE, IN CHOICES</span>
     <h1 id="resultTitle">당신이 남긴 이야기</h1>
     <p class="result-lede" id="resultSummary"></p>
+    <section id="resultShareCard" class="result-share-card" aria-label="인스타그램 4:5 인생 기록 카드">
+      <div class="result-card-top">
+        <div class="result-visual"><div class="result-poster-mount" id="resultPosterMount" aria-label="인물 포스터"></div></div>
+        <div class="result-card-person"><small>나의 인생 기록</small><h2 id="resultCardName"></h2><p id="resultCardStage"></p><div id="resultCareer" class="result-career"></div></div>
+      </div>
+      <div id="resultCardStats" class="result-card-stats"></div>
+      <div id="resultTraits" class="result-traits" aria-label="함께한 특성"></div>
+      <footer>국민의 부름 <span>THE PEOPLE CALL · 나의 선택으로 남은 삶</span></footer>
+    </section>
+    <details id="resultTraitArchive" class="result-trait-archive" hidden><summary>함께한 모든 특성</summary><div id="resultAllTraits" class="result-traits"></div></details>
     <div id="resultFacts" class="result-facts"></div>
-    <div id="resultTraits" class="result-traits" aria-label="함께한 특성"></div>
     <section class="result-memories"><h2>기억할 순간들</h2><ol id="resultHistory"></ol></section>
     <div class="result-share-actions"><button type="button" id="shareResult" class="primary-action">기록 공유 ↗</button><button type="button" id="downloadResult" class="secondary-action">이미지 저장 ↓</button></div>
     <p id="shareNotice" class="view-note" role="status" aria-live="polite"></p>
     <button type="button" id="resultBack" class="primary-action">대기 화면으로 돌아가기 <span aria-hidden="true">↩</span></button>
   </div>
-  <div class="result-visual">
-    <div class="result-poster-mount" id="resultPosterMount" aria-label="인물 포스터"></div>
-    <span class="waiting-visual-caption">THE PEOPLE CALL · 나의 선택으로 남은 삶</span>
-  </div>
 </main>
-<script src="js/poster.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/base.js?v=gu-recovery-20261021" defer></script>
+<dialog id="resultRecap" class="result-recap" aria-label="지나온 인생 돌아보기">
+  <button type="button" id="skipResultRecap" class="recap-skip">건너뛰기 ↗</button>
+  <div id="resultRecapFrame" class="recap-frame"><small id="recapAge"></small><h2 id="recapTitle"></h2><p id="recapDetail"></p></div>
+  <div class="recap-footer"><span id="recapCount"></span><progress id="recapProgress" max="1" value="0" aria-label="인생 회고 진행"></progress></div>
+</dialog>
+<script src="js/poster.js?v=life-card-20261021" defer></script>
+<script src="js/data/base.js?v=life-card-20261021" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
 <script src="js/data/schools.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/grades.js?v=pressure-care-20261021" defer></script>
-<script src="js/playerState.js?v=gu-recovery-20261021" defer></script>
-<script src="js/effects.js?v=gu-recovery-20261021" defer></script>
+<script src="js/data/grades.js?v=life-card-20261021" defer></script>
+<script src="js/playerState.js?v=life-card-20261021" defer></script>
+<script src="js/effects.js?v=life-card-20261021" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=gu-recovery-20261021" defer></script>
+<script src="js/life/director.js?v=life-card-20261021" defer></script>
 <script src="js/life/story.js?v=pressure-care-20261021" defer></script>
 <script src="js/life/infant.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/elementary.js?v=gu-recovery-20261021" defer></script>
-<script src="js/life/middle.js?v=gu-recovery-20261021" defer></script>
-<script src="js/life/high.js?v=gu-recovery-20261021" defer></script>
+<script src="js/life/elementary.js?v=life-card-20261021" defer></script>
+<script src="js/life/middle.js?v=life-card-20261021" defer></script>
+<script src="js/life/high.js?v=life-card-20261021" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=gu-recovery-20261021" defer></script>
-<script src="js/game.js?v=gu-recovery-20261021" defer></script>
-<script src="js/majorView.js?v=pressure-care-20261021" defer></script>
-<script src="js/boot.js?v=gu-recovery-20261021" defer></script>
+<script src="js/statusView.js?v=life-card-20261021" defer></script>
+<script src="js/game.js?v=life-card-20261021" defer></script>
+<script src="js/majorView.js?v=life-card-20261021" defer></script>
+<script src="js/resultView.js?v=life-card-20261021" defer></script>
+<script src="js/boot.js?v=life-card-20261021" defer></script>
 </body>
 </html>

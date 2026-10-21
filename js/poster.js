@@ -149,6 +149,10 @@ function download(el){
  const canvas=el?.querySelector('canvas');if(!canvas)return;
  canvas.toBlob(blob=>{if(!blob)return;const url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='국민의부름_포스터.png';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)},'image/png');
 }
-global.GukminPoster=Object.freeze({create,update,download});
+async function ready(el){
+ const jobs=[atlas.decode(),document.fonts?.ready];const custom=customImages.get(el?._posterData?.imageSrc);if(custom)jobs.push(custom.decode());
+ await Promise.allSettled(jobs);paint(el);return el.querySelector('canvas');
+}
+global.GukminPoster=Object.freeze({create,update,download,ready});
 if(document.fonts?.ready)document.fonts.ready.then(()=>posters.forEach(paint));
 })(window);

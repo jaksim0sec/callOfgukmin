@@ -70,7 +70,8 @@ function create({persona,persist,onChange}){
   onChange:s=>onChange?.(decorate(s))});
  function limit(){
   const s=timeline.snapshot();
-  if(s.reviewPending||s.runtime.cinematic||s.persona.attributes?.lifeEndReason)return false;
+  if(s.persona.attributes?.lifeEndReason)return false;
+  if((s.reviewPending||s.runtime.cinematic)&&(s.persona.stats.illness||0)<5)return false;
   if((s.persona.stats.illness||0)>=5&&(s.persona.attributes?.admissionAttempts||1)<2){
    timeline.cancelPending('life-limit',{effects:{attributes:{lifeEndReason:'정신병 한계',admissionDestination:'finished',job:'생애 종료'}},history:{title:'삶의 끝 · 정신병 한계',detail:'감당할 수 있는 한계를 넘어 이번 삶이 끝났다.',importance:'major'}});return true;
   }
@@ -154,7 +155,7 @@ function create({persona,persist,onChange}){
    storeStatus,buy,acknowledgePressure,step,snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
    acknowledge:()=>timeline.acknowledge(),
-   resolve:(token,optionId,input)=>limit()?false:timeline.resolve(token,optionId,input),
+   resolve:(token,optionId,input)=>{if(limit())return false;const applied=timeline.resolve(token,optionId,input);if(applied)limit();return applied;},
    apply:(id,result)=>{const applied=timeline.apply(id,result);if(applied)run();return applied;},
    run,active:()=>{const s=timeline.snapshot();return active(s.persona,s.runtime.turn);}
  });

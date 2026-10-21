@@ -10,6 +10,11 @@ function report(id,value,phase){
 }
 const plans=[[-2,-2],[-1,-1],[0,1],[1,2],[2,4]];
 function color(display){const index=/^[A-E]$/.test(display)?display.charCodeAt(0)-65:parseInt(display,10)-1;return 'var(--grade-'+(index+1)+')';}
+const schoolAptitudes={science:'이과',gifted:'이과',foreign:'문과',international:'문과'};
+function schoolFit(person,track=person.attributes?.schoolTrack){
+ const trait=schoolAptitudes[track];if(!trait)return null;
+ return {trait,matched:person.traits.some(t=>(typeof t==='string'?t:t.name)===trait),surcharge:2};
+}
 function assessment(person,{metric,effort}){
  if(!['schoolScore','exam'].includes(metric)||!Number.isInteger(effort)||!plans[effort])throw new Error('시험 준비 정의 오류');
  const held=name=>person.traits.some(t=>(typeof t==='string'?t:t.name)===name);
@@ -18,7 +23,11 @@ function assessment(person,{metric,effort}){
  if(effort>=3&&current<20&&held('꼼꼼함')){score+=1;applied.push({trait:'꼼꼼함',text:'집중 검산 +1'});}
  // A high score requires sustained effort; passively maintaining it slowly loses ground.
  if(effort===2&&current>=20)score=-1;
- if(metric==='schoolScore'&&cost>0&&['science','gifted'].includes(person.attributes?.schoolTrack)&&held('문과')&&!held('이과')){stress+=1;applied.push({trait:'문과',text:'심화과학 적응 부담 +1'});}
+ const fit=schoolFit(person);
+ if(cost>0&&person.phase==='high'&&!(person.attributes?.admissionAttempts>1)&&fit){
+  if(fit.matched){stress=Math.max(1,stress-1);applied.push({trait:fit.trait,tone:'shield',text:'적성 방패 · 추가 부담 +2 면제'+(cost>stress?' · 기본 압박 −1':'')});}
+  else {stress+=fit.surcharge;applied.push({...(held('문과')&&fit.trait==='이과'?{trait:'문과'}:{}),label:'적성 불일치',tone:'risk',text:'심화 수업의 추가 압박 +'+fit.surcharge});}
+ }
  if(stress>0&&held('인내심')){const before=stress;stress=Math.max(1,Math.round(stress*.75));if(stress!==before)applied.push({trait:'인내심',text:'압박 부담 '+before+' → '+stress});}
  const actual=Math.max(0,Math.min(25,current+score))-current;
  return {stats:{[metric]:score,stress},applied,metric,actual,limited:actual!==score};
@@ -27,5 +36,5 @@ function highEntry(person,track){
  const last=person.stats.schoolScore??17,elite=['science','gifted'].includes(track);
  return {schoolScore:Math.max(13,Math.min(elite?19:21,last-(elite?3:0))),exam:elite?21:last>=22?19:last>=18?16:13};
 }
-g.GukminGrades=Object.freeze({bounds,rankIndex,report,color,assessment,highEntry});
+g.GukminGrades=Object.freeze({bounds,rankIndex,report,color,assessment,highEntry,schoolFit});
 })(window);
