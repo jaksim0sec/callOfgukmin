@@ -6,7 +6,7 @@ if(!dialog)return;
 const make=(tag,cls,text)=>{
  const element=document.createElement(tag);
  if(cls)element.className=cls;
- if(text!==undefined)element.textContent=String(text);
+ if(text!==undefined)element.textContent=global.GukminMarkup.text(text);
  return element;
 };
 function effectList(option,person,turn){
@@ -90,7 +90,7 @@ function presentAdmission({choice,resolve,root}){
    const grade=make('span','admission-big-grade',metric==='exam'&&!person.attributes?.csatSubmitted?'응시 전':global.GukminGrades.report(metric,score,'high').display);
    row.append(grade);
   }
-  if(entry.school?.typeLabel){const chance=global.GukminAdmissions.probability(person,entry.school,p.category);row.append(make('small','admission-type-label',entry.school.typeLabel+' · 게임 내 합격 가능성 '+chance+'%'+(entry.school.minimum?' · 수능 최저 '+global.GukminGrades.report('exam',entry.school.minimum,'high').display+' 수준':'')));}
+  if(entry.school?.typeLabel){const chance=global.GukminAdmissions.probability(person,entry.school,p.category);row.append(make('small','admission-type-label',entry.school.typeLabel+' · 합격 확률 '+chance+'%'+(entry.school.minimum?' · 수능 최저 '+global.GukminGrades.report('exam',entry.school.minimum,'high').display+' 수준':'')));}
   else if(!primary&&p.type!=='grade-seal')row.append(make('small','admission-type-label',entry.label));
   if(entry.school){const after=global.GukminEffects.apply(person,entry.result,{turn:choice.openedAt||0});const cost=after.stats.stress-person.stats.stress;row.append(make('span','admission-risk','지원 부담 · 압박 '+(cost>0?'+':'')+cost.toLocaleString('ko-KR',{maximumFractionDigits:1})));if(p.category==='early'&&person.attributes?.preExamStrategy==='record')row.append(make('small','admission-note','서류 준비 보정 +1 · 내신 등급은 유지'));}
   else if(entry.risk)row.append(make('span','admission-risk',entry.risk));
@@ -105,7 +105,7 @@ function presentAdmission({choice,resolve,root}){
  });
  modal.append(choices);
  const footer=make('footer','life-modal-foot admission-foot');
- footer.append(make('p','',p.type==='university'?'학교·학과별 실제 합격선이 아닌 게임 내 난도입니다.':
+ footer.append(make('p','',p.type==='university'?'성적과 준비 상태에 따라 합격 확률이 달라집니다.':
   p.type==='grade-seal'?'확인 후 최종 성적을 공개합니다.':'한 번의 선택이 이후 지원 기회를 바꿉니다.'));
  const confirm=make('button','life-submit',p.type==='grade-seal'
   ?p.category==='mock'?'수능 점수 확인하기':'내신 점수 확인하기':p.type==='university'?'선택한 대학에 지원':'이 진로로 확정');
@@ -197,8 +197,8 @@ function present({choice,resolve,root}){
    if(school.minScore){
     const qualifies=Number.isFinite(actual)&&actual>=school.minScore;
     copy.append(make('small','life-requirement',
-     '게임 내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
-   }else copy.append(make('small','life-requirement','게임 내 별도 내신 제한 없음'));
+     '내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
+   }else copy.append(make('small','life-requirement','별도 내신 제한 없음'));
    if(['science','gifted'].includes(school.kind)){copy.append(make('small','life-requirement','지원 준비 경로 완료 필요 · '+(person.attributes?.admissionResearch?'완료':'미완료')));}
    const fit=global.GukminGrades.schoolFit(person,school.kind);if(fit)copy.append(make('small','life-requirement',fit.matched?fit.trait+' 적성 방패 · 시험 추가 압박 면제, 기본 비용 완화':'적성 불일치 · 같은 성적의 시험 압박 +2 ('+fit.trait+' 특성으로 완화)'));
    if(false&&school.minStudy){
@@ -247,7 +247,7 @@ function present({choice,resolve,root}){
   options.append(row);
  });
  const footer=make('footer','life-modal-foot');
- const note=make('p','',isSchool?'게임용 지원 기준입니다. 실제 입학 자격은 학교 자료에서 확인하세요.':'게임 내 예상 성적입니다. 실제 준비와 적용 특성 효과를 포함합니다.');
+ const note=make('p','',isSchool?'현재 성적과 지원 조건을 확인하세요.':'예상 성적입니다. 실제 준비와 적용 특성 효과를 포함합니다.');
  footer.append(note,confirm);
  if(isSchool){
   const source=make('a','life-school-source','학교 정보 공시 검색 ↗');

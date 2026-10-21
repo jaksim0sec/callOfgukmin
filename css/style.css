@@ -1336,3 +1336,12 @@ body[data-screen=waiting],body[data-screen=result]{height:auto;min-height:100dvh
 .result-recap[data-scene=death] .recap-frame small,.result-recap[data-scene=death] .recap-frame p{color:#c48f94}
 .result-recap[data-scene=death] .recap-footer{visibility:hidden}
 @media(max-width:48em){.waiting-screen{grid-template-columns:minmax(0,1fr)}.waiting-copy h1{font-size:clamp(2.4rem,9vw,3.6rem)}}
+
+/* Fiction notice precedes the birth certificate without advancing gameplay. */
+.fiction-notice{position:fixed;inset:0;width:100%;height:100dvh;max-width:none;max-height:none;margin:0;border:0;border-radius:0;padding:2rem 1.5rem;background:#000;color:#f2eee8;overflow-y:auto}
+.fiction-notice[open]{display:grid;place-items:center}
+.fiction-notice::backdrop{background:#000}
+.fiction-notice-text{width:min(100%,42rem);text-align:center;font:400 clamp(1rem,2vw,1.25rem)/1.95 'Batang','바탕','AppleMyungjo','Noto Serif CJK KR',serif;word-break:keep-all;overflow-wrap:anywhere}
+.fiction-notice-text p{margin:0}.fiction-notice-text p+p{margin-top:.6em}
+.fiction-notice-skip{position:fixed;right:max(1.5rem,env(safe-area-inset-right));bottom:max(1.5rem,env(safe-area-inset-bottom));min-height:2.8rem;padding:.6rem 1rem;border:.0625rem solid #ffffff50;border-radius:2rem;background:#000;color:#d7d2cc;font-size:.85rem}
+body:has(#fictionNotice[open]){overflow:hidden}

@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='life-scenes-20261022';
+const RELEASE='fiction-notice-20261022';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
@@ -48,6 +48,8 @@ function initWaiting(){
  const introBackground=document.getElementById('birthIntroBackground');
  const skip=document.getElementById('birthIntroSkip');
  const introTrait=document.getElementById('birthIntroTrait');
+ const fiction=document.getElementById('fictionNotice'),fictionSkip=document.getElementById('skipFictionNotice');
+ let fictionTimer=null;
  let introActive=false,introTimer=null,introTick=null;
  function finishIntro(){
    if(!introActive)return;
@@ -56,7 +58,7 @@ function initWaiting(){
    navigate('game');
  }
  function beginIntro(){
-   if(introActive)return;
+   if(introActive||fiction.open)return;
    if(!progressed(player.ensure())){
      const value=input.value.trim();
      input.setCustomValidity(value&&value.length<=12&&!/[\u0000-\u001f\u007f]/.test(value)?'':'이름을 1~12자로 입력해 주세요.');
@@ -67,6 +69,16 @@ function initWaiting(){
    }
    const persona=player.ensure();
    if(progressed(persona)){navigate('game');return;}
+   document.querySelector('.waiting-screen').inert=true;
+   fiction.showModal();fictionSkip.focus({preventScroll:true});
+   fictionTimer=global.setTimeout(continueToBirth,8000);
+ }
+ function continueToBirth(){
+   if(!fiction.open)return;
+   global.clearTimeout(fictionTimer);fiction.close();
+   showBirth(player.ensure());
+ }
+ function showBirth(persona){
    introName.textContent=persona.name;
    introBackground.textContent=persona.birthplace;
    introFamily.textContent=persona.family;
@@ -96,6 +108,9 @@ function initWaiting(){
  gender.addEventListener('change',()=>{const known=Object.values(global.GukminData.namesByGender).flat().includes(input.value.trim());if(known)input.value=player.randomName(gender.value);input.dispatchEvent(new Event('input'));});
  document.getElementById('enterGame').addEventListener('click',beginIntro);
  skip.addEventListener('click',finishIntro);
+ fictionSkip.addEventListener('click',continueToBirth);
+ fiction.addEventListener('cancel',event=>{event.preventDefault();continueToBirth();});
+ global.addEventListener('pagehide',()=>{global.clearTimeout(fictionTimer);global.clearTimeout(introTimer);global.clearInterval(introTick);},{once:true});
  document.addEventListener('keydown',event=>{
    if(introActive&&event.key==='Escape'){event.preventDefault();finishIntro();}
  });

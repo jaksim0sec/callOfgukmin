@@ -135,7 +135,7 @@ global.GukminDirector.register({
    S.exam('middle',15,3,61,'1학기 중간고사'),
    S.examPrelude('middle',3,62,'1학기 기말고사'),
    S.exam('middle',15,3,62,'1학기 기말고사'),
-   S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
+   S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
   );
   // Elementary preparation has a bounded, real return instead of becoming a discarded gauge.

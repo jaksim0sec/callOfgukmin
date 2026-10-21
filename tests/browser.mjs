@@ -90,6 +90,7 @@ try{
   page.setDefaultTimeout(7000);
   const initial=await page.locator('#waitingName').textContent();assert.ok(initial.trim());
   await page.locator('#enterGame').click();
+  await page.locator('#skipFictionNotice').click();
   await page.locator('#birthIntro').waitFor({state:'visible'});
   assert.equal(await page.locator('#birthIntroName').textContent(),initial);
   assert.equal(await page.locator('#birthIntroTitle').textContent(),'출생신고서');
@@ -525,7 +526,8 @@ try{
  await recallPage.locator('#rerollPersona').click();
  assert.match(await recallPage.locator('#enterGame').textContent(),/인생 시작하기/);
  await recallPage.locator('#enterGame').click();
- await recallPage.locator('#birthIntro').waitFor({state:'visible'});
+ await recallPage.locator('#skipFictionNotice').click();
+  await recallPage.locator('#birthIntro').waitFor({state:'visible'});
  await recallPage.locator('#birthIntroSkip').evaluate(button=>button.click());
  await recallPage.locator('#resumeDailyChoice').waitFor({state:'visible'});
  assert.equal(await recallPage.locator('#dailyChoiceDialog').isVisible(),false);

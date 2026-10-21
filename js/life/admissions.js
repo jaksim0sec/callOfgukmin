@@ -45,7 +45,7 @@ function decision(p,{cycle,type}){
  const accepted=eligible&&roll(p,cycle+'|'+type+'|'+name)<probability(p,{target},type);
  const field=p.attributes?.admissionField|| (g.GukminPlayer.hasTrait(p,'이과')?'science':'humanities');
  const display=field==='science'?name.replace(/(?:인문사회|사회과학|인문|사회|실무)계열/,'자연·공학계열'):name;
- return {effects:{attributes:{[type+'Status']:accepted?'accepted':'failed',[type+'Offer']:accepted?display:null}},history:{title:display+(accepted?' 합격':' 불합격'),detail:accepted?'지원한 대학에서 합격 통보가 도착했다. 결과를 확인한 다음 등록 여부를 결정한다.':!eligible?'수능 최저 기준을 충족하지 못했다. 이번 수시 지원은 불합격이다.':'이번 지원은 불합격이었다. 게임 내 합격 가능성은 확정을 뜻하지 않는다.',importance:'major'}};
+ return {effects:{attributes:{[type+'Status']:accepted?'accepted':'failed',[type+'Offer']:accepted?display:null}},history:{title:display+(accepted?' 합격':' 불합격'),detail:accepted?'지원한 대학에서 합격 통보가 도착했다. 결과를 확인한 다음 등록 여부를 결정한다.':!eligible?'수능 최저 기준을 충족하지 못했다. 이번 수시 지원은 불합격이다.':'이번 지원은 불합격이었다. 합격 확률은 확정을 뜻하지 않는다.',importance:'major'}};
 }
 function add(pack,x,when){if(when)x.event.when=when;pack.events.push(x.event);pack.choices.push(x.choice);return x;}
 function board(pack,pre,at,type,when){

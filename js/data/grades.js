@@ -4,9 +4,9 @@ const bounds=Object.freeze({high:[10,34,66,90,100],mock:[4,11,23,40,60,77,89,96,
 function rankIndex(value,mode){if(!Number.isFinite(value))return null;const p=Math.max(.01,100-Math.min(25,Math.max(0,value))*4);return bounds[mode].findIndex(x=>p<=x)+1;}
 function report(id,value,phase){
  if(!Number.isFinite(value))return {display:'—',detail:'미기록'};
- if(id==='schoolScore'&&phase==='middle'){const a=value>=23?'A':value>=20?'B':value>=18?'C':value>=15?'D':'E';return {display:a,detail:'게임 성취도 예상 · 중학교'};}
- if(id==='schoolScore'||id==='exam'){const mode=id==='exam'?'mock':'high',grade=rankIndex(value,mode);return {display:grade+'등급',detail:'게임 예상 '+grade+'등급 / '+(mode==='mock'?'9':'5')+'등급제 (공식 성적 아님)'};}
- return {display:String(value),detail:'게임 수치'};
+ if(id==='schoolScore'&&phase==='middle'){const a=value>=23?'A':value>=20?'B':value>=18?'C':value>=15?'D':'E';return {display:a,detail:'성취도 예상 · 중학교'};}
+ if(id==='schoolScore'||id==='exam'){const mode=id==='exam'?'mock':'high',grade=rankIndex(value,mode);return {display:grade+'등급',detail:'예상 '+grade+'등급 / '+(mode==='mock'?'9':'5')+'등급제'};}
+ return {display:String(value),detail:'수치'};
 }
 const plans=[[-2,-2],[-1,-1],[0,1],[1,2],[2,4]];
 function color(display){const index=/^[A-E]$/.test(display)?display.charCodeAt(0)-65:parseInt(display,10)-1;return 'var(--grade-'+(index+1)+')';}

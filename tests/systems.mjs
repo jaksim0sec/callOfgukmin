@@ -287,7 +287,7 @@ test('five-grade high-school and nine-grade mock estimates are different, labell
  assert.equal(G.report('schoolScore',23,'middle').display,'A');
  assert.equal(G.report('exam',23,'high').display,'2등급');
  assert.equal(G.report('exam',24,'high').display,'1등급');
- assert.ok(G.report('exam',20,'high').detail.includes('공식 성적 아님'));
+ assert.match(G.report('exam',20,'high').detail,/^예상 .*등급제$/);assert.ok(!G.report('exam',20,'high').detail.includes('게임'));
  assert.equal(G.report('exam',null,'high').display,'—');
 });
 test('high-school major choices are annual, legacy exams remain loadable and ordinary stories depend on school track',()=>{

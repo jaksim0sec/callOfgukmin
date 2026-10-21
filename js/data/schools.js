@@ -43,7 +43,7 @@ function kindOf(name){
  return 'general';
 }
 const typeLabels=Object.freeze({
- general:'일반고 (게임 내 지역 배정 희망)',
+ general:'일반고 (지역 배정 희망)',
  autonomous:'자율형 사립고 (개별 입학전형)',
  foreign:'외국어고 (개별 입학전형)',
  science:'과학고 (과학계열 특수목적고)',

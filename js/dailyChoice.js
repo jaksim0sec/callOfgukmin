@@ -6,9 +6,11 @@ function el(tag,cls,text){
  const node=document.createElement(tag);if(cls)node.className=cls;
  if(text!==undefined)node.textContent=String(text);return node;
 }
+// Format legacy frozen labels at display time; never rewrite saved choices.
+function displayText(value){return String(value??'').replace(/게임 내 합격 가능성/g,'합격 확률').replace(/게임 내 예상 성적/g,'예상 성적').replace(/게임 내 별도/g,'별도').replace(/게임 내신 /g,'내신 ').replace(/게임 판정선/g,'판정선').replace(/게임 난도는 실제 입학 성적이나 공식 합격선이 아님/g,'성적과 준비 상태를 함께 반영합니다.');}
 // Four supported inline marks only. Never parse story text as HTML.
 function renderRich(target,input){
- const source=String(input??''),pattern=/\*\*([^*\n]+)\*\*|==([^=\n]+)==|~~([^~\n]+)~~|\*([^*\n]+)\*/g;
+ const source=displayText(input),pattern=/\*\*([^*\n]+)\*\*|==([^=\n]+)==|~~([^~\n]+)~~|\*([^*\n]+)\*/g;
  const fragment=document.createDocumentFragment();let pos=0,match;
  // Preserve author-written Markdown line breaks as DOM breaks, not collapsed spaces.
  function plain(value){
@@ -387,5 +389,5 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  return Object.freeze({suspend:()=>{cancelClock();if(dialog.open)dialog.close();},showChoice,changesFor,capture,restore,openRestoredReward,highlight,reset,dispose,isReview:()=>review,isRewardVisible:()=>!!reward});
 }
 global.GukminDailyChoice=Object.freeze({create});
-global.GukminMarkup=Object.freeze({render:renderRich});
+global.GukminMarkup=Object.freeze({render:renderRich,text:displayText});
 })(window);

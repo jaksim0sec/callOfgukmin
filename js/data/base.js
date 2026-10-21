@@ -105,7 +105,7 @@ global.GukminData=freezeCopy({
   {id:'tea',name:'따뜻한 차',price:15000,relief:4,art:'tea',description:'창가에 앉아 따뜻한 한 잔과 쉬어 간다.'},
   {id:'meal',name:'따뜻한 한 끼',price:22000,relief:6,art:'meal',description:'식사를 마칠 때까지 할 일을 잠시 내려놓는다.'},
   {id:'break',name:'간식과 긴 쉼',price:40000,relief:8,art:'break',description:'좋아하는 간식을 챙겨 충분히 쉬어 간다.'},
-  {id:'care',name:'마음 돌봄 꾸러미',price:60000,relief:8,recovery:1,art:'care',description:'일정을 비우고 나를 돌보는 게임용 회복 꾸러미.'},
+  {id:'care',name:'마음 돌봄 꾸러미',price:60000,relief:8,recovery:1,art:'care',description:'일정을 비우고 나를 돌보는 회복 꾸러미.'},
   {id:'retreat',name:'온전한 휴식 꾸러미',price:90000,relief:12,recovery:2,art:'retreat',description:'쌓인 부담을 정리하며 더 긴 회복 시간을 갖는다.'}
  ]
 });

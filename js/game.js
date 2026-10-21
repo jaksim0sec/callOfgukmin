@@ -386,7 +386,7 @@ function mount(root,navigate,content=global.GukminContent){
    card.append(row);
    if(scene.changes)card.append(el('p','life-cinematic-changes',scene.changes));
    if(scene.assessment){const applied=global.GukminGrades.assessment(scene.person,scene.assessment);if(applied.applied.length){card.append(el('small','','이번 평가에 적용됨'));for(const source of applied.applied){const line=el('div','assessment-source');line.append(global.GukminStatus.traitToken(source.trait),el('span','',source.text));card.append(line);}}}
-   card.append(el('small','life-cinematic-disclaimer','게임 내 성적 · 공식 성적이 아님'));
+   card.append(el('small','life-cinematic-disclaimer','성적표'));
   }
   if(scene.kind==='election'){
    card.classList.add('is-election');
