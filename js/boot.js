@@ -14,7 +14,6 @@ function navigate(name){
 }
 function renderPoster(target,persona,stage){
  const data=global.GukminGame.posterData(persona);
- data.stage=stage;
  target.replaceChildren(global.GukminPoster.create(data));
 }
 function initWaiting(){

@@ -41,12 +41,32 @@ function headlineFor(persona){
  return persona.age+'살';
 }
 function posterData(persona){
- const phase=global.GukminPlayer.phaseOf(persona);
- const phrases={infant:'세상이 궁금한 아이',elementary:'꿈을 키우는\n초등학생',middle:'가능성을 찾는\n중학생',high:'내 길을 고르는\n고등학생'};
+ const phase=global.GukminPlayer.phaseOf(persona),a=persona.attributes||{};
+ const phases={
+  infant:['유년기','세상은 아직\n놀이터','infant'],
+  elementary:['초등학생','꿈은 크게\n숙제는 적게','elementary'],
+  middle:['중학생','어른이 되는\n연습','middle'],
+  high:['고등학생','내 인생은\n어디로?','high']
+ };
+ let [stage,phrase,portraitStage]=phases[phase]||['인생 기록','나의 길을\n걷다','adult'];
+ if(a.admissionDestination==='college') [stage,phrase,portraitStage]=['대학 예정','새로운 문이\n열렸다','adult'];
+ else if(a.admissionDestination==='employment') [stage,phrase,portraitStage]=['사회 준비','이제부터\n진짜 실전','adult'];
+ else if(a.admissionDestination==='finished'||a.lifeEndReason){
+   [stage,phrase,portraitStage]=['기록 종료','이번 도전은\n여기까지',phase==='high'?'high':'adult'];
+ }else if((a.admissionAttempts||1)>1){
+   [stage,phrase,portraitStage]=['N수생','올해는\n진짜 간다','high'];
+ }else if(phase==='high'&&persona.age>=19){
+   [stage,phrase,portraitStage]=['입시생','다음 길을\n선택하다','high'];
+ }
+ // Older saved lives get a reproducible visual variant; new lives store it explicitly.
+ const seed=String(persona.admissionSeed||persona.createdAt||persona.name||'');
+ let hash=0;for(const ch of seed)hash=(Math.imul(hash,31)+ch.charCodeAt(0))|0;
+ const portraitVariant=persona.portraitVariant==='female'||persona.portraitVariant==='male'
+  ?persona.portraitVariant:((hash>>>0)%2?'female':'male');
  return {
-  color:persona.partyColor,partyName:persona.party,partyIcon:persona.partyIcon,
-  phrase:persona.attributes?.admissionAttempts>1?(persona.attributes?.retryEndReason?'다음 장을\n기다리는 청춘':'다음 기회를\n준비하는 N수생'):persona.job==='고교 졸업'?'다음 장을\n기다리는 청춘':phrases[phase]||'다음 선택은 나의 몫',stage:persona.job,name:persona.name,number:persona.number,
-  imageSrc:persona.portraitSrc,ageGroup:persona.age>=19?'adult':'child',template:'solid'
+  age:persona.age,name:persona.name,stage,phrase,portraitStage,portraitVariant,
+  partyName:persona.party||'무소속',number:persona.number,imageSrc:persona.portraitSrc||null,
+  color:persona.partyColor,partyIcon:persona.partyIcon
  };
 }
 
