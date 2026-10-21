@@ -28,14 +28,14 @@ global.GukminDirector.register({
      options:[
       {label:'바퀴를 굴리며 안쪽을 들여다본다',effects:{attributes:{earlyTemperament:'curious'},traits:{add:['호기심']}},detail:'차를 뒤집어 놓고 바퀴가 돌아가는 걸 한참 지켜봤다.'},
       {label:'익숙한 곰 인형을 먼저 집는다',effects:{attributes:{earlyTemperament:'cautious'},traits:{add:['낯가림']}},detail:'처음 본 장난감은 잠시 두고, 낡은 곰 인형을 품에 안았다.'},
-      {label:'자동차를 옆으로 밀어 놓는다',effects:{attributes:{earlyTemperament:'stubborn'}},detail:'어른이 권한 장난감보다 바닥의 종이 상자가 더 좋았다.'}
+      {label:'자동차 대신 종이 상자를 직접 가져온다',effects:{attributes:{earlyTemperament:'stubborn'},traits:{add:['진취성']}},detail:'어른이 권한 장난감보다 바닥의 종이 상자가 더 좋았다.'}
      ]},
     {id:'toy-box',priority:0,
      title:'의자 아래 곰 인형',body:'곰 인형이 의자 아래에 떨어져 있다. 누군가 주워 주려 하자 손이 먼저 뻗는다.',
      options:[
       {label:'가져온 인형의 귀를 하나씩 만져 본다',effects:{attributes:{earlyTemperament:'curious'},traits:{add:['호기심']}},detail:'귀를 접었다 폈다 하다가 안쪽의 실밥까지 발견했다.'},
       {label:'곰 인형을 받아 꼭 끌어안는다',effects:{attributes:{earlyTemperament:'cautious'},traits:{add:['낯가림']}},detail:'익숙한 냄새가 나자 그제야 인형을 놓지 않았다.'},
-      {label:'남이 집어 주기 전에 직접 기어가 잡는다',effects:{attributes:{earlyTemperament:'independent'}},detail:'엉금엉금 기어가 직접 가져왔다. 무릎에는 먼지가 묻었다.'}
+      {label:'남이 집어 주기 전에 직접 기어가 잡는다',effects:{attributes:{earlyTemperament:'independent'},traits:{add:['진취성']}},detail:'엉금엉금 기어가 직접 가져왔다. 무릎에는 먼지가 묻었다.'}
      ]}
    ]),
    S.notice('infant:age3',12,'어린이집과 동네 생활',local+'에서 친구들을 만나고 낯선 생활을 접한다.',{attributes:{age:3}}),

@@ -8,23 +8,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icons/favicon.ico?v=fiction-notice-20261022" sizes="16x16 32x32 48x48">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=fiction-notice-20261022">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=fiction-notice-20261022">
+  <link rel="icon" href="assets/icons/favicon.ico?v=family-retake-20261022" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=family-retake-20261022">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=family-retake-20261022">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="국민의 부름">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="css/style.css?v=fiction-notice-20261022">
+  <link rel="stylesheet" href="css/style.css?v=family-retake-20261022">
 </head>
 <body data-screen="waiting">
 <main class="waiting-screen" aria-label="게임 대기 화면">
   <div class="waiting-copy">
-    <span class="view-eyebrow">LIFE NO. 001 · 당신의 차례입니다</span>
-    <h1>태어나는 건 운.<br>살아가는 건 <em>선택.</em></h1>
-    <p class="waiting-lede">국민의 부름<br>작은 선택들이 모여, 당신이라는 한 사람이 됩니다.</p>
-    <div class="waiting-file-label"><span>새로운 인생의 첫 장</span><span aria-hidden="true">↗</span></div>
+    <span class="view-eyebrow">정치 인생 시뮬레이션</span>
+    <h1>국민의 부름<br><em>어떤 삶이 세상을 바꿀까.</em></h1>
+    <p class="waiting-lede">태어난 환경, 쌓아온 이력, 그리고 사람들의 지지.<br>한 사람의 삶이 정치로 이어지는 이야기.</p>
     <div class="waiting-identity" aria-label="이번 인생의 출생 정보">
       <span class="waiting-identity-name" id="waitingName">이름을 준비하는 중</span>
       <span class="waiting-identity-detail" id="waitingBackground"></span>
@@ -38,12 +37,12 @@
       <button type="button" id="enterGame" class="primary-action">인생 시작하기 <span aria-hidden="true">→</span></button>
       <button type="button" id="rerollPersona" class="secondary-action">새 출생 배경 뽑기</button>
     </div>
-    <p class="view-note" id="waitingSaveNotice">선택에 따라 다른 사건이 벌어지는 인생 이야기.</p>
+    <p class="view-note" id="waitingSaveNotice">현재 출생~대학 입시까지 플레이 가능 · 사회·정치 콘텐츠 준비 중</p>
     <button type="button" class="text-action" id="previewResult">내 인생 기록 보기 ↗</button>
   </div>
   <div class="waiting-visual">
     <div class="waiting-poster-mount" id="waitingPosterMount" aria-label="현재 인물 포스터"></div>
-    <span class="waiting-visual-caption">하나의 출생에서 시작되는 수많은 가능성</span>
+    <span class="waiting-visual-caption">대통령을 꿈꾸거나, 나만의 길을 찾거나.</span>
   </div>
 </main>
 <dialog id="fictionNotice" class="fiction-notice" aria-label="게임 안내" aria-describedby="fictionNoticeText">
@@ -76,24 +75,24 @@
     <button type="button" class="birth-intro-skip" id="birthIntroSkip">출생하기 <span aria-hidden="true">↗</span></button>
   </div>
 </section>
-<script src="js/poster.js?v=fiction-notice-20261022" defer></script>
-<script src="js/data/base.js?v=fiction-notice-20261022" defer></script>
+<script src="js/poster.js?v=family-retake-20261022" defer></script>
+<script src="js/data/base.js?v=family-retake-20261022" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/schools.js?v=fiction-notice-20261022" defer></script>
-<script src="js/data/grades.js?v=fiction-notice-20261022" defer></script>
-<script src="js/playerState.js?v=fiction-notice-20261022" defer></script>
-<script src="js/effects.js?v=fiction-notice-20261022" defer></script>
+<script src="js/data/schools.js?v=family-retake-20261022" defer></script>
+<script src="js/data/grades.js?v=family-retake-20261022" defer></script>
+<script src="js/playerState.js?v=family-retake-20261022" defer></script>
+<script src="js/effects.js?v=family-retake-20261022" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=fiction-notice-20261022" defer></script>
-<script src="js/life/story.js?v=fiction-notice-20261022" defer></script>
-<script src="js/life/infant.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/elementary.js?v=fiction-notice-20261022" defer></script>
-<script src="js/life/middle.js?v=fiction-notice-20261022" defer></script>
-<script src="js/life/high.js?v=fiction-notice-20261022" defer></script>
+<script src="js/life/director.js?v=family-retake-20261022" defer></script>
+<script src="js/life/story.js?v=family-retake-20261022" defer></script>
+<script src="js/life/infant.js?v=family-retake-20261022" defer></script>
+<script src="js/life/elementary.js?v=family-retake-20261022" defer></script>
+<script src="js/life/middle.js?v=family-retake-20261022" defer></script>
+<script src="js/life/high.js?v=family-retake-20261022" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=fiction-notice-20261022" defer></script>
-<script src="js/game.js?v=fiction-notice-20261022" defer></script>
-<script src="js/majorView.js?v=fiction-notice-20261022" defer></script>
-<script src="js/boot.js?v=fiction-notice-20261022" defer></script>
+<script src="js/statusView.js?v=family-retake-20261022" defer></script>
+<script src="js/game.js?v=family-retake-20261022" defer></script>
+<script src="js/majorView.js?v=family-retake-20261022" defer></script>
+<script src="js/boot.js?v=family-retake-20261022" defer></script>
 </body>
 </html>

@@ -9,22 +9,27 @@ const groups=[
  {min:0,id:'open',early:[['stretch','인천대학교 인문계열',15,0],['fit','대진대학교 인문사회계열',11,0],['safe','동서울대학교 실무계열',7,0]],regular:[['stretch','인천대학교 인문계열',15],['fit','대진대학교 인문사회계열',11],['safe','동서울대학교 실무계열',7]]}
 ];
 const fields={humanities:'인문·사회',science:'자연·공학'};
-const attributeNames={admissionAttempts:'입시 응시 회차',admissionRoute:'원서 경로',earlyChoice:'수시 지원처',earlyStatus:'수시 판정',earlyOffer:'수시 합격 대학',regularChoice:'정시 지원처',regularStatus:'정시 판정',regularOffer:'정시 합격 대학',admissionDestination:'졸업 뒤 진로',csatSubmitted:'수능 확정',highFinalSubmitted:'내신 확정',admissionField:'지원 계열',retryEndReason:'N수 종료 이유'};
+const attributeNames={retakeSupportUsed:'재수학원 지원 사용 횟수',retakeMode:'입시 준비 방식',careerGapYears:'경력 공백 기간',admissionAttempts:'입시 응시 회차',admissionRoute:'원서 경로',earlyChoice:'수시 지원처',earlyStatus:'수시 판정',earlyOffer:'수시 합격 대학',regularChoice:'정시 지원처',regularStatus:'정시 판정',regularOffer:'정시 합격 대학',admissionDestination:'졸업 뒤 진로',csatSubmitted:'수능 확정',highFinalSubmitted:'내신 확정',admissionField:'지원 계열',retryEndReason:'N수 종료 이유'};
 const option=(id,label,detail,effects={},extra={})=>({id,label,detail,effects,...extra});
-const gate=n=>n===1?{attributes:{admissionAttempts:1}}:{all:[{attributes:{admissionAttempts:n}},{not:{attributes:{admissionDestination:'finished'}}}]};
+const gate=n=>({all:[{attributes:{admissionAttempts:n}},{not:{any:['finished','employment','college'].map(admissionDestination=>({attributes:{admissionDestination}}))}}]});
 function prefix(n){return n===1?'admission:first':n===2?'admission:second':'admission:attempt-'+n;}
-function retryReason(p){return (p.stats.illness||0)>=5?'정신병 한계':p.stats.money<=0?'준비 자금 소진':p.age>=30?'나이 제한':null;}
+function supportStatus(p){
+ const tier=g.GukminData.wealthTiers.find(t=>t.id===p.familyTier)||g.GukminData.wealthTiers[0];
+ const used=p.attributes?.retakeSupportUsed||0,limit=tier.retakeSupport;
+ return {tier:tier.name,limit,used,remaining:limit===null?null:Math.max(0,limit-used),detail:tier.educationDetail};
+}
+function retryReason(p){return (p.stats.illness||0)>=5?'정신병 한계':p.age>=30?'백수 엔딩':null;}
 function retry(p,result){
  const x=JSON.parse(JSON.stringify(result)),a=p.attributes||{},blocked=retryReason(p),ageLimit=!blocked&&p.age>=29;
- const reason=blocked||(ageLimit?'나이 제한':null);
- if(reason){x.effects={attributes:{...(ageLimit?{age:30}:{}),admissionDestination:'finished',retryEndReason:reason,job:'입시 종료'}};}
+ const reason=blocked||(ageLimit?'백수 엔딩':null);
+ if(reason){x.effects={attributes:{...(ageLimit?{age:30}:{}),admissionDestination:'finished',retryEndReason:reason,job:reason==='백수 엔딩'?'무직':'입시 종료'}};}
  else{
-  const money=Math.min(300000,p.stats.money),illness=(p.stats.illness||0)+Math.max(0,p.stats.stress+2-25);
-  const ended=money===p.stats.money?'준비 자금 소진':illness>=5?'정신병 한계':null;
-  x.effects={attributes:{age:p.age+1,admissionAttempts:(a.admissionAttempts||1)+1,job:ended?'입시 종료':'N수생',roles:[],admissionDestination:ended?'finished':'retry',retryEndReason:ended,csatSubmitted:false},stats:{money:-money,stress:2},schools:g.GukminPlayer.schoolsOf(p).some(s=>s.kind==='high'&&s.status==='enrolled')?[{kind:'high',status:'graduated'}]:[]};
+  const support=supportStatus(p),academy=support.remaining===null||support.remaining>0,nextAge=p.age+1,gap=nextAge>=25;
+  const pressure=2+(gap?1:0),illness=(p.stats.illness||0)+Math.max(0,p.stats.stress+pressure-25),ended=illness>=5?'정신병 한계':null;
+  x.effects={attributes:{age:nextAge,admissionAttempts:(a.admissionAttempts||1)+1,job:ended?'입시 종료':'N수생',roles:[],admissionDestination:ended?'finished':'retry',retryEndReason:ended,csatSubmitted:false,retakeMode:academy?'academy':'self',retakeSupportUsed:support.used+(academy?1:0),careerGapYears:gap?nextAge-24:0},stats:{stress:pressure,...(gap?{relations:-1}:{})},...(gap?{traits:{add:['경력 공백']}}:{}),schools:g.GukminPlayer.schoolsOf(p).some(s=>s.kind==='high'&&s.status==='enrolled')?[{kind:'high',status:'graduated'}]:[]};
  }
- const end=x.effects.attributes.retryEndReason;
- x.history={title:end?'N수 준비 종료 · '+end:'다음 입시 연도를 준비한다',detail:end?'새 수능 주기를 열지 않고 이번 장을 마친다. '+end+'에 도달했다.':'나이가 한 살 늘었다. 연간 기본 준비비 30만원과 압박 부담 2을 반영했다. 고교 내신은 보존한다.',importance:'major'};
+ const end=x.effects.attributes.retryEndReason,mode=x.effects.attributes.retakeMode;
+ x.history={title:end?end==='백수 엔딩'?'서른, 백수 엔딩':'N수 준비 종료 · '+end:mode==='academy'?'가족의 지원으로 재수학원에 등록했다':'독학으로 다음 입시를 준비한다',detail:end?end==='백수 엔딩'?'여러 번의 사회 진출 기회를 뒤로하고 입시 준비만 이어 왔다. 서른이 되었지만 아직 첫 경력을 시작하지 못했다.':'새 수능 주기를 열지 않고 이번 장을 마친다. '+end+'에 도달했다.':(mode==='academy'?supportStatus(p).detail+' 학원비는 가족이 부담하며 내 재산에서 차감하지 않는다.':'학원 지원은 끝났지만 독학으로 도전할 수 있다. 기출문제와 공공 학습 자료로 계획을 세운다.')+' 나이가 한 살 늘고 압박 '+(x.effects.stats.stress)+'을 반영했다.'+(x.effects.attributes.careerGapYears?' 입시 준비가 길어지며 첫 경력의 공백이 쌓인다. 관계 −1.':''),importance:'major'};
  return x;
 }
 function probability(p,school,type){
@@ -65,7 +70,8 @@ function cycle(pack,n){
  option('regular','정시 집중','수능 기출 풀이에 집중하는 대신 수시 기회는 포기했다.',{attributes:{...reset,admissionRoute:'regular'},stats:{exam:1,stress:1}}),
  option('employment','바로 사회 진출 준비','입시 대신 실무와 구직 정보를 살핀다.',{attributes:{...reset,admissionRoute:'employment'},stats:{stress:-1,relations:1}})
  ],'한방 선택',{type:'admission-route',term:'대입 지원 경로'}),withGate());
- const studying=withGate({not:{attributes:{admissionRoute:'employment'}}});
+ const studying=withGate({all:[{not:{attributes:{admissionRoute:'employment'}}},{not:{attributes:{admissionDestination:'employment'}}}]});
+ if([4,7,10].includes(n))add(pack,S.selection(pre+':career-offer',routeAt+1,'입시 바깥에서 온 제안',n===4?'학교 선배가 지역 일자리센터의 실무 교육과 채용 연계 설명회 소식을 보내 왔다. 시험 준비를 멈추고 첫 경력을 시작할 수도 있다.':n===7?'친구가 신입 교육을 제공하는 채용 설명회를 알려 왔다. 준비 기간이 길어진 만큼 지금까지의 선택과 앞으로의 생활을 정리할 때다.':'지인이 현장 실무 교육 참여자를 모집한다고 연락했다. 서른까지 입시만 계속하면 첫 경력을 시작하지 못한 채 백수 엔딩을 맞는다.',[option('employment','설명회에 참여하고 사회 진출을 준비한다','입시 일정을 내려놓고 실무 교육과 구직 상담을 시작했다.',{attributes:{admissionDestination:'employment',admissionRoute:'employment',job:'사회 진출 준비'}}),option('decline','제안을 거절하고 입시 준비를 계속한다','이번 사회 진출 제안을 거절했다. 다음 시험을 준비하지만 첫 경력을 시작하는 시점은 다시 늦어졌다.',{stats:{stress:1}})]),studying);
  add(pack,S.selection(pre+':peer-practice',routeAt+1,'원서철의 단체방','친구가 기출문제의 풀이를 보내 왔다.\n\n오늘 남은 두 시간을 함께 검토할지, 혼자 복습할지 정하자.',[
  option('team','친구와 틀린 이유를 설명한다','친구와 검산하며 단원을 다시 익혔다.',{stats:{exam:1,relations:1,stress:2}}),
  option('intense','연락을 줄이고 기출을 집중 복습한다','문제를 다시 풀었지만 다른 약속은 줄었다.',{stats:{exam:2,relations:-1,stress:3}}),
@@ -88,13 +94,13 @@ function cycle(pack,n){
  option('sleep','연락을 미루고 충분히 쉰다','쉬는 동안 단체방의 대화는 놓쳤다.',{stats:{stress:-3,relations:-1}})
  ]),studying);
  board(pack,pre,routeAt+5,'regular',withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}},{attributes:{earlyStatus:'skipped'}}]}));
- const retryOption=option('retry','다음 해 입시에 다시 도전한다','다음 연도 준비를 선택했다.',{}, {retryYear:true,risk:'나이 +1 · 연간 기본 준비비 30만원 · 압박 +2. 정신병5·돈0·나이30 도달 시 종료'});
+ const retryOption=option('retry','다음 해 입시에 다시 도전한다','다음 연도 준비를 선택했다.',{}, {retryYear:true,risk:'나이 +1 · 압박 +2. 가족의 학원 지원이 끝나면 독학. 25세부터 경력 공백 부담 · 30세 백수 엔딩'});
  const work=option('employment','대학 대신 사회 진출을 준비한다','구직과 실무 준비로 이번 장을 마친다.',{attributes:{admissionDestination:'employment',job:'사회 진출 준비'},stats:{stress:-1,relations:1}});
  const done=add(pack,S.selection(pre+':destination',routeAt+7,'졸업 이후의 진로','입시 결과를 바탕으로 다음 진로를 정하자.',[retryOption,work],'한방 선택',{type:'admission-finish',term:'진로 확정'}),withGate());
  done.choice.variants=['early','regular'].map((type,i)=>({id:pre+'-offer-'+type,priority:30-i*10,when:{attributes:{[type+'Status']:'accepted'}},title:(type==='early'?'수시':'정시')+' 합격 이후의 선택',body:type==='early'?'수시에 합격했다. 등록하지 않아도 올해 정시에는 지원할 수 없다.':'정시에 합격했다. 등록 여부를 정하자.',options:S.selection('tmp',0,'진로','',[
  option('college','합격한 대학에 진학한다','합격 대학 진학으로 이번 장을 마친다.',{attributes:{admissionDestination:'college',job:'대학 입학 예정'}}),work,retryOption],'한방 선택').choice.options}));
 }
-g.GukminAdmissions=Object.freeze({probability,roll,decision,retry,retryReason,prefix});
+g.GukminAdmissions=Object.freeze({probability,roll,decision,retry,retryReason,prefix,supportStatus});
 g.GukminDirector.register({id:'admissions',when:{phase:'high'},generate:()=>{
  const pack={events:[],choices:[],attributes:Object.fromEntries(Object.entries(attributeNames).map(([id,label])=>[id,{label,hidden:true}]))};
  // Up to the age boundary; each yearly group has stable IDs, including historical first/second.

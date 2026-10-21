@@ -29,6 +29,7 @@ function assessment(person,{metric,effort}){
   else {stress+=fit.surcharge;applied.push({...(held('문과')&&fit.trait==='이과'?{trait:'문과'}:{}),label:'적성 불일치',tone:'risk',text:'심화 수업의 추가 압박 +'+fit.surcharge});}
  }
  if(stress>0&&held('인내심')){const before=stress;stress=Math.max(1,Math.round(stress*.75));if(stress!==before)applied.push({trait:'인내심',text:'압박 부담 '+before+' → '+stress});}
+ if(metric==='exam'&&(person.attributes?.admissionAttempts||1)>1&&person.attributes?.retakeMode==='academy'&&effort>=3&&current<20){score+=1;applied.push({label:'재수학원',text:'오답 피드백 +1'});}
  const actual=Math.max(0,Math.min(25,current+score))-current;
  return {stats:{[metric]:score,stress},applied,metric,actual,limited:actual!==score};
 }

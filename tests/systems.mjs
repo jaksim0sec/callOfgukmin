@@ -1070,9 +1070,9 @@ test('final current-year scores freeze; next retake reopens only the exam, never
 test('N-year cost and termination boundaries do not charge blocked years or duplicate transactions',()=>{
  const env=setup(),pack=env.c.GukminDirector.content(env.P.generate());for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);
  for(const [money,stress,age,end,cost,nextAge,nextAttempt] of [
- [300001,5,20,null,300000,21,3],[300000,5,20,'준비 자금 소진',300000,21,3],[299999,5,20,'준비 자금 소진',299999,21,3],[0,5,20,'준비 자금 소진',0,20,2],
- [1000000,22,20,null,300000,21,3],[1000000,23,20,null,300000,21,3],[1000000,25,20,null,300000,21,3],
- [1000000,5,28,null,300000,29,3],[1000000,5,29,'나이 제한',0,30,2],[1000000,5,30,'나이 제한',0,30,2]]){
+ [300001,5,20,null,0,21,3],[300000,5,20,null,0,21,3],[299999,5,20,null,0,21,3],[0,5,20,null,0,21,3],
+ [1000000,22,20,null,0,21,3],[1000000,23,20,null,0,21,3],[1000000,25,20,null,0,21,3],
+ [1000000,5,28,null,0,29,3],[1000000,5,29,'백수 엔딩',0,30,2],[1000000,5,30,'백수 엔딩',0,30,2]]){
   const p=env.P.generate();p.phase='high';p.age=age;p.stats.money=money;p.stats.stress=stress;p.attributes={admissionAttempts:2,highFinalSubmitted:true};
   const t=env.T.create({persona:p});t.apply('retry',{retryYear:true});assert.equal(t.apply('retry',{retryYear:true}),false);const s=t.snapshot().persona;assert.equal(s.stats.money,money-cost);assert.equal(s.age,nextAge);assert.equal(s.attributes.admissionAttempts,nextAttempt);assert.equal(s.attributes.retryEndReason,end);
  }
@@ -1080,7 +1080,7 @@ test('N-year cost and termination boundaries do not charge blocked years or dupl
 test('third and fourth admission years execute and resume without charging or aging twice',()=>{
  const env=setup(),p=env.P.generate();p.phase='high';p.age=19;p.job='N수생';p.stats={...p.stats,money:5000000,stress:3,health:95,schoolScore:20,exam:16};p.attributes={admissionAttempts:2,admissionDestination:'retry',highFinalSubmitted:true};let e=env.c.GukminDirector.create({persona:p,persist:p=>env.P.save(p)});let reached=2;
  for(let i=0;i<70;i++){let s=e.run();if(s.runtime.cinematic){s=e.run();}if(!s.choice)continue;const c=s.choice;if(c.id==='admission:attempt-4:route'){reached=4;break;}const o=c.options.find(o=>c.id.endsWith(':destination')&&o.id==='retry')||c.options.find(o=>o.id==='effort-0')||c.options.find(o=>o.id==='employment')||c.options.find(o=>o.available);e.resolve(c.token,o.id);if(c.id.endsWith(':destination')){const before=e.snapshot();assert.equal(e.resolve(c.token,o.id),false);e=env.c.GukminDirector.create({persona:env.P.load(),persist:p=>env.P.save(p)});assert.equal(e.snapshot().persona.age,before.persona.age);assert.equal(e.snapshot().persona.stats.money,before.persona.stats.money);}}
- assert.equal(reached,4);assert.ok(e.snapshot().runtime.turn>=109);assert.equal(e.snapshot().persona.age,21);assert.equal(e.snapshot().persona.stats.money,4400000);
+ assert.equal(reached,4);assert.ok(e.snapshot().runtime.turn>=109);assert.equal(e.snapshot().persona.age,21);assert.equal(e.snapshot().persona.stats.money,5000000);
 });
 test('full humanities/science lives can prepare for science school and retain the right admissions field',()=>{
  for(const field of ['문과','이과']){
@@ -1102,7 +1102,7 @@ test('full humanities/science lives can prepare for science school and retain th
  }
 });
 test('legacy completed retry resumes into the next year exactly once without deleting prior history',()=>{
- const env=setup(),p=env.P.generate();p.phase='high';p.age=18;p.stats.money=1000000;p.stats.stress=5;p.attributes={admissionAttempts:1,admissionDestination:'retry'};const pack=env.c.GukminDirector.content(p);const t=env.T.create({...pack,persona:p}),saved=t.snapshot().persona;saved.simulation=plain(t.snapshot().runtime);saved.simulation.turn=87;for(const r of Object.values(saved.simulation.events)){r.status='completed';r.count=1;}for(const id of ['admission:second:annual-preparation','admission:second:route']){saved.simulation.events[id].status='unseen';saved.simulation.events[id].count=0;}saved.simulation.choices.old={token:'old',choiceId:'admission:first:destination',eventId:'admission:first:destination',status:'closed',layer:'한방 선택',optionId:'retry'};const before=saved.history.length;let e=env.c.GukminDirector.create({persona:saved,persist:p=>env.P.save(p)});e.run();assert.equal(e.snapshot().persona.age,19);assert.equal(e.snapshot().persona.stats.money,700000);assert.equal(e.snapshot().persona.attributes.admissionAttempts,2);assert.ok(e.snapshot().persona.history.length>before);e=env.c.GukminDirector.create({persona:env.P.load()});e.run();assert.equal(e.snapshot().persona.age,19);assert.equal(e.snapshot().persona.stats.money,700000);
+ const env=setup(),p=env.P.generate();p.phase='high';p.age=18;p.stats.money=1000000;p.stats.stress=5;p.attributes={admissionAttempts:1,admissionDestination:'retry'};const pack=env.c.GukminDirector.content(p);const t=env.T.create({...pack,persona:p}),saved=t.snapshot().persona;saved.simulation=plain(t.snapshot().runtime);saved.simulation.turn=87;for(const r of Object.values(saved.simulation.events)){r.status='completed';r.count=1;}for(const id of ['admission:second:annual-preparation','admission:second:route']){saved.simulation.events[id].status='unseen';saved.simulation.events[id].count=0;}saved.simulation.choices.old={token:'old',choiceId:'admission:first:destination',eventId:'admission:first:destination',status:'closed',layer:'한방 선택',optionId:'retry'};const before=saved.history.length;let e=env.c.GukminDirector.create({persona:saved,persist:p=>env.P.save(p)});e.run();assert.equal(e.snapshot().persona.age,19);assert.equal(e.snapshot().persona.stats.money,1000000);assert.equal(e.snapshot().persona.attributes.admissionAttempts,2);assert.ok(e.snapshot().persona.history.length>before);e=env.c.GukminDirector.create({persona:env.P.load()});e.run();assert.equal(e.snapshot().persona.age,19);assert.equal(e.snapshot().persona.stats.money,1000000);
 });
 
 test('health retirement migrates old stats, flags, waiting scripts and review deltas without deleting history',()=>{
@@ -1261,4 +1261,41 @@ test('result memories sample the life and exclude repeated exam preparation, wit
  assert.equal(memories.length,5);assert.equal(memories[0].title,'태어났다');assert.equal(memories.at(-1).title,'대학 합격');assert.equal(new Set(memories.map(x=>x.title)).size,5);assert.ok(memories.every(x=>!x.title.includes('준비 기간')&&!x.title.includes('다가옵니다')));assert.equal(JSON.stringify(history),copy);
  for(const reason of ['나이 제한','준비 자금 소진'])assert.equal(c.GukminResultView.isDeceased({attributes:{retryEndReason:reason}}),false);
  assert.equal(c.GukminResultView.isDeceased({attributes:{retryEndReason:'정신병 한계'}}),true);assert.equal(c.GukminResultView.isDeceased({attributes:{lifeEndReason:'정신병 한계'}}),true);
+});
+
+
+test('first proactive childhood choice grants initiative and reduces the pressure of candidacy',()=>{
+ const {c,P,T}=setup(),p=P.generate();p.familyTier='bronze';p.traits=[];
+ const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);const home=pack.choices.find(x=>x.id==='infant:home'),variant=home.variants.find(x=>x.id==='toy-box');
+ const result=variant.options[2].result,withTrait=c.GukminEffects.apply(p,result);
+ assert.equal(P.hasTrait(withTrait,'진취성'),true);assert.equal(P.hasTrait(p,'진취성'),false);
+ const election=pack.choices.find(x=>x.presentation?.type==='election'),candidate=election.variants.flatMap(v=>v.options).find(x=>x.result?.effects?.attributes?.classElection==='ran');
+ const before=c.GukminEffects.apply(p,candidate.result),after=c.GukminEffects.apply(withTrait,candidate.result);
+ assert.equal(before.stats.stress-p.stats.stress,2);assert.equal(after.stats.stress-withTrait.stats.stress,1);
+ const gold=home.variants.find(x=>x.id==='toy-care');assert.ok(gold.options[2].result.effects.traits.add.includes('진취성'));
+});
+test('family support displays the requested tier allowances without touching money or past attempts',()=>{
+ const {c,P}=setup();for(const [tier,limit] of [['soil',0],['bronze',1],['silver',2],['gold',4],['diamond',null]]){const p=P.generate();p.familyTier=tier;p.attributes={admissionAttempts:3};const copy=JSON.stringify(p),s=c.GukminAdmissions.supportStatus(p);assert.equal(s.limit,limit);assert.equal(s.used,0);assert.equal(s.remaining,limit);assert.ok(s.detail);assert.equal(JSON.stringify(p),copy);}
+});
+
+
+test('family-funded academy counts exhaust exactly, then self-study continues without personal tuition',()=>{
+ const env=setup();for(const [id,d] of Object.entries(env.c.GukminDirector.content(env.P.generate()).attributes))env.P.registerAttribute(id,d);
+ for(const [tier,limit] of [['soil',0],['bronze',1],['silver',2],['gold',4],['diamond',null]]){
+  let p=env.P.generate();p.familyTier=tier;p.age=19;p.phase='high';p.attributes={admissionAttempts:1,highFinalSubmitted:true};p.stats.money=0;
+  for(let year=0;year<5;year++){p.stats.stress=0;p.stats.illness=0;const t=env.T.create({persona:p});assert.equal(t.apply('year',{retryYear:true}),true);const q=t.snapshot().persona;assert.equal(t.apply('year',{retryYear:true}),false);assert.equal(q.stats.money,0);assert.equal(q.attributes.retryEndReason,null);assert.equal(q.attributes.retakeSupportUsed,limit===null?year+1:Math.min(year+1,limit));assert.equal(q.attributes.retakeMode,limit===null||year<limit?'academy':'self');env.P.save(q);p=env.P.load();assert.equal(p.attributes.retakeSupportUsed,q.attributes.retakeSupportUsed);}
+ }
+});
+test('career offers remain optional, accepting stops exam events, and ignored years end at thirty without a death marker',()=>{
+ const env=setup(),p=env.P.generate();p.familyTier='gold';p.phase='high';p.age=22;p.attributes={admissionAttempts:4,admissionRoute:'regular',highFinalSubmitted:true,retakeMode:'academy',retakeSupportUsed:3};Object.assign(p.stats,{stress:0,illness:0,relations:15,money:10000});
+ const e=openLifeScene(env,'admission:attempt-4:career-offer',p),s=e.snapshot();assert.equal(s.choice.options.length,2);e.resolve(s.choice.token,'employment');assert.equal(e.snapshot().persona.attributes.admissionDestination,'employment');e.resume();e.advance(1);assert.equal(e.snapshot().choice,null);
+ const savedExit=e.snapshot().persona,full=env.c.GukminDirector.content(savedExit);assert.ok(full.events.filter(x=>x.id.startsWith('admission:')).every(x=>!env.E.matches(savedExit,x.when,x.at)));
+ const skip=openLifeScene(env,'admission:attempt-4:career-offer',p);skip.resolve(skip.snapshot().choice.token,'decline');assert.notEqual(skip.snapshot().persona.attributes.admissionDestination,'employment');assert.ok(skip.snapshot().persona.history.some(h=>h.detail?.includes('사회 진출 제안을 거절')));
+ p.age=24;p.stats.stress=0;const after=env.E.apply(p,{retryYear:true});assert.equal(after.attributes.careerGapYears,1);assert.equal(after.stats.relations,p.stats.relations-1);assert.equal(after.stats.stress,3);assert.ok(env.P.hasTrait(after,'경력 공백'));
+ p.age=29;const end=env.E.apply(p,{retryYear:true});assert.equal(end.age,30);assert.equal(end.attributes.retryEndReason,'백수 엔딩');assert.equal(end.stats.money,p.stats.money);assert.equal(end.job,'무직');assert.equal(end.attributes.lifeEndReason,undefined);
+ const pack=env.c.GukminDirector.content(p);for(const n of [4,7,10])assert.ok(pack.choices.some(c=>c.id===env.c.GukminAdmissions.prefix(n)+':career-offer'));
+});
+test('academy feedback helps deliberate retake preparation below twenty without granting top grades automatically',()=>{
+ const {c,P}=setup(),p=P.generate();p.phase='high';p.traits=[];p.stats.exam=16;p.attributes={admissionAttempts:2,retakeMode:'self'};
+ const self=c.GukminGrades.assessment(p,{metric:'exam',effort:3});p.attributes.retakeMode='academy';const academy=c.GukminGrades.assessment(p,{metric:'exam',effort:3});assert.equal(academy.actual,self.actual+1);assert.ok(academy.applied.some(x=>x.label==='재수학원'));p.stats.exam=20;assert.ok(!c.GukminGrades.assessment(p,{metric:'exam',effort:3}).applied.some(x=>x.label==='재수학원'));
 });

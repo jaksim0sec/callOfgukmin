@@ -1345,3 +1345,22 @@ body[data-screen=waiting],body[data-screen=result]{height:auto;min-height:100dvh
 .fiction-notice-text p{margin:0}.fiction-notice-text p+p{margin-top:.6em}
 .fiction-notice-skip{position:fixed;right:max(1.5rem,env(safe-area-inset-right));bottom:max(1.5rem,env(safe-area-inset-bottom));min-height:2.8rem;padding:.6rem 1rem;border:.0625rem solid #ffffff50;border-radius:2rem;background:#000;color:#d7d2cc;font-size:.85rem}
 body:has(#fictionNotice[open]){overflow:hidden}
+
+/* Waiting uses the same ink/lavender palette as the game. */
+body[data-screen=waiting]{background:radial-gradient(ellipse at 75% 20%,#61507025,transparent 60%),#101015}
+.waiting-copy h1{font-size:clamp(3rem,5vw,4.8rem);margin:1.1rem 0 1.25rem}
+.waiting-copy h1 em{display:block;margin-top:.75rem;font-size:.4em;line-height:1.6;letter-spacing:-.025em;color:#c7b5db;font-weight:550}
+.waiting-copy .view-eyebrow,.waiting-visual:before{color:#b6a5c4}
+.waiting-identity{margin:.75rem 0;padding:.65rem 0;border-block:.0625rem solid #ffffff14}
+.waiting-identity-name{position:absolute;clip-path:inset(50%);width:.0625rem;height:.0625rem;overflow:hidden;white-space:nowrap}
+.waiting-name-field{margin:1rem 0}.waiting-name-field label{color:#c8bbd2}.waiting-name-field p{color:#a297ac}
+.waiting-actions .primary-action{background:#c7b5db;color:#261c30}.waiting-actions .secondary-action{color:#d1c5da;border-color:#74617f}
+.waiting-copy .name-input-row:focus-within{border-color:#c7b5db}.waiting-copy .name-input-row select{background:#302838;color:#e3d5ef;border-color:#695374}
+.waiting-copy .waiting-lede{font-size:.95rem;color:#b8adbf}.waiting-copy .view-note{max-width:30rem;margin-inline:auto;color:#a599af;font-size:.7rem}
+
+.family-support{flex:0 0 auto;margin:0 0 .9rem;padding:.85rem 1rem;border:.0625rem solid #bcaacc;border-radius:.7rem;background:#eae2ef;color:#403348}
+.family-support-heading{display:flex;align-items:center;justify-content:space-between;gap:.7rem;flex-wrap:wrap}.family-support-heading .token{background:#756182;color:#fff;font-size:.65rem}.family-support-heading strong{font-size:.9rem}
+.family-support p{font-size:.78rem;line-height:1.7;margin:.6rem 0 .4rem}.family-support>small{font-size:.65rem;color:#74617e}
+@media(max-height:40em){.family-support{padding:.6rem .8rem}.family-support p{margin:.35rem 0;font-size:.72rem}}
+
+.career-deadline{display:block;padding:.65rem .8rem;margin-top:.65rem;border-left:.2rem solid #b64e5d;background:#f3dfe2;color:#8e283b!important;word-break:keep-all;overflow-wrap:anywhere;font-size:.8rem;line-height:1.7;font-weight:750}

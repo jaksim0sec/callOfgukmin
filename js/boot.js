@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='fiction-notice-20261022';
+const RELEASE='family-retake-20261022';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
@@ -35,7 +35,7 @@ function initWaiting(){
    const saved=progressed(s);
    start.textContent=saved?'이어서 플레이하기 →':'인생 시작하기 →';
    reroll.textContent=saved?'새 인생 시작하기 (기록 초기화)':'새 출생 배경 뽑기';
-   note.textContent=saved?'기존 선택 기록을 이어서 플레이 중. 새 스토리를 처음부터 경험하려면 새 인생을 시작해.':'선택에 따라 다른 사건이 벌어지는 인생 이야기.';
+   note.textContent=saved?'기존 선택 기록을 이어서 플레이 중. 새 스토리를 처음부터 경험하려면 새 인생을 시작해.':'현재 출생~대학 입시까지 플레이 가능 · 사회·정치 콘텐츠 준비 중';
    renderPoster(mount,s,saved?'진행 중':'출생');
  }
  // Intro is a view-only transition. It does not advance turns or reroll the persona.

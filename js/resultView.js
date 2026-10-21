@@ -15,7 +15,7 @@ function mount({navigate,renderPoster}){
  const reason=a.lifeEndReason||a.retryEndReason;
  const destination=a.admissionDestination;
  const finished=!!reason||['college','employment','finished'].includes(destination);
- const title=!saved?'아직 쓰이지 않은 이야기':reason?'잠시 멈춘, 하나의 삶':destination==='college'?'더 넓은 세상으로':destination==='employment'?'교문 밖, 나의 길로':finished?'이번 삶의 마지막 장':'아직, 쓰는 중입니다';
+ const title=!saved?'아직 쓰이지 않은 이야기':reason==='백수 엔딩'?'서른, 백수 엔딩':reason?'잠시 멈춘, 하나의 삶':destination==='college'?'더 넓은 세상으로':destination==='employment'?'교문 밖, 나의 길로':finished?'이번 삶의 마지막 장':'아직, 쓰는 중입니다';
  const schools=P.schoolsOf(persona),school=schools.at(-1);
  const summary=!saved?'대기 화면에서 당신의 첫 인생을 시작해 보세요.':reason?persona.name+' · '+persona.age+'살 · '+reason:persona.name+' · '+persona.age+'살 · '+(finished?'학생 시절의 기록을 남깁니다. 다음 생애 콘텐츠는 준비 중입니다.':'현재까지의 선택을 모았습니다. 이야기는 계속됩니다.');
  const put=(id,value)=>document.getElementById(id).textContent=value;
@@ -27,6 +27,7 @@ function mount({navigate,renderPoster}){
  const offer=a.earlyStatus==='accepted'?a.earlyOffer:a.regularOffer;
  if(destination==='college'&&offer)facts.push(['다음 목적지',offer]);
  else if(destination==='employment')facts.push(['다음 목적지','사회 진출 준비']);
+ if((a.admissionAttempts||1)>1)facts.push(['입시 재도전',(a.admissionAttempts-1)+'회'],['재수학원 지원',(a.retakeSupportUsed||0)+'회'],['경력 공백',(a.careerGapYears||0)+'년']);
  facts.push(['압박',persona.stats.stress+'/25'],['정신병',(persona.stats.illness||0)+'/5'],['관계',persona.stats.relations+'/25']);
  for(const [id,label,submitted] of [['schoolScore','최종 내신',a.highFinalSubmitted],['exam','수능',a.csatSubmitted]])if(Number.isFinite(persona.stats[id]))facts.push([label,submitted?global.GukminGrades.report(id,persona.stats[id],'high').display:'아직 확정되지 않음']);
  const career=document.getElementById('resultCareer');

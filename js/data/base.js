@@ -49,11 +49,11 @@ const BIRTH_DEFAULTS = Object.freeze({
   })
 });
 const WEALTH_TIERS=[
- {id:'soil',name:'흙수저',weight:34,allowance:2000,relations:7,icon:'home'},
- {id:'bronze',name:'동수저',weight:31,allowance:6000,relations:8,icon:'home'},
- {id:'silver',name:'은수저',weight:22,allowance:12000,relations:9,icon:'home'},
- {id:'gold',name:'금수저',weight:10,allowance:25000,relations:9,icon:'home'},
- {id:'diamond',name:'다이아수저',weight:3,allowance:45000,relations:10,icon:'sparkle'}
+ {id:'soil',retakeSupport:0,educationDetail:'생활비와 교육비를 월별로 나눠 잡는 집. 가족은 지원서와 일정을 함께 살피지만 재수학원비까지 보태기는 어렵다.',name:'흙수저',weight:34,allowance:2000,relations:7,icon:'home'},
+ {id:'bronze',retakeSupport:1,educationDetail:'큰 교육비는 가족이 미리 의논하는 집. 다른 지출을 조정해 재수학원 한 해를 지원할 수 있다.',name:'동수저',weight:31,allowance:6000,relations:8,icon:'home'},
+ {id:'silver',retakeSupport:2,educationDetail:'교육비를 따로 준비해 온 집. 두 번까지 재수학원을 지원하되 매년 학습 계획과 진로를 함께 확인한다.',name:'은수저',weight:22,allowance:12000,relations:9,icon:'home'},
+ {id:'gold',retakeSupport:4,educationDetail:'교육 선택의 여유가 있는 집. 재수학원을 네 번까지 지원할 수 있지만 결과 발표 때마다 다음 계획을 의논한다.',name:'금수저',weight:10,allowance:25000,relations:9,icon:'home'},
+ {id:'diamond',retakeSupport:null,educationDetail:'장기 교육비를 준비할 수 있는 집. 서른 살이 되기 전까지 재수학원을 지원할 수 있으며 가족과 진로 계획을 나눈다.',name:'다이아수저',weight:3,allowance:45000,relations:10,icon:'sparkle'}
 ];
 // Narrative starting-state modifiers, NOT real demographic statistics.
 const REGION_PRESETS={
@@ -61,11 +61,13 @@ const REGION_PRESETS={
  '상업':{relations:1},'학군지':{relations:1}
 };
 const TRAIT_DEFS = {
- '흙수저':{icon:'home',tier:'soil',description:'경제적 지원이 제한적인 출생 배경'},
- '동수저':{icon:'home',tier:'bronze',description:'평범한 경제적 출생 배경'},
- '은수저':{icon:'home',tier:'silver',description:'일정한 경제적 지원이 가능한 출생 배경'},
- '금수저':{icon:'home',tier:'gold',description:'경제적으로 넉넉한 출생 배경'},
- '다이아수저':{icon:'sparkle',tier:'diamond',description:'매우 풍족한 경제적 지원을 받는 출생 배경'},
+ '흙수저':{icon:'home',tier:'soil',description:'재수학원 지원 없음 — 가계 예산 안에서 교육 계획을 함께 세운다.'},
+ '동수저':{icon:'home',tier:'bronze',description:'재수학원 1회 지원 — 큰 교육비는 미리 의논하고 한 해에 집중한다.'},
+ '은수저':{icon:'home',tier:'silver',description:'재수학원 2회 지원 — 준비해 둔 교육비로 두 번의 재도전 기회를 만든다.'},
+ '금수저':{icon:'home',tier:'gold',description:'재수학원 4회 지원 — 진로를 점검하며 여러 번의 도전을 뒷받침한다.'},
+ '다이아수저':{icon:'sparkle',tier:'diamond',description:'30살 이전까지 재수학원 지원 — 시간을 들여 진로를 탐색할 교육비 여유가 있다.'},
+  '경력 공백':{color:'#91616d',icon:'clock',negative:true,description:'입시 준비가 길어져 첫 경력의 시작이 늦어졌다. 25세부터 재도전할 때마다 추가 압박 1과 관계 −1이 생긴다. 사회 진출 기회를 검토할 수 있다.'},
+  '진취성':{color:'#8370b2',icon:'sparkle',description:'먼저 나서는 성격. 반장 출마처럼 먼저 도전하는 선택의 압박 부담을 1 줄인다.',modifiers:[{tags:['initiative'],stats:{stress:{add:-1}}}]},
   '저축습관':{color:'#967127',icon:'savings',description:'저축을 실제로 실행할 때 남는 돈이 늘어난다.',modifiers:[{tags:['save'],stats:{money:{add:1000}}}]},
   '인내심':{color:'#467ba6',icon:'hourglass',description:'시험 준비의 양수 압박 부담을 약 25% 줄인다. 정수로 반영하며 최소 부담은 1이다.'},
   '꼼꼼함':{color:'#348571',icon:'check',description:'준비 지수 20 미만의 집중·올인 평가에서 검산 보완 +1. 상위권 성적을 자동 유지하지는 않는다.'},

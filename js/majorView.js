@@ -54,6 +54,7 @@ function presentAdmission({choice,resolve,root}){
  const summary=make('p','life-modal-sub');
  global.GukminMarkup.render(summary,choice.body||'');
  modal.append(heading,make('p','admission-meta',(person.name||'학생')+' · 입시 '+(person.attributes?.admissionAttempts||1)+'회차'),summary);
+ if(['admission-finish','admission-route'].includes(p.type)){const support=global.GukminAdmissions.supportStatus(person),box=make('section','family-support');box.setAttribute('aria-label','가족의 재수학원 지원');const head=make('div','family-support-heading');head.append(global.GukminStatus.createToken({label:'재수학원',icon:'school'}),make('strong','',support.limit===null?'30살 이전까지 지원':support.remaining+'회 지원 가능'));box.append(head,make('p','',support.detail),make('small','',support.tier+' · '+support.used+'회 이용'+(support.limit===null?'':' / 총 '+support.limit+'회 지원')));if(person.age>=28)box.append(make('p','career-deadline','30세까지 입시 준비만 이어가면 백수 엔딩입니다. 사회 진출 기회도 확인하세요.'));modal.append(box);}
  const choices=make('div','admission-choices'+(p.type==='admission-route'?' is-route':''));
  if(p.type==='admission-route'){
   const gradeStrip=make('div','admission-grade-strip');
@@ -82,6 +83,7 @@ function presentAdmission({choice,resolve,root}){
   const label=make('strong','admission-choice-title',
    isRoute?entry.id==='early'?'수시':entry.id==='regular'?'정시':entry.id==='employment'?'바로 사회 진출':'N수 하기':
    entry.school?.name||entry.label);
+  if(entry.result?.retryYear){const support=global.GukminAdmissions.supportStatus(person);label.textContent=person.age>=29?'재수를 계속하고 서른을 맞는다':support.remaining===null||support.remaining>0?'가족 지원으로 재수학원에 다닌다':'독학으로 다음 입시를 준비한다';}
   if(entry.school){row.append(schoolLogo());label.dataset.schoolName=entry.school.name;if(field==='science')label.textContent=entry.school.name.replace(/(?:인문사회|사회과학|인문|사회|실무)계열/,'자연·공학계열');}
   row.append(label);
   if(isRoute&&primary){
@@ -91,8 +93,9 @@ function presentAdmission({choice,resolve,root}){
    row.append(grade);
   }
   if(entry.school?.typeLabel){const chance=global.GukminAdmissions.probability(person,entry.school,p.category);row.append(make('small','admission-type-label',entry.school.typeLabel+' · 합격 확률 '+chance+'%'+(entry.school.minimum?' · 수능 최저 '+global.GukminGrades.report('exam',entry.school.minimum,'high').display+' 수준':'')));}
-  else if(!primary&&p.type!=='grade-seal')row.append(make('small','admission-type-label',entry.label));
+  else if(!primary&&p.type!=='grade-seal'&&!entry.result?.retryYear)row.append(make('small','admission-type-label',entry.label));
   if(entry.school){const after=global.GukminEffects.apply(person,entry.result,{turn:choice.openedAt||0});const cost=after.stats.stress-person.stats.stress;row.append(make('span','admission-risk','지원 부담 · 압박 '+(cost>0?'+':'')+cost.toLocaleString('ko-KR',{maximumFractionDigits:1})));if(p.category==='early'&&person.attributes?.preExamStrategy==='record')row.append(make('small','admission-note','서류 준비 보정 +1 · 내신 등급은 유지'));}
+  else if(entry.result?.retryYear)row.append(make('span','admission-risk',person.age>=29?'30세 도달 · 백수 엔딩 · 추가 학원 등록 없음':'나이 +1 · 압박 +'+(person.age>=24?3:2)+(person.age>=24?' · 관계 −1 · 경력 공백 누적':'')+' · 내 재산 차감 없음'));
   else if(entry.risk)row.append(make('span','admission-risk',entry.risk));
   if(entry.outlook)row.append(make('small','admission-note',entry.outlook));
   row.addEventListener('click',()=>{
@@ -149,7 +152,8 @@ function present({choice,resolve,root}){
  const sub=make('p','life-modal-sub',isSchool?'학교를 고르면 교육과정과 생활 정보를 확인할 수 있습니다':
    (p.grade+'학년 · '+(p.category==='mock'?'모의고사 · 9등급 기준':'내신 · '+(p.stage==='middle'?'성취도 A–E':'5등급 기준'))));
  const desc=make('p','life-modal-copy');
- global.GukminMarkup.render(desc,choice.body);
+ global.GukminMarkup.render(desc,choice.body);if(person.age>=28&&(person.attributes?.admissionAttempts||1)>1)desc.append(make('strong','career-deadline','30세까지 재수만 이어가면 백수 엔딩입니다.'));
+ if(p.stage==='retake')title.textContent=(person.attributes?.retakeMode==='academy'?'재수학원 · ':'독학 재수 · ')+(p.term||choice.title);
  const collapse=make('button','life-modal-collapse','접기 ⌄');collapse.type='button';
  collapse.setAttribute('aria-label','선택을 유지하고 창 접기');head.lastElementChild.replaceWith(collapse);
  const options=make('div','life-modal-options');

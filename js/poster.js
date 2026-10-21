@@ -99,10 +99,9 @@ function slogan(ctx,data,p){
  lines.forEach((line,i)=>{
    const x=57+(i%2?7:0),y=settings.start+i*settings.step;
    ctx.save();ctx.translate(x,y);ctx.rotate((i%2?-.008:-.024));ctx.transform(1,0,-.045,1,0,0);
-   ctx.font=`900 ${settings.size}px ${font}`;
+   ctx.font=`400 ${settings.size}px "Do Hyeon","Pretendard",system-ui,sans-serif`;
    const measured=ctx.measureText(line).width;
    ctx.scale(Math.min(1,600/Math.max(measured,1)),1);
-   ctx.lineWidth=6;ctx.strokeStyle=p.ink;ctx.lineJoin='round';ctx.strokeText(line,0,0);
    ctx.fillStyle=p.ink;ctx.fillText(line,0,0);ctx.restore();
  });
 }
