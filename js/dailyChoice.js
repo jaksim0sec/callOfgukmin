@@ -306,6 +306,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    if(option.available&&option.requirement)
     text.append(S.createToken({type:'context',label:'활용 · '+option.requirement,icon:'sparkle',
      classes:'daily-choice-advantage'}));
+   if(stage!=='infant'){
    const indicators=el('span','daily-choice-effects');
    // Ordinary choices show the exact projection. A declared uncertain outlook
    // reveals known costs, leaving conditional success/failure for the result.
@@ -345,6 +346,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
 
    if(option.outlook)text.append(rich('small','daily-choice-outlook',option.outlook));
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
+   }
    button.append(number,text,el('span','daily-choice-chevron','›'));
    button.addEventListener('click',()=>{
     selectedId=option.id;

@@ -16,16 +16,16 @@ const SCHOOL_KINDS = [
   {id:'uni',label:'대학교'}
 ];
 const METRIC_DEFS = {
-  stress:{label:'정신병',type:'progress',tone:'negative',icon:'pulse',min:0,max:100},
+  stress:{label:'정신병',type:'progress',tone:'negative',icon:'pulse',min:0,max:25},
   money:{label:'재산',type:'currency',icon:'savings'},
   allowance:{label:'용돈',type:'currency',icon:'coin'},
   income:{label:'수입',type:'currency',icon:'coin'},
-  relations:{label:'관계',type:'progress',icon:'users',min:0,max:100},
-  study:{label:'학업 역량',type:'progress',icon:'book',min:0,max:100},
-  schoolScore:{label:'내신',type:'progress',icon:'school',gradeSystem:'five',min:0,max:100},
-  exam:{label:'모의고사',type:'progress',icon:'chart',gradeSystem:'nine',min:0,max:100},
-  support:{label:'지지도',type:'progress',icon:'flag'},
-  awareness:{label:'인지도',type:'progress',icon:'sparkle'}
+  relations:{label:'관계',type:'progress',icon:'users',min:0,max:25},
+  study:{label:'학업 역량',type:'progress',icon:'book',min:0,max:25},
+  schoolScore:{label:'내신',type:'progress',icon:'school',gradeSystem:'five',min:0,max:25},
+  exam:{label:'모의고사',type:'progress',icon:'chart',gradeSystem:'nine',min:0,max:25},
+  support:{label:'지지도',type:'progress',icon:'flag',min:0,max:25},
+  awareness:{label:'인지도',type:'progress',icon:'sparkle',min:0,max:25}
 };
 // This is a content-facing progression map, not a clock or a legal-age rule.
 // The college/adult overlap and the circumstances of each move remain story-owned.
@@ -47,15 +47,15 @@ const BIRTH_DEFAULTS = Object.freeze({
   })
 });
 const WEALTH_TIERS=[
- {id:'soil',name:'흙수저',weight:34,allowance:2000,relations:45,icon:'home'},
- {id:'bronze',name:'동수저',weight:31,allowance:6000,relations:48,icon:'home'},
- {id:'silver',name:'은수저',weight:22,allowance:12000,relations:50,icon:'home'},
- {id:'gold',name:'금수저',weight:10,allowance:25000,relations:52,icon:'home'},
- {id:'diamond',name:'다이아수저',weight:3,allowance:45000,relations:55,icon:'sparkle'}
+ {id:'soil',name:'흙수저',weight:34,allowance:2000,relations:7,icon:'home'},
+ {id:'bronze',name:'동수저',weight:31,allowance:6000,relations:8,icon:'home'},
+ {id:'silver',name:'은수저',weight:22,allowance:12000,relations:9,icon:'home'},
+ {id:'gold',name:'금수저',weight:10,allowance:25000,relations:9,icon:'home'},
+ {id:'diamond',name:'다이아수저',weight:3,allowance:45000,relations:10,icon:'sparkle'}
 ];
 // Narrative starting-state modifiers, NOT real demographic statistics.
 const REGION_PRESETS={
- '신도시':{relations:-2},'농촌':{relations:2},'섬':{relations:1},
+ '신도시':{relations:-1},'농촌':{relations:1},'섬':{relations:1},
  '상업':{relations:1},'학군지':{relations:1}
 };
 const TRAIT_DEFS = {
@@ -65,8 +65,8 @@ const TRAIT_DEFS = {
  '금수저':{icon:'home',tier:'gold',description:'경제적으로 넉넉한 출생 배경'},
  '다이아수저':{icon:'sparkle',tier:'diamond',description:'매우 풍족한 경제적 지원을 받는 출생 배경'},
   '저축습관':{color:'#E7B34F',icon:'savings',description:'저축을 실제로 실행할 때 남는 돈이 늘어난다.',modifiers:[{tags:['save'],stats:{money:{add:1000}}}]},
-  '인내심':{color:'#63A6E2',icon:'hourglass',description:'시험 준비의 양수 정신병 부담을 25% 줄인다. 회복 효과는 그대로 유지한다.'},
-  '꼼꼼함':{color:'#58C9AB',icon:'check',description:'핵심 복습·유지·집중·올인 평가에서 실수 보완 +1. 회복 선택에는 적용하지 않는다. 수행평가에서는 기록 검증에 활용한다.'},
+  '인내심':{color:'#63A6E2',icon:'hourglass',description:'시험 준비의 양수 정신병 부담을 약 25% 줄인다. 정수로 반영하며 최소 부담은 1이다.'},
+  '꼼꼼함':{color:'#58C9AB',icon:'check',description:'준비 지수 20 미만의 집중·올인 평가에서 검산 보완 +1. 상위권 성적을 자동 유지하지는 않는다.'},
   '리더십':{color:'#E6A245',icon:'flag',description:'협업에서 관계 보너스를 얻는다. 수행평가 분담과 추가 부탁의 범위 조율에 활용할 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
   '언변':{color:'#A994FF',icon:'speech',description:'토론·질의응답 방식으로 수행평가를 해결할 수 있다. 대표 발표의 준비 부족을 보완하지만 컨디션은 따로 관리해야 한다.'},
   '친화력':{color:'#F68CB8',icon:'users',description:'친구들과 협력할 때 관계 보너스를 얻는다. 수행평가를 분담할 수 있지만 이후 부탁도 늘어날 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
@@ -82,9 +82,9 @@ const TRAIT_DEFS = {
   '관심-이과':{hidden:true,description:'과학·수학 분야의 탐색 기록'},
   '관심-예체능':{hidden:true,description:'예술·공연 분야의 탐색 기록'},
   '관심-체육':{hidden:true,description:'운동·체육 분야의 탐색 기록'},
-  '문과':{color:'#AE94EF',icon:'graduation',aptitude:'humanities',description:'읽기·토론 활동을 이어 왔다. 토론 동아리와 질의응답 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['humanities'],stats:{schoolScore:{add:2}}}]},
-  '이과':{color:'#56D0C2',icon:'graduation',aptitude:'science',description:'과학·수학 탐구를 이어 왔다. 수행평가에서 누적 기록으로 근거를 검증하는 해결법을 사용할 수 있다.',modifiers:[{tags:['science'],stats:{schoolScore:{add:2},study:{add:1}}}]},
-  '예체능':{color:'#EB83C0',icon:'graduation',aptitude:'arts',description:'창작 활동을 이어 왔다. 수행평가를 영상으로 구성하는 해결법을 사용할 수 있다. 제작 시간은 필요하다.',modifiers:[{tags:['arts'],stats:{relations:{add:2}}}]},
+  '문과':{color:'#AE94EF',icon:'graduation',aptitude:'humanities',description:'읽기·토론 활동을 이어 왔다. 토론 동아리와 질의응답 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['humanities'],stats:{schoolScore:{add:1}}}]},
+  '이과':{color:'#56D0C2',icon:'graduation',aptitude:'science',description:'과학·수학 탐구를 이어 왔다. 수행평가에서 누적 기록으로 근거를 검증하는 해결법을 사용할 수 있다.',modifiers:[{tags:['science'],stats:{schoolScore:{add:1},study:{add:1}}}]},
+  '예체능':{color:'#EB83C0',icon:'graduation',aptitude:'arts',description:'창작 활동을 이어 왔다. 수행평가를 영상으로 구성하는 해결법을 사용할 수 있다. 제작 시간은 필요하다.',modifiers:[{tags:['arts'],stats:{relations:{add:1}}}]},
   '체육':{color:'#7AD783',icon:'graduation',aptitude:'sports',description:'운동과 연습을 이어 왔다. 대표팀 활동과 실물 시연 방식의 수행평가 해결에 활용할 수 있다.',modifiers:[{tags:['sports'],stats:{relations:{add:1}}}]}
 };
 
@@ -95,6 +95,7 @@ const freezeCopy=value=>{
 global.GukminData=freezeCopy({
  names:NAMES,homes:HOMES,schoolKinds:SCHOOL_KINDS,
  metrics:METRIC_DEFS,stages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,traits:TRAIT_DEFS,
- wealthTiers:WEALTH_TIERS,regionPresets:REGION_PRESETS
+ wealthTiers:WEALTH_TIERS,regionPresets:REGION_PRESETS,
+ shopItems:[{id:"tea",name:"따뜻한 차",price:15000,relief:2},{id:"break",name:"간식과 잠깐의 쉼",price:40000,relief:4}]
 });
 })(window);

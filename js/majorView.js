@@ -92,7 +92,7 @@ function presentAdmission({choice,resolve,root}){
   }
   if(entry.school?.typeLabel){const chance=global.GukminAdmissions.probability(person,entry.school,p.category);row.append(make('small','admission-type-label',entry.school.typeLabel+' · 게임 내 합격 가능성 '+chance+'%'+(entry.school.minimum?' · 수능 최저 '+global.GukminGrades.report('exam',entry.school.minimum,'high').display+' 수준':'')));}
   else if(!primary&&p.type!=='grade-seal')row.append(make('small','admission-type-label',entry.label));
-  if(entry.school){const after=global.GukminEffects.apply(person,entry.result,{turn:choice.openedAt||0});const cost=after.stats.stress-person.stats.stress;row.append(make('span','admission-risk','지원 부담 · 정신병 '+(cost>0?'+':'')+cost.toLocaleString('ko-KR',{maximumFractionDigits:1})));if(p.category==='early'&&person.attributes?.preExamStrategy==='record')row.append(make('small','admission-note','서류 준비 보정 +3 · 내신 등급은 유지'));}
+  if(entry.school){const after=global.GukminEffects.apply(person,entry.result,{turn:choice.openedAt||0});const cost=after.stats.stress-person.stats.stress;row.append(make('span','admission-risk','지원 부담 · 정신병 '+(cost>0?'+':'')+cost.toLocaleString('ko-KR',{maximumFractionDigits:1})));if(p.category==='early'&&person.attributes?.preExamStrategy==='record')row.append(make('small','admission-note','서류 준비 보정 +1 · 내신 등급은 유지'));}
   else if(entry.risk)row.append(make('span','admission-risk',entry.risk));
   if(entry.outlook)row.append(make('small','admission-note',entry.outlook));
   row.addEventListener('click',()=>{
@@ -194,7 +194,7 @@ function present({choice,resolve,root}){
     copy.append(make('small','life-requirement',
      '게임 내신 '+(Number.isFinite(actual)?actual:'—')+' / 지원 기준 '+school.minScore+' 이상'+(qualifies?' · 충족':' · 미달')));
    }else copy.append(make('small','life-requirement','게임 내 별도 내신 제한 없음'));
-   if(['science','gifted'].includes(school.kind)){copy.append(make('small','life-requirement','지원 준비 경로 완료 필요 · '+(person.attributes?.admissionResearch?'완료':'미완료')));if(global.GukminPlayer.hasTrait(person,'문과')&&!global.GukminPlayer.hasTrait(person,'이과'))copy.append(make('small','life-requirement','입학 허용 · 내신 시험 양수 정신병 부담 +2'));}
+   if(['science','gifted'].includes(school.kind)){copy.append(make('small','life-requirement','지원 준비 경로 완료 필요 · '+(person.attributes?.admissionResearch?'완료':'미완료')));if(global.GukminPlayer.hasTrait(person,'문과')&&!global.GukminPlayer.hasTrait(person,'이과'))copy.append(make('small','life-requirement','입학 허용 · 내신 시험 양수 정신병 부담 +1'));}
    if(false&&school.minStudy){
     const study=person?.stats?.study;
     copy.append(make('small','life-requirement life-school-extra',

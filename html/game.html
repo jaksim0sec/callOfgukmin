@@ -7,7 +7,7 @@
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=student-feedback-20261021">
+  <link rel="stylesheet" href="css/style.css?v=balance25-20261021">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -19,6 +19,8 @@
           <div class="trait-heading"><strong>특성</strong></div>
           <div class="traits" id="traits"></div>
         </section>
+        <p id="stressWarning" class="stress-warning" role="alert" hidden></p>
+        <button id="openConvenienceStore" class="store-launch" type="button" hidden>편의점</button>
         <div class="gauges-list" id="gaugesList" aria-label="현재 활성 상태 스탯"></div>
       </section>
 
@@ -69,6 +71,10 @@
   <div id="lifeCinematicBody" class="life-cinematic-body"></div>
   <button id="lifeCinematicDismiss" class="life-cinematic-dismiss" type="button">계속하기 →</button>
 </div>
+<dialog id="convenienceStore" class="convenience-store" aria-labelledby="storeTitle">
+  <div class="modal-head"><h2 id="storeTitle">편의점</h2><form method="dialog"><button class="close" aria-label="편의점 닫기">×</button></form></div>
+  <div class="store-content"><p id="storeBalance"></p><p id="storeNotice" role="status"></p><div id="storeItems"></div></div>
+</dialog>
 <dialog id="traitDialog" class="trait-dialog" aria-labelledby="traitDialogTitle" aria-describedby="traitInfo">
   <div class="modal-head"><h2 id="traitDialogTitle">특성</h2><form method="dialog"><button class="close" aria-label="설명 닫기">×</button></form></div>
   <p id="traitInfo"></p>
@@ -86,27 +92,27 @@
   <footer class="daily-paper-footer"><button id="dailyPaperConfirm" class="daily-paper-confirm" type="button" disabled>이 선택으로 기록하기</button></footer>
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
-<script src="js/poster.js?v=character-paths-20261020" defer></script>
-<script src="js/data/base.js?v=character-paths-20261020" defer></script>
-<script src="js/data/regions.js?v=character-paths-20261020" defer></script>
-<script src="js/data/schools.js?v=character-paths-20261020" defer></script>
-<script src="js/data/grades.js?v=character-paths-20261020" defer></script>
-<script src="js/playerState.js?v=character-paths-20261020" defer></script>
-<script src="js/effects.js?v=character-paths-20261020" defer></script>
-<script src="js/timeline.js?v=character-paths-20261020" defer></script>
-<script src="js/life/director.js?v=character-paths-20261020" defer></script>
-<script src="js/life/story.js?v=character-paths-20261020" defer></script>
-<script src="js/life/infant.js?v=character-paths-20261020" defer></script>
-<script src="js/life/elementary.js?v=character-paths-20261020" defer></script>
-<script src="js/life/middle.js?v=character-paths-20261020" defer></script>
-<script src="js/life/high.js?v=character-paths-20261020" defer></script>
-<script src="js/life/admissions.js?v=admissions-20261021" defer></script>
-<script src="js/systemDemo.js?v=character-paths-20261020" defer></script>
-<script src="js/statusView.js?v=student-feedback-20261021" defer></script>
-<script src="js/sheetController.js?v=aligned-life-sheet-20261021" defer></script>
-<script src="js/dailyChoice.js?v=daily-reward-20261021" defer></script>
-<script src="js/game.js?v=student-feedback-20261021" defer></script>
-<script src="js/majorView.js?v=character-paths-20261020" defer></script>
-<script src="js/boot.js?v=character-paths-20261020" defer></script>
+<script src="js/poster.js?v=balance25-20261021" defer></script>
+<script src="js/data/base.js?v=balance25-20261021" defer></script>
+<script src="js/data/regions.js?v=balance25-20261021" defer></script>
+<script src="js/data/schools.js?v=balance25-20261021" defer></script>
+<script src="js/data/grades.js?v=balance25-20261021" defer></script>
+<script src="js/playerState.js?v=balance25-20261021" defer></script>
+<script src="js/effects.js?v=balance25-20261021" defer></script>
+<script src="js/timeline.js?v=balance25-20261021" defer></script>
+<script src="js/life/director.js?v=balance25-20261021" defer></script>
+<script src="js/life/story.js?v=balance25-20261021" defer></script>
+<script src="js/life/infant.js?v=balance25-20261021" defer></script>
+<script src="js/life/elementary.js?v=balance25-20261021" defer></script>
+<script src="js/life/middle.js?v=balance25-20261021" defer></script>
+<script src="js/life/high.js?v=balance25-20261021" defer></script>
+<script src="js/life/admissions.js?v=balance25-20261021" defer></script>
+<script src="js/systemDemo.js?v=balance25-20261021" defer></script>
+<script src="js/statusView.js?v=balance25-20261021" defer></script>
+<script src="js/sheetController.js?v=balance25-20261021" defer></script>
+<script src="js/dailyChoice.js?v=balance25-20261021" defer></script>
+<script src="js/game.js?v=balance25-20261021" defer></script>
+<script src="js/majorView.js?v=balance25-20261021" defer></script>
+<script src="js/boot.js?v=balance25-20261021" defer></script>
 </body>
 </html>

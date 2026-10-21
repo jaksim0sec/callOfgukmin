@@ -19,7 +19,7 @@ global.GukminDirector.register({
    S.notice('infant:age1',4,'첫돌을 맞았다','가족에게 익숙한 웃음과 표정이 생겼다.',{attributes:{age:1}}),
    S.notice('infant:age2',8,'두 살이 되었다','주변 세상을 알아가기 시작했다.',{attributes:{age:2}}),
    S.branch(S.selection('infant:home',8,'곰 인형을 발견했다',scene,[
-    {label:'인형을 꼭 끌어안는다',effects:{stats:{relations:3},traits:{add:['낯가림']}},detail:'낯선 게 있으면 익숙한 인형을 찾는다.'},
+    {label:'인형을 꼭 끌어안는다',effects:{stats:{relations:1},traits:{add:['낯가림']}},detail:'낯선 게 있으면 익숙한 인형을 찾는다.'},
     {label:'인형의 귀와 꼬리를 만져 본다',effects:{stats:{relations:1},traits:{add:['호기심']}},detail:'새로운 물건은 꼭 만져 봐야 직성이 풀린다.'},
     {label:'뺏겨도 다시 붙잡는다',effects:{stats:{relations:1},traits:{add:['고집']}},detail:'하고 싶은 건 끝까지 고집해 본다.'}
    ]),[
@@ -41,7 +41,7 @@ global.GukminDirector.register({
    S.notice('infant:age3',12,'어린이집과 동네 생활',local+'에서 친구들을 만나고 낯선 생활을 접한다.',{attributes:{age:3}}),
    S.notice('infant:age4',16,'네 살이 되었다','이제 친구들과 의견을 나눌 수 있다.',{attributes:{age:4}}),
    S.branch(S.selection('infant:play',16,'친구가 내 모래삽을 잡았다',local+' 놀이터에서 친구가 내 모래삽을 가져가려 한다.',[
-    {label:'같이 삽을 잡고 모래성을 만든다',effects:{stats:{relations:5},traits:{add:['배려심']}},detail:'함께 노니까 더 커다란 성을 만들 수 있었다.'},
+    {label:'같이 삽을 잡고 모래성을 만든다',effects:{stats:{relations:1},traits:{add:['배려심']}},detail:'함께 노니까 더 커다란 성을 만들 수 있었다.'},
     {label:'엄마 뒤로 쏙 숨는다',effects:{stats:{relations:1},traits:{add:['낯가림']}},detail:'친구가 다가오면 잠깐 숨어서 지켜본다.'},
     {label:'내 거라고 꼭 붙잡는다',effects:{stats:{relations:-1},traits:{add:['고집']}},detail:'내가 쓰던 물건은 쉽게 놓기 싫다.'}
    ]),[
@@ -49,7 +49,7 @@ global.GukminDirector.register({
      title:'모래에 물을 부으면',body:'모래성에 물을 부으면 어떻게 될까? 네가 물통을 들자 친구도 삽을 내려놓고 지켜본다.',
      options:[
       {label:'물을 조금씩 부어 모양을 확인한다',effects:{traits:{add:['호기심']}},detail:'모래가 무너졌다가 단단해졌다. 친구도 옆에서 따라 해 봤다.'},
-      {label:'친구에게 물통을 건네 함께 해 본다',effects:{stats:{relations:2}},detail:'친구가 물을 부을 동안 네가 삽으로 받쳤다. 둘은 작은 둑을 만들었다.'},
+      {label:'친구에게 물통을 건네 함께 해 본다',effects:{stats:{relations:1}},detail:'친구가 물을 부을 동안 네가 삽으로 받쳤다. 둘은 작은 둑을 만들었다.'},
       {label:'혼자 다른 자리에 새로운 성을 만든다',effects:{stats:{relations:-1}},detail:'친구는 물놀이를 이어 갔다. 너는 옆에서 바싹 마른 모래로 성을 다시 쌓았다.'}
      ]},
     {id:'cautious-play',priority:20,when:{any:[{attributes:{earlyTemperament:'cautious'}},{traits:['낯가림']}]},
@@ -63,8 +63,8 @@ global.GukminDirector.register({
       title:'블록 탑이 무너진 날',
       body:'친구가 팔꿈치로 블록 탑을 무너뜨렸다. ==마지막 한 층만 남았는데.== "아, 미안! 다시 만들자!" ~~그럼 네가 10분 쌓아 보든가.~~',
       options:[
-       {label:'"야, 너 때문에 망했잖아!"라며 화낸다',effects:{stats:{relations:-2}},detail:'친구는 웃음을 멈추고 다른 쪽으로 갔다. 탑을 다시 쌓는 사람은 너 혼자였다.'},
-       {label:'화가 남았지만 친구와 다시 쌓는다',effects:{stats:{relations:2},traits:{add:['배려심']}},detail:'친구가 블록을 주워 왔다. "이번엔 내가 밑에 쌓을게." ==다시 만든 탑이 조금 더 높았다.=='},
+       {label:'"야, 너 때문에 망했잖아!"라며 화낸다',effects:{stats:{relations:-1}},detail:'친구는 웃음을 멈추고 다른 쪽으로 갔다. 탑을 다시 쌓는 사람은 너 혼자였다.'},
+       {label:'화가 남았지만 친구와 다시 쌓는다',effects:{stats:{relations:1},traits:{add:['배려심']}},detail:'친구가 블록을 주워 왔다. "이번엔 내가 밑에 쌓을게." ==다시 만든 탑이 조금 더 높았다.=='},
        {label:'남은 블록을 챙겨 다른 곳으로 간다',detail:'친구는 손을 거뒀고 너는 구석에서 새 탑을 쌓았다.'}
       ]},
      {id:'territory-play',priority:0,
@@ -89,10 +89,10 @@ global.GukminDirector.register({
    })
   );
   const play=stages.choices.find(c=>c.id==='infant:play');
-  const block=play.variants.find(v=>v.id==='block-disaster');block.options[0].result.effects.stats={relations:-2};block.options[1].result.effects.stats={relations:2};block.options[2].result.effects={stats:{relations:-1}};
+  const block=play.variants.find(v=>v.id==='block-disaster');block.options[0].result.effects.stats={relations:-1};block.options[1].result.effects.stats={relations:1};block.options[2].result.effects={stats:{relations:-1}};
   const curious=play.variants.find(v=>v.id==='curious-play');
   curious.options[0].result.effects={traits:{add:['꼼꼼함']}};
-  curious.options[1].result.effects={stats:{relations:2},traits:{add:['배려심']}};
+  curious.options[1].result.effects={stats:{relations:1},traits:{add:['배려심']}};
   curious.options[2].result.effects={traits:{add:['느긋함']}};
   const territory=play.variants.find(v=>v.id==='territory-play');territory.options[1].result.effects={stats:{relations:-1},traits:{add:['자기주장']}};territory.options[2].result.effects={stats:{relations:-1}};
   const prepare=stages.choices.find(c=>c.id==='infant:prepare');

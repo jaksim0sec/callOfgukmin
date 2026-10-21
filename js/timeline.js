@@ -48,7 +48,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   if(EVENT_KINDS[e.layer]===null?!!e.choice:!e.choice||choiceDefs.get(e.choice).layer!==EVENT_KINDS[e.layer])throw new Error('이벤트 종류와 선택 종류 불일치: '+e.id);
  }
  if(!P.valid(persona))throw new Error('인물 데이터 오류');
- persona=P.withoutHealth(persona);
+ persona=P.upgradeScale(persona);
  const saved=persona.simulation;
  if(saved&&(saved.version!==1||saved.contentId!==contentId))throw new Error('저장된 콘텐츠 버전과 정의가 다름');
  let state={persona:clone(persona),runtime:saved?clone(saved):{version:1,contentId,turn:0,progressStart:0,events:{},choices:{},applied:[]}};

@@ -12,7 +12,7 @@ function bounded(value,def){
  finite(value);
  if(def.min!==undefined)value=Math.max(def.min,value);
  if(def.max!==undefined)value=Math.min(def.max,value);
- return value;
+ return def.type==='progress'&&def.max===25?Math.round(value):value;
 }
 function matches(persona,condition={},turn=0){
  keys(condition,['all','any','not','traits','withoutTraits','stats','attributes','age','phase','turn'],'조건');
@@ -42,7 +42,7 @@ function apply(persona,result={},context={}){
  if(result.retryYear)prepared=global.GukminAdmissions.retry(persona,prepared);
  if(result.highEntry){
   prepared.effects??={};prepared.effects.activate={...prepared.effects.activate,...global.GukminGrades.highEntry(persona,result.highEntry.track)};
-  if(persona.attributes?.admissionResearch==='paid'&&!persona.attributes?.counselingUsed){prepared.effects.stats={...prepared.effects.stats,stress:(prepared.effects.stats?.stress||0)-2};prepared.effects.attributes={...prepared.effects.attributes,counselingUsed:true};}
+  if(persona.attributes?.admissionResearch==='paid'&&!persona.attributes?.counselingUsed){prepared.effects.stats={...prepared.effects.stats,stress:(prepared.effects.stats?.stress||0)-1};prepared.effects.attributes={...prepared.effects.attributes,counselingUsed:true};}
  }
  if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};}
  const s=P.withoutHealth(persona),effects=prepared.effects||{},turn=context.turn??0;
@@ -55,7 +55,7 @@ function apply(persona,result={},context={}){
  for(const [id,value] of Object.entries(deltas)){P.metricDefinition(id);finite(value);}
  const tags=result.tags||context.tags||[];
  // Old waiting examination scripts retain their original modifier contract.
- if(tags.includes('assessment')&&!result.assessment){if(P.hasTrait(persona,'인내심')&&deltas.stress!==undefined)deltas.stress*=.75;if(P.hasTrait(persona,'꼼꼼함'))for(const id of ['schoolScore','exam'])if(deltas[id]!==undefined)deltas[id]+=2;}
+ if(tags.includes('assessment')&&!result.assessment){if(P.hasTrait(persona,'인내심')&&deltas.stress!==undefined)deltas.stress*=.75;if(P.hasTrait(persona,'꼼꼼함'))for(const id of ['schoolScore','exam'])if(deltas[id]!==undefined)deltas[id]+=1;}
  // Only traits held before this result modify its base deltas, in acquisition order.
  for(const trait of persona.traits){
   const name=typeof trait==='string'?trait:trait.name,def=P.traitDefinition(name);

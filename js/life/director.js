@@ -27,12 +27,13 @@ function content(persona){
      pack.events.push({...clone(event),when:{all:[clone(op.when),clone(event.when||{})]}});
    }
  }
+ pack.attributes.storeLastTurn={label:'편의점 이용 시점',hidden:true};
  pack.attributes.lifeEndReason={label:'생애 종료 이유',hidden:true};
  return pack;
 }
 function create({persona,persist,onChange}){
  persona={...persona,attributes:{admissionAttempts:1,...persona.attributes}};
- persona=global.GukminPlayer.withoutHealth(persona);
+ persona=global.GukminPlayer.upgradeScale(persona);
  // Old recovery occurrences remain archived, without a future occurrence.
  if(persona.simulation?.events)delete persona.simulation.events['wellness:high-pressure-rest'];
  const definitions=content(persona);
@@ -62,7 +63,7 @@ function create({persona,persist,onChange}){
   if(tier&&person.age>=7&&person.age<=18&&['elementary','middle','high'].includes(phase))
    stats.money=Number.isFinite(person.stats.allowance)?Math.max(0,person.stats.allowance):tier.allowance;
   const pressure=person.stats.stress||0;
-  if(pressure>=90&&(phase==='middle'||phase==='high')&&!person.attributes?.highFinalSubmitted)stats.schoolScore=-1;
+  if(pressure>=23&&(phase==='middle'||phase==='high')&&!person.attributes?.highFinalSubmitted)stats.schoolScore=-1;
   return Object.keys(stats).length?{effects:{stats}}:null;
  };
  const timeline=global.GukminTimeline.create({...definitions,persona,persist,pauseAfterChoice:true,onTurn,
@@ -70,7 +71,7 @@ function create({persona,persist,onChange}){
  function limit(){
   const s=timeline.snapshot();
   if(s.reviewPending||s.runtime.cinematic||s.persona.attributes?.lifeEndReason)return false;
-  if(s.persona.stats.stress>=100&&(s.persona.attributes?.admissionAttempts||1)<2){
+  if(s.persona.stats.stress>=25&&(s.persona.attributes?.admissionAttempts||1)<2){
    timeline.cancelPending('life-limit',{effects:{attributes:{lifeEndReason:'정신병 한계',admissionDestination:'finished',job:'생애 종료'}},history:{title:'삶의 끝 · 정신병 한계',detail:'감당할 수 있는 한계를 넘어 이번 삶이 끝났다.',importance:'major'}});return true;
   }
   if(s.persona.attributes?.admissionAttempts<2||!s.persona.attributes?.admissionAttempts||s.persona.attributes?.admissionDestination==='finished')return false;
@@ -132,8 +133,21 @@ function create({persona,persist,onChange}){
    if(limit())return false;
    return decorate(timeline.snapshot());
  }
+ function storeStatus(){
+  const s=timeline.snapshot(),last=s.persona.attributes?.storeLastTurn;
+  const remaining=Number.isFinite(last)?Math.max(0,4-(s.runtime.turn-last)):0;
+  const blocked=s.persona.age<7||s.persona.stats.stress<=0||s.persona.stats.stress>=25||s.reviewPending||!!s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished';
+  return {remaining,blocked,items:global.GukminData.shopItems.map(item=>({...item,available:!blocked&&!remaining&&s.persona.stats.money>=item.price}))};
+ }
+ function buy(id){
+  const status=storeStatus(),item=status.items.find(x=>x.id===id);
+  if(!item)throw new Error('등록되지 않은 상품');
+  if(!item.available)return false;
+  const s=timeline.snapshot();
+  return timeline.apply('store:'+s.runtime.turn,{effects:{stats:{money:-item.price,stress:-item.relief},attributes:{storeLastTurn:s.runtime.turn}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
+ }
  return Object.freeze({
-   step,snapshot:()=>decorate(timeline.snapshot()),
+   storeStatus,buy,step,snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
    acknowledge:()=>timeline.acknowledge(),
    resolve:(token,optionId,input)=>limit()?false:timeline.resolve(token,optionId,input),

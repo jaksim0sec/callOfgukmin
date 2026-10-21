@@ -39,7 +39,7 @@ function birthContext(){
 function generate() {
   const {home,region,tier,stats}=birthContext();
   return {
-    version:1,
+    version:1,statScale:25,
     name:pick(NAMES),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
     family:home.name,birthplace:region.label,birthplaceId:region.id,regionTags:[...region.tags],familyTier:tier.id,description:home.description,
     school:{elementary:null,middle:null,high:null,uni:null},schoolHistory:[],
@@ -65,8 +65,39 @@ function withoutHealth(value){
  }
  return copy;
 }
+const scaledIds=new Set(['stress','relations','study','schoolScore','exam','support','awareness']);
+const quarter=(n,delta=false)=>!Number.isFinite(n)?n:delta&&n!==0?Math.sign(n)*Math.max(1,Math.round(Math.abs(n)/4)):Math.round(n/4);
+function scaleRules(value,parent=''){
+ if(Array.isArray(value))return value.map(v=>scaleRules(v,parent));
+ if(!value||typeof value!=='object')return value;
+ const copy={};
+ for(const [key,item] of Object.entries(value)){
+  if((parent==='stats'||parent==='activate')&&scaledIds.has(key)){
+   copy[key]=typeof item==='number'?quarter(item,parent==='activate'?false:true):Object.fromEntries(Object.entries(item).map(([op,n])=>[op,['gte','lte','eq','add'].includes(op)?quarter(n,op==='add'):n]));
+  }else if(['minScore','minStudy','target','minimum'].includes(key)&&typeof item==='number')copy[key]=quarter(item);
+  else copy[key]=scaleRules(item,key);
+ }
+ return copy;
+}
+function upgradeScale(persona){
+ const copy=withoutHealth(persona);if(copy.statScale===25)return copy;
+ // Only standard bounded metrics change units; currency, time and custom stats do not.
+ function walk(value,key=''){
+  if(Array.isArray(value))return value.map(v=>walk(v,key));
+  if(!value||typeof value!=='object')return value;
+  const out={};
+  for(const [k,v] of Object.entries(value)){
+   if(k==='script')out[k]=scaleRules(v);
+   else if(k==='stats')out[k]=Object.fromEntries(Object.entries(v).map(([id,n])=>[id,scaledIds.has(id)?quarter(n):n]));
+   else if(k==='value'&&scaledIds.has(value.id))out[k]=quarter(v);
+   else out[k]=walk(v,k);
+  }
+  return out;
+ }
+ const migrated=walk(copy);migrated.statScale=25;return migrated;
+}
 function normalize(s) {
- s=withoutHealth(s);
+ s=upgradeScale(s);
   // Compatible with the previous UI-only save. A family is an attribute, not a buff.
   const copy={...s,stats:{...s.stats},school:{...s.school}};
   copy.traits=s.traits.filter(t=>typeof t==='string'?t!==s.family:!!(t&&typeof t==='object'&&t.name!==s.family));
@@ -83,7 +114,7 @@ function load() {
 }
 function save(persona) {
   if(!valid(persona))throw new TypeError('Invalid persona');
-  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(withoutHealth(persona)));return true;}
+  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(upgradeScale(persona)));return true;}
   catch(error){return false;}
 }
 function ensure() {
@@ -164,7 +195,7 @@ function schoolsOf(s) {
   return [...records,...legacy.filter(old=>!records.some(r=>r.kind===old.kind&&r.name===old.name))];
 }
 global.GukminPlayer=Object.freeze({
-  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,phaseOf,activeMetrics,schoolsOf,
+  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,upgradeScale,scaleRules,phaseOf,activeMetrics,schoolsOf,
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   birthContext,wealthTiers:DATA.wealthTiers,

@@ -34,7 +34,7 @@ try{
    await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
   }
-  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:80,exam:60},stats:{money:1575000,allowance:45000,stress:51,relations:30}}}));
+  await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:20,exam:15},stats:{money:1575000,allowance:45000,stress:13,relations:8}}}));
   assert.equal(await page.locator('.gauges-heading').count(),0,'status heading and its layout box are removed');
   const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-relations').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'mental health and relationships share one flex row');
   const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
@@ -253,7 +253,7 @@ try{
       projected.stats[id]!==snapshot.persona.stats[id]).length;
    },0);
   });
-  assert.equal(shownEffects,realEffects,'preview never invents rewards when a narrative choice has no numeric effect');
+  assert.equal(shownEffects,await page.evaluate(()=>GukminPlayer.phaseOf(GukminGame.session.snapshot().persona)==='infant')?0:realEffects,'preview never invents rewards when a narrative choice has no numeric effect');
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'paper collapses without settling');
@@ -413,8 +413,8 @@ try{
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true,'explicitly reopened saved choice is now visible');
   await page.locator('#dailyChoiceBody .inline-choice').first().evaluate(b=>{b.click();b.click();});
   assert.equal(await page.locator('#dailyChoiceBody .inline-choice[aria-pressed=true]').count(),1,'double marking does not settle');
-  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count()>0,
-   'a real money change is visualized as shared metric pill before settlement');
+  assert.equal(await page.locator('#dailyChoiceBody .daily-choice-effect.metric-impact.metric-money').count(),0,
+   'infant-stage choices also hide verification rewards until settlement');
   await page.locator('#dailyPaperConfirm').click();
   await page.locator('#dailyChoiceDialog.is-reward .daily-reward-hero').waitFor();
   assert.equal(await page.locator('#dailyPaperConfirm').textContent(),'보상 받기');
@@ -482,18 +482,18 @@ try{
  assert.equal(await timedPage.locator('#dailyChoiceDialog').isVisible(),true,'manual re-entry works immediately');
  const gaugeMotion=await timedPage.evaluate(()=>{
   const before=GukminGame.session.snapshot().persona;
-  const person={...before,stats:{...before.stats,stress:55}};
+  const person={...before,stats:{...before.stats,stress:14}};
   GukminStatus.render(document,person);
   const node=document.querySelector('.metric-stress .ui-progress-fill');
   return {target:node.dataset.ratio,duration:getComputedStyle(node).transitionDuration};
  });
- assert.equal(gaugeMotion.target,'0.55','synthetic state change sets the correct real target');
+ assert.equal(gaugeMotion.target,'0.56','synthetic state change sets the correct real target');
  assert.match(gaugeMotion.duration,/0\.5s/,'gauge transitions use shared half-second motion');
  await timedPage.waitForTimeout(90);
  const intermediate=await timedPage.locator('.metric-stress .ui-progress-fill').evaluate(el=>{
   const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
  });
- assert.ok(intermediate>0&&intermediate<.55,'visual stat fill interpolates rather than jumping to its target');
+ assert.ok(intermediate>0&&intermediate<.56,'visual stat fill interpolates rather than jumping to its target');
  assert.deepEqual(timerErrors,[]);
  await timedContext.close();
  console.log('PASS timed diary: smooth bar, 5-second auto-open, no auto-choice, dismiss stays dismissed');
@@ -535,11 +535,11 @@ try{
   window.GukminContent={
    contentId:'exam-view-check',events:[{id:'exam-view',layer:'한방 이벤트',at:0,choice:'exam-view'}],
    choices:[{id:'exam-view',layer:'한방 선택',title:'중간고사',presentation:{type:'exam',grade:1,term:'1학기 중간고사',category:'school'},options:[
-    {id:'0',label:'쉰다',result:{effects:{stats:{stress:-2}}}},
+    {id:'0',label:'쉰다',result:{effects:{stats:{stress:-1}}}},
     {id:'1',label:'조금',result:{effects:{stats:{study:1}}}},
-    {id:'2',label:'꾸준히',result:{effects:{stats:{study:3}}}},
-    {id:'3',label:'집중',result:{effects:{stats:{study:6}}}},
-    {id:'4',label:'매우 집중',result:{effects:{stats:{stress:3}}}}
+    {id:'2',label:'꾸준히',result:{effects:{stats:{study:1}}}},
+    {id:'3',label:'집중',result:{effects:{stats:{study:2}}}},
+    {id:'4',label:'매우 집중',result:{effects:{stats:{stress:1}}}}
    ]}]
   };
  });
@@ -577,7 +577,7 @@ try{
      return {age:settled.persona.age,turn:settled.runtime.turn,choice:null};
     }
     if(choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice.id};
-    const first=(choice.presentation?.type==='admission-finish'?choice.options.find(o=>o.id==='employment'&&o.available):null)||choice.options.find(o=>o.available);
+    const first=(snap.persona.stats.stress>=12?choice.options.find(o=>['rest','recover'].includes(o.id)&&o.available):null)||choice.options.find(o=>o.id===(snap.persona.stats.stress>=8?'effort-0':'effort-2'))||(choice.presentation?.type==='admission-finish'?choice.options.find(o=>o.id==='employment'&&o.available):null)||choice.options.find(o=>o.available);
     if(!first)throw new Error('No legal choice: '+choice.id);
     s.resolve(choice.token,first.id);
     if(choice.layer==='한방 선택'&&!s.snapshot().reviewPending)throw new Error('Major choice review did not persist');

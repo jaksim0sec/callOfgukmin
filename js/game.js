@@ -97,6 +97,7 @@ function mount(root,navigate,content=global.GukminContent){
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   global.GukminStatus.render(root,persona);
+  renderStore();
   const headline=$('lifeHeadline'),label=headlineFor(persona);
   if(headline.textContent!==label){
    headline.textContent=label;
@@ -271,6 +272,28 @@ function mount(root,navigate,content=global.GukminContent){
   $('choiceDialog').close();
   commit(item);
  }
+ function renderStore(){
+  const warning=$('stressWarning'),open=$('openConvenienceStore'),dialog=$('convenienceStore');
+  const stress=persona.stats.stress||0,ended=persona.attributes?.admissionDestination==='finished';
+  warning.hidden=stress<20||ended;
+  warning.textContent=(stress>=23?'위험':'경고')+' · 정신병 '+stress+'/25. 한계에 가까워지고 있습니다. 잠시 쉬어 가세요.';
+  warning.classList.toggle('is-critical',stress>=23);
+  open.hidden=persona.age<7||!engine?.storeStatus||ended;
+  if(!dialog.open)return;
+  const status=engine.storeStatus();
+  text('storeBalance','재산 '+persona.stats.money.toLocaleString('ko-KR')+'원 · 정신병 '+stress+'/25');
+  text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?'현재는 이용할 수 없습니다.':'상품을 이용하면 4턴 뒤 다시 구매할 수 있습니다.');
+  const list=$('storeItems');list.replaceChildren();
+  for(const item of status.items){
+   const button=el('button','store-item');button.type='button';button.disabled=!item.available;
+   button.append(el('strong','',item.name),el('span','',item.price.toLocaleString('ko-KR')+'원 · 정신병 −'+item.relief));
+   button.addEventListener('click',safely(()=>{if(engine.buy(item.id)){$('convenienceStore').close();}}));list.append(button);
+  }
+ }
+ function openStore(){
+  if(!engine?.storeStatus)return;
+  dailyUI.suspend();$('convenienceStore').showModal();renderStore();
+ }
  function safely(fn){
   return (...args)=>{if(disposed)return false;try{$('systemError').hidden=true;return fn(...args);}catch(error){
    text('systemError',error.message);$('systemError').hidden=false;console.error(error);
@@ -430,7 +453,7 @@ function mount(root,navigate,content=global.GukminContent){
   journeyActive=true;
   function tick(){
    if(disposed||!journeyActive)return;
-   if(cinematicShown||examBreakTimer!==null){journeyTimer=global.setTimeout(tick,80);return;}
+   if(cinematicShown||examBreakTimer!==null||$('convenienceStore').open){journeyTimer=global.setTimeout(tick,80);return;}
    const before=engine.snapshot(),had=before.persona.history.length;
    if(before.choice&&!before.reviewPending){stopJourney();renderProgress();return;}
    const changed=engine.step();
@@ -526,6 +549,8 @@ function mount(root,navigate,content=global.GukminContent){
  const subscriptions=[
   [$('lifeCinematicDismiss'),'click',hideCinematic],
   [$('resetGame'),'click',reset],
+  [$('openConvenienceStore'),'click',openStore],
+  [$('convenienceStore'),'close',()=>{renderProgress();}],
   [$('startSystemDemo'),'click',startDemo],
   [$('advanceTurn'),'click',()=>engine.advance(1)],
   [$('previewSchool'),'click',()=>openPreview('school')],
@@ -539,7 +564,7 @@ function mount(root,navigate,content=global.GukminContent){
  function dispose(){if(disposed)return;disposed=true;stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
-  resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),dispose
+  resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose
  });
  render();
  return dispose;

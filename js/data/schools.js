@@ -54,10 +54,10 @@ const typeLabels=Object.freeze({
 });
 function school(id,name,region){
  const kind=kindOf(name);
- const minScore=kind==='gifted'?90:kind==='science'?85:kind==='autonomous'?66:
-   ['foreign','international'].includes(kind)?72:0;
- const minStudy=kind==='gifted'?78:kind==='science'?65:kind==='autonomous'?55:
-   ['foreign','international'].includes(kind)?65:0;
+ const minScore=kind==='gifted'?23:kind==='science'?22:kind==='autonomous'?17:
+   ['foreign','international'].includes(kind)?18:0;
+ const minStudy=kind==='gifted'?20:kind==='science'?17:kind==='autonomous'?14:
+   ['foreign','international'].includes(kind)?17:0;
  return Object.freeze({
   id,name,region,kind,minScore,minStudy,
   focus:kind==='foreign'?'외국어 중심':kind==='international'?'국제교류 중심':
