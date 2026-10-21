@@ -4,11 +4,16 @@
 const P=global.GukminPlayer,E=global.GukminEffects;
 const clone=value=>JSON.parse(JSON.stringify(value));
 const outcomeState=persona=>({
- age:persona.age,phase:persona.phase,
+ age:persona.age,phase:persona.phase,job:persona.job,attributes:clone(persona.attributes||{}),
  stats:clone(persona.stats),traits:clone(persona.traits),
  schoolHistory:clone(P.schoolsOf(persona)),roles:clone(persona.roles||[])
 });
 const EVENT_KINDS=Object.freeze({'소식 이벤트':null,'일상 이벤트':'일상 선택','한방 이벤트':'한방 선택'});
+function selectScenario(c,persona,turn){
+ const variants=[...(c.variants||[])].sort((a,b)=>(b.priority||0)-(a.priority||0));
+ return variants.find(v=>v.when&&E.matches(persona,v.when,turn))||variants.find(v=>!v.when);
+}
+function scriptOf(c,variant){const script={...clone(c),...(variant?clone(variant):{})};delete script.variants;delete script.priority;delete script.when;script.id=c.id;script.revision=2;return script;}
 function create({persona,events=[],choices=[],metrics={},traits={},attributes={},contentId='custom',persist=()=>true,onChange=()=>{},pauseAfterChoice=false,onTurn=null}){
 
  function index(definitions,label){
@@ -30,6 +35,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    if(!Array.isArray(c.variants))throw new Error('시나리오 정의 오류: '+c.id);
    index(c.variants,'시나리오');
    for(const variant of c.variants){
+    if(typeof variant.title!=='string'||!variant.title.trim())throw new Error('시나리오 제목 누락: '+variant.id);
     if(!Array.isArray(variant.options)||!variant.options.length)throw new Error('시나리오 선택지 오류: '+variant.id);
     index(variant.options,'시나리오 선택지');
    }
@@ -46,12 +52,13 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
  if(saved&&(saved.version!==1||saved.contentId!==contentId))throw new Error('저장된 콘텐츠 버전과 정의가 다름');
  let state={persona:clone(persona),runtime:saved?clone(saved):{version:1,contentId,turn:0,progressStart:0,events:{},choices:{},applied:[]}};
  delete state.persona.simulation;
+ for(const r of Object.values(state.runtime.choices||{}))if(r.status==='waiting'&&!r.script){const def=choiceDefs.get(r.choiceId);if(!def)throw new Error('저장된 선택 정의 누락: '+r.choiceId);r.script=(contentId==='life-main-v1'?global.GukminStory?.legacyChoice(def,r.scenarioId,persona):null)||scriptOf(def,(def.variants||[]).find(v=>v.id===r.scenarioId));}
  state.persona.traitSince??={};
  for(const t of state.persona.traits){const id=typeof t==='string'?t:t.name;P.traitDefinition(id);state.persona.traitSince[id]??=state.runtime.turn;}
  for(const e of eventDefs.values())state.runtime.events[e.id]??={status:'unseen',count:0,nextAt:e.at??0};
  for(const id of Object.keys(state.runtime.events))if(!eventDefs.has(id))throw new Error('저장된 이벤트 정의 누락: '+id);
  function waiting(s){return Object.values(s.runtime.choices).filter(c=>c.status==='waiting');}
- function blocking(s){return waiting(s).some(c=>choiceDefs.get(c.choiceId).blocksTime!==false);}
+ function blocking(s){return !!s.runtime.cinematic||waiting(s).some(c=>choiceDefs.get(c.choiceId).blocksTime!==false);}
  function settlement(s,id,result,source){
   if(s.runtime.applied.includes(id))return false;
   s.persona=E.apply(s.persona,result,{turn:s.runtime.turn,source});
@@ -82,13 +89,12 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
     // Resolve at the moment the slot opens, not when definitions were assembled.
     // Store the ID in the existing choice runtime; an old waiting save without it
     // intentionally continues to use its legacy, unbranched options.
-    const variant=[...(c.variants||[])].sort((a,b)=>(b.priority||0)-(a.priority||0))
-      .find(candidate=>E.matches(s.persona,candidate.when,s.runtime.turn));
+    const variant=selectScenario(c,s.persona,s.runtime.turn);
     s.runtime.choices[token]={token,eventId:id,choiceId:c.id,layer:c.layer,status:'waiting',
-      openedAt:s.runtime.turn,...(variant?{scenarioId:variant.id}:{})};
+      openedAt:s.runtime.turn,script:scriptOf(c,variant),...(variant?{scenarioId:variant.id}:{})};
     // Later events at this same turn open only after the player's decision.
     if(c.blocksTime!==false)break;
-   }else finish(s,id);
+   }else {finish(s,id);if(e.presentation&&pauseAfterChoice){const h=s.persona.history.at(-1);s.runtime.cinematic={...clone(e.presentation),eventId:id,title:h.title,detail:h.detail};break;}}
   }
  }
  function periodic(s){
@@ -126,10 +132,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   let choice=null;
   if(current){
    const def=choiceDefs.get(current.choiceId);
-   const selected=(def.variants||[]).find(v=>v.id===current.scenarioId);
-   const presented={...clone(def),...(selected?clone(selected):{})};
-   delete presented.variants;delete presented.priority;delete presented.when;
-   presented.id=def.id; // Variant ID is stored separately, never replaces choice ID.
+   const presented=current.script||scriptOf(def,(def.variants||[]).find(v=>v.id===current.scenarioId));
    choice={...presented,...clone(current),options:presented.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)}))};
   }
   return {...clone(s),choice,progress:progress(s),reviewPending:!!s.runtime.awaitingContinuation};
@@ -144,14 +147,14 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    }
   });
  }
- function resolve(token,optionId){
+ function resolve(token,optionId,input={}){
   return transact(s=>{
    if(s.runtime.awaitingContinuation)return false;
    const r=s.runtime.choices[token];
    if(!r||r.status!=='waiting')return false;
    const def=choiceDefs.get(r.choiceId);
    const selected=(def.variants||[]).find(v=>v.id===r.scenarioId);
-   const option=(selected?.options||def.options).find(o=>o.id===optionId);
+   const option=(r.script?.options||selected?.options||def.options).find(o=>o.id===optionId);
    if(!option)throw new Error('등록되지 않은 선택지: '+optionId);
    if(!E.matches(s.persona,option.when,s.runtime.turn))throw new Error('선택 조건을 충족하지 않음');
    r.status='confirmed';r.optionId=optionId;
@@ -159,7 +162,9 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    // so reload can show the real applied differences rather than guessed badges.
    const reviewBefore=pauseAfterChoice?outcomeState(s.persona):null;
    const before=outcomeState(s.persona),historyFrom=s.persona.history.length;
-   settlement(s,`choice:${token}`,option.result||{},'choice:'+r.choiceId);
+   let result=option.result||{};
+   if(Object.keys(input).length){if((r.script||def).presentation?.type!=='university'||Object.keys(input).some(k=>k!=='admissionField')||!['humanities','science'].includes(input.admissionField))throw new Error('선택 입력 오류');result={...clone(result),effects:{...clone(result.effects||{}),attributes:{...result.effects?.attributes,admissionField:input.admissionField}}};}
+   settlement(s,`choice:${token}`,result,'choice:'+r.choiceId);
    // Preserve real settled deltas and the related log range after future turns.
    r.outcome={label:option.label,historyFrom,historyTo:s.persona.history.length-1,
     before,after:outcomeState(s.persona)};
@@ -174,6 +179,15 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    else pump(s);
   });
  }
+ function acknowledge(){return transact(s=>{
+  if(s.runtime.cinematic){delete s.runtime.cinematic;return true;}
+  const last=Object.values(s.runtime.choices).filter(c=>c.status==='closed').at(-1);
+  if(!last||last.presentationAcknowledged)return false;last.presentationAcknowledged=true;
+ });}
+ function cancelPending(id,result){return transact(s=>{
+  if(!settlement(s,'external:'+id,result,id))return false;
+  for(const c of waiting(s)){c.status='closed';c.cancelled=true;const r=s.runtime.events[c.eventId];delete r.waitingToken;r.status='completed';}
+ });}
  function resume(){
   return transact(s=>{
    if(!s.runtime.awaitingContinuation)return false;
@@ -182,10 +196,10 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    pump(s);
   });
  }
- return Object.freeze({snapshot,advance,resolve,resume,apply:(id,result)=>{
+ return Object.freeze({snapshot,advance,resolve,resume,acknowledge,cancelPending,apply:(id,result)=>{
   if(typeof id!=='string'||!id.trim())throw new Error('정산 ID 필요');
   return transact(s=>settlement(s,'external:'+id,result,'external:'+id));
  }});
 }
-global.GukminTimeline=Object.freeze({create,eventKinds:EVENT_KINDS});
+global.GukminTimeline=Object.freeze({create,selectScenario,eventKinds:EVENT_KINDS});
 })(window);

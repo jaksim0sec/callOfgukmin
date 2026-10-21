@@ -90,7 +90,7 @@ function createToken({type='context',label='',name='',id='',icon:iconName='',amo
   path.setAttribute('d',up?'M6 1 11 10H1Z':'M1 2h10L6 11Z');
   path.setAttribute('fill','currentColor');
   triangle.append(path);
-  const numeric=Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:2})+
+  const numeric=Math.abs(amount).toLocaleString('ko-KR',{maximumFractionDigits:1})+
    (['money','allowance','income'].includes(id)?'원':'');
   el.append(triangle,node('span','impact-amount',numeric));
   el.setAttribute('aria-label',text+' '+(up?'증가 ':'감소 ')+numeric);
@@ -218,7 +218,7 @@ function showMetrics(root,s){
   const formatted=result?result.display:Number.isFinite(number)?
    metric.type==='currency'?Number(number).toLocaleString('ko-KR')+'원':String(number):'—';
   const value=node('b','gauge-value',formatted);
-  if(result)value.title=result.detail;
+  if(result){value.title=result.detail;wrap.style.setProperty('--grade-color',global.GukminGrades.color(result.display));}
   line.append(value);
   wrap.append(line);
   // Categorical grades must not look like completion percentages.

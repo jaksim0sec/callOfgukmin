@@ -54,7 +54,7 @@ const typeLabels=Object.freeze({
 });
 function school(id,name,region){
  const kind=kindOf(name);
- const minScore=kind==='gifted'?82:kind==='science'?78:kind==='autonomous'?66:
+ const minScore=kind==='gifted'?90:kind==='science'?85:kind==='autonomous'?66:
    ['foreign','international'].includes(kind)?72:0;
  const minStudy=kind==='gifted'?78:kind==='science'?65:kind==='autonomous'?55:
    ['foreign','international'].includes(kind)?65:0;

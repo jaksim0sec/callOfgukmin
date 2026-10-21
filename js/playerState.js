@@ -46,7 +46,7 @@ function generate() {
     roles:[],traits:[tier.name,...BIRTH_DEFAULTS.traits],
     stats,
     history:[{age:0,title:'당신이 태어났다',detail:region.label+'에서 새로운 삶이 시작되었다.'},{age:0,title:'출생 배경',detail:home.description}],
-    createdAt:new Date().toISOString()
+    admissionSeed:Math.random().toString(36).slice(2),createdAt:new Date().toISOString()
   };
 }
 function valid(s) {
@@ -62,6 +62,7 @@ function normalize(s) {
   copy.roles=Array.isArray(s.roles)?s.roles:[];
   copy.regionTags=Array.isArray(s.regionTags)?s.regionTags:[];
   if(!PHASE_METRICS[copy.phase])delete copy.phase;
+  if(copy.attributes?.admissionAttempts>1&&['N수 준비','고등학생','고교 졸업'].includes(copy.job))copy.job='N수생';
   return copy;
 }
 function load() {

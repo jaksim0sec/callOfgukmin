@@ -24,18 +24,18 @@ global.GukminDirector.register({
     {label:'뺏겨도 다시 붙잡는다',effects:{stats:{relations:1,stress:2},traits:{add:['고집']}},detail:'하고 싶은 건 끝까지 고집해 본다.'}
    ]),[
     {id:'toy-care',priority:20,when:{traits:['금수저']},
-     body:'선반에서 반짝이는 장난감 자동차를 내려놓았다. 바퀴가 굴러가자 아이 손이 먼저 움직인다.',
+     title:'반짝이는 장난감 자동차',body:'선반에서 반짝이는 장난감 자동차를 내려놓았다. 바퀴가 굴러가자 아이 손이 먼저 움직인다.',
      options:[
-      {label:'바퀴를 굴리며 안쪽을 들여다본다',effects:{attributes:{earlyTemperament:'curious'}},detail:'차를 뒤집어 놓고 바퀴가 돌아가는 걸 한참 지켜봤다.'},
-      {label:'익숙한 곰 인형을 먼저 집는다',effects:{attributes:{earlyTemperament:'cautious'}},detail:'처음 본 장난감은 잠시 두고, 낡은 곰 인형을 품에 안았다.'},
+      {label:'바퀴를 굴리며 안쪽을 들여다본다',effects:{attributes:{earlyTemperament:'curious'},traits:{add:['호기심']}},detail:'차를 뒤집어 놓고 바퀴가 돌아가는 걸 한참 지켜봤다.'},
+      {label:'익숙한 곰 인형을 먼저 집는다',effects:{attributes:{earlyTemperament:'cautious'},traits:{add:['낯가림']}},detail:'처음 본 장난감은 잠시 두고, 낡은 곰 인형을 품에 안았다.'},
       {label:'자동차를 옆으로 밀어 놓는다',effects:{attributes:{earlyTemperament:'stubborn'}},detail:'어른이 권한 장난감보다 바닥의 종이 상자가 더 좋았다.'}
      ]},
     {id:'toy-box',priority:0,
-     body:'곰 인형이 의자 아래에 떨어져 있다. 누군가 주워 주려 하자 손이 먼저 뻗는다.',
+     title:'의자 아래 곰 인형',body:'곰 인형이 의자 아래에 떨어져 있다. 누군가 주워 주려 하자 손이 먼저 뻗는다.',
      options:[
-      {label:'가져온 인형의 귀를 하나씩 만져 본다',effects:{attributes:{earlyTemperament:'curious'}},detail:'귀를 접었다 폈다 하다가 안쪽의 실밥까지 발견했다.'},
-      {label:'곰 인형을 받아 꼭 끌어안는다',effects:{attributes:{earlyTemperament:'cautious'}},detail:'익숙한 냄새가 나자 그제야 인형을 놓지 않았다.'},
-      {label:'남이 집어 주기 전에 직접 기어가 잡는다',effects:{attributes:{earlyTemperament:'stubborn'}},detail:'엉금엉금 기어가 직접 가져왔다. 무릎에는 먼지가 묻었다.'}
+      {label:'가져온 인형의 귀를 하나씩 만져 본다',effects:{attributes:{earlyTemperament:'curious'},traits:{add:['호기심']}},detail:'귀를 접었다 폈다 하다가 안쪽의 실밥까지 발견했다.'},
+      {label:'곰 인형을 받아 꼭 끌어안는다',effects:{attributes:{earlyTemperament:'cautious'},traits:{add:['낯가림']}},detail:'익숙한 냄새가 나자 그제야 인형을 놓지 않았다.'},
+      {label:'남이 집어 주기 전에 직접 기어가 잡는다',effects:{attributes:{earlyTemperament:'independent'}},detail:'엉금엉금 기어가 직접 가져왔다. 무릎에는 먼지가 묻었다.'}
      ]}
    ]),
    S.notice('infant:age3',12,'어린이집과 동네 생활',local+'에서 친구들을 만나고 낯선 생활을 접한다.',{attributes:{age:3}}),
@@ -46,18 +46,18 @@ global.GukminDirector.register({
     {label:'내 거라고 꼭 붙잡는다',effects:{stats:{health:2,relations:-1},traits:{add:['고집']}},detail:'내가 쓰던 물건은 쉽게 놓기 싫다.'}
    ]),[
     {id:'curious-play',priority:30,when:{any:[{attributes:{earlyTemperament:'curious'}},{traits:['호기심']}]},
-     body:'모래성에 물을 부으면 어떻게 될까? 네가 물통을 들자 친구도 삽을 내려놓고 지켜본다.',
+     title:'모래에 물을 부으면',body:'모래성에 물을 부으면 어떻게 될까? 네가 물통을 들자 친구도 삽을 내려놓고 지켜본다.',
      options:[
       {label:'물을 조금씩 부어 모양을 확인한다',effects:{traits:{add:['호기심']}},detail:'모래가 무너졌다가 단단해졌다. 친구도 옆에서 따라 해 봤다.'},
-      {label:'친구에게 물통을 건네 함께 해 본다',effects:{stats:{relations:1}},detail:'친구가 물을 부을 동안 네가 삽으로 받쳤다. 둘은 작은 둑을 만들었다.'},
-      {label:'혼자 다른 자리에 새로운 성을 만든다',detail:'친구는 물놀이를 이어 갔다. 너는 옆에서 바싹 마른 모래로 성을 다시 쌓았다.'}
+      {label:'친구에게 물통을 건네 함께 해 본다',effects:{stats:{relations:2,stress:1}},detail:'친구가 물을 부을 동안 네가 삽으로 받쳤다. 둘은 작은 둑을 만들었다.'},
+      {label:'혼자 다른 자리에 새로운 성을 만든다',effects:{stats:{stress:-1,relations:-1}},detail:'친구는 물놀이를 이어 갔다. 너는 옆에서 바싹 마른 모래로 성을 다시 쌓았다.'}
      ]},
     {id:'cautious-play',priority:20,when:{any:[{attributes:{earlyTemperament:'cautious'}},{traits:['낯가림']}]},
-     body:'낯선 친구가 네 삽을 잡아당겼다. 옆에 있던 선생님도 잠시 상황을 지켜본다.',
+     title:'모래삽의 차례',body:'낯선 친구가 네 삽을 잡아당겼다. 옆에 있던 선생님도 잠시 상황을 지켜본다.',
      options:[
-      {label:'아직 쓰는 중이라고 말한다',detail:'친구가 손을 놓았다. 말을 하니 목소리가 조금 떨렸다.'},
+      {label:'아직 쓰는 중이라고 말한다',effects:{stats:{stress:1},traits:{add:['자기주장']}},detail:'친구가 손을 놓았다. 말을 하니 목소리가 조금 떨렸다.'},
       {label:'다 쓰고 나서 빌려주기로 한다',effects:{stats:{relations:1}},detail:'성의 벽을 다 쌓자 삽을 건넸다. 친구는 고맙다며 다른 모양을 만들었다.'},
-      {label:'선생님에게 차례를 정해 달라고 한다',detail:'선생님이 모래삽 순서를 정했다. 이제 누가 먼저 쓰는지 헷갈릴 일은 없었다.'}
+      {label:'선생님에게 차례를 정해 달라고 한다',effects:{stats:{stress:-1,relations:-1}},detail:'선생님이 모래삽 순서를 정했다. 이제 누가 먼저 쓰는지 헷갈릴 일은 없었다.'}
      ]},
     {id:'block-disaster',priority:25,when:{attributes:{earlyTemperament:'stubborn'}},
       title:'블록 탑이 무너진 날',
@@ -68,7 +68,7 @@ global.GukminDirector.register({
        {label:'남은 블록을 챙겨 다른 곳으로 간다',detail:'친구는 손을 거뒀고 너는 구석에서 새 탑을 쌓았다.'}
       ]},
      {id:'territory-play',priority:0,
-     body:'친구가 네 모래탑을 건드려 꼭대기가 무너졌다. 친구는 남은 모래를 보며 같이 고치자고 한다.',
+     title:'무너진 모래탑',body:'친구가 네 모래탑을 건드려 꼭대기가 무너졌다. 친구는 남은 모래를 보며 같이 고치자고 한다.',
      options:[
       {label:'화가 난 채로 친구와 다시 쌓는다',effects:{stats:{relations:1}},detail:'친구가 모래를 주워 왔다. ==아직 화는 나지만== 둘은 다시 쌓기 시작했다.'},
       {label:'내가 만든 탑이라며 다시 만지지 말라고 한다',detail:'친구는 손을 거두고 옆에 다른 성을 만들었다. 무너진 탑은 네 몫으로 남았다.'},
@@ -88,6 +88,11 @@ global.GukminDirector.register({
     schools:[{id:'local-elementary',kind:'elementary',name:'거주지 배정 초등학교',status:'enrolled'}]
    })
   );
+  const play=stages.choices.find(c=>c.id==='infant:play');
+  const block=play.variants.find(v=>v.id==='block-disaster');block.options[0].result.effects.stats={relations:-2,stress:-2};block.options[1].result.effects.stats={relations:2,stress:2};block.options[2].result.effects={stats:{relations:-1,stress:-1}};
+  const curious=play.variants.find(v=>v.id==='curious-play');curious.options[0].result.effects.stats={relations:1,stress:1};curious.options[1].result.effects.stats={relations:2,stress:2};
+  const territory=play.variants.find(v=>v.id==='territory-play');territory.options[1].result.effects={stats:{relations:-1},traits:{add:['자기주장']}};territory.options[2].result.effects={stats:{relations:-1,stress:-1}};
+  stages.choices.find(c=>c.id==='infant:prepare').options.forEach((o,i)=>o.result.effects={stats:[{relations:2,stress:1},{stress:-1},{stress:-2,relations:-1}][i]});
   return {...stages,attributes:{earlyTemperament:{label:'유년기 행동 기록',hidden:true}}};
  }
 });

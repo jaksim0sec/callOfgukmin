@@ -1060,3 +1060,63 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .trait-dialog .modal-head{gap:1rem}.trait-dialog h2{font-size:1.125rem;margin:0;overflow-wrap:anywhere}
 .trait-dialog form{margin:0;flex:none}
 .trait-dialog #traitInfo{padding:1.25rem;margin:0;line-height:1.75;font-size:.9375rem;white-space:pre-line;overflow-y:auto}
+
+/* Student assessments and admissions share the existing paper and token language. */
+:root{--grade-1:#23865A;--grade-2:#237F91;--grade-3:#A67515;--grade-4:#B8682D;--grade-5:#B84B52;--grade-6:#AA414C;--grade-7:#963747;--grade-8:#822F42;--grade-9:#6F293C}
+.gauge[style*="--grade-color"] .gauge-value{color:var(--grade-color)}
+.assessment-sources,.assessment-source{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;line-height:1.6}
+.assessment-sources{margin-top:.5rem;font-size:.85rem}
+.assessment-sources>small{flex-basis:100%}
+.assessment-source{font-size:.85rem;margin:.3rem 0}
+.interest-transition{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem;margin:.5rem 0}
+.school-placeholder{width:2rem;height:2rem;flex-shrink:0;object-fit:contain}
+.life-school-crest{flex-shrink:0;background:transparent}
+.admission-paper{max-height:calc(100dvh - 1rem);min-height:0;overflow:hidden;display:flex;flex-direction:column}
+.admission-paper>.life-modal-head,.admission-paper>.life-modal-title,.admission-paper>.admission-foot,.admission-fields{flex-shrink:0}
+.admission-meta{font-size:.85rem;margin:.6rem 0 0;color:#6e6662}
+.admission-paper .life-modal-sub{font-size:.9rem;line-height:1.65;flex-shrink:0}
+.admission-choices{flex:1 1 auto;min-height:0;overflow:auto}
+.admission-major{aspect-ratio:auto;min-height:8rem;border-width:.08rem}
+.admission-major.route-early,.admission-major.route-regular{background:#fffdf9;border-color:#d0c9c0;--route-color:#403b35}
+.admission-major .admission-risk,.admission-minor .admission-risk,.admission-risk,.admission-type-label{font-size:.85rem;line-height:1.6}
+.admission-choice-title{overflow-wrap:anywhere;min-width:0}
+.admission-row{display:grid;grid-template-columns:2rem minmax(0,1fr);column-gap:.7rem}
+.admission-row>.school-placeholder{grid-column:1;grid-row:1}
+.admission-row>*:not(.school-placeholder){grid-column:2}
+.admission-fields{display:flex;gap:.5rem;margin:0 0 .7rem}
+.admission-fields button{font:inherit;min-height:2.75rem;padding:.5rem .75rem;border:.0625rem solid #c5bbac;border-radius:.3rem;background:#fffdf9;color:#403b35;cursor:pointer}
+.admission-fields [aria-pressed=true]{background:#e6e0d5;border-color:#645a4e}
+.admission-choices [aria-pressed=true]{box-shadow:inset .2rem 0 #645a4e;border-color:#645a4e;background:#eee9df}
+.admission-foot p{font-size:.8rem}
+body.cinematic-open{overflow:hidden}
+.life-cinematic-body{max-height:calc(100dvh - 7rem);overflow-y:auto}
+.is-election{background:#234a3e;border:.35rem solid #806445;border-radius:.3rem;padding:1.1rem;color:#fffced}
+.is-election .life-cinematic-title{font-size:2.2rem}
+.election-candidate{display:flex;justify-content:space-between;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:.0625rem solid #fff5;text-align:left}
+.election-tally{font-size:1.1rem;letter-spacing:.1em}
+.election-candidate.is-player{color:#ffe4a0}
+.election-ballot-box{border:.125rem solid #e5ddbd;margin:1rem auto;padding:.5rem;width:5rem;animation:election-vote 1s ease-in-out infinite}
+.election-result{min-height:3rem;line-height:1.6;font-weight:800}
+.is-elected .is-player{animation:election-winner .7s ease-out}
+.is-counted .election-ballot-box{animation:none}
+.is-admission-result{background:#f5f0e6;color:#302c31;border:.0625rem solid #bdb3a1;padding:1.5rem;border-radius:.3rem;animation:admission-envelope 2.4s ease-out both}
+.is-admission-result .life-cinematic-title{font-size:clamp(1.65rem,6vw,2.5rem);overflow-wrap:anywhere}
+.is-admission-result .life-cinematic-description{color:#625c54}
+.admission-guidance{font-size:.95rem;line-height:1.75;margin:1rem 0;white-space:pre-line;border-top:.0625rem solid #c5bbac;padding-top:.8rem}
+@keyframes election-vote{50%{transform:translateY(-.25rem) rotate(-3deg)}}
+@keyframes election-winner{50%{text-shadow:0 0 .8rem #ffe4a0}}
+@keyframes admission-envelope{from{opacity:0;transform:translateY(1rem) rotateX(15deg)}to{opacity:1;transform:none}}
+@media(max-width:35em){.admission-paper .life-modal-title{font-size:1.55rem;margin:.65rem 0}.admission-paper .life-modal-sub{max-height:6rem;overflow-y:auto}.admission-major{min-height:7rem}.admission-major .admission-choice-title{font-size:1.3rem}.admission-big-grade{font-size:1.6rem}.admission-choices.is-route{grid-template-columns:repeat(2,minmax(0,1fr))}.is-election{padding:.8rem}.election-candidate{font-size:.9rem}.election-tally{font-size:.95rem}}
+@media(prefers-reduced-motion:reduce){.election-ballot-box,.is-elected .is-player,.is-admission-result{animation:none}}
+@media(max-height:40em){
+ .admission-paper{padding:.8rem}
+ .admission-paper .life-modal-title{margin:.4rem 0 .2rem}
+ .admission-meta{margin:.2rem 0 .45rem}
+ .admission-paper .life-modal-sub{max-height:3.5rem;margin-bottom:.5rem;overflow-y:auto}
+ .admission-current-score{margin:.2rem 0 .4rem}
+ .admission-fields{margin-bottom:.4rem}
+ .admission-foot{margin-top:.5rem}
+ .admission-foot p{margin:.2rem 0 .5rem}
+}
+
+.admission-choices>button{flex-shrink:0}

@@ -1,5 +1,15 @@
 # 국민의 부름 — 정적 화면 기반 실행 구조
 
+## 2026-10-21 학생 생애 개정 — 현행
+
+정적 HTML/일반 JS/기존 로드 순서를 유지한다. 제품 의존성·빌드·서버를 추가하지 않았다. 공통 성적 순수 계산은 기존 `data/grades.js`에 있어 새 스크립트 로더가 필요 없다. 세 화면 CSS/JS 버전은 `student-revision-20261021`이다.
+
+선택 script와 발표 대기는 기존 simulation 안에 저장한다. 이전 인물/키는 보존하며 이미 완료한 사건은 재지급하지 않는다. N수는2회/99턴 종료 대신 실제 연도 반복과 세 한계로 진행한다. 입시 seed는 신생 인물에 저장하며 구 인물은 기존 출생 식별값의 안정적 해시를 사용한다.
+
+검사: `node tests/smoke.mjs`, `node --test tests/systems.mjs`, `CHROMIUM_PATH=/usr/bin/chromium node tests/browser.mjs`, `CHROMIUM_PATH=/usr/bin/chromium node tests/experience.mjs`. Playwright는 테스트 전용이다. 환경별 Chromium 경로는 조정한다. [수치/범위/화면 검증표](STUDENT_REVISION.md).
+
+> 아래2회차·99턴 등은 개정 전 이력이다.
+
 ## 2026-10-21 시각 진행바와 일상 선택 자동 노출
 
 `GukminDailyChoice`는 동일 토큰당 한 번만 5초 wall-clock 타이머를 시작한다. `document.visibilitychange`에서 남은 시간과 막대를 일시 정지하며, 수동 열기·접기·다른 선택·dispose 시 타이머를 취소한다. 5초 후의 유일한 부작용은 `dialog.showModal()`이고 `resolve`/정산은 절대 호출하지 않는다. 인생 진행바의 값은 기존 논리 턴에만 의존하고, UI 진행률은 CSS transform 보간으로 표시한다. `GukminStatus.showMetrics`는 각 게이지의 실제 현재 변환 값을 읽어 새 렌더에 이어 주고, 접근 가능한 `<progress>`의 값을 그대로 유지한다. 출생 화면도 원래의 10초 타이머와 Skip 버튼을 변경하지 않는다.

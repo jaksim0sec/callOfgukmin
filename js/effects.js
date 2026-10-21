@@ -36,8 +36,16 @@ function matches(persona,condition={},turn=0){
  return true;
 }
 function apply(persona,result={},context={}){
- keys(result,['effects','history','tags','conditional'],'결과');
- const s=clone(persona),effects=result.effects||{},turn=context.turn??0;
+ keys(result,['effects','history','tags','conditional','assessment','highEntry','retryYear','admissionDecision'],'결과');
+ let prepared=clone(result);
+ if(result.admissionDecision)prepared={...prepared,...global.GukminAdmissions.decision(persona,result.admissionDecision)};
+ if(result.retryYear)prepared=global.GukminAdmissions.retry(persona,prepared);
+ if(result.highEntry){
+  prepared.effects??={};prepared.effects.activate={...prepared.effects.activate,...global.GukminGrades.highEntry(persona,result.highEntry.track)};
+  if(persona.attributes?.admissionResearch==='paid'&&!persona.attributes?.counselingUsed){prepared.effects.stats={...prepared.effects.stats,stress:(prepared.effects.stats?.stress||0)-2};prepared.effects.attributes={...prepared.effects.attributes,counselingUsed:true};}
+ }
+ if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};}
+ const s=clone(persona),effects=prepared.effects||{},turn=context.turn??0;
  keys(effects,['activate','stats','attributes','schools','traits','deactivate'],'효과');
  s.metricActive??={};s.metricHistory??=[];s.attributeHistory??=[];s.traitSince??={};s.attributes??={};
  for(const [id,value] of Object.entries(effects.activate||{})){
@@ -46,6 +54,8 @@ function apply(persona,result={},context={}){
  const deltas={...effects.stats};
  for(const [id,value] of Object.entries(deltas)){P.metricDefinition(id);finite(value);}
  const tags=result.tags||context.tags||[];
+ // Old waiting examination scripts retain their original modifier contract.
+ if(tags.includes('assessment')&&!result.assessment){if(P.hasTrait(persona,'인내심')&&deltas.stress!==undefined)deltas.stress*=.75;if(P.hasTrait(persona,'꼼꼼함'))for(const id of ['schoolScore','exam'])if(deltas[id]!==undefined)deltas[id]+=2;}
  // Only traits held before this result modify its base deltas, in acquisition order.
  for(const trait of persona.traits){
   const name=typeof trait==='string'?trait:trait.name,def=P.traitDefinition(name);
@@ -59,6 +69,7 @@ function apply(persona,result={},context={}){
   }
  }
  for(const [id,delta] of Object.entries(deltas)){
+  if((id==='exam'&&persona.attributes?.csatSubmitted&&!prepared.retryYear&&!context.finalizing)||(id==='schoolScore'&&persona.attributes?.highFinalSubmitted))continue;
   s.stats[id]=bounded(finite(s.stats[id]??0)+delta,P.metricDefinition(id));
  }
  for(const [id,value] of Object.entries(effects.attributes||{})){
@@ -101,7 +112,7 @@ function apply(persona,result={},context={}){
   if(s.metricActive[id]!==false)s.metricHistory.push({id,value:s.stats[id]??null,turn,age:s.age,phase:P.phaseOf(s)});
   s.metricActive[id]=false;
  }
- const histories=result.history?(Array.isArray(result.history)?result.history:[result.history]):[];
+ const histories=prepared.history?(Array.isArray(prepared.history)?prepared.history:[prepared.history]):[];
  for(const h of histories){
   keys(h,['title','detail','importance','display'],'기록');
   if(typeof h.title!=='string')throw new Error('기록 제목 오류');
@@ -109,8 +120,8 @@ function apply(persona,result={},context={}){
  }
  let settled=s;
  for(const branch of result.conditional||[]){
-  keys(branch,['when','result'],'조건부 결과');
-  if(matches(settled,branch.when,turn))settled=apply(settled,branch.result,context);
+  keys(branch,['when','result','before'],'조건부 결과');
+  if(matches(branch.before?persona:settled,branch.when,turn))settled=apply(settled,branch.result,{...context,finalizing:!!result.effects?.attributes?.csatSubmitted||context.finalizing});
  }
  return settled;
 }

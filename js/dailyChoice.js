@@ -51,7 +51,7 @@ function differences(before,after){
  }
  for(const item of prior)if(item&&!next.has(item)){
   const def=P.traitDefinitions[item]||{};
-  if(def.hidden)continue;
+  if(def.hidden){if(item.startsWith('관심-')&&next.has(item.slice(3)))result.push({text:'관심 → 적성 · '+item.slice(3),trait:item,change:'conversion',icon:def.icon||'graduation',tone:'good'});continue;}
   result.push({text:(def.negative?'특성 해소 · ':'특성 상실 · ')+item,icon:def.icon||'sparkle',tone:def.negative?'good':'bad'});
  }
  const oldSchool=P.schoolsOf(before);
@@ -146,7 +146,9 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   return entries.filter(item=>item.display!=='hidden').map(item=>item.detail||'').filter(Boolean).join(' ');
  }
  function rewardModel(before,after,label,from,to){
-  return {label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
+  const route=after.attributes?.admissionResearch,score=after.stats?.schoolScore||0;
+  const guidance=route&&route!==before.attributes?.admissionResearch?global.GukminStory.admissionGuide(after,route):'';
+  return {guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
  }
  function renderReward(){
   if(!reward)return;
@@ -165,13 +167,16 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   if(reward.story)hero.append(rich('p','daily-reward-story',reward.story));
   else if(reward.label)hero.append(el('p','daily-reward-story',reward.label));
   body.append(hero);
+  if(reward.guidance)body.append(rich('p','admission-guidance',reward.guidance));
   const section=el('section','daily-reward-changes');
   section.append(el('strong','daily-reward-changes-title','획득한 보상'));
   const tray=el('div','daily-reward-tokens');
-  const ordered=[...gained,...reward.changes.filter(item=>item.change!=='gain')];
+  const conversions=reward.changes.filter(item=>item.change==='conversion');
+  const ordered=[...gained.filter(item=>!conversions.some(c=>c.trait.slice(3)===item.trait)),...reward.changes.filter(item=>item.change!=='gain')];
   for(const [index,change] of ordered.entries()){
    let tokenNode;
-   if(change.id&&Number.isFinite(change.amount))
+   if(change.change==='conversion'){tokenNode=el('span','interest-transition daily-reward-token');tokenNode.append(S.createToken({type:'interest',name:change.trait.slice(3)}),el('span','','→'),S.traitToken(change.trait.slice(3)));}
+   else if(change.id&&Number.isFinite(change.amount))
     tokenNode=S.metricImpact(change.id,change.amount,'daily-reward-token');
    else if(change.trait?.startsWith('관심-'))
     tokenNode=S.createToken({type:'interest',name:change.trait.slice(3),classes:'daily-reward-token'});
@@ -321,7 +326,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
      const preview=S.createToken({type:'interest',name:interest,label:'관심 발견 · '+interest,
       classes:'daily-trait-preview'});
      indicators.append(preview);
-    }else if(!def.hidden){
+    }else if(!def.hidden&&!P.hasTrait(persona,'관심-'+name)){
      const reward=S.traitToken(name);
      reward.classList.add('daily-trait-preview');
      reward.querySelector('.token-name').prepend('+ ');
@@ -335,8 +340,9 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
     indicators.append(S.createToken({type:'context',label:(def.negative?'해소 · ':'상실 · ')+name,
      icon:def.icon||'sparkle',classes:'daily-choice-effect '+(def.negative?'is-positive':'is-negative')}));
    }
+   for(const name of persona.traits.filter(t=>typeof t==='string'&&t.startsWith('관심-'))){if(!P.hasTrait(projected,name)&&P.hasTrait(projected,name.slice(3))){const transition=el('span','interest-transition');transition.append(S.createToken({type:'interest',name:name.slice(3)}),el('span','','→'),S.traitToken(name.slice(3)));text.append(transition);}}
    if(indicators.childElementCount)text.append(indicators);
-   else text.append(el('small','daily-choice-note',Object.keys(option.result?.effects?.attributes||{}).length?'이 행동을 이후 이야기에서 기억합니다':'수치 변화 없이 이야기를 이어갑니다'));
+
    if(option.outlook)text.append(rich('small','daily-choice-outlook',option.outlook));
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
    button.append(number,text,el('span','daily-choice-chevron','›'));
@@ -375,7 +381,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   confirm.removeEventListener('click',confirmSelection);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }
- return Object.freeze({showChoice,changesFor,capture,restore,openRestoredReward,highlight,reset,dispose,isReview:()=>review,isRewardVisible:()=>!!reward});
+ return Object.freeze({suspend:()=>{cancelClock();if(dialog.open)dialog.close();},showChoice,changesFor,capture,restore,openRestoredReward,highlight,reset,dispose,isReview:()=>review,isRewardVisible:()=>!!reward});
 }
 global.GukminDailyChoice=Object.freeze({create});
 global.GukminMarkup=Object.freeze({render:renderRich});

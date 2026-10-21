@@ -29,3 +29,5 @@
 2. 해당 `html/`·`js/`·`css/`와 테스트에서 실제 구현 확인.
 3. CSS 작업 전 [developing/CSS.md](developing/CSS.md) 확인 후 **같은 커밋에 문서 갱신**.
 4. 기획/옛 날짜별 기록을 현재 계약으로 취급하거나 미구현 기능을 구현했다고 적지 않기.
+
+- [학생 생애 개정 검증표](developing/STUDENT_REVISION.md): 2026-10-21 실행 기본안·G/S별 근거·분기/옵션 점검.

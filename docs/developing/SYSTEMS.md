@@ -1,5 +1,14 @@
 # 게임 공통 시스템 — 구현 계약
 
+## 2026-10-21 학생 생애 개정 — 현행 추가 계약
+
+- 선택 시작 시 조건부 variant를 우선 검토하고 그중 매칭이 없을 때만 명시 폴백/기본 슬롯을 쓴다. 각 variant 제목은 필수다. `runtime.choices[token].script`(revision2)는 제목·본문·옵션·결과 전체를 저장한다. 구 대기 선택만 `story.legacyChoice` 차이표로 복구한다.
+- 기존 공통 정산은 선택적 `result.assessment:{metric,effort}`, `highEntry:{track}`, `retryYear:true`, `admissionDecision:{cycle,type}`를 해석한다. `grades`와 `admissions`의 순수 계산이며 시간·저장·DOM을 소유하지 않는다. 옵션 `conditional[].before:true`는 결과 직전 상태로 조건을 확인한다.
+- `resolve(token,optionId,{admissionField})` 입력은 대학 지원에서만 인문/자연 enum으로 허용된다. 미리보기는 저장하지 않고 확정 때 단일 정산한다.
+- 발표 소식의 선택적 `presentation`은 `runtime.cinematic`으로 저장한다. 명시적 `acknowledge()` 전까지 타임라인이 멈추고 UI는 정산된 결과만 보여 준다. 선택 결과도 `presentationAcknowledged`로 중복 연출/정산을 구별한다. `run()`은 시뮬레이션 소비자의 명시적 계속 요청이며 UI는 확인 후에만 호출한다.
+- N수 한계는 다음 입력 경계에서 `cancelPending`으로 미확정 선택을 종료한다. 비용과 종료 기록은 같은 트랜잭션이다. 예전 retry/more-prep 저장은 첫 계속 요청에서 한 번만 새 준비 연도로 이행한다.
+- 현재/다음 연도 성적과 비용·전체 검증 근거는 [STUDENT_REVISION.md](STUDENT_REVISION.md).
+
 ## 현행 선택 정산·검토 흐름 (2026-10-21)
 
 - **공통 엔진**: `GukminTimeline.resolve()`는 선택을 한 번만 정산·저장하고 `runtime.choices[token].outcome`에 선택 문구·기록 구간·정산 전후 상태를 남긴다. 생애 감독의 `pauseAfterChoice:true`는 `awaitingContinuation`/`reviewPending`을 유지한다.

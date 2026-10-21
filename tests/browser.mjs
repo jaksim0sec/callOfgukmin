@@ -577,7 +577,7 @@ try{
      return {age:settled.persona.age,turn:settled.runtime.turn,choice:null};
     }
     if(choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice.id};
-    const first=choice.options.find(o=>o.available);
+    const first=(choice.presentation?.type==='admission-finish'?choice.options.find(o=>o.id==='employment'&&o.available):null)||choice.options.find(o=>o.available);
     if(!first)throw new Error('No legal choice: '+choice.id);
     s.resolve(choice.token,first.id);
     if(choice.layer==='한방 선택'&&!s.snapshot().reviewPending)throw new Error('Major choice review did not persist');
@@ -611,7 +611,7 @@ try{
   assert.ok((await p.locator('#lifeDecisionDialog .life-school-source').getAttribute('href')).startsWith('https://'));
   await p.locator('#lifeDecisionDialog .life-submit').click();
   const ended=await walk('nothing');
-  assert.equal(ended.age,19);assert.equal(ended.turn,99);
+  assert.equal(ended.age,19);assert.equal(ended.turn,88);
   assert.equal(await p.locator('#choiceTiming').isVisible(),false,'completed chapter has no meaningless progress bar');
   assert.equal(await p.locator('.life-chapter-complete button').count(),1,'completed chapter has an explicit replay action');
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);

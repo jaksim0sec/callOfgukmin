@@ -87,32 +87,19 @@ const old=[
  [18,3,77,'6월 모의고사','mock'],[18,3,78,'1학기 기말고사','school']
 ];
 global.GukminDirector.register({
- id:'high',when:{phase:'high'},
+ id:'high',when:{phase:'high',age:{lte:18}},
  generate:persona=>{
   const countryside=persona.regionTags?.some(t=>['어촌','농촌','섬'].includes(t));
   const familyNeeds=['soil','bronze'].includes(persona.familyTier);
-   // The first mock score inherits accumulated study, not a flat 45 for every school.
-   const arrival=S.notice('high:welcome',64,'고등학교에 입학했다',
-    '고등학교 첫 시간표가 나왔다. 중학교 때 쌓아 온 기초는 그대로지만, 평가 방식은 달라졌다.',
-    {activate:{exam:45}});
-   const tracks=['science','gifted'];
-   const notElite={not:{any:tracks.map(schoolTrack=>({attributes:{schoolTrack}}))}};
-   const band=(from,until)=>({all:[notElite,{stats:{study:{gte:from}}},...(until?[{not:{stats:{study:{gte:until}}}}]:[])]});
-   arrival.result.conditional=[
-    {when:{attributes:{schoolTrack:'science'}},result:{effects:{stats:{exam:35}}}},
-    {when:{attributes:{schoolTrack:'gifted'}},result:{effects:{stats:{exam:40}}}},
-    {when:band(85,null),result:{effects:{stats:{exam:32}}}},
-    {when:band(70,85),result:{effects:{stats:{exam:23}}}},
-    {when:band(55,70),result:{effects:{stats:{exam:12}}}}
-   ];
+  const arrival=S.notice('high:welcome',64,'고등학교에 입학했다','새 시간표를 받았다. 내신은 교내 경쟁, 모의고사는 통합 시험 역량이다. 입학 시작값은 원서 확정 때 한 번 반영했다.');
   const branches=Object.entries(trackScenes).map(([track,[title,body]])=>S.branch(choiceAt(
    'high:track-'+track,67,title,body,actions,{attributes:{schoolTrack:track}}),[
-    {id:'track-'+track,body,options:trackOptions[track]}
+    {id:'track-'+track,title,body,options:trackOptions[track]}
   ]));
   const unique=[
    S.branch(choiceAt('high:bdja-science',72,'학교에서 안내한 과학·수학 탐구 활동',
     '분당중앙고 공개 안내에는 과학·수학 관련 활동이 있다. 어떤 방식으로 참여할까?',actions,
-    {attributes:{schoolProgram:'bdja-science'}}),[{id:'bdja-lab',
+    {attributes:{schoolProgram:'bdja-science'}}),[{id:'bdja-lab',title:'예약이 찬 탐구실',
     body:'실험실 예약표가 빈틈없이 찼다. ==검증 가능한 가설==을 적으라는 안내와 달리 장비가 먼저 부족하다.',
     options:[
      {label:'측정 조건 하나만 바꾸는 소규모 실험을 한다',effects:{stats:{study:2}},detail:'변인을 좁히자 필요한 실험 시간도 줄었다.'},
@@ -121,7 +108,7 @@ global.GukminDirector.register({
     ]}]),
    S.branch(choiceAt('high:whimoon-electives',72,'다양한 선택과목의 학점 배당',
     '휘문고 공개 교육과정에서 과목 선택과 이수 학점을 검토한다. 시간을 어떻게 배분할까?',actions,
-    {attributes:{schoolProgram:'whimoon-electives'}}),[{id:'whimoon-credits',
+    {attributes:{schoolProgram:'whimoon-electives'}}),[{id:'whimoon-credits',title:'겹쳐 버린 선택과목',
     body:'과목 희망표가 돌아왔다. 두 과목의 시간이 겹친다. 마감은 내일이고 이수 학점은 지켜야 한다.',
     options:[
      {label:'이수 기준부터 확인하고 한 과목을 조정한다',effects:{stats:{study:1}},detail:'희망 순위를 고쳤다. 듣고 싶던 과목 하나는 다음 학기로 미뤘다.'},
@@ -138,20 +125,20 @@ global.GukminDirector.register({
      {label:'친구에게 말을 걸고 같이 살펴본다',effects:{stats:{relations:4,stress:-2}},detail:'함께 적응하는 친구가 생겼다.'},
      {label:'내 일정부터 정리한다',effects:{stats:{study:3,stress:-2}},detail:'스스로 일정을 챙겼다.'}
     ]),[
-  {id:'first-science',priority:30,when:{traits:['이과']},
-   body:'첫날 실험 조가 꼬였다. 윤세아가 자리표를 보더니 "우리 조가 세 명이라는데 둘밖에 없어."라고 속삭인다.',
+  {id:'first-science',priority:30,when:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]},
+   title:'함께 풀 첫 탐구 과제',body:'입학 전 공동 문제풀이 기록을 나눠 정리해야 한다. 윤세아는 서로 다른 풀이의 가정을 확인하자고 한다.\n\n익숙하지 않은 심화 문제와 조별 기록을 어떻게 나눌까?',
    options:[
-    {label:'세아와 남은 조원을 찾아본다',effects:{attributes:{highPeer:'세아'},stats:{relations:1}},detail:'전학 간 학생의 이름이 남은 것이었다. 세아와 함께 담당 선생님께 알렸다.'},
-    {label:'세아와 준비물 목록부터 확인한다',effects:{attributes:{highPeer:'세아'},stats:{study:1}},detail:'준비물 하나를 빠뜨릴 뻔했다. 세아가 체크 표시를 보내 왔다.'}
+    {label:'세아와 풀이의 가정을 대조하고 역할을 나눈다',effects:{attributes:{highPeer:'세아'},stats:{relations:1}},detail:'서로 다른 가정을 표시해 공동 기록에 남겼다. 조원들과 다시 설명하느라 방과 후 시간이 줄었다.'},
+    {label:'공통 문제풀이 기록의 누락부터 검토한다',effects:{attributes:{highPeer:'세아'},stats:{study:1}},detail:'기록의 빈칸을 찾아 다시 풀었다. 세아는 다음 문제의 검산을 맡았다.'}
    ]},
   {id:'first-social',priority:20,when:{stats:{relations:{gte:55}}},
-   body:'첫날 최하린이 반 단체방에서 자기소개 영상을 만들자고 한다. 학생 이름도 못 외웠는데 마감은 이번 주다.',
+   title:'첫 수행평가의 조 편성',body:'첫 수행평가의 조 편성 공지가 올라왔다. 최하린이 선택과목 안내와 제출 날짜가 서로 다르다고 알려 왔다.\n\n토론 경험이 있다면 자료 해석과 질의응답을 맡을 수도 있다.',
    options:[
-    {label:'하린과 인터뷰 영상에 참여한다',effects:{attributes:{highPeer:'하린'},stats:{relations:1}},detail:'첫 영상에는 학생보다 형광등이 더 크게 찍혔다. 둘은 다시 찍었다.'},
-    {label:'하린을 도와 자막과 이름을 확인한다',effects:{attributes:{highPeer:'하린'},stats:{study:1}},detail:'자막을 세 번 고쳤다. 그 사이 반 친구들의 이름을 조금 외웠다.'}
+    {label:'하린과 공지의 근거를 찾아 조원들에게 설명한다',effects:{attributes:{highPeer:'하린'},stats:{relations:1}},detail:'질문을 모아 담당 교사에게 확인했다. 조 편성은 정리됐지만 내 복습 시간은 줄었다.'},
+    {label:'하린과 제출 기준을 대조해 내 일정을 정한다',effects:{attributes:{highPeer:'하린'},stats:{study:1}},detail:'서로 다른 날짜를 바로잡고 제출 계획을 적었다. 전체 설명은 다른 조원에게 맡겼다.'}
    ]},
   {id:'first-ordinary',priority:0,
-   body:'박재호가 단체방에 수행평가 마감일을 올렸다. ==아직 수행평가가 시작도 안 했다.== 담임도 당황했다.',
+   title:'공지 원문부터 확인하기',body:'박재호가 단체방에 수행평가 마감일을 올렸다. ==아직 수행평가가 시작도 안 했다.== 담임도 당황했다.',
    options:[
     {label:'재호와 공지 원문을 다시 확인한다',effects:{attributes:{highPeer:'재호'},stats:{relations:1}},detail:'재호가 날짜를 정정했다. 네가 놓친 준비물도 하나 있었다.'},
     {label:'내 시간표부터 정리하고 알림을 꺼둔다',effects:{attributes:{highPeer:'재호'},stats:{study:1}},detail:'재호의 메시지는 계속 왔다. 필요한 날짜만 달력에 적었다.'}
@@ -171,10 +158,10 @@ global.GukminDirector.register({
     ]),[
      {id:'morning-lab',priority:30,when:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]},
       title:'아침 탐구실에 빠진 안전 고글',
-      body:'실습 시작까지 7분. 조원들이 실험실 앞에 모였다. 그런데 네 고글이 안 보인다. ==가방 밑바닥에는 교과서만 있다.==',
+      body:'실험 준비 시간, 조원들이 실험실 앞에 모였다. 수업 전 안전 점검을 하니 네 고글이 안 보인다. ==가방 밑바닥에는 교과서만 있다.==',
       options:[
        {label:'담당 선생님에게 말하고 여분 보호구를 확인한다',effects:{stats:{relations:1}},detail:'실험실에 여분이 있었다. 선생님은 기록부에 장비 대여를 적고 들어오라고 했다.'},
-       {label:'기숙사나 사물함에 두었는지 확인하고 돌아온다',risk:'실습 시작을 놓칠 수 있음',effects:{stats:{stress:2}},detail:'사물함에 고글이 있었다. 조금 늦게 합류했지만 안전 수칙을 지킬 수 있었다.'},
+       {label:'실험실 옆 사물함을 확인하고 담당 교사에게 알린다',risk:'실습 시작을 놓칠 수 있음',effects:{stats:{stress:2}},detail:'사물함에 고글이 있었다. 조금 늦게 합류했지만 안전 수칙을 지킬 수 있었다.'},
        {label:'오늘은 직접 실험 대신 기록 담당을 맡는다',effects:{stats:{study:1}},detail:'조원이 실험했고 너는 측정값을 정리했다. 신경 쓰였던 오차 하나를 찾아냈다.'}
       ]},
      {id:'morning-commute',priority:0,title:'등교 버스를 놓쳤다',
@@ -195,21 +182,21 @@ global.GukminDirector.register({
      {label:'산책하면서 다른 이야기도 나눈다',effects:{stats:{relations:3,health:2,stress:-2}},detail:'조금 편안한 시간을 보냈다.'}
     ]),[
   {id:'career-sea',priority:30,when:{attributes:{highPeer:'세아'}},
-   body:'윤세아가 학과 안내서를 펴고 묻는다. "좋아하는 과목하고 잘하는 과목이 다르면 뭘 골라?"',
+   title:'세아의 전공 수업 목록',body:'윤세아가 학과 안내서를 펴고 묻는다. "좋아하는 과목하고 잘하는 과목이 다르면 뭘 골라?"',
    options:[
     {label:'세아와 실제 전공 수업 목록을 살펴본다',tags:['team'],effects:{stats:{relations:1}},detail:'학과 이름보다 수업 내용이 훨씬 낯설었다. 세아도 목록에 표시했다.'},
     {label:'관심 수업의 선수 과목을 찾아본다',effects:{stats:{study:1}},detail:'필요한 과목을 적었지만 아직 희망 학과를 확정하진 않았다.'},
     {label:'아직 진로를 모르겠다고 인정한다',detail:'세아가 웃었다. 본인도 지망 학과를 세 번 고쳤다고 했다.'}
    ]},
   {id:'career-harin',priority:20,when:{attributes:{highPeer:'하린'}},
-   body:'최하린의 진로 발표 자료에는 그럴듯한 직업명만 가득하다. "이거 내가 하고 싶은 일은 아닌데."',
+   title:'하린의 다음 탐구 방향',body:'최하린은 앞서 함께한 자료 해석 활동은 좋아했지만, 선택과목 계획에는 관심 없는 계열의 준비가 가득하다고 말한다.\n\n다음 탐구를 바꾸면 기존 기록을 이어갈 시간과 새 기초를 익힐 시간을 나눠야 한다.',
    options:[
     {label:'하린에게 실제로 해 보고 싶은 일을 물어본다',effects:{stats:{relations:1}},detail:'하린은 화려한 직업명을 지우고 하고 싶은 활동을 적었다.'},
     {label:'내 발표에서도 직업 대신 경험을 적는다',effects:{stats:{study:1}},detail:'희망 직업 칸은 비었다. 대신 해 보고 싶은 활동이 세 줄 늘었다.'},
     {label:'일단 제출부터 하고 나중에 고민한다',detail:'발표는 끝났다. 하린은 파일을 지우지 않고 남겼다.'}
    ]},
   {id:'career-jaeho',priority:0,
-   body:'박재호가 직업 체험 신청서 앞에서 멈췄다. 인기 프로그램은 정원이 찼다. "나 줄 서 있었는데."',
+   title:'재호의 체험 신청서',body:'박재호가 직업 체험 신청서 앞에서 멈췄다. 인기 프로그램은 정원이 찼다. "나 줄 서 있었는데."',
    options:[
     {label:'재호와 다른 체험 프로그램을 찾아본다',effects:{stats:{relations:1}},detail:'원래 목표는 놓쳤지만 다른 분야 체험을 함께 신청했다.'},
     {label:'현직자 인터뷰 자료를 찾아본다',effects:{stats:{study:1}},detail:'일하는 일상을 읽고 예상했던 모습과 다른 부분을 발견했다.'},
@@ -231,7 +218,7 @@ global.GukminDirector.register({
        {label:'실험 규모를 줄이고 검증 가능한 질문 하나만 남긴다',effects:{attributes:{electiveRoute:'alternate'},stats:{study:1}},detail:'제목은 덜 거창해졌다. ==대신 결론은 네가 직접 검증할 수 있다.=='},
        {label:'지도교사와 대체 실험실을 찾는다',effects:{attributes:{electiveRoute:'petition'}},detail:'다른 연구실 빈 시간이 나왔다. 지도교사는 안전교육을 먼저 다시 받으라고 했다.'}
       ]},
-     {id:'regular-elective',priority:0,
+     {id:'regular-elective',priority:0,title:'다시 고르는 선택과목',
       body:'다음 학기 희망 과목 신청 결과가 나왔다. 그런데 신청 인원이 부족해 ==개설이 어려울 수 있다==는 공지가 붙었다.',
       options:[
        {label:'학교 밖 공동교육과정에서 같은 과목을 찾아본다',effects:{attributes:{electiveRoute:'shared'}},detail:'다른 학교에 강좌가 있었다. 통학 일정과 이수 조건을 확인했다.'},
@@ -259,7 +246,7 @@ global.GukminDirector.register({
      {label:'교사에게 현재 진행 상황을 정확히 알린다',effects:{stats:{study:3,stress:1}},detail:'상황을 정리해 전달했다.'}
     ]),[
   {id:'team-sea',priority:30,when:{attributes:{highPeer:'세아'}},
-   body:'윤세아가 실험 결과 파일을 열었다. 마지막 그래프의 단위가 틀렸다. ==이미 보고서를 인쇄했다.==',
+   title:'세아가 찾은 실험 오류',body:'윤세아가 실험 결과 파일을 열었다. 마지막 그래프의 단위가 틀렸다. ==이미 보고서를 인쇄했다.==',
    options:[
     {label:'세아와 원본 데이터를 다시 계산한다',tags:['team','science'],risk:'늦은 밤까지 재작업',
       effects:{stats:{study:3,stress:3,health:-1}},
@@ -272,14 +259,14 @@ global.GukminDirector.register({
       detail:'그래프를 빼자 결론을 뒷받침할 설명도 줄었다. 질문 시간에 빠진 그래프의 이유를 설명하느라 진땀을 뺐다.'}
    ]},
   {id:'team-harin',priority:20,when:{attributes:{highPeer:'하린'}},
-   body:'최하린과 준비한 토론 발표에서 한 조원이 맡은 슬라이드를 보내지 않았다. 그런데 단체방 프로필 사진은 방금 바뀌었다.',
+   title:'하린과 비어 있는 발표 자료',body:'최하린과 준비한 토론 발표에서 한 조원이 맡은 슬라이드를 보내지 않았다. 그런데 단체방 프로필 사진은 방금 바뀌었다.',
    options:[
     {label:'조원에게 필요한 자료와 마감을 명확히 전달한다',detail:'조원이 절반을 보내 왔다. 나머지는 너와 하린이 다시 확인했다.'},
     {label:'하린과 발표 분량을 줄여 마무리한다',tags:['team','humanities'],risk:'발표 완성도 일부를 포기',effects:{stats:{relations:2,schoolScore:-1},traits:{add:['친화력']}},detail:'지난 학기부터 함께 고친 자료를 다시 나눴다. 분량은 줄었지만 ==일을 나누고 마무리하는 습관==이 남았다.'},
     {label:'담당 교사에게 역할별 진행 상황을 알린다',detail:'교사는 작업 기록을 확인했다. 단체방은 며칠 동안 조용했다.'}
    ]},
-  {id:'team-jaeho',priority:0,
-   body:'박재호가 축제 홍보 영상 링크를 보냈다. 마지막 장면에 학교 이름이 틀렸다. 예약 업로드까지 ==30분 남았다.==',
+  {id:'team-jaeho',priority:0,when:{attributes:{highPeer:'재호'}},
+   title:'업로드 직전의 학교 이름',body:'박재호가 축제 홍보 영상 링크를 보냈다. 마지막 장면에 학교 이름이 틀렸다. 예약 업로드까지 ==30분 남았다.==',
    options:[
     {label:'재호와 마지막 장면을 다시 편집한다',tags:['team','arts'],risk:'출력하는 동안 내 과제 시간이 줄어듦',effects:{stats:{study:1,relations:1,stress:2}},detail:'오타를 고쳤다. 영상이 다시 출력되는 동안 둘 다 말을 안 했다.'},
     {label:'업로드 예약을 취소하고 수정본을 늦게 낸다',detail:'시간은 놓쳤지만 잘못된 학교 이름으로 퍼지지는 않았다.'},
@@ -314,21 +301,21 @@ global.GukminDirector.register({
      {label:'기출문제를 다시 풀며 수능 준비 계획을 세운다',detail:'오답 목록을 정리하고 남은 공부 일정을 새로 썼다.'}
     ]),[
      {id:'csat-mock-strength',priority:20,when:{stats:{exam:{gte:62}}},
-      body:'최근 모의고사 결과가 꾸준하다. 그런데 원서 상담에서는 내신과 전형별 준비가 빠졌다고 지적했다. ==점수 하나로 지원전략은 결정되지 않는다.==',
+      title:'모의고사와 지원 서류',body:'최근 모의고사 결과가 꾸준하다. 그런데 원서 상담에서는 내신과 전형별 준비가 빠졌다고 지적했다. ==점수 하나로 지원전략은 결정되지 않는다.==',
       options:[
        {label:'모의고사 대비를 유지하면서 지원 가능 전형을 분석한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'모의고사 준비를 이어가기로 했다. 동시에 지원 일정과 제출 서류를 표로 정리했다.'},
        {label:'기출 풀이 시간을 늘리는 계획을 짠다',effects:{attributes:{preExamStrategy:'exam'}},detail:'오답 유형을 추려 주간 계획에 적었다. 아직 수능 점수가 나온 것은 아니다.'},
        {label:'학교 기록과 면접 준비 내용을 먼저 검토한다',effects:{attributes:{preExamStrategy:'record'}},detail:'학교 활동 기록과 희망 전형의 요건을 대조했다. 보완할 항목 몇 개를 발견했다.'}
       ]},
      {id:'csat-record-strength',priority:10,when:{stats:{schoolScore:{gte:67}}},
-      body:'내신은 잘 관리했지만 모의고사는 들쭉날쭉하다. 상담실에서는 어느 전형도 합격이 확정된 건 아니라고 했다.',
+      title:'내신을 활용할 준비',body:'내신은 잘 관리했지만 모의고사는 들쭉날쭉하다. 상담실에서는 어느 전형도 합격이 확정된 건 아니라고 했다.',
       options:[
        {label:'내신 활용 전형의 제출 일정과 자격을 점검한다',effects:{attributes:{preExamStrategy:'record'}},detail:'학교 기록을 확인하고 서류 누락이 없도록 체크했다.'},
        {label:'모의고사 취약 단원부터 남은 계획을 다시 쓴다',effects:{attributes:{preExamStrategy:'exam'}},detail:'틀린 유형을 묶어 계획을 세웠다. 다음 점수는 아직 모른다.'},
        {label:'지원 일정과 수능 준비를 나눠 진행한다',effects:{attributes:{preExamStrategy:'balanced'}},detail:'원서 일정표와 공부 계획을 따로 적었다. 빽빽하지만 하나씩 확인할 수 있게 됐다.'}
       ]},
      {id:'csat-open-plan',priority:0,
-      body:'수능이 가까워지자 교실에서 대학 이름이 대화의 절반을 차지한다. 너는 누가 정해 준 답 대신 지금 할 수 있는 일을 골라야 한다.',
+      title:'내가 고르는 입시 준비',body:'수능이 가까워지자 교실에서 대학 이름이 대화의 절반을 차지한다. 너는 누가 정해 준 답 대신 지금 할 수 있는 일을 골라야 한다.',
       options:[
        {label:'기출문제의 자주 틀리는 유형을 우선 정리한다',effects:{attributes:{preExamStrategy:'exam'}},detail:'오답 원인을 세 갈래로 나눠 적었다. 실력이 하루 만에 오른 것은 아니다.'},
        {label:'학교 활동과 지원 전형을 먼저 비교한다',effects:{attributes:{preExamStrategy:'record'}},detail:'지원 가능한 전형과 필요한 기록을 정리했다. 빈칸은 담당 선생님에게 확인할 예정이다.'},
@@ -394,14 +381,7 @@ global.GukminDirector.register({
    effects:{stats:{study:4,stress:1,relations:-2},attributes:{projectStyle:'study',projectResult:'limited',projectObligation:'none',schoolRole:'학업 집중'}},
    detail:'발표 분량은 작아졌다. 너는 남은 단원을 복습했지만 조원들은 더 해 볼 수 있지 않았냐고 말했다.'};
   const commonBody='수행평가 발표와 축제 준비가 같은 주에 잡혔다. 자료 일부는 비었고, 내 시험 범위도 남았다. 주제는 학교생활 속 문제 하나를 근거로 설명하는 것이다.\n\n담당 교사는 영상·실물 시연·질의응답 중 설명에 맞는 형식을 골라도 된다고 했다. ==남은 방과 후는 사흘이다.==';
-  const projectPaths=scripts=>S.paths(stages,'high:teamwork',scripts.flatMap(script=>[
-   script,...[
-    ['harin','하린','최하린은 발표 규모를 키우자고 한다. 조원들은 네가 맡을 분량부터 정해 달라고 기다린다.'],
-    ['sea','세아','윤세아는 근거가 빈 부분을 짚었다. 자료를 전부 다시 찾자니 준비 시간이 부족하다.'],
-    ['jaeho','재호','박재호는 축제 일정까지 겹쳤다며 이번에는 네가 중심을 맡아 달라고 한다.']
-   ].map(([id,peer,detail])=>({...script,id:script.id+'-'+id,priority:script.priority+1,
-    when:{all:[...(script.when?[script.when]:[]),{attributes:{highPeer:peer}}]},body:detail+'\n\n'+script.body}))
-  ]));
+  const projectPaths=scripts=>S.paths(stages,'high:teamwork',scripts);
   projectPaths([{id:'project-open',priority:40,title:'마감을 앞두고, 어떤 방식으로 풀까?',body:commonBody,
    options:[spotlight,{id:'specialty',label:'쌓아온 활동 경험으로 다른 발표 형식을 쓴다',requirement:'적성 특성 또는 동아리 대표 활동 경험',when:{any:modes.map(modeWhen)},
     effects:{attributes:{projectStyle:'experience'}},detail:'활동 경험을 살릴 수 있는지 확인했다.'},protect]}]);
@@ -437,14 +417,26 @@ global.GukminDirector.register({
     {label:'권유는 넘기고 친구와 잠깐 이야기하다 나온다',effects:{stats:{relations:1},attributes:{habitStage:'away'}},detail:'다음 교시 선생님 얘기를 하다 친구와 교실로 돌아왔다. 특별한 약속은 잡지 않았다.'},
     {label:'한 번쯤은 괜찮겠다며 담배 권유를 받아들이고 남는다',effects:{stats:{relations:3,stress:-2},attributes:{habitStage:'first'}},detail:'권유를 받아들인 뒤 시험 얘기 대신 시답잖은 농담을 했다. 다음날 선배가 네 이름을 먼저 불렀다. 쉬는 시간에 다시 볼 것 같은 분위기였다.'}
    ]}]);
+  const notResearch={not:{any:[{attributes:{schoolTrack:'science'}},{attributes:{schoolTrack:'gifted'}}]}};
+  stages.events.find(e=>e.id==='high:tobacco-offer').when=notResearch;
+  const smoking=stages.choices.find(c=>c.id==='high:tobacco-offer');
+  const invitation=smoking.variants.find(v=>v.id==='senior-invitation');
+  invitation.body='방과 후 선배와 친구가 잠깐 이야기를 나누고 있다. 같은 수업 이야기에 웃다가 선배가 담배를 권한다.\n\n곧 집에 가야 한다. 권유를 넘기거나 한 번 받아들이고 먼저 돌아갈 수 있다.';
+  const accept=invitation.options.pop();accept.label='한 번만 받아들이고 먼저 자리를 나온다';accept.result.effects={stats:{relations:2,stress:-1,health:-1},attributes:{habitStage:'first'}};accept.result.conditional=[{before:true,when:{stats:{stress:{gte:70}}},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}},history:{title:'흡연 습관이 시작됐다',detail:'짧은 만남 이후에도 같은 권유를 찾게 됐다. 건강과 재산에 주기적인 부담이 남는다.'}}}];invitation.options.unshift(accept);
+  invitation.options[1].result.effects.stats={relations:-1,stress:-1};invitation.options[2].result.effects.stats={relations:1,stress:1};
   const routine=choiceAt('high:break-routine',73,'점심 뒤, 익숙해진 자리',
    '점심을 먹고 나면 선배들이 먼저 연락한다. ==시험이 끝난 날에도 같은 자리에 모였다.== 선배가 아무렇지 않게 또 담배를 권한다.\n\n오늘은 반 친구가 같이 운동장에 가자고 한다. 쉬는 시간을 어디에 쓸까?',[
     {id:'repeat',label:'지난번처럼 권하는 담배를 받아들이고 모임을 계속 간다',effects:{stats:{relations:2,stress:-2},attributes:{habitStage:'routine'}},detail:'며칠이 몇 주가 됐다. 모임에서 담배를 피우는 날이 늘었고 수업 전에 급히 돌아오는 일도 익숙해졌다.'},
     {id:'occasional',label:'권유는 넘기고 가끔만 만나며 반 친구들과도 지낸다',effects:{stats:{relations:1,study:1},attributes:{habitStage:'occasional'}},detail:'모든 연락에 나가지는 않았다. 교실에 남은 날에는 친구와 과제를 먼저 마쳤다.'},
     {id:'leave',label:'오늘부터 다른 약속을 잡고 그 모임에는 나가지 않는다',effects:{stats:{relations:-1,stress:1,study:1},attributes:{habitStage:'away'}},detail:'처음 며칠은 심심했다. 연락은 조금씩 줄었고 점심 뒤 시간이 다시 비었다.'}
    ],{attributes:{habitStage:'first'}});
+  routine.event.when={all:[notResearch,routine.event.when]};
+  const repeat=routine.choice.options[0];repeat.result.effects.stats={relations:2,stress:-1,health:-1};
+  repeat.result.conditional=[{before:true,when:{traits:['인내심']},result:{effects:{attributes:{habitStage:'grace'}}}},{before:true,when:{withoutTraits:['인내심']},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}}}}];
+  const reconsider=choiceAt('high:smoking-reconsider',74,'다시 생각할 마지막 약속','인내심으로 잠시 거리를 뒀지만 다시 연락이 왔다. 이번에도 반복할지 결정해야 한다.',[{id:'repeat',label:'다시 권유를 받아들인다',effects:{traits:{add:['흡연']},stats:{health:-1},attributes:{habitStage:'revealed'}},detail:'다시 반복한 생활이 흡연 습관으로 남았다.'},{id:'leave',label:'거절하고 모임에서 거리를 둔다',effects:{stats:{relations:-1,stress:1},attributes:{habitStage:'away'}},detail:'연락을 줄이고 다른 약속을 잡았다.'}],{all:[notResearch,{attributes:{habitStage:'grace'}}]});
+  stages.events.push(reconsider.event);stages.choices.push(reconsider.choice);
   stages.events.push(routine.event);stages.choices.push(routine.choice);
-  senior.result.conditional.push({when:{attributes:{habitStage:'routine'}},result:{
+  senior.result.conditional.push({when:{all:[notResearch,{attributes:{habitStage:'routine'}}]},result:{
    effects:{stats:{health:-6,money:-12000,stress:3},traits:{add:['흡연']},attributes:{habitStage:'revealed'}},
    history:{title:'짧던 쉬는 시간이 길어졌다',detail:'처음에는 선배를 따라 잠깐 나갔을 뿐이었다. 몇 달 뒤, 계단에서 숨을 고르다가 쉬는 시간과 지출이 전부 그 습관에 맞춰진 걸 깨달았다. ==이제는 어울리는 자리보다 흡연 습관 자체가 남아 있었다.=='}}});
   S.paths(stages,'high:smoking-followup',[{id:'habit-aftermath',priority:50,when:{traits:['흡연']},
@@ -454,9 +446,29 @@ global.GukminDirector.register({
     {label:'일단 모이는 횟수부터 줄이며 혼자 조절해 본다',effects:{stats:{stress:2,relations:-1},attributes:{habitStage:'limited'}},detail:'일부 약속은 줄였다. 공부 시간을 조금 되찾았지만 습관이 사라진 것은 아니었다.'},
     {label:'시험이 끝나면 생각하기로 하고 원래 모임을 유지한다',effects:{stats:{relations:1,stress:-2,study:-1},attributes:{habitStage:'entrenched'}},detail:'당장의 불편은 덜었다. 그런데 교재를 펼쳐 둔 시간과 실제로 공부한 시간의 차이는 줄지 않았다.'}
    ]}]);
+  const research=stages.choices.find(c=>c.id==='high:electives').variants.find(v=>v.id==='research-slot');
+  research.options[0].label='검증된 자료로 범위를 줄여 마무리한다';research.options[0].result.effects={attributes:{electiveRoute:'alternate'},stats:{stress:-2}};research.options[0].result.history.detail='추가 실험을 포기하고 이미 검증한 자료로 질문을 좁혔다. 보고서의 범위는 작아졌지만 마감은 지켰다.';
+  research.options[1].label='다른 조와 사용 시간을 교환한다';research.options[1].result.effects={attributes:{electiveRoute:'petition'},stats:{relations:2,stress:2}};research.options[1].result.history.detail='다른 조와 필요한 장비 시간을 바꿨다. 저녁 일정은 빠듯해졌지만 서로의 측정을 끝낼 수 있었다.';
+  research.options[2].label='작은 추가 소모품을 마련해 대체 실험을 준비한다 (5천 원)';research.options[2].when={stats:{money:{gte:5000}}};research.options[2].result.effects={attributes:{electiveRoute:'shared'},stats:{money:-5000,schoolScore:2,stress:2}};research.options[2].result.history.detail='교내 장비 사용료 대신 직접 필요한 소형 소모품을 마련했다. 실험 범위를 바꿔 측정을 끝냈다.';
   const finalExam=stages.choices.find(choice=>choice.presentation?.annual&&choice.presentation.grade===3&&choice.presentation.category==='school');
-  for(const option of finalExam.options)option.result.conditional.push({when:{attributes:{habitStage:'entrenched'}},result:{
+  for(const option of finalExam.options)(option.result.conditional??=[]).push({when:{attributes:{habitStage:'entrenched'}},result:{
    effects:{stats:{schoolScore:-2,stress:2}},history:{title:'비워 둔 복습 시간',detail:'쉬는 시간마다 흐름이 끊겨 끝내 못 본 단원이 있었다. 시험에서 그 부분을 만나자 떠올릴 근거가 부족했다. 미뤘던 생활의 부담이 이번에는 성적에 남았다.'}}});
+  const byId=id=>stages.choices.find(c=>c.id===id);
+  routine.choice.options[1].result.effects.stats={relations:2,stress:2};routine.choice.options[2].result.effects.stats={relations:-1,stress:-1};
+  const habit=byId('high:smoking-followup').variants.find(v=>v.id==='habit-aftermath');habit.options[1].result.effects.stats.schoolScore=1;habit.options[2].result.effects.stats.schoolScore=-1;
+  for(const v of byId('high:first-day').variants){v.options[0].result.effects.stats={relations:2,stress:2};v.options[1].result.effects.stats=v.id==='first-science'?{schoolScore:.5,stress:1,relations:-1}:{stress:-1,relations:-1};}
+  byId('high:commute').options[0].result.effects={stats:{relations:-1}};
+  const commute=byId('high:commute').variants;const bus=commute.find(v=>v.id==='morning-commute');bus.options[0].result.effects={stats:{relations:-1,stress:-1}};bus.options[1].result.effects.stats={relations:1,stress:1};bus.options[2].result.effects.stats={relations:2,stress:2};const lab=commute.find(v=>v.id==='morning-lab');lab.options[0].result.effects.stats={relations:1,stress:2};lab.options[1].result.effects.stats={stress:1};lab.options[2].result.effects={stats:{schoolScore:.5,relations:-1}};
+  const harin=byId('high:career').variants.find(v=>v.id==='career-harin');harin.options[0].label='하린과 앞선 활동을 대조해 다음 탐구 방향을 정한다';harin.options[0].result.history.detail='자료를 해석할 때 즐거웠던 부분을 함께 적었다. 새 탐구 질문을 고르느라 내 계획 점검은 늦어졌다.';harin.options[1].label='희망 계열의 선수 과목에 맞춰 내 계획을 고친다';harin.options[1].result.history.detail='현재 활동과 모집 계열을 비교하고 필요한 과목을 적었다. 친구의 계획까지 함께 볼 시간은 부족했다.';harin.options[2].label='현재 탐구를 마무리하고 상담을 다음으로 미룬다';harin.options[2].result.history.detail='당장의 제출 부담은 덜었다. 하린은 다른 친구와 다음 활동 계획을 정하기로 했다.';
+  for(const v of byId('high:career').variants){v.options[0].result.effects.stats={relations:2,stress:1};v.options[1].result.effects={attributes:{admissionField:v.id==='career-sea'?'science':'humanities'},stats:{relations:-1,stress:-1}};v.options[2].result.effects={stats:{relations:-2,stress:-2}};}
+  const team=byId('high:teamwork').variants;
+  team.find(v=>v.id==='team-harin').options[0].result.effects={stats:{relations:3,stress:4}};team.find(v=>v.id==='team-harin').options[0].result.tags=['team','humanities'];team.find(v=>v.id==='team-harin').options[1].result.effects.stats.stress=2;team.find(v=>v.id==='team-harin').options[2].result.effects={stats:{relations:-1,stress:-1}};
+  team.find(v=>v.id==='team-jaeho').options[1].result.effects={stats:{schoolScore:-1,stress:-2}};team.find(v=>v.id==='team-jaeho').options[2].result.effects={stats:{relations:-1,stress:-1}};
+  byId('high:bdja-science').variants[0].options[2].result.effects={stats:{schoolScore:.5,stress:-1,relations:-1}};
+  byId('high:whimoon-electives').variants[0].options[1].label='담당 교사와 대체 분반·공동교육과정을 확인한다';byId('high:whimoon-electives').variants[0].options[1].result.history.detail='교내 분반만으로는 맞출 수 없어 공동교육과정의 빈 강좌와 이수 조건을 확인했다. 다음 학기 다른 학교 수업을 신청했다.';
+  byId('high:whimoon-electives').variants[0].options.forEach((o,i)=>o.result.effects={attributes:{electiveRoute:['alternate','shared','petition'][i]},stats:[{stress:-1,relations:-1},{stress:2},{relations:2,stress:2}][i]});
+  byId('high:graduation-photo').options.forEach((o,i)=>o.result.effects=i===0?{stats:{relations:2,stress:1}}:i===1?{attributes:{preExamStrategy:'record'},stats:{stress:1}}:{stats:{relations:-1,stress:-1}});
+  S.schoolwork(stages,{"high:age18":"schoolScore","high:teamwork": "schoolScore", "high:bdja-science": "schoolScore", "high:track-general": "schoolScore", "high:track-autonomous": "schoolScore", "high:track-autonomous-public": "schoolScore", "high:track-foreign": "schoolScore", "high:track-international": "schoolScore", "high:track-gifted": "schoolScore", "high:track-science": "schoolScore", "high:track-vocational": "schoolScore"});
   return {...stages,attributes:{projectStyle:{label:'수행평가 해결 방식',hidden:true},projectResult:{label:'수행평가 결과',hidden:true},projectObligation:{label:'다음 부탁',hidden:true},habitStage:{label:'쉬는 시간의 선택',hidden:true},highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }
 });
