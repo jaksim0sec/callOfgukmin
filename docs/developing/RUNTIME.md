@@ -1,3 +1,7 @@
+## 2026-10-21 압박·돌봄 캐시 (현행)
+
+진입/화면 이동·세 독립 HTML의 자산 쿼리는 `pressure-care-20261021`이다. `mentalModel:2` 마이그레이션은 상태/타임라인 복원 시 적용한다. 전용 UI 검증은 `CHROMIUM_PATH=/usr/bin/chromium node tests/pressure.mjs`를 사용한다.
+
 ## 2026-10-21 학업 카드 캐시 갱신
 
 진입/화면 이동·CSS·boot 쿼리는 `academic-layout-20261021`로 갱신한다. 다른 JS는 기존 `life-refresh-20261021`을 유지한다.

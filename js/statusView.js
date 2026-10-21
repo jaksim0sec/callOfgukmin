@@ -3,6 +3,7 @@
 'use strict';
 const NS='http://www.w3.org/2000/svg';
 const ICONS=Object.freeze({
+ mind:'<path d="M8 18v3h8v-3l3-3V9A7 7 0 0 0 5 9v6Z"/><path d="M9 10c2-3 4 3 6 0M10 15h4"/>',
  pin:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',
  home:'<path d="m4 10 6-5a3 3 0 0 1 4 0l6 5v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 20v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6"/>',
  school:'<rect x="5" y="8" width="14" height="13" rx="2"/><path d="m7 8 5-5 5 5M9 21v-5h6v5M9 11h.01M15 11h.01"/>',
@@ -184,7 +185,7 @@ function showMetrics(root,s){
  // Preserve metric definitions while grouping only their presentation.
  const groups=new Map();
  function metricGroup(metric){
-  if(metric.id==='stress'||metric.id==='relations')return 'vitals';
+  if(metric.id==='stress'||metric.id==='illness')return 'vitals';
   if(metric.type==='currency')return 'finance';
   if(metric.id==='schoolScore'||metric.id==='exam')return 'academics';
   return 'other';
@@ -222,7 +223,7 @@ function showMetrics(root,s){
   line.append(value);
   wrap.append(line);
   // Categorical grades must not look like completion percentages.
-  if(metric.type==='progress'&&!graded){
+  if(metric.type==='progress'&&!graded&&metric.id!=='illness'){
    const progress=node('progress');
    const min=metric.min??0,max=metric.max??100;
    progress.max=max-min;
@@ -237,6 +238,12 @@ function showMetrics(root,s){
    track.append(fill);
    wrap.append(progress,track);
    nextFills.push([fill,ratio]);
+  }
+  if(metric.id==='illness'){
+   const ring=node('span','illness-ring'),native=node('progress','illness-native');
+   native.max=5;native.value=number||0;native.setAttribute('aria-label','정신병');
+   ring.style.setProperty('--illness-ratio',Math.max(0,Math.min(1,(number||0)/5)));
+   value.textContent=(number||0)+'/5';ring.append(native,value);wrap.append(ring);
   }
   // Grade methodology is available on hover; avoid repeating warning text under each gauge.
   if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);

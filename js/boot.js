@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='academic-layout-20261021';
+const RELEASE='pressure-care-20261021';
 const screen=document.body.dataset.screen;
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
@@ -24,11 +24,12 @@ function initWaiting(){
  const mount=document.getElementById('waitingPosterMount');
  const start=document.getElementById('enterGame'),reroll=document.getElementById('rerollPersona');
  const note=document.getElementById('waitingSaveNotice');
+ const gender=document.getElementById('personaGender');
  const input=document.getElementById('personaName'),hint=document.getElementById('nameHint');
  const progressed=p=>!!(p.simulation||p.age>0);
  function show(){
    const s=player.ensure();
-   name.textContent=s.name;input.value=s.name;input.disabled=progressed(s);document.getElementById('randomName').disabled=progressed(s);
+   name.textContent=s.name;input.value=s.name;gender.value=player.genderOf(s);gender.disabled=progressed(s);input.disabled=progressed(s);document.getElementById('randomName').disabled=progressed(s);
    hint.textContent=progressed(s)?'진행 중인 인생의 이름은 유지됩니다.':'1~12자 · 출생 전에 이름을 정할 수 있습니다.';
    background.textContent=s.birthplace+' · '+s.family;
    const saved=progressed(s);
@@ -60,7 +61,7 @@ function initWaiting(){
      const value=input.value.trim();
      input.setCustomValidity(value&&value.length<=12&&!/[\u0000-\u001f\u007f]/.test(value)?'':'이름을 1~12자로 입력해 주세요.');
      if(!input.reportValidity())return;
-     const updated={...player.ensure(),name:value};
+     const updated={...player.ensure(),name:value,gender:gender.value,portraitVariant:gender.value};
      if(!player.save(updated)){hint.textContent='이름을 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.';return;}
      show();
    }
@@ -89,9 +90,10 @@ function initWaiting(){
    introTick=global.setInterval(updateCountdown,100);
    introTimer=global.setTimeout(finishIntro,duration);
  }
- input.addEventListener('input',()=>{input.setCustomValidity('');const s=player.ensure();name.textContent=input.value.trim()||s.name;renderPoster(mount,{...s,name:name.textContent},'출생');});
+ input.addEventListener('input',()=>{input.setCustomValidity('');for(const [key,names] of Object.entries(global.GukminData.namesByGender))if(names.includes(input.value.trim()))gender.value=key;const s={...player.ensure(),gender:gender.value,portraitVariant:gender.value};name.textContent=input.value.trim()||s.name;renderPoster(mount,{...s,name:name.textContent},'출생');});
  input.addEventListener('keydown',event=>{if(event.key==='Enter'&&!event.isComposing)beginIntro();});
- document.getElementById('randomName').addEventListener('click',()=>{input.value=player.generate().name;input.dispatchEvent(new Event('input'));input.focus();});
+ document.getElementById('randomName').addEventListener('click',()=>{input.value=player.randomName(gender.value);input.dispatchEvent(new Event('input'));input.focus();});
+ gender.addEventListener('change',()=>{const known=Object.values(global.GukminData.namesByGender).flat().includes(input.value.trim());if(known)input.value=player.randomName(gender.value);input.dispatchEvent(new Event('input'));});
  document.getElementById('enterGame').addEventListener('click',beginIntro);
  skip.addEventListener('click',finishIntro);
  document.addEventListener('keydown',event=>{
@@ -121,7 +123,7 @@ function initResult(){
  const offer=a.earlyStatus==='accepted'?a.earlyOffer:a.regularOffer;
  if(destination==='college'&&offer)facts.push(['다음 목적지',offer]);
  else if(destination==='employment')facts.push(['다음 목적지','사회 진출 준비']);
- facts.push(['정신병',persona.stats.stress+'/25'],['관계',persona.stats.relations+'/25']);
+ facts.push(['압박',persona.stats.stress+'/25'],['정신병',(persona.stats.illness||0)+'/5'],['관계',persona.stats.relations+'/25']);
  for(const [id,label,submitted] of [['schoolScore','최종 내신',a.highFinalSubmitted],['exam','수능',a.csatSubmitted]])if(Number.isFinite(persona.stats[id]))facts.push([label,submitted?global.GukminGrades.report(id,persona.stats[id],'high').display:'아직 확정되지 않음']);
  for(const [key,value] of facts){const item=node('div','');item.append(node('small',key),node('strong',value));document.getElementById('resultFacts').append(item);}
  for(const trait of persona.traits||[]){

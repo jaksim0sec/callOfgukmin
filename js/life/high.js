@@ -235,7 +235,7 @@ global.GukminDirector.register({
      {label:'피우지 않겠다고 하고 친구와 함께 나온다',
       effects:{stats:{relations:1,stress:1}},
       detail:'친구도 따라 나왔다. "와, 저런 얘기 갑자기 하면 난감하네." 둘은 말없이 교실로 돌아왔다.'},
-     {label:'거절하지 못하고 권유에 넘어간다',risk:'반복되면 정신병·재산에 지속적인 부담',
+     {label:'거절하지 못하고 권유에 넘어간다',risk:'반복되면 압박·재산에 지속적인 부담',
       effects:{stats:{},traits:{add:['흡연']}},
       detail:'처음에는 공짜 권유였지만 이후에도 같은 무리에 어울리며 반복했다. 몇 주 뒤에는 ==흡연 습관==이 남았다. 잠깐 거절하기 어려웠던 일이 계속 신경 쓸 일이 됐다.'}
    ]),
@@ -367,7 +367,7 @@ global.GukminDirector.register({
   const ready={all:[{stats:{stress:{lte:19}}},
    {any:[{stats:{schoolScore:{gte:16}}},{traits:['언변']}]}]};
   const spotlight={id:'spotlight',label:'대표 발표를 맡고 남은 기간 전부 걸어 본다',
-   outlook:'대표 발표 기회 · 선택 전 내신 지수 16 이상 또는 언변 · 선택 전 정신병 19 이하일 때 성과를 낼 수 있습니다',
+   outlook:'대표 발표 기회 · 선택 전 내신 지수 16 이상 또는 언변 · 선택 전 압박 19 이하일 때 성과를 낼 수 있습니다',
    risk:'다른 공부 시간을 비우고 연습을 떠맡음',
    effects:{stats:{study:-1,stress:3},attributes:{projectStyle:'spotlight'}},
    detail:'최종 발표 명단에 이름을 올리고 며칠간 원고와 시연을 고쳤다. 내 시험 공부는 뒤로 밀렸다.',
@@ -423,7 +423,7 @@ global.GukminDirector.register({
   const invitation=smoking.variants.find(v=>v.id==='senior-invitation');
   delete invitation.when;smoking.variants=[invitation];
   invitation.body='방과 후 선배와 친구가 잠깐 이야기를 나누고 있다. 같은 수업 이야기에 웃다가 선배가 담배를 권한다.\n\n곧 집에 가야 한다. 권유를 넘기거나 한 번 받아들이고 먼저 돌아갈 수 있다.';
-  const accept=invitation.options.pop();accept.label='한 번만 받아들이고 먼저 자리를 나온다';accept.result.effects={stats:{relations:1,stress:-1},attributes:{habitStage:'first'}};accept.result.conditional=[{before:true,when:{stats:{stress:{gte:18}}},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}},history:{title:'흡연 습관이 시작됐다',detail:'짧은 만남 이후에도 같은 권유를 찾게 됐다. 정신병과 재산에 주기적인 부담이 남는다.'}}}];invitation.options.unshift(accept);
+  const accept=invitation.options.pop();accept.label='한 번만 받아들이고 먼저 자리를 나온다';accept.result.effects={stats:{relations:1,stress:-1},attributes:{habitStage:'first'}};accept.result.conditional=[{before:true,when:{stats:{stress:{gte:18}}},result:{effects:{traits:{add:['흡연']},attributes:{habitStage:'revealed'}},history:{title:'흡연 습관이 시작됐다',detail:'짧은 만남 이후에도 같은 권유를 찾게 됐다. 압박과 재산에 주기적인 부담이 남는다.'}}}];invitation.options.unshift(accept);
   invitation.options[1].result.effects.stats={relations:-1,stress:-1};invitation.options[2].result.effects.stats={relations:1,stress:1};
   const routine=choiceAt('high:break-routine',73,'점심 뒤, 익숙해진 자리',
    '점심을 먹고 나면 선배들이 먼저 연락한다. ==시험이 끝난 날에도 같은 자리에 모였다.== 선배가 아무렇지 않게 또 담배를 권한다.\n\n오늘은 반 친구가 같이 운동장에 가자고 한다. 쉬는 시간을 어디에 쓸까?',[

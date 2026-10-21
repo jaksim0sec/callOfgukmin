@@ -1,7 +1,8 @@
 /* Immutable static game catalogue. No random generation or runtime state. */
 (function(global){
 'use strict';
-const NAMES = ['이루은','유승현','최승우','강민수','김병수','김병인','윤소율','박재윤'];
+const NAMES_BY_GENDER={male:['유승현','최승우','강민수','김병수','김병인','박재윤','이도현','정시우'],female:['이루은','윤소율','김서연','박지유','이하린','최서윤','정다은','한예린']};
+const NAMES = Object.values(NAMES_BY_GENDER).flat();
 const HOMES = [
   {name:'자영업 가정',place:'경기도 수원',description:'집에서 장부와 손님 이야기를 들으며 자랐다.'},
   {name:'맞벌이 가정',place:'서울',description:'가족들은 매일 각자의 일정을 부지런히 소화했다.'},
@@ -16,7 +17,8 @@ const SCHOOL_KINDS = [
   {id:'uni',label:'대학교'}
 ];
 const METRIC_DEFS = {
-  stress:{label:'정신병',type:'progress',tone:'negative',icon:'pulse',min:0,max:25},
+  illness:{label:'정신병',type:'progress',tone:'negative',icon:'mind',min:0,max:5},
+  stress:{label:'압박',type:'progress',tone:'negative',icon:'pulse',min:0,max:25},
   money:{label:'재산',type:'currency',icon:'savings'},
   allowance:{label:'용돈',type:'currency',icon:'coin'},
   income:{label:'수입',type:'currency',icon:'coin'},
@@ -30,19 +32,19 @@ const METRIC_DEFS = {
 // This is a content-facing progression map, not a clock or a legal-age rule.
 // The college/adult overlap and the circumstances of each move remain story-owned.
 const LIFE_STAGES = Object.freeze([
-  {id:'infant',label:'출생·유년기',next:['elementary'],metrics:['stress','relations','money']},
-  {id:'elementary',label:'초등학생',next:['middle'],metrics:['stress','money','allowance','relations']},
-  {id:'middle',label:'중학생',next:['high'],metrics:['stress','money','allowance','relations','schoolScore']},
-  {id:'high',label:'고등학생',next:['university','adult'],metrics:['stress','money','allowance','relations','schoolScore','exam']},
-  {id:'university',label:'대학생',next:['adult'],metrics:['stress','money','income','relations','support','awareness']},
-  {id:'adult',label:'사회생활',next:['political'],metrics:['stress','relations','money','income','support','awareness']},
-  {id:'political',label:'정치활동',next:['adult'],metrics:['stress','relations','money','income','support','awareness']}
+  {id:'infant',label:'출생·유년기',next:['elementary'],metrics:['stress','illness','relations','money']},
+  {id:'elementary',label:'초등학생',next:['middle'],metrics:['stress','illness','money','allowance','relations']},
+  {id:'middle',label:'중학생',next:['high'],metrics:['stress','illness','money','allowance','relations','schoolScore']},
+  {id:'high',label:'고등학생',next:['university','adult'],metrics:['stress','illness','money','allowance','relations','schoolScore','exam']},
+  {id:'university',label:'대학생',next:['adult'],metrics:['stress','illness','money','income','relations','support','awareness']},
+  {id:'adult',label:'사회생활',next:['political'],metrics:['stress','illness','relations','money','income','support','awareness']},
+  {id:'political',label:'정치활동',next:['adult'],metrics:['stress','illness','relations','money','income','support','awareness']}
 ].map(stage=>Object.freeze({...stage,next:Object.freeze(stage.next),metrics:Object.freeze(stage.metrics)})));
 const BIRTH_DEFAULTS = Object.freeze({
   age:0,phase:'infant',job:'아기',traits:Object.freeze([]),
   // Values are placeholders from the existing UI, NOT balanced game probabilities.
   stats:Object.freeze({
-    stress:0,money:0,allowance:null,relations:null,study:null,
+    stress:0,illness:0,money:0,allowance:null,relations:null,study:null,
     schoolScore:null,exam:null,income:null,support:null,awareness:null
   })
 });
@@ -65,12 +67,12 @@ const TRAIT_DEFS = {
  '금수저':{icon:'home',tier:'gold',description:'경제적으로 넉넉한 출생 배경'},
  '다이아수저':{icon:'sparkle',tier:'diamond',description:'매우 풍족한 경제적 지원을 받는 출생 배경'},
   '저축습관':{color:'#967127',icon:'savings',description:'저축을 실제로 실행할 때 남는 돈이 늘어난다.',modifiers:[{tags:['save'],stats:{money:{add:1000}}}]},
-  '인내심':{color:'#467ba6',icon:'hourglass',description:'시험 준비의 양수 정신병 부담을 약 25% 줄인다. 정수로 반영하며 최소 부담은 1이다.'},
+  '인내심':{color:'#467ba6',icon:'hourglass',description:'시험 준비의 양수 압박 부담을 약 25% 줄인다. 정수로 반영하며 최소 부담은 1이다.'},
   '꼼꼼함':{color:'#348571',icon:'check',description:'준비 지수 20 미만의 집중·올인 평가에서 검산 보완 +1. 상위권 성적을 자동 유지하지는 않는다.'},
   '리더십':{color:'#a06b2e',icon:'flag',description:'협업에서 관계 보너스를 얻는다. 수행평가 분담과 추가 부탁의 범위 조율에 활용할 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
   '언변':{color:'#7b65ad',icon:'speech',description:'토론·질의응답 방식으로 수행평가를 해결할 수 있다. 대표 발표의 준비 부족을 보완하지만 컨디션은 따로 관리해야 한다.'},
   '친화력':{color:'#ac597e',icon:'users',description:'친구들과 협력할 때 관계 보너스를 얻는다. 수행평가를 분담할 수 있지만 이후 부탁도 늘어날 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
-  '흡연':{icon:'pulse',negative:true,color:'#b55255',description:'흡연 습관은 정신병과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{stress:1,money:-2000}}}}},
+  '흡연':{icon:'pulse',negative:true,color:'#b55255',description:'흡연 습관은 압박과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{stress:1,money:-2000}}}}},
   '자기주장':{icon:'speech',color:'#427e9e',description:'자신의 한계를 표현한 경험. 추가 부탁을 전부 수락하거나 거절하는 대신 범위를 조율할 수 있다.'},
   '미루는 습관':{color:'#b55255',icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'},
   '호기심':{color:'#9a7a2d',icon:'sparkle',description:'새로운 물건과 상황을 먼저 탐색하는 성격'},
@@ -93,9 +95,18 @@ const freezeCopy=value=>{
  return value;
 };
 global.GukminData=freezeCopy({
- names:NAMES,homes:HOMES,schoolKinds:SCHOOL_KINDS,
+ names:NAMES,namesByGender:NAMES_BY_GENDER,homes:HOMES,schoolKinds:SCHOOL_KINDS,
  metrics:METRIC_DEFS,stages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,traits:TRAIT_DEFS,
  wealthTiers:WEALTH_TIERS,regionPresets:REGION_PRESETS,
- shopItems:[{id:"tea",name:"따뜻한 차",price:15000,relief:2},{id:"break",name:"간식과 잠깐의 쉼",price:40000,relief:4}]
+ shopItems:[
+  {id:'water',name:'시원한 생수',price:1000,relief:1,art:'water',description:'한 모금 마시며 잠깐 숨을 고른다.'},
+  {id:'snack',name:'작은 초콜릿',price:3500,relief:2,art:'snack',description:'달콤한 간식과 짧은 기분 전환.'},
+  {id:'sandwich',name:'든든한 샌드위치',price:7000,relief:3,art:'meal',description:'끼니를 챙기고 서두르던 걸음을 멈춘다.'},
+  {id:'tea',name:'따뜻한 차',price:15000,relief:4,art:'tea',description:'창가에 앉아 따뜻한 한 잔과 쉬어 간다.'},
+  {id:'meal',name:'따뜻한 한 끼',price:22000,relief:6,art:'meal',description:'식사를 마칠 때까지 할 일을 잠시 내려놓는다.'},
+  {id:'break',name:'간식과 긴 쉼',price:40000,relief:8,art:'snack',description:'좋아하는 간식을 챙겨 충분히 쉬어 간다.'},
+  {id:'care',name:'마음 돌봄 꾸러미',price:60000,relief:8,recovery:1,art:'care',description:'일정을 비우고 나를 돌보는 게임용 회복 꾸러미.'},
+  {id:'retreat',name:'온전한 휴식 꾸러미',price:90000,relief:12,recovery:2,art:'care',description:'쌓인 부담을 정리하며 더 긴 회복 시간을 갖는다.'}
+ ]
 });
 })(window);

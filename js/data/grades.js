@@ -19,7 +19,7 @@ function assessment(person,{metric,effort}){
  // A high score requires sustained effort; passively maintaining it slowly loses ground.
  if(effort===2&&current>=20)score=-1;
  if(metric==='schoolScore'&&cost>0&&['science','gifted'].includes(person.attributes?.schoolTrack)&&held('문과')&&!held('이과')){stress+=1;applied.push({trait:'문과',text:'심화과학 적응 부담 +1'});}
- if(stress>0&&held('인내심')){const before=stress;stress=Math.max(1,Math.round(stress*.75));if(stress!==before)applied.push({trait:'인내심',text:'정신병 부담 '+before+' → '+stress});}
+ if(stress>0&&held('인내심')){const before=stress;stress=Math.max(1,Math.round(stress*.75));if(stress!==before)applied.push({trait:'인내심',text:'압박 부담 '+before+' → '+stress});}
  const actual=Math.max(0,Math.min(25,current+score))-current;
  return {stats:{[metric]:score,stress},applied,metric,actual,limited:actual!==score};
 }

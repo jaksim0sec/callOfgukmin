@@ -36,11 +36,28 @@ function birthContext(){
  }
  return {home,region,tier,stats};
 }
+function genderOf(s){
+ if(['male','female'].includes(s.gender))return s.gender;
+ for(const [gender,names] of Object.entries(DATA.namesByGender))if(names.includes(s.name))return gender;
+ if(['male','female'].includes(s.portraitVariant))return s.portraitVariant;
+ const seed=String(s.admissionSeed||s.createdAt||s.name||'');let hash=0;for(const ch of seed)hash=(Math.imul(hash,31)+ch.charCodeAt(0))|0;
+ return (hash>>>0)%2?'female':'male';
+}
+function randomName(gender){return pick(DATA.namesByGender[gender]||NAMES);}
+function upgradeMental(persona){
+ const s=withoutHealth(persona);
+ if(s.mentalModel!==2){
+  s.stats.illness=s.attributes?.lifeEndReason==='정신병 한계'||s.attributes?.retryEndReason==='정신병 한계'?5:0;
+  s.mentalModel=2;
+ }
+ s.stats.illness??=0;s.gender=genderOf(s);s.portraitVariant=s.gender;
+ return s;
+}
 function generate() {
-  const {home,region,tier,stats}=birthContext();
+  const {home,region,tier,stats}=birthContext(),gender=Math.random()<.5?'male':'female';
   return {
-    version:1,statScale:25,
-    name:pick(NAMES),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
+    version:1,statScale:25,mentalModel:2,gender,portraitVariant:gender,
+    name:randomName(gender),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
     family:home.name,birthplace:region.label,birthplaceId:region.id,regionTags:[...region.tags],familyTier:tier.id,description:home.description,
     school:{elementary:null,middle:null,high:null,uni:null},schoolHistory:[],
     roles:[],traits:[tier.name,...BIRTH_DEFAULTS.traits],
@@ -97,7 +114,7 @@ function upgradeScale(persona){
  const migrated=walk(copy);migrated.statScale=25;return migrated;
 }
 function normalize(s) {
- s=upgradeScale(s);
+ s=upgradeMental(upgradeScale(s));
   // Compatible with the previous UI-only save. A family is an attribute, not a buff.
   const copy={...s,stats:{...s.stats},school:{...s.school}};
   copy.traits=s.traits.filter(t=>typeof t==='string'?t!==s.family:!!(t&&typeof t==='object'&&t.name!==s.family));
@@ -114,7 +131,7 @@ function load() {
 }
 function save(persona) {
   if(!valid(persona))throw new TypeError('Invalid persona');
-  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(upgradeScale(persona)));return true;}
+  try {localStorage.setItem(STORAGE_KEY,JSON.stringify(upgradeMental(upgradeScale(persona))));return true;}
   catch(error){return false;}
 }
 function ensure() {
@@ -140,6 +157,8 @@ function activeMetrics(s) {
   return [...ids].map(id=>({id,...metricDefinition(id),value:s.stats?.[id]??null}));
 }
 const ATTRIBUTE_DEFS={
+ pressureGuideSeen:{label:'압박 안내 확인',custom:true,hidden:true},pressureNoticeBand:{label:'경고 확인 단계',custom:true,hidden:true},pressureAdviceCount:{label:'상태 안내 횟수',custom:true,hidden:true},
+ gender:{label:'성별',hidden:true},portraitVariant:{label:'초상',hidden:true},
  name:{label:'이름'},age:{label:'나이'},phase:{label:'생애 단계'},birthplace:{label:'출생지',icon:'pin'},
  family:{label:'집안',icon:'home'},job:{label:'직업',icon:'flag'},party:{label:'정당',icon:'flag'},
  partyIcon:{label:'정당 아이콘',hidden:true},partyColor:{label:'정당색',hidden:true},
@@ -195,7 +214,7 @@ function schoolsOf(s) {
   return [...records,...legacy.filter(old=>!records.some(r=>r.kind===old.kind&&r.name===old.name))];
 }
 global.GukminPlayer=Object.freeze({
-  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,upgradeScale,scaleRules,phaseOf,activeMetrics,schoolsOf,
+  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,upgradeScale,upgradeMental,genderOf,randomName,scaleRules,phaseOf,activeMetrics,schoolsOf,
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   birthContext,wealthTiers:DATA.wealthTiers,

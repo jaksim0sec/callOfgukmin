@@ -111,7 +111,7 @@ test('birth defaults and stage routes are data-owned without triggering a clock 
  assert.equal(Number.isFinite(birth.stats.relations),true);
  assert.equal(birth.traits.length,1);
  assert.ok(P.wealthTiers.some(t=>t.name===birth.traits[0]));
- assert.deepEqual(plain(P.activeMetrics(birth).map(metric=>metric.id)),['stress','relations','money']);
+ assert.deepEqual(plain(P.activeMetrics(birth).map(metric=>metric.id)),['stress','illness','relations','money']);
  birth.stats.stress=11;assert.equal(P.birthDefaults.stats.stress,0);
  const older=E.apply(birth,{effects:{attributes:{age:22}}});
  assert.equal(older.phase,'infant','Changing age alone must not advance the stage');
@@ -525,7 +525,7 @@ test('recovery is voluntary, can be ignored and never automatically rescues a li
   const opt=D.content(p).choices.find(x=>x.id===id).options.find(x=>x.id==='ignore');assert.ok(opt);
   assert.equal(c.GukminEffects.apply(p,opt.result).stats.stress,24);
  }
- engine.apply('limit',{effects:{stats:{stress:1}}});
+ engine.apply('limit',{effects:{stats:{stress:6}}});
  const ended=engine.snapshot();assert.equal(ended.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(ended.persona.stats.stress,25);assert.equal(ended.choice,null);
  const saved={...ended.persona,simulation:plain(ended.runtime)};
  assert.equal(D.create({persona:saved}).run().persona.attributes.lifeEndReason,'정신병 한계');
@@ -1071,7 +1071,7 @@ test('N-year cost and termination boundaries do not charge blocked years or dupl
  const env=setup(),pack=env.c.GukminDirector.content(env.P.generate());for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);
  for(const [money,stress,age,end,cost,nextAge,nextAttempt] of [
  [300001,5,20,null,300000,21,3],[300000,5,20,'준비 자금 소진',300000,21,3],[299999,5,20,'준비 자금 소진',299999,21,3],[0,5,20,'준비 자금 소진',0,20,2],
- [1000000,22,20,null,300000,21,3],[1000000,23,20,'정신병 한계',300000,21,3],[1000000,25,20,'정신병 한계',0,20,2],
+ [1000000,22,20,null,300000,21,3],[1000000,23,20,null,300000,21,3],[1000000,25,20,null,300000,21,3],
  [1000000,5,28,null,300000,29,3],[1000000,5,29,'나이 제한',0,30,2],[1000000,5,30,'나이 제한',0,30,2]]){
   const p=env.P.generate();p.phase='high';p.age=age;p.stats.money=money;p.stats.stress=stress;p.attributes={admissionAttempts:2,highFinalSubmitted:true};
   const t=env.T.create({persona:p});t.apply('retry',{retryYear:true});assert.equal(t.apply('retry',{retryYear:true}),false);const s=t.snapshot().persona;assert.equal(s.stats.money,money-cost);assert.equal(s.age,nextAge);assert.equal(s.attributes.admissionAttempts,nextAttempt);assert.equal(s.attributes.retryEndReason,end);
@@ -1140,8 +1140,8 @@ test('the first tobacco encounter is available for every school, trait and relat
 });
 test('convenience-store purchases are atomic, save their cooldown and never advance time',()=>{
  const {P,c}=setup(),p=P.generate();p.age=15;p.phase='middle';Object.assign(p.stats,{money:100000,stress:20});let e=c.GukminDirector.create({persona:p,persist:s=>P.save(s)});const turn=e.snapshot().runtime.turn;
- assert.ok(e.buy('break'));assert.equal(e.snapshot().persona.stats.stress,16);assert.equal(e.snapshot().persona.stats.money,60000);assert.equal(e.snapshot().runtime.turn,turn);assert.equal(e.buy('tea'),false);e=c.GukminDirector.create({persona:P.load()});assert.equal(e.storeStatus().remaining,4);assert.equal(e.buy('break'),false);
- for(const patch of [{money:14999,stress:20},{money:100000,stress:0},{money:100000,stress:25}]){const q=P.generate();q.age=15;q.phase='middle';Object.assign(q.stats,patch);assert.equal(c.GukminDirector.create({persona:q}).buy('tea'),false);}
+ assert.ok(e.buy('break'));assert.equal(e.snapshot().persona.stats.stress,12);assert.equal(e.snapshot().persona.stats.money,60000);assert.equal(e.snapshot().runtime.turn,turn);assert.equal(e.buy('tea'),false);e=c.GukminDirector.create({persona:P.load()});assert.equal(e.storeStatus().remaining,4);assert.equal(e.buy('break'),false);
+ for(const patch of [{money:14999,stress:20},{money:100000,stress:0},{money:100000,stress:25,illness:5}]){const q=P.generate();q.age=15;q.phase='middle';Object.assign(q.stats,patch);assert.equal(c.GukminDirector.create({persona:q}).buy('tea'),false);}
 });
 
 test('plain choices have neither identical payouts nor an unconditionally worse risk/reward vector',()=>{
@@ -1175,4 +1175,32 @@ test('elementary preparation, electives and admission strategies differ in their
  const final={};for(const strategy of ['balanced','exam','record']){const q=plain(p);q.attributes.preExamStrategy=strategy;final[strategy]=E.apply(q,csat);}
  assert.equal(final.exam.stats.exam-final.balanced.stats.exam,1);assert.equal(final.exam.stats.stress-final.balanced.stats.stress,2);
  assert.equal(final.balanced.stats.exam-final.record.stats.exam,1);assert.ok(c.GukminAdmissions.probability(final.record,{target:15},'early')>c.GukminAdmissions.probability(final.balanced,{target:15},'early'));
+});
+
+
+test('pressure overflow, persistent illness and the fifth illness point share the common settlement',()=>{
+ const {P,E,c}=setup(),p=P.generate();p.age=14;p.phase='middle';p.stats.stress=24;
+ let q=E.apply(p,{effects:{stats:{stress:1}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,0);
+ q=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,2);
+ q=E.apply(q,{effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,15);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
+ q=E.apply(q,{effects:{stats:{illness:-1}}});assert.equal(q.stats.illness,1);
+ const e=c.GukminDirector.create({persona:p,persist:p=>P.save(p)});e.apply('overflow-end',{effects:{stats:{stress:6}}});const end=e.snapshot();assert.equal(end.persona.stats.illness,5);assert.equal(end.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(end.choice,null);
+ assert.equal(c.GukminDirector.create({persona:P.load()}).run().persona.stats.illness,5);
+});
+test('mental migration keeps frozen scripts, histories and old endings without reviving them',()=>{
+ const {P}=setup(),p=P.generate();delete p.mentalModel;delete p.stats.illness;delete p.gender;delete p.portraitVariant;p.name='김병인';p.stats.stress=23;p.simulation={choices:{old:{script:{options:[{result:{effects:{stats:{stress:2}}}}]}}}};
+ const old=plain(p),next=P.upgradeMental(p);assert.equal(next.stats.stress,23);assert.equal(next.stats.illness,0);assert.equal(next.gender,'male');assert.equal(next.portraitVariant,'male');assert.deepEqual(plain(next.simulation),old.simulation);assert.deepEqual(plain(next.history),old.history);assert.deepEqual(plain(P.upgradeMental(next)),plain(next));
+ p.attributes={lifeEndReason:'정신병 한계',admissionDestination:'finished'};assert.equal(P.upgradeMental(p).stats.illness,5);
+});
+test('generated gender, name catalogue and portrait always agree',()=>{
+ const {P,c}=setup();for(let i=0;i<100;i++){const p=P.generate();assert.ok(c.GukminData.namesByGender[p.gender].includes(p.name));assert.equal(p.portraitVariant,p.gender);assert.ok(c.GukminData.namesByGender[p.gender].includes(P.randomName(p.gender)));}
+ assert.equal(P.genderOf({name:'김병인',portraitVariant:'female'}),'male');assert.equal(P.genderOf({name:'김서연',portraitVariant:'male'}),'female');
+});
+test('diverse store items and advice acknowledgement never advance the clock or bypass cooldown',()=>{
+ const {P,c,E}=setup(),p=P.generate();p.age=15;p.phase='middle';Object.assign(p.stats,{stress:25,illness:3,money:100000});let e=c.GukminDirector.create({persona:p,persist:p=>P.save(p)});const turn=e.snapshot().runtime.turn;
+ assert.equal(e.storeStatus().items.length,8);assert.equal(Math.min(...e.storeStatus().items.map(i=>i.price)),1000);
+ assert.ok(e.acknowledgePressure());assert.equal(e.snapshot().runtime.turn,turn);assert.equal(e.snapshot().persona.attributes.pressureGuideSeen,true);assert.equal(e.snapshot().persona.stats.illness,3);
+ assert.ok(e.buy('care'));assert.equal(e.snapshot().persona.stats.stress,17);assert.equal(e.snapshot().persona.stats.illness,2);assert.equal(e.snapshot().persona.stats.money,40000);assert.equal(e.snapshot().runtime.turn,turn);assert.equal(e.buy('water'),false);
+ e=c.GukminDirector.create({persona:P.load()});assert.equal(e.storeStatus().remaining,4);assert.equal(e.buy('water'),false);
+ const q=P.generate();q.phase='high';q.age=20;q.attributes={admissionAttempts:2};Object.assign(q.stats,{stress:25,illness:3,money:1000000});const pack=c.GukminDirector.content(q);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);const retry=E.apply(q,{retryYear:true});assert.equal(retry.stats.illness,5);assert.equal(retry.attributes.retryEndReason,'정신병 한계');
 });

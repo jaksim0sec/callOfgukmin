@@ -7,7 +7,7 @@
   <title>국민의 부름 · 대기</title>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=academic-layout-20261021">
+  <link rel="stylesheet" href="css/style.css?v=pressure-care-20261021">
 </head>
 <body data-screen="waiting">
 <main class="waiting-screen" aria-label="게임 대기 화면">
@@ -22,7 +22,7 @@
     </div>
     <div class="waiting-name-field">
       <label for="personaName">이 인생을 살아갈 이름</label>
-      <div class="name-input-row"><input id="personaName" type="text" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="nameHint" required><button id="randomName" class="text-action" type="button">무작위 ↻</button></div>
+      <div class="name-input-row"><select id="personaGender" aria-label="성별"><option value="male">남성</option><option value="female">여성</option></select><input id="personaName" type="text" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="nameHint" required><button id="randomName" class="text-action" type="button">무작위 ↻</button></div>
       <p id="nameHint">1~12자 · 출생 전에 이름을 정할 수 있습니다.</p>
     </div>
     <div class="waiting-actions">
@@ -60,24 +60,24 @@
     <button type="button" class="birth-intro-skip" id="birthIntroSkip">출생하기 <span aria-hidden="true">↗</span></button>
   </div>
 </section>
-<script src="js/poster.js?v=life-refresh-20261021" defer></script>
-<script src="js/data/base.js?v=life-refresh-20261021" defer></script>
-<script src="js/data/regions.js?v=life-refresh-20261021" defer></script>
-<script src="js/data/schools.js?v=life-refresh-20261021" defer></script>
-<script src="js/data/grades.js?v=life-refresh-20261021" defer></script>
-<script src="js/playerState.js?v=life-refresh-20261021" defer></script>
-<script src="js/effects.js?v=life-refresh-20261021" defer></script>
-<script src="js/timeline.js?v=life-refresh-20261021" defer></script>
-<script src="js/life/director.js?v=life-refresh-20261021" defer></script>
-<script src="js/life/story.js?v=life-refresh-20261021" defer></script>
-<script src="js/life/infant.js?v=life-refresh-20261021" defer></script>
-<script src="js/life/elementary.js?v=life-refresh-20261021" defer></script>
-<script src="js/life/middle.js?v=life-refresh-20261021" defer></script>
-<script src="js/life/high.js?v=life-refresh-20261021" defer></script>
-<script src="js/systemDemo.js?v=life-refresh-20261021" defer></script>
-<script src="js/statusView.js?v=life-refresh-20261021" defer></script>
-<script src="js/game.js?v=life-refresh-20261021" defer></script>
-<script src="js/majorView.js?v=life-refresh-20261021" defer></script>
-<script src="js/boot.js?v=academic-layout-20261021" defer></script>
+<script src="js/poster.js?v=pressure-care-20261021" defer></script>
+<script src="js/data/base.js?v=pressure-care-20261021" defer></script>
+<script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
+<script src="js/data/schools.js?v=pressure-care-20261021" defer></script>
+<script src="js/data/grades.js?v=pressure-care-20261021" defer></script>
+<script src="js/playerState.js?v=pressure-care-20261021" defer></script>
+<script src="js/effects.js?v=pressure-care-20261021" defer></script>
+<script src="js/timeline.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/director.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/story.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/infant.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/elementary.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/middle.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/high.js?v=pressure-care-20261021" defer></script>
+<script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
+<script src="js/statusView.js?v=pressure-care-20261021" defer></script>
+<script src="js/game.js?v=pressure-care-20261021" defer></script>
+<script src="js/majorView.js?v=pressure-care-20261021" defer></script>
+<script src="js/boot.js?v=pressure-care-20261021" defer></script>
 </body>
 </html>

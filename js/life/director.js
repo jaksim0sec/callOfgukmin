@@ -71,7 +71,7 @@ function create({persona,persist,onChange}){
  function limit(){
   const s=timeline.snapshot();
   if(s.reviewPending||s.runtime.cinematic||s.persona.attributes?.lifeEndReason)return false;
-  if(s.persona.stats.stress>=25&&(s.persona.attributes?.admissionAttempts||1)<2){
+  if((s.persona.stats.illness||0)>=5&&(s.persona.attributes?.admissionAttempts||1)<2){
    timeline.cancelPending('life-limit',{effects:{attributes:{lifeEndReason:'정신병 한계',admissionDestination:'finished',job:'생애 종료'}},history:{title:'삶의 끝 · 정신병 한계',detail:'감당할 수 있는 한계를 넘어 이번 삶이 끝났다.',importance:'major'}});return true;
   }
   if(s.persona.attributes?.admissionAttempts<2||!s.persona.attributes?.admissionAttempts||s.persona.attributes?.admissionDestination==='finished')return false;
@@ -136,18 +136,22 @@ function create({persona,persist,onChange}){
  function storeStatus(){
   const s=timeline.snapshot(),last=s.persona.attributes?.storeLastTurn;
   const remaining=Number.isFinite(last)?Math.max(0,4-(s.runtime.turn-last)):0;
-  const blocked=s.persona.age<7||s.persona.stats.stress<=0||s.persona.stats.stress>=25||s.reviewPending||!!s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished';
-  return {remaining,blocked,items:global.GukminData.shopItems.map(item=>({...item,available:!blocked&&!remaining&&s.persona.stats.money>=item.price}))};
+  const blocked=s.persona.age<7||(s.persona.stats.stress<=0&&(s.persona.stats.illness||0)<=0)||(s.persona.stats.illness||0)>=5||s.reviewPending||!!s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished';
+  return {remaining,blocked,items:global.GukminData.shopItems.map(item=>({...item,available:!blocked&&!remaining&&s.persona.stats.money>=item.price&&(!item.recovery||(s.persona.stats.illness||0)>0)&&(s.persona.stats.stress>0||!!item.recovery)}))};
+ }
+ function acknowledgePressure(){
+  const s=timeline.snapshot(),a=s.persona.attributes||{},count=(a.pressureAdviceCount||0)+1,illness=s.persona.stats.illness||0;
+  return timeline.apply('pressure-advice:'+count,{effects:{attributes:{pressureGuideSeen:true,pressureNoticeBand:illness?illness+1:s.persona.stats.stress>=23?1:0,pressureAdviceCount:count}}});
  }
  function buy(id){
   const status=storeStatus(),item=status.items.find(x=>x.id===id);
   if(!item)throw new Error('등록되지 않은 상품');
   if(!item.available)return false;
-  const s=timeline.snapshot();
-  return timeline.apply('store:'+s.runtime.turn,{effects:{stats:{money:-item.price,stress:-item.relief},attributes:{storeLastTurn:s.runtime.turn}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
+  const s=timeline.snapshot(),illness=Math.max(0,(s.persona.stats.illness||0)-(item.recovery||0)),pressure=Math.max(0,s.persona.stats.stress-item.relief);
+  return timeline.apply('store:'+s.runtime.turn,{effects:{stats:{money:-item.price,stress:-item.relief,...(item.recovery?{illness:-item.recovery}:{})},attributes:{storeLastTurn:s.runtime.turn,pressureNoticeBand:illness?illness+1:pressure>=23?1:0}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
  }
  return Object.freeze({
-   storeStatus,buy,step,snapshot:()=>decorate(timeline.snapshot()),
+   storeStatus,buy,acknowledgePressure,step,snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
    acknowledge:()=>timeline.acknowledge(),
    resolve:(token,optionId,input)=>limit()?false:timeline.resolve(token,optionId,input),

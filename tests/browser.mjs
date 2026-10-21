@@ -43,7 +43,7 @@ try{
   assert.equal(academicRows.length,2);
   assert.ok(academicRows.every(row=>row.valueTop>=row.labelBottom),'both grades sit below their labels');
   assert.ok(Math.abs(academicRows[0].valueTop-academicRows[1].valueTop)<1,'academic grades share a baseline');
-  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-relations').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'mental health and relationships share one flex row');
+  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-illness').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'pressure and the illness ring share one flex row');
   const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
   await page.locator('#traits .trait-control').first().click();
   await page.locator('#traitDialog[open]').waitFor();assert.ok((await page.locator('#traitInfo').textContent()).trim());
@@ -366,7 +366,7 @@ try{
    await page.keyboard.press('Enter');
    await page.waitForTimeout(320);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'keyboard advances to middle');
-   assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
+   assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'압박');
    assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>!!el.closest('.gauge-group-finance')),true,'currency rows share a compact group');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
@@ -574,6 +574,7 @@ try{
   const walk=async target=>p.evaluate(target=>{
    const s=GukminGame.session;
    for(let index=0;index<80;index++){
+    if(document.getElementById('pressureAdvice').open)document.getElementById('adviceContinue').click();
     const scene=document.getElementById('lifeCinematic');
     if(scene&&!scene.hidden)document.getElementById('lifeCinematicDismiss').click();
     const snap=s.snapshot(),choice=snap.choice;
@@ -630,7 +631,7 @@ try{
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
   assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);
   assert.equal(await p.locator('.gauge-group-academics .gauge-progress-track').count(),0,'grades have no misleading completion bars');
-  assert.equal(await p.locator('.metric-stress .gauge-name').textContent(),'정신병','approved metric name is preserved');
+  assert.equal(await p.locator('.metric-stress .gauge-name').textContent(),'압박','approved metric name is preserved');
   const metricOverflow=await p.locator('.status>.gauges').evaluate(card=>{
    const bounds=card.getBoundingClientRect();
    return [...card.querySelectorAll('.gauge-name,.gauge-value')].some(el=>{

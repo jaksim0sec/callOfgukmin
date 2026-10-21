@@ -13,18 +13,18 @@ const attributeNames={admissionAttempts:'입시 응시 회차',admissionRoute:'�
 const option=(id,label,detail,effects={},extra={})=>({id,label,detail,effects,...extra});
 const gate=n=>n===1?{attributes:{admissionAttempts:1}}:{all:[{attributes:{admissionAttempts:n}},{not:{attributes:{admissionDestination:'finished'}}}]};
 function prefix(n){return n===1?'admission:first':n===2?'admission:second':'admission:attempt-'+n;}
-function retryReason(p){return p.stats.stress>=25?'정신병 한계':p.stats.money<=0?'준비 자금 소진':p.age>=30?'나이 제한':null;}
+function retryReason(p){return (p.stats.illness||0)>=5?'정신병 한계':p.stats.money<=0?'준비 자금 소진':p.age>=30?'나이 제한':null;}
 function retry(p,result){
  const x=JSON.parse(JSON.stringify(result)),a=p.attributes||{},blocked=retryReason(p),ageLimit=!blocked&&p.age>=29;
  const reason=blocked||(ageLimit?'나이 제한':null);
  if(reason){x.effects={attributes:{...(ageLimit?{age:30}:{}),admissionDestination:'finished',retryEndReason:reason,job:'입시 종료'}};}
  else{
-  const money=Math.min(300000,p.stats.money),pressure=Math.min(25,p.stats.stress+2);
-  const ended=money===p.stats.money?'준비 자금 소진':pressure>=25?'정신병 한계':null;
+  const money=Math.min(300000,p.stats.money),illness=(p.stats.illness||0)+Math.max(0,p.stats.stress+2-25);
+  const ended=money===p.stats.money?'준비 자금 소진':illness>=5?'정신병 한계':null;
   x.effects={attributes:{age:p.age+1,admissionAttempts:(a.admissionAttempts||1)+1,job:ended?'입시 종료':'N수생',roles:[],admissionDestination:ended?'finished':'retry',retryEndReason:ended,csatSubmitted:false},stats:{money:-money,stress:2},schools:g.GukminPlayer.schoolsOf(p).some(s=>s.kind==='high'&&s.status==='enrolled')?[{kind:'high',status:'graduated'}]:[]};
  }
  const end=x.effects.attributes.retryEndReason;
- x.history={title:end?'N수 준비 종료 · '+end:'다음 입시 연도를 준비한다',detail:end?'새 수능 주기를 열지 않고 이번 장을 마친다. '+end+'에 도달했다.':'나이가 한 살 늘었다. 연간 기본 준비비 30만원과 정신병 부담 2을 반영했다. 고교 내신은 보존한다.',importance:'major'};
+ x.history={title:end?'N수 준비 종료 · '+end:'다음 입시 연도를 준비한다',detail:end?'새 수능 주기를 열지 않고 이번 장을 마친다. '+end+'에 도달했다.':'나이가 한 살 늘었다. 연간 기본 준비비 30만원과 압박 부담 2을 반영했다. 고교 내신은 보존한다.',importance:'major'};
  return x;
 }
 function probability(p,school,type){
@@ -50,7 +50,7 @@ function decision(p,{cycle,type}){
 function add(pack,x,when){if(when)x.event.when=when;pack.events.push(x.event);pack.choices.push(x.choice);return x;}
 function board(pack,pre,at,type,when){
  const metric=type==='early'?'schoolScore':'exam',title=type==='early'?'수시 지원서':'정시 지원서';
- const build=group=>group[type].map(([risk,name,target,minimum=0],i)=>option(pre+'-'+type+'-'+risk+'-'+name.replaceAll(/\s+/g,''),name,'원서를 접수했다. 발표 전까지 합격 여부는 확정되지 않는다.',{attributes:{[type+'Choice']:pre+'-'+type+'-'+risk+'-'+name.replaceAll(/\s+/g,''),[type+'Status']:'pending'},stats:{stress:[5,2,0][i]}},{school:{name,typeLabel:['도전','적정','안정'][i],target,minimum,kind:type,scoreMetric:metric},risk:'준비 부담 · 정신병 +'+[5,2,0][i],conditional:type==='early'?[{before:true,when:{attributes:{preExamStrategy:'record'}},result:{effects:{stats:{stress:-1}}}}]:[]})).concat([option(pre+'-skip','이번 원서는 쓰지 않는다','이번 전형 지원은 건너뛰었다.',{attributes:{[type+'Choice']:'skip',[type+'Status']:'skipped'}})]);
+ const build=group=>group[type].map(([risk,name,target,minimum=0],i)=>option(pre+'-'+type+'-'+risk+'-'+name.replaceAll(/\s+/g,''),name,'원서를 접수했다. 발표 전까지 합격 여부는 확정되지 않는다.',{attributes:{[type+'Choice']:pre+'-'+type+'-'+risk+'-'+name.replaceAll(/\s+/g,''),[type+'Status']:'pending'},stats:{stress:[5,2,0][i]}},{school:{name,typeLabel:['도전','적정','안정'][i],target,minimum,kind:type,scoreMetric:metric},risk:'준비 부담 · 압박 +'+[5,2,0][i],conditional:type==='early'?[{before:true,when:{attributes:{preExamStrategy:'record'}},result:{effects:{stats:{stress:-1}}}}]:[]})).concat([option(pre+'-skip','이번 원서는 쓰지 않는다','이번 전형 지원은 건너뛰었다.',{attributes:{[type+'Choice']:'skip',[type+'Status']:'skipped'}})]);
  const x=add(pack,S.selection(pre+':'+type+'-application',at,title,'성적과 모집 계열을 확인하고 대학을 고르자.',build(groups.at(-1)),'한방 선택',{type:'university',category:type,gradeMetric:metric,term:title}),when);
  x.choice.variants=groups.map((group,i)=>({id:pre+'-'+type+'-'+group.id,priority:(groups.length-i)*10,when:{stats:{[metric]:{gte:group.min}}},title,body:x.choice.body,options:S.selection('tmp',0,title,'',build(group),'한방 선택').choice.options}));
  const n=S.notice(pre+':'+type+'-result',at+(type==='early'?3:1),type==='early'?'수시 합격자 발표':'정시 합격자 발표','지원 결과가 도착했다.');n.when={all:[when,{not:{attributes:{[type+'Choice']:'skip'}}}]};n.presentation={kind:'admission'};n.result.admissionDecision={cycle:pre,type};pack.events.push(n);
@@ -88,7 +88,7 @@ function cycle(pack,n){
  option('sleep','연락을 미루고 충분히 쉰다','쉬는 동안 단체방의 대화는 놓쳤다.',{stats:{stress:-3,relations:-1}})
  ]),studying);
  board(pack,pre,routeAt+5,'regular',withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}},{attributes:{earlyStatus:'skipped'}}]}));
- const retryOption=option('retry','다음 해 입시에 다시 도전한다','다음 연도 준비를 선택했다.',{}, {retryYear:true,risk:'나이 +1 · 연간 기본 준비비 30만원 · 정신병 +2. 정신병25·돈0·나이30 도달 시 종료'});
+ const retryOption=option('retry','다음 해 입시에 다시 도전한다','다음 연도 준비를 선택했다.',{}, {retryYear:true,risk:'나이 +1 · 연간 기본 준비비 30만원 · 압박 +2. 정신병5·돈0·나이30 도달 시 종료'});
  const work=option('employment','대학 대신 사회 진출을 준비한다','구직과 실무 준비로 이번 장을 마친다.',{attributes:{admissionDestination:'employment',job:'사회 진출 준비'},stats:{stress:-1,relations:1}});
  const done=add(pack,S.selection(pre+':destination',routeAt+7,'졸업 이후의 진로','입시 결과를 바탕으로 다음 진로를 정하자.',[retryOption,work],'한방 선택',{type:'admission-finish',term:'진로 확정'}),withGate());
  done.choice.variants=['early','regular'].map((type,i)=>({id:pre+'-offer-'+type,priority:30-i*10,when:{attributes:{[type+'Status']:'accepted'}},title:(type==='early'?'수시':'정시')+' 합격 이후의 선택',body:type==='early'?'수시에 합격했다. 등록하지 않아도 올해 정시에는 지원할 수 없다.':'정시에 합격했다. 등록 여부를 정하자.',options:S.selection('tmp',0,'진로','',[

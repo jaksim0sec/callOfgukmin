@@ -39,7 +39,7 @@ function differences(before,after){
   result.push({id,amount:delta,icon:def.icon||'sparkle',
    text:def.label+' '+(delta>0?'+':'−')+Math.abs(delta).toLocaleString('ko-KR')+
     (['money','allowance','income'].includes(id)?'원':''),
-   tone:(id==='stress'?delta<0:delta>0)?'good':'bad'});
+   tone:(['stress','illness'].includes(id)?delta<0:delta>0)?'good':'bad'});
  }
  const name=x=>typeof x==='string'?x:x?.name;
  const prior=new Set((before.traits||[]).map(name)),next=new Set((after.traits||[]).map(name));
@@ -169,7 +169,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   body.append(hero);
   if(reward.guidance)body.append(rich('p','admission-guidance',reward.guidance));
   const section=el('section','daily-reward-changes');
-  section.append(el('strong','daily-reward-changes-title','획득한 보상'));
+  section.append(el('strong','daily-reward-changes-title','선택의 영향'));
   const tray=el('div','daily-reward-tokens');
   const conversions=reward.changes.filter(item=>item.change==='conversion');
   const ordered=[...gained.filter(item=>!conversions.some(c=>c.trait.slice(3)===item.trait)),...reward.changes.filter(item=>item.change!=='gain')];
@@ -315,7 +315,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    for(const [id,next] of Object.entries(projected.stats||{})){
     const amount=Number.isFinite(next)&&Number.isFinite(persona.stats?.[id])?next-persona.stats[id]:0;
     if(!Number.isFinite(amount)||amount===0)continue;
-    const def=P.metricDefinition(id),good=id==='stress'?amount<0:amount>0;
+    const def=P.metricDefinition(id),good=['stress','illness'].includes(id)?amount<0:amount>0;
     indicators.append(S.metricImpact(id,amount,'daily-choice-effect '+(good?'is-positive':'is-negative')));
    }
    for(const trait of projected.traits||[]){

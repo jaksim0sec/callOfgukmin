@@ -12,7 +12,7 @@ function bounded(value,def){
  finite(value);
  if(def.min!==undefined)value=Math.max(def.min,value);
  if(def.max!==undefined)value=Math.min(def.max,value);
- return def.type==='progress'&&def.max===25?Math.round(value):value;
+ return def.type==='progress'&&[5,25].includes(def.max)?Math.round(value):value;
 }
 function matches(persona,condition={},turn=0){
  keys(condition,['all','any','not','traits','withoutTraits','stats','attributes','age','phase','turn'],'조건');
@@ -45,7 +45,7 @@ function apply(persona,result={},context={}){
   if(persona.attributes?.admissionResearch==='paid'&&!persona.attributes?.counselingUsed){prepared.effects.stats={...prepared.effects.stats,stress:(prepared.effects.stats?.stress||0)-1};prepared.effects.attributes={...prepared.effects.attributes,counselingUsed:true};}
  }
  if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};}
- const s=P.withoutHealth(persona),effects=prepared.effects||{},turn=context.turn??0;
+ const s=P.upgradeMental(persona),effects=prepared.effects||{},turn=context.turn??0;
  keys(effects,['activate','stats','attributes','schools','traits','deactivate'],'효과');
  s.metricActive??={};s.metricHistory??=[];s.attributeHistory??=[];s.traitSince??={};s.attributes??={};
  for(const [id,value] of Object.entries(effects.activate||{})){
@@ -68,10 +68,15 @@ function apply(persona,result={},context={}){
    }
   }
  }
+ let overflow=0;
  for(const [id,delta] of Object.entries(deltas)){
+  if(id==='illness')continue;
   if((id==='exam'&&persona.attributes?.csatSubmitted&&!prepared.retryYear&&!context.finalizing)||(id==='schoolScore'&&persona.attributes?.highFinalSubmitted))continue;
-  s.stats[id]=bounded(finite(s.stats[id]??0)+delta,P.metricDefinition(id));
+  const raw=finite(s.stats[id]??0)+delta;
+  if(id==='stress'&&delta>0)overflow=Math.max(0,Math.round(raw)-25);
+  s.stats[id]=bounded(raw,P.metricDefinition(id));
  }
+ if(overflow||deltas.illness!==undefined)s.stats.illness=bounded((s.stats.illness||0)+overflow+(deltas.illness||0),P.metricDefinition('illness'));
  for(const [id,value] of Object.entries(effects.attributes||{})){
   const def=P.attributeDefinition(id),old=def.custom?s.attributes[id]:s[id];
   if(id==='age'&&(!Number.isFinite(value)||value<0))throw new Error('나이 오류');

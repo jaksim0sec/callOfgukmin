@@ -86,8 +86,8 @@ function pack(...parts){
 }
 function admissionGuide(person,route){
  const score=person.stats.schoolScore||0,official='**학교 유형별 지원 안내**\n\n**일반고** · 지역 배정과 제출 일정을 확인한다.\n**특성화고** · 희망 학과와 실습 내용을 비교한다.\n**과학고** · 중학 성적 ==22 이상== + 진학 준비 완료\n**영재학교** · 중학 성적 ==23 이상== + 진학 준비 완료';
- const personal='**나의 준비 상황**\n현재 중학 성적 '+score.toLocaleString('ko-KR',{maximumFractionDigits:1})+' · 과학고까지 '+Math.max(0,22-score).toLocaleString('ko-KR',{maximumFractionDigits:1})+'점, 영재학교까지 '+Math.max(0,23-score).toLocaleString('ko-KR',{maximumFractionDigits:1})+'점 남았다. '+(global.GukminPlayer.hasTrait(person,'문과')&&!global.GukminPlayer.hasTrait(person,'이과')?'문과로 과고에 진학할 수 있지만 내신 시험의 양수 정신병 부담이1 늘어난다.':'심화 탐구와 통합 모고 준비는 교내 내신 경쟁과 다르다.');
- return route==='official'?official:route==='mentor'?personal+'\n\n무료 일반고·특성화고 경로도 비교하자.':official+'\n\n'+personal+'\n\n**준비 순서**\n① 부족한 단원 복습\n② 학교별 필수 서류 준비\n③ 원서 일정 확인\n\n**유료 상담 효과** · 첫 입학 정신병 부담 −1\n합격을 보장하지 않는다.';
+ const personal='**나의 준비 상황**\n현재 중학 성적 '+score.toLocaleString('ko-KR',{maximumFractionDigits:1})+' · 과학고까지 '+Math.max(0,22-score).toLocaleString('ko-KR',{maximumFractionDigits:1})+'점, 영재학교까지 '+Math.max(0,23-score).toLocaleString('ko-KR',{maximumFractionDigits:1})+'점 남았다. '+(global.GukminPlayer.hasTrait(person,'문과')&&!global.GukminPlayer.hasTrait(person,'이과')?'문과로 과고에 진학할 수 있지만 내신 시험의 양수 압박 부담이1 늘어난다.':'심화 탐구와 통합 모고 준비는 교내 내신 경쟁과 다르다.');
+ return route==='official'?official:route==='mentor'?personal+'\n\n무료 일반고·특성화고 경로도 비교하자.':official+'\n\n'+personal+'\n\n**준비 순서**\n① 부족한 단원 복습\n② 학교별 필수 서류 준비\n③ 원서 일정 확인\n\n**유료 상담 효과** · 첫 입학 압박 부담 −1\n합격을 보장하지 않는다.';
 }
 function schoolwork(pack,contexts){
  function edit(result,metric){
