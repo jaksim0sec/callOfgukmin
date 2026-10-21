@@ -40,7 +40,7 @@ function generate() {
   const {home,region,tier,stats}=birthContext();
   return {
     version:1,statScale:25,
-    name:pick(NAMES),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,portraitVariant:Math.random()<.5?'female':'male',
+    name:pick(NAMES),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
     family:home.name,birthplace:region.label,birthplaceId:region.id,regionTags:[...region.tags],familyTier:tier.id,description:home.description,
     school:{elementary:null,middle:null,high:null,uni:null},schoolHistory:[],
     roles:[],traits:[tier.name,...BIRTH_DEFAULTS.traits],
