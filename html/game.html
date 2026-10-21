@@ -7,7 +7,7 @@
   <title>국민의 부름 · 인생</title>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=gu-care-20261021">
+  <link rel="stylesheet" href="css/style.css?v=gu-recovery-20261021">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -78,7 +78,7 @@
       <div class="advice-pressure"><div><strong>압박</strong><b id="advicePressureValue"></b></div><progress id="advicePressureProgress" class="ui-progress-native" max="25" value="0" aria-label="현재 압박"></progress><span class="ui-progress-track"><span id="advicePressureFill" class="ui-progress-fill"></span></span></div>
       <div class="advice-illness"><div><strong>정신병</strong><b id="adviceIllnessValue"></b></div><progress id="adviceIllnessProgress" class="ui-progress-native" max="5" value="0" aria-label="현재 정신병"></progress><span class="ui-progress-track"><span id="adviceIllnessFill" class="ui-progress-fill"></span></span></div>
     </div>
-    <ol class="advice-explanation"><li><b>압박은 25까지 쌓입니다</b><span>25를 넘은 만큼 정신병으로 바뀝니다.<br>예: 압박 24에서 +3 → 정신병 +2</span></li><li><b>정신병이 생기면 표시가 바뀝니다</b><span>상태창의 붉은 압박 막대가 보라색 정신병 막대로 바뀝니다. <strong>정신병 5는 게임오버입니다.</strong></span></li><li><b>회복은 직접 선택하세요</b><span>GU의 쉼 상품은 압박을, 돌봄 상품은 정신병도 낮춥니다. 압박만 낮춰서는 정신병이 회복되지 않습니다.</span></li></ol>
+    <ol class="advice-explanation"><li><b>압박은 25까지 쌓입니다</b><span>25를 넘은 만큼 정신병으로 바뀝니다.<br>예: 압박 24에서 +3 → 정신병 +2</span></li><li><b>정신병이 생기면 표시가 바뀝니다</b><span>붉은 압박 막대가 보라색 정신병으로 바뀌고, 선택의 부담·회복도 정신병부터 반영됩니다. <strong>정신병 5는 게임오버입니다.</strong></span></li><li><b>회복은 직접 선택하세요</b><span>선택의 회복은 정신병부터 낮춥니다. GU에서는 압박 전용 쉼 상품과 정신병도 낮추는 돌봄 상품을 구분해 고르세요.</span></li></ol>
     <p id="adviceStoreNote" class="advice-store-note"></p><small class="advice-disclaimer">편의점 구매와 안내 확인만으로는 시간이 흐르지 않습니다.</small>
     <div class="advice-actions"><button id="adviceContinue" type="button">알겠어요</button><button id="adviceStore" type="button">GU 편의점 가기 ↗</button></div>
   </div>
@@ -87,7 +87,8 @@
   <div class="modal-head"><h2 id="storeTitle"><span class="store-logo">GU<span aria-hidden="true">.</span></span><small>가까운 쉼, 편의점</small></h2><form method="dialog"><button class="close" aria-label="편의점 닫기">×</button></form></div>
   <div class="store-content">
     <div class="store-sign"><span>GOOD TO SEE YOU</span><strong>오늘도, 잠깐 쉬었다 가요.</strong><p>작은 간식부터 마음 돌봄까지.</p><span class="store-sign-mark" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="24" cy="24" r="20"/><circle cx="17" cy="20" r="1.5" fill="currentColor" stroke="none"/><circle cx="31" cy="20" r="1.5" fill="currentColor" stroke="none"/><path d="M16 29Q24 37 32 29"/></svg></span></div>
-    <p id="storeBalance"></p><p id="storeNotice" role="status"></p>
+    <p id="storeBalance"></p><div id="storeVitals" class="store-vitals" aria-label="현재 마음 상태"></div>
+    <section id="storeAvailability" class="store-availability" aria-label="편의점 이용 상태"><strong id="storeAvailabilityTitle"></strong><div id="storeCooldownSteps" class="store-cooldown-steps" role="img"></div><p id="storeNotice" role="status"></p></section>
     <div class="store-aisle"><b>쉼을 고르는 진열대</b><span>REST &amp; CARE</span></div><div id="storeItems"></div>
     <p class="store-footer">GU — 나를 챙기는 작은 선택<br><span>1회 1상품 · 이용 간격 4턴</span></p>
   </div>
@@ -110,26 +111,26 @@
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
 <script src="js/poster.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/base.js?v=gu-care-20261021" defer></script>
+<script src="js/data/base.js?v=gu-recovery-20261021" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
 <script src="js/data/schools.js?v=pressure-care-20261021" defer></script>
 <script src="js/data/grades.js?v=pressure-care-20261021" defer></script>
-<script src="js/playerState.js?v=gu-care-20261021" defer></script>
-<script src="js/effects.js?v=pressure-care-20261021" defer></script>
+<script src="js/playerState.js?v=gu-recovery-20261021" defer></script>
+<script src="js/effects.js?v=gu-recovery-20261021" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=gu-care-20261021" defer></script>
+<script src="js/life/director.js?v=gu-recovery-20261021" defer></script>
 <script src="js/life/story.js?v=pressure-care-20261021" defer></script>
 <script src="js/life/infant.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/elementary.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/middle.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/high.js?v=pressure-care-20261021" defer></script>
+<script src="js/life/elementary.js?v=gu-recovery-20261021" defer></script>
+<script src="js/life/middle.js?v=gu-recovery-20261021" defer></script>
+<script src="js/life/high.js?v=gu-recovery-20261021" defer></script>
 <script src="js/life/admissions.js?v=pressure-care-20261021" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=gu-care-20261021" defer></script>
+<script src="js/statusView.js?v=gu-recovery-20261021" defer></script>
 <script src="js/sheetController.js?v=pressure-care-20261021" defer></script>
-<script src="js/dailyChoice.js?v=gu-care-20261021" defer></script>
-<script src="js/game.js?v=gu-care-20261021" defer></script>
+<script src="js/dailyChoice.js?v=gu-recovery-20261021" defer></script>
+<script src="js/game.js?v=gu-recovery-20261021" defer></script>
 <script src="js/majorView.js?v=pressure-care-20261021" defer></script>
-<script src="js/boot.js?v=gu-care-20261021" defer></script>
+<script src="js/boot.js?v=gu-recovery-20261021" defer></script>
 </body>
 </html>

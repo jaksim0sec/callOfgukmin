@@ -67,7 +67,7 @@ global.GukminDirector.register({
     {label:'상담을 거쳐 시험 준비량을 조정하고 몇 주간 실천한다',effects:{stats:{stress:-4,schoolScore:-1}},detail:'보충 문제를 일부 포기하고 교사와 적당한 분량으로 계획을 줄였다. 몇 주 동안 무리하지 않으니 계속 밀리던 숙제가 조금씩 줄었다.'},
     {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-6,schoolScore:-2,relations:-1}},detail:'과제와 친구 약속을 미루고 몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
     {label:'친구에게 부담을 털어놓고 과제 진행을 함께 점검한다',effects:{stats:{stress:-2,schoolScore:-1,relations:1}},detail:'개인 복습 시간을 줄이고 친구와 제출 날짜를 대조한 뒤 할 수 있는 것부터 나눴다. 불안이 완전히 사라지진 않았지만 다음 주 일정은 보였다.'}
-   ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},stats:{stress:{gte:16}}}}},
+   ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},any:[{stats:{stress:{gte:16}}},{stats:{illness:{gte:1}}}]}}},
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
    S.examPrelude('middle',2,57,'1학기 중간고사'),
    S.exam('middle',14,2,57,'1학기 중간고사'),

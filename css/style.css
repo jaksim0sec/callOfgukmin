@@ -1200,9 +1200,9 @@ body[data-screen=waiting],body[data-screen=result]{background:radial-gradient(el
 .convenience-store .store-aisle span{font-size:.55rem;letter-spacing:.08em;color:#7d6b8d}
 .convenience-store #storeItems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem .75rem;margin-top:.85rem}
 .convenience-store .store-item{position:relative;display:flex;flex-direction:column;align-items:stretch;gap:0;min-width:0;padding:0;overflow:hidden;border:.0625rem solid #ddd6e7;border-radius:.65rem;background:#fff;color:#2d2636;text-align:left;box-shadow:0 .2rem 0 #d7cfe0;transition:border-color .15s,box-shadow .15s}
-.convenience-store .store-item:disabled{opacity:1;cursor:default}
-.convenience-store .store-item:not(:disabled):hover{transform:none;background:#fff;border-color:#735393;box-shadow:0 .2rem 0 #735393}
-.convenience-store .store-item:focus-visible{outline:.15rem solid #735393;outline-offset:.2rem}
+
+.convenience-store .store-item[data-available=true]:hover{transform:none;background:#fff;border-color:#735393;box-shadow:0 .2rem 0 #735393}
+.convenience-store .store-buy:focus-visible{outline:.15rem solid #735393;outline-offset:.2rem}
 .convenience-store .store-product-art{height:6rem;width:100%;flex:none;align-self:stretch;border-radius:0;background:radial-gradient(ellipse at 50% 90%,#b6c8d04d,transparent 60%),#eef4f5;border-bottom:.0625rem solid #e4e3e8}
 .convenience-store .store-product-art.is-tea{background-color:#eff2e7}.convenience-store .store-product-art.is-snack{background-color:#f5ecdf}.convenience-store .store-product-art.is-meal{background-color:#f5eade}.convenience-store .store-product-art.is-care{background-color:#f0eaf8}
 .convenience-store .store-product-art i{filter:drop-shadow(.15rem .3rem .1rem #40323522)}
@@ -1213,8 +1213,19 @@ body[data-screen=waiting],body[data-screen=result]{background:radial-gradient(el
 .convenience-store .store-product-description{font-size:.7rem;line-height:1.65;color:#706676}
 .convenience-store .store-relief{display:block;margin-top:auto;padding-top:.4rem;white-space:normal;font-size:.7rem;font-weight:700;line-height:1.5;color:#635080}
 .convenience-store .store-price{display:block;font-size:1rem;color:#32223d;font-variant-numeric:tabular-nums}
-.convenience-store .store-buy-label{display:block;width:100%;padding:.55rem .4rem;border-top:.0625rem solid #ded6e7;text-align:center;line-height:1.4;font-size:.7rem;font-weight:650;background:#ede4f6;color:#563773}
-.convenience-store .store-item:disabled .store-buy-label{background:#f1eef4;color:#796e81}
+.convenience-store .store-product-checkout{display:grid;gap:.6rem;padding:.7rem;border-top:.0625rem solid #eee8f2;background:#fcfaff}
+.convenience-store .store-buy{display:flex;align-items:center;justify-content:center;width:100%;min-height:2.5rem;padding:.55rem .35rem;border:.0625rem solid #5e3c7f;border-radius:.5rem;background:#634186;color:#fff;font:700 .75rem/1.4 system-ui;box-shadow:0 .15rem 0 #42295d;cursor:pointer}
+.convenience-store .store-buy:not(:disabled):hover{background:#4d2d70}.convenience-store .store-buy:disabled{opacity:1;background:#e9e3ef;color:#7c6c88;border-color:#d5cbdf;box-shadow:none;cursor:default}
+.convenience-store .store-product-illustration{display:block;width:100%;height:100%;max-width:11rem}.convenience-store .store-product-art:before{content:none}
+.convenience-store .store-vitals{display:flex;flex-wrap:wrap;gap:.45rem;margin:.6rem 0 .85rem}
+.convenience-store .store-vitals .token{font-size:.75rem;white-space:nowrap;color:#fff;padding:.35rem .65rem;border-radius:2rem;line-height:1.4}
+.convenience-store .store-vitals .metric-stress{background:#bf4d5b}.convenience-store .store-vitals .metric-illness{background:#8153b4}
+.convenience-store .store-availability{padding:.85rem;margin:.6rem 0 1rem;border:.0625rem solid #d5dcbf;border-radius:.65rem;background:#f2f7e7;color:#465637}
+.convenience-store .store-availability[data-waiting=true]{border-color:#dbd0e7;background:#eee8f5;color:#604675}
+.convenience-store .store-availability>strong{display:block;font-size:.85rem;line-height:1.5}
+.convenience-store .store-availability #storeNotice{font-size:.72rem;line-height:1.6;min-height:0;margin:.35rem 0 0;color:inherit}
+.convenience-store .store-cooldown-steps{display:flex;gap:.35rem;margin:.65rem 0 .5rem}
+.convenience-store .store-cooldown-steps[hidden]{display:none}.convenience-store .store-cooldown-steps>span{flex:1;height:.35rem;border-radius:1rem;background:#d6c9e2}.convenience-store .store-cooldown-steps>.is-complete{background:#85639f}
 .convenience-store .store-footer{margin:1.2rem 0 .2rem;text-align:center;font-size:.7rem;font-weight:600;line-height:1.8;color:#65546d}
 .convenience-store .store-footer span{font-size:.65rem;font-weight:400}
 .store-product-art{height:5rem;align-self:center;display:grid;place-items:center;position:relative;border-radius:50%;background:#d4c19c15}.store-product-art.is-tea i{position:relative;display:block;width:2.4rem;height:2.8rem;border-radius:.3rem .3rem 1rem 1rem;background:linear-gradient(100deg,#e7dcc1,#b8b79d);border-top:.3rem solid #8c7961}.store-product-art.is-tea i:after{content:'';position:absolute;right:-.7rem;top:.35rem;width:.7rem;height:1.2rem;border:.25rem solid #babba4;border-left:0;border-radius:0 .7rem .7rem 0}.store-product-art.is-tea:before{content:'∿';position:absolute;top:-.6rem;color:#d2d7c5;font-size:1.5rem;opacity:.6}.store-product-art.is-snack i{display:block;width:2.7rem;height:3.5rem;border-radius:.25rem;background:repeating-linear-gradient(0deg,transparent 0 .3rem,#ffffff10 .3rem .4rem),linear-gradient(20deg,#b88656,#c6a263);border-block:.35rem solid #ecd7a3;transform:rotate(-9deg)}.store-product-art.is-snack i:after{content:'';display:block;width:1.4rem;height:1.4rem;border-radius:50%;background:#775138;box-shadow:inset 0 0 0 .3rem #a56d44;margin:.5rem auto}
@@ -1257,3 +1268,9 @@ body[data-screen=waiting],body[data-screen=result]{background:radial-gradient(el
 .advice-actions #adviceStore{flex:1;background:#5c3b7c;color:#fff;border-color:#5c3b7c}
 @media(max-width:23em){.convenience-store .store-content{padding:.75rem}.convenience-store #storeItems{gap:.75rem .5rem}.convenience-store .store-product-info{padding:.6rem .5rem}.convenience-store .store-product-description{font-size:.7rem}.convenience-store h2{gap:.6rem}.convenience-store h2 small{font-size:.65rem}.advice-paper{padding:1rem}.advice-actions{bottom:-1rem;margin-inline:-1rem;margin-bottom:-1rem;padding:.75rem 1rem}.advice-gauges>div{padding:.7rem .6rem}.advice-gauges>div>div{font-size:.8rem}}
 @media(prefers-reduced-motion:reduce){.store-item{transition:none}}
+
+/* Admission verdict and stamp share a clearly legible outcome color. */
+.is-admission-result{--admission-color:#28725d;border-top-color:var(--admission-color)}
+.is-admission-result[data-outcome=failed]{--admission-color:#ac4450}
+.is-admission-result .admission-verdict{margin:.8rem 0 .5rem;color:var(--admission-color);font:900 clamp(2.6rem,10vw,4rem)/1.15 system-ui;letter-spacing:-.04em;word-break:keep-all}
+.is-admission-result .cinematic-stamp{display:grid;place-items:center;width:5.4rem;aspect-ratio:1;border:.32rem double currentColor;border-radius:50%;color:var(--admission-color);font:900 1.2rem/1.2 system-ui;white-space:nowrap;word-break:keep-all;letter-spacing:.025em;padding:.3rem;box-shadow:inset 0 0 0 .06rem currentColor}

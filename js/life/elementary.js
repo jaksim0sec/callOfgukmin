@@ -84,7 +84,7 @@ global.GukminDirector.register({
     {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-5,study:-2}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
     {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-3,relations:-1}},detail:'친구 약속을 취소하고 모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
     {label:'가까운 친구에게 최근 힘든 일을 말하고 도움을 구한다',effects:{stats:{stress:-2,study:-1,relations:1}},detail:'복습 한 번을 미루고 친구와 이야기했다. 친구가 쉬는 시간마다 잠깐 같이 있자고 했다. 문제는 남아 있지만 혼자 감당할 일이 조금 줄었다.'}
-   ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},stats:{stress:{gte:16}}}}},
+   ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},any:[{stats:{stress:{gte:16}}},{stats:{illness:{gte:1}}}]}}},
    S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
     '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
     {id:'school',label:'학교 방과 후 교실에서 과제를 함께 푼다',risk:'정해진 요일에는 다른 약속을 잡기 어려움',effects:{attributes:{afterschoolPath:'school'},stats:{study:1,relations:1,stress:1}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},

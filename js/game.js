@@ -318,19 +318,30 @@ function mount(root,navigate,content=global.GukminContent){
   const status=engine?.storeStatus?.();
   if(status)open.textContent=status.remaining?'편의점 · '+status.remaining+'턴 후 이용 ↗':'편의점 ↗';
   if(!dialog.open)return;
-  text('storeBalance','재산 '+persona.stats.money.toLocaleString('ko-KR')+'원 · 압박 '+stress+'/25 · 정신병 '+illness+'/5');
+  text('storeBalance','사용 가능한 재산 '+persona.stats.money.toLocaleString('ko-KR')+'원');
+  const vitals=$('storeVitals');vitals.replaceChildren(global.GukminStatus.createToken({label:'압박 '+stress+'/25',icon:'pulse',classes:'metric-impact metric-stress'}));
+  if(illness)vitals.append(global.GukminStatus.createToken({label:'정신병 '+illness+'/5',icon:'mind',classes:'metric-impact metric-illness'}));
+  const availability=$('storeAvailability');availability.dataset.waiting=String(status.remaining>0);
+  text('storeAvailabilityTitle',status.remaining?'다음 이용까지 '+status.remaining+'턴':status.blocked?'잠시 이용할 수 없습니다':'지금 이용할 수 있어요');
+  const steps=$('storeCooldownSteps');steps.hidden=!status.remaining;steps.replaceChildren();
+  for(let i=0;i<4;i++){const step=el('span',i<4-status.remaining?'is-complete':'');step.setAttribute('aria-hidden','true');steps.append(step);}
+  steps.setAttribute('aria-label',status.remaining+'턴 후 이용 가능');
   text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?(stress===0&&!illness?'지금은 충분히 쉬었습니다.':snapshot?.reviewPending?'선택 결과를 확인한 뒤 이용해 주세요.':'현재는 이용할 수 없습니다.'):'한 번에 하나 · 구매 후 4턴 간격 · 회복은 직접 선택합니다.');
   const list=$('storeItems');list.replaceChildren();
   for(const item of status.items){
-   const button=el('button','store-item');button.type='button';button.dataset.item=item.id;button.disabled=!item.available;
-   const art=el('span','store-product-art is-'+item.art);art.setAttribute('aria-hidden','true');art.append(el('i',''),el('span','store-pack-brand','GU'));
+   const card=el('article','store-item');card.dataset.available=String(item.available);
+   const button=el('button','store-buy');button.type='button';button.dataset.item=item.id;button.disabled=!item.available;button.setAttribute('aria-label',item.name+' · '+item.price.toLocaleString('ko-KR')+'원 구매');
+   const art=el('span','store-product-art is-'+item.art);art.setAttribute('aria-hidden','true');
+   const drawing=document.createElementNS('http://www.w3.org/2000/svg','svg');drawing.setAttribute('viewBox','0 0 160 120');drawing.classList.add('store-product-illustration');
+   const use=document.createElementNS('http://www.w3.org/2000/svg','use');use.setAttribute('href','assets/svg/store-products.svg?v=gu-recovery-20261021#'+item.art);drawing.append(use);art.append(drawing);
    const info=el('span','store-product-info');
    info.append(el('small','',item.recovery?'CARE / 마음 돌봄':'REST / 가벼운 쉼'),el('strong','',item.name),el('span','store-product-description',item.description));
    const relief=Math.min(stress,item.relief),recovery=Math.min(illness,item.recovery||0);
-   info.append(el('span','store-relief','압박 −'+relief+(item.recovery?' · 정신병 −'+recovery:'')),el('b','store-price',item.price.toLocaleString('ko-KR')+'원'));
+   info.append(el('span','store-relief','압박 −'+relief+(item.recovery?' · 정신병 −'+recovery:'')));
+   const checkout=el('div','store-product-checkout');checkout.append(el('b','store-price',item.price.toLocaleString('ko-KR')+'원'),button);
    const reason=item.available?'구매하기 ↗':status.remaining?'다음 이용까지 '+status.remaining+'턴':status.blocked?'지금은 이용 불가':persona.stats.money<item.price?'재산 부족':!item.recovery&&stress===0?'압박이 없습니다':'정신병 발생 후 이용';
-   button.append(art,info,el('span','store-buy-label',reason));
-   button.addEventListener('click',safely(()=>{if(engine.buy(item.id)){text('storeNotice',item.name+' 구매 완료 · 압박 '+relief+' 감소'+(recovery?' · 정신병 '+recovery+' 감소':'')+' · 다음 이용까지 4턴.');$('convenienceStore').querySelector('.close').focus({preventScroll:true});}}));list.append(button);
+   button.textContent=reason;button.setAttribute('aria-label',item.name+' · '+reason+' · '+item.price.toLocaleString('ko-KR')+'원');card.append(art,info,checkout);
+   button.addEventListener('click',safely(()=>{if(engine.buy(item.id)){text('storeNotice',item.name+' 구매 완료 · 압박 '+relief+' 감소'+(recovery?' · 정신병 '+recovery+' 감소':'')+' · 다음 이용까지 4턴.');$('convenienceStore').querySelector('.close').focus({preventScroll:true});}}));list.append(card);
   }
  }
  function openStore(){
@@ -387,7 +398,15 @@ function mount(root,navigate,content=global.GukminContent){
    electionTicker=global.setInterval(()=>{const elapsed=performance.now()-start;const fraction=Math.min(1,Math.max(0,(elapsed-600)/4000));rows.forEach((node,i)=>{const count=Math.floor(votes[i]*fraction);node.textContent='正'.repeat(Math.floor(count/5))+(count%5?'一丨三四'[count%5-1]:'')+' · '+count+'표';});if(elapsed>=6000)scene.finish();},100);
    if(reduceMotion)scene.finish();
   }
-  if(scene.kind==='admission'){card.append(el('span','cinematic-stamp','기록'));card.classList.add('is-admission-result');const image=el('img','school-placeholder');image.src='assets/svg/school-placeholder.svg';image.alt='';card.prepend(image);}
+  if(scene.kind==='admission'){
+   const type=scene.eventId?.includes(':early-result')?'early':'regular';
+   const status=persona.attributes?.[type+'Status'];
+   const accepted=status==='accepted'||(status!=='failed'&&!/불합격$/.test(scene.title));
+   const verdict=accepted?'합격':'불합격';card.dataset.outcome=accepted?'accepted':'failed';card.classList.add('is-admission-result');
+   const title=card.querySelector('.life-cinematic-title');title.textContent=scene.title.replace(/ (?:불합격|합격)$/,'');
+   card.insertBefore(el('p','admission-verdict',verdict),title);card.append(el('span','cinematic-stamp',verdict));
+   const image=el('img','school-placeholder');image.src='assets/svg/school-placeholder.svg';image.alt='';card.prepend(image);
+  }
   if(scene.kind==='transition'){card.classList.add('is-chapter');card.prepend(el('span','chapter-orbit',''));card.append(el('span','chapter-footer','새로운 장이 시작됩니다.'));}
   body.append(card);cinematic.hidden=false;document.body.classList.add('cinematic-open');
   $('lifeCinematicDismiss').textContent=scene.kind==='election'&&!scene.finished?'건너뛰기':scene.kind==='transition'?'시간이 흐른다…':'결과 확인하고 계속하기 →';

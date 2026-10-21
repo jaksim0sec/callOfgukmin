@@ -150,7 +150,7 @@ global.GukminDirector.register({
      {label:'상담 뒤 한 달 동안 학습량과 수면 시간을 조정한다',effects:{stats:{stress:-5,schoolScore:-1}},detail:'과제 분량을 줄인 만큼 복습 한 단원을 포기했다. 상담만으로 달라지진 않았다. 과제 시간을 줄이고 잠드는 시간을 지키자 몇 주 뒤부터 버틸 여유가 생겼다.'},
      {label:'무리한 일정을 줄이고 실제로 며칠 휴식한다',effects:{stats:{stress:-3,relations:-1}},detail:'친구들과의 약속을 취소했다. 휴식 기간에는 밀린 일을 억지로 처리하지 않았다. 돌아와서 남은 과제부터 다시 순서를 잡았다.'},
      {label:'가족과 도움받을 수 있는 일과 없는 일을 나눠 본다',effects:{stats:{stress:-2,schoolScore:-1,relations:1}},detail:'개인 복습 시간을 비워 가족과 의논했다. 가족이 집안일 일부를 맡았다. 시험 걱정은 그대로지만 그동안 하던 일 하나는 내려놓을 수 있었다.'}
-    ],{stats:{stress:{gte:19}}}),
+    ],{any:[{stats:{stress:{gte:19}}},{stats:{illness:{gte:1}}}]}),
    S.branch(choiceAt('high:commute',66,'아침부터 꼬인 학교 일정',
     '조회 시간까지 얼마 남지 않았다. 무엇부터 처리할까?',[
      {label:'다음 교통편을 알아보고 이동한다',detail:'뛰어봐야 길이 줄지는 않는다. 지각 사유를 정확히 적어 제출했다.'},

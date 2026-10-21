@@ -68,6 +68,14 @@ function apply(persona,result={},context={}){
    }
   }
  }
+ // Once illness is visible, ordinary mental changes act on that stage first.
+ // Shop products explicitly distinguish pressure relief from illness recovery.
+ if(!tags.includes('pressure-only')&&s.stats.illness>0&&deltas.stress!==undefined){
+  const change=Math.round(deltas.stress);
+  const illnessChange=change<0?-Math.min(s.stats.illness,-change):change;
+  deltas.illness=(deltas.illness||0)+illnessChange;
+  deltas.stress=change-illnessChange;
+ }
  let overflow=0;
  for(const [id,delta] of Object.entries(deltas)){
   if(id==='illness')continue;

@@ -148,7 +148,7 @@ function create({persona,persist,onChange}){
   if(!item)throw new Error('등록되지 않은 상품');
   if(!item.available)return false;
   const s=timeline.snapshot();
-  return timeline.apply('store:'+s.runtime.turn,{effects:{stats:{money:-item.price,stress:-item.relief,...(item.recovery?{illness:-item.recovery}:{})},attributes:{storeLastTurn:s.runtime.turn}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
+  return timeline.apply('store:'+s.runtime.turn,{tags:['pressure-only'],effects:{stats:{money:-item.price,stress:-item.relief,...(item.recovery?{illness:-item.recovery}:{})},attributes:{storeLastTurn:s.runtime.turn}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
  }
  return Object.freeze({
    storeStatus,buy,acknowledgePressure,step,snapshot:()=>decorate(timeline.snapshot()),

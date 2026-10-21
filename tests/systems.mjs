@@ -1182,7 +1182,7 @@ test('pressure overflow, persistent illness and the fifth illness point share th
  const {P,E,c}=setup(),p=P.generate();p.age=14;p.phase='middle';p.stats.stress=24;
  let q=E.apply(p,{effects:{stats:{stress:1}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,0);
  q=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,2);
- q=E.apply(q,{effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,15);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
+ q=E.apply(q,{tags:['pressure-only'],effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,15);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
  q=E.apply(q,{effects:{stats:{illness:-1}}});assert.equal(q.stats.illness,1);
  const e=c.GukminDirector.create({persona:p,persist:p=>P.save(p)});e.apply('overflow-end',{effects:{stats:{stress:6}}});const end=e.snapshot();assert.equal(end.persona.stats.illness,5);assert.equal(end.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(end.choice,null);
  assert.equal(c.GukminDirector.create({persona:P.load()}).run().persona.stats.illness,5);
@@ -1211,4 +1211,15 @@ test('critical advice is acknowledged once across healing and restored saves wit
  e.apply('critical',{effects:{stats:{illness:1}}});const settledTurn=e.snapshot().runtime.turn;e.acknowledgePressure();assert.equal(e.snapshot().runtime.turn,settledTurn);assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,true);
  e.buy('care');assert.equal(e.snapshot().persona.stats.illness,3);assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,true,'buying care never resets the warning');
  e=c.GukminDirector.create({persona:P.load()});e.apply('critical-again',{effects:{stats:{illness:1}}});assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,true);assert.equal(e.snapshot().runtime.turn,settledTurn);
+});
+
+test('mental choices change the visible illness stage before hidden pressure, including restored choices',()=>{
+ const {P,E,T}=setup(),p=P.generate();p.age=16;p.phase='high';Object.assign(p.stats,{stress:9,illness:2});
+ const rest={effects:{stats:{stress:-1}}},strain={effects:{stats:{stress:1}}};
+ const q=E.apply(p,rest);assert.equal(q.stats.illness,1);assert.equal(q.stats.stress,9);
+ const r=E.apply(p,strain);assert.equal(r.stats.illness,3);assert.equal(r.stats.stress,9);
+ const healed=E.apply(p,{effects:{stats:{stress:-3}}});assert.equal(healed.stats.illness,0);assert.equal(healed.stats.stress,8);
+ const direct=E.apply(p,{tags:['pressure-only'],effects:{stats:{stress:-1}}});assert.equal(direct.stats.illness,2);assert.equal(direct.stats.stress,8,'explicit shop pressure products retain their advertised effect');
+ const cfg={contentId:'mental-recovery',events:[{id:'rest',layer:'일상 이벤트',at:0,title:'회복',choice:'rest'}],choices:[{id:'rest',layer:'일상 선택',title:'회복',blocksTime:true,options:[{id:'rest',label:'쉰다',result:rest}]}]};
+ let t=T.create({...cfg,persona:p});t.advance(0);const save=t.snapshot(),token=save.choice.token;t=T.create({...cfg,persona:{...save.persona,simulation:save.runtime}});t.resolve(token,'rest');assert.equal(t.snapshot().persona.stats.illness,1);assert.equal(t.resolve(token,'rest'),false);
 });
