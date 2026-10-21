@@ -64,9 +64,9 @@ global.GukminDirector.register({
      ]}
    ]),
    {...S.selection('middle:recover',55,'학교생활을 조절할 시간','시험과 활동이 겹치면서 피로가 쌓였다. 부담을 줄일 방법을 선택하자.',[
-    {label:'상담을 거쳐 시험 준비량을 조정하고 몇 주간 실천한다',effects:{stats:{stress:-4}},detail:'교사와 적당한 분량으로 계획을 줄였다. 몇 주 동안 무리하지 않으니 계속 밀리던 숙제가 조금씩 줄었다.'},
-    {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-4}},detail:'몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
-    {label:'친구에게 부담을 털어놓고 과제 진행을 함께 점검한다',effects:{stats:{stress:-2,relations:1}},detail:'친구와 제출 날짜를 대조한 뒤 할 수 있는 것부터 나눴다. 불안이 완전히 사라지진 않았지만 다음 주 일정은 보였다.'}
+    {label:'상담을 거쳐 시험 준비량을 조정하고 몇 주간 실천한다',effects:{stats:{stress:-4,schoolScore:-1}},detail:'보충 문제를 일부 포기하고 교사와 적당한 분량으로 계획을 줄였다. 몇 주 동안 무리하지 않으니 계속 밀리던 숙제가 조금씩 줄었다.'},
+    {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-6,schoolScore:-2,relations:-1}},detail:'과제와 친구 약속을 미루고 몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
+    {label:'친구에게 부담을 털어놓고 과제 진행을 함께 점검한다',effects:{stats:{stress:-2,schoolScore:-1,relations:1}},detail:'개인 복습 시간을 줄이고 친구와 제출 날짜를 대조한 뒤 할 수 있는 것부터 나눴다. 불안이 완전히 사라지진 않았지만 다음 주 일정은 보였다.'}
    ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},stats:{stress:{gte:16}}}}},
    S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
    S.examPrelude('middle',2,57,'1학기 중간고사'),
@@ -127,9 +127,9 @@ global.GukminDirector.register({
      {id:'public',label:'교육청 무료 설명회에서 실제 모집요강을 확인한다',
       effects:{attributes:{admissionResearch:'official'}},detail:'전형이 학교마다 달랐다. 설명회에서 받은 안내서를 표시하고 지원 가능한 학교를 추렸다.'},
      {id:'mentor',label:'담임과 학교 유형별 수업을 비교한다',
-      effects:{attributes:{admissionResearch:'mentor'}},detail:'상담실에서 지원 일정과 교육과정을 비교했다. 결정하기 전에 가족과 한 번 더 이야기하기로 했다.'},
-     {id:'paid',label:'유료 진학 상담을 받는다 (12만 원'+(parentFunds?' · 가족 부담':' · 직접 부담')+')',...pay(consultingCost),
-       effects:{attributes:{admissionResearch:'paid'},stats:costStats(consultingCost,0)},detail:'상담에서 받은 자료를 실제 모집요강과 대조했다. '+receipt(consultingCost)+' 합격 보장은 믿지 않았다.'}
+      effects:{attributes:{admissionResearch:'mentor'},stats:{relations:1,stress:1}},detail:'상담실에서 지원 일정과 교육과정을 비교했다. 결정하기 전에 가족과 한 번 더 이야기하기로 했다.'},
+     {id:'paid',label:'유료 상담 뒤 계획에 맞춰 취약 단원을 복습한다 (12만 원'+(parentFunds?' · 가족 부담':' · 직접 부담')+')',...pay(consultingCost),
+       effects:{attributes:{admissionResearch:'paid'},stats:{...costStats(consultingCost,0),schoolScore:1,stress:2}},detail:'상담 계획으로 취약 단원을 다시 풀고 받은 자료를 실제 모집요강과 대조했다. '+receipt(consultingCost)+' 합격 보장은 믿지 않았다.'}
     ]),
    S.examPrelude('middle',3,61,'1학기 중간고사'),
    S.exam('middle',15,3,61,'1학기 중간고사'),
@@ -138,6 +138,11 @@ global.GukminDirector.register({
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다. 실제 모집요강을 대신하지 않는 게임용 모형이다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
   );
+  // Elementary preparation has a bounded, real return instead of becoming a discarded gauge.
+  stages.events.find(e=>e.id==='middle:welcome').result.conditional=[
+   {before:true,when:{stats:{study:{gte:15}}},result:{effects:{stats:{schoolScore:1}}}},
+   {before:true,when:{stats:{study:{gte:19}}},result:{effects:{stats:{schoolScore:1}}}}
+  ];
   // An elected elementary class president leaves a visible history and changes a later dilemma.
   S.paths(stages,'middle:group-chat',[{
    id:'former-class-president',priority:35,when:{attributes:{classElection:'elected'}},
@@ -201,6 +206,34 @@ global.GukminDirector.register({
   friends.variants.find(v=>v.id==='club-default').options[1].result.effects.stats={relations:1,stress:1};
   const chat=stages.choices.find(c=>c.id==='middle:group-chat');chat.options[2].result.effects={stats:{stress:-1,relations:-1}};
   chat.variants.find(v=>v.id==='science-chat').options[2].result.effects={stats:{schoolScore:1,relations:-1,stress:1}};
+  const scienceClub=friends.variants.find(v=>v.id==='science-group');scienceClub.options[0].result.effects.stats={relations:2,stress:1};
+  const generalClub=friends.variants.find(v=>v.id==='club-default');generalClub.options[0].result.effects.stats={relations:1,stress:1};generalClub.options[1].result.effects.stats={schoolScore:1,stress:1};generalClub.options[2].result.effects.stats={relations:1,schoolScore:-1,stress:-1};
+  const humanitiesClub=friends.variants.find(v=>v.id==='humanities-club');humanitiesClub.options[0].result.effects.stats={relations:2,stress:2,schoolScore:1};humanitiesClub.options[1].result.effects.stats={relations:1,stress:1};humanitiesClub.options[2].result.effects.stats={schoolScore:1,relations:-1,stress:-1};
+  const arts=friends.variants.find(v=>v.id==='arts-group');arts.options[0].result.effects.stats={relations:3,stress:2};arts.options[1].result.effects.stats={relations:1,stress:1};
+  const sports=friends.variants.find(v=>v.id==='sports-club');sports.options[2].result.effects.stats={schoolScore:1,stress:1,relations:-1};
+  const chatChoice=stages.choices.find(c=>c.id==='middle:group-chat');
+  const scienceChat=chatChoice.variants.find(v=>v.id==='science-chat');
+  scienceChat.options[0].result.effects.stats={schoolScore:1,relations:1,stress:2};
+  scienceChat.options[1].result.effects.stats={relations:1};
+  scienceChat.options[2].result.effects.stats={schoolScore:2,relations:-1,stress:1};
+  const ordinaryChat=chatChoice.variants.find(v=>v.id==='ordinary-chat');
+  ordinaryChat.options[0].result.effects.stats={schoolScore:1,relations:1,stress:2};
+  ordinaryChat.options[1].result.effects.stats={relations:2,stress:2};
+  const former=chatChoice.variants.find(v=>v.id==='former-class-president');
+  former.options[0].result.effects.stats={relations:3,stress:2,schoolScore:-1};
+  former.options[1].result.effects.stats={schoolScore:2,relations:-1};
+  former.options[2].result.effects.stats={schoolScore:1,relations:1,stress:2};
+  const resources=stages.choices.find(c=>c.id==='middle:resources');
+  for(const script of resources.variants.filter(v=>['lab-study','club-study','resource-default'].includes(v.id))){
+   script.options.find(o=>o.id==='teacher').result.effects.stats={schoolScore:1,stress:1};
+   script.options.find(o=>o.id==='peer').result.effects.stats={schoolScore:1,relations:1,stress:2};
+   const paid=script.options.find(o=>o.id==='paid');paid.result.effects.stats={...(paid.result.effects.stats.money!==undefined?{money:paid.result.effects.stats.money}:{}),schoolScore:2,stress:3};
+  }
+  for(const script of resources.variants.filter(v=>v.id.startsWith('commitment-'))){
+   script.options.find(o=>o.id==='showcase').result.effects.stats={relations:2,stress:2,schoolScore:-1};
+   script.options.find(o=>o.id==='steady').result.effects.stats={schoolScore:1,stress:1};
+   script.options.find(o=>o.id==='study').result.effects.stats={schoolScore:2,stress:2,relations:-1};
+  }
   S.schoolwork(stages,{"middle:resources": "schoolScore", "middle:group-chat": "schoolScore"});
   const recovery=stages.choices.find(c=>c.id==='middle:recover');
   recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});

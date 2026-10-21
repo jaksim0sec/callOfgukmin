@@ -99,6 +99,16 @@ global.GukminDirector.register({
   prepare.options[0].label='새 공책에 학교에서 해 보고 싶은 것을 그린다';prepare.options[0].result.effects={traits:{add:['호기심']}};prepare.options[0].result.history.detail='새 교실과 친구들을 상상하며 공책 한 장을 채웠다.';
   prepare.options[1].label='준비물을 하나씩 확인하고 가방에 챙긴다';prepare.options[1].result.effects={traits:{add:['꼼꼼함']}};prepare.options[1].result.history.detail='목록과 가방을 번갈아 보며 빠진 준비물을 찾아 넣었다.';
   prepare.options[2].result.effects={};
+  const cautious=play.variants.find(v=>v.id==='cautious-play');
+  cautious.options[2].result.effects.traits={add:['꼼꼼함']};
+  cautious.options[2].result.history.detail='선생님이 차례표를 만들었다. 친구와 순서를 하나씩 확인하며 삽을 번갈아 썼다.';
+  block.options[0].result.effects.traits={add:['자기주장']};
+  block.options[1].result.effects.traits={add:['친화력']};
+  block.options[2].result.effects.traits={add:['인내심']};
+  territory.options[0].result.effects.traits={add:['친화력']};
+  territory.options[2].result.effects.traits={add:['인내심']};
+  prepare.options[0].label='학교에서 하고 싶은 말을 소리 내어 연습한다';prepare.options[0].result.effects={traits:{add:['자기주장']}};prepare.options[0].result.history.detail='작은 목소리로 시작해 하고 싶은 말을 끝까지 연습했다.';
+  prepare.options[2].label='내일 일정을 차분히 정리하고 일찍 잠자리에 든다';prepare.options[2].result.effects={traits:{add:['인내심']}};prepare.options[2].result.history.detail='새 학교에 대한 기대와 걱정을 잠시 내려놓고 정해 둔 시간에 잠자리에 들었다.';
   return {...stages,attributes:{earlyTemperament:{label:'유년기 행동 기록',hidden:true}}};
  }
 });

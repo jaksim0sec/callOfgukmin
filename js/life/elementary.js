@@ -13,7 +13,7 @@ function stand(label){
   ]};
 }
 function support(label){
- return {label,effects:{attributes:{classElection:'supported'},stats:{relations:1,stress:1}},
+ return {label,effects:{attributes:{classElection:'supported'},stats:{relations:2,stress:1}},
   detail:'후보가 부탁한 포스터를 함께 붙였다. 친구는 다음날 간식을 하나 건넸다.'};
 }
 const watch={label:'출마를 거절하고 내 일정을 지킨다',effects:{attributes:{classElection:'observed'},stats:{}},
@@ -81,28 +81,28 @@ global.GukminDirector.register({
        ]}
      ]),
    {...S.selection('elementary:recover',30,'잠시 쉬어 갈 때','요즘 긴장과 피로가 쌓였다. 몸과 마음을 돌볼 방법을 정해 보자.',[
-    {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-4}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
-    {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-4,study:-1}},detail:'모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
-    {label:'가까운 친구에게 최근 힘든 일을 말하고 도움을 구한다',effects:{stats:{stress:-3,relations:1}},detail:'친구가 쉬는 시간마다 잠깐 같이 있자고 했다. 문제는 남아 있지만 혼자 감당할 일이 조금 줄었다.'}
+    {label:'가족과 상의해 방과 후 일정을 줄이고 며칠 쉬어 간다',effects:{stats:{stress:-5,study:-2}},detail:'방과 후 약속을 줄이고 제시간에 잠들었다. 며칠이 지나자 아침에 일어나는 일이 조금 수월해졌다.'},
+    {label:'숙제의 우선순위를 정하고 일주일 동안 충분히 잔다',effects:{stats:{stress:-3,relations:-1}},detail:'친구 약속을 취소하고 모든 활동을 붙잡지 않고 꼭 해야 할 것만 했다. 충분히 자면서 몸이 조금 회복됐다.'},
+    {label:'가까운 친구에게 최근 힘든 일을 말하고 도움을 구한다',effects:{stats:{stress:-2,study:-1,relations:1}},detail:'복습 한 번을 미루고 친구와 이야기했다. 친구가 쉬는 시간마다 잠깐 같이 있자고 했다. 문제는 남아 있지만 혼자 감당할 일이 조금 줄었다.'}
    ]),event:{...S.selection('elementary:recover',30,'','',[{label:'회복'}]).event,when:{turn:{eq:30},stats:{stress:{gte:16}}}}},
    S.selection('elementary:afterschool',37,'방과 후 시간표가 비었다',
     '집에 돌아오니 방과 후 프로그램 안내장이 식탁에 놓여 있다. 신청하는 사람은 다음 달부터 매주 수업을 듣는다.',[
-    {id:'school',label:'학교 방과 후 교실에서 과제를 함께 푼다',risk:'정해진 요일에는 다른 약속을 잡기 어려움',effects:{attributes:{afterschoolPath:'school'},stats:{study:1,stress:1}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
-    {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{attributes:{afterschoolPath:'library'},stats:{study:1}},detail:'도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
-    {id:'academy',label:'한 달간 방과 후 학원을 다닌다 (16만 원'+(funded?' · 가족 부담':' · 직접 부담')+')',risk:'주 3회 수업 · 다른 방과 후 활동 시간이 줄어듦',...(fee?{when:{stats:{money:{gte:fee}}}}:{}),effects:{attributes:{afterschoolPath:'academy'},stats:{study:1,stress:1,...(fee?{money:-fee}:{})}},detail:fee?'첫 달 수강료 16만 원을 직접 냈다. 매주 교재를 풀었다.':'가족이 첫 달 수강료 16만 원을 부담했다. 매주 교재를 풀었다.'}
+    {id:'school',label:'학교 방과 후 교실에서 과제를 함께 푼다',risk:'정해진 요일에는 다른 약속을 잡기 어려움',effects:{attributes:{afterschoolPath:'school'},stats:{study:1,relations:1,stress:1}},detail:'매주 한 번 남아 연습 문제를 풀었다. 헷갈리던 부분은 교실에서 다시 물어볼 수 있었다.'},
+    {id:'library',label:'도서관에서 관심 있는 책과 문제를 찾아본다',effects:{attributes:{afterschoolPath:'library'},stats:{study:1,stress:-1,relations:-1}},detail:'방과 후 친구들과 노는 대신 도서관에서 빌린 책을 읽고 숙제의 모르는 부분을 찾아 정리했다.'},
+    {id:'academy',label:'한 달간 방과 후 학원을 다닌다 (16만 원'+(funded?' · 가족 부담':' · 직접 부담')+')',risk:'주 3회 수업 · 다른 방과 후 활동 시간이 줄어듦',...(fee?{when:{stats:{money:{gte:fee}}}}:{}),effects:{attributes:{afterschoolPath:'academy'},stats:{study:2,stress:2,...(fee?{money:-fee}:{})}},detail:fee?'첫 달 수강료 16만 원을 직접 냈다. 매주 교재를 풀었다.':'가족이 첫 달 수강료 16만 원을 부담했다. 매주 교재를 풀었다.'}
    ]),
    S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:10}}),
    S.selection('elementary:project',41,'우리 동네 발표에 생긴 빈칸',
     '발표 전날 한 조원이 동네 소개 사진을 가져왔는데 그 사진은 ==전혀 다른 시의 축제==였다. 이미 PPT 표지에는 그 사진이 걸려 있다.',[
     {label:'지역 자료를 다시 조사해 사진과 출처를 고친다',risk:'마감 전 자료를 다시 찾아야 함',
-      effects:{stats:{study:1,stress:1}},
+      effects:{stats:{study:2,stress:2}},
       detail:'지역 도서관 자료와 시청 사진을 대조하다 축제 이름이 겹친다는 걸 발견했다. 밤늦게 출처까지 다시 적었다. **발표의 사실관계는 바로잡았지만** 준비 시간이 빠듯해졌다.'},
      {label:'조원과 함께 원본을 찾아 수정한다',risk:'연락이 늦으면 수정 시간도 줄어듦',
-      tags:['team'],effects:{stats:{relations:1,stress:1}},
+      tags:['team'],effects:{stats:{relations:2,stress:2}},
       detail:'조원은 처음엔 자신이 틀리지 않았다고 주장했다. 너도 근거를 보여 줬고, 결국 둘이 새 사진을 찾아 표지를 고쳤다. **다음 발표도 같이 하자**는 답장이 왔지만 다른 과목 과제는 밀렸다.'},
      {label:'문제 사진을 빼고 확인된 정보만 발표한다',risk:'자료를 준비한 조원과 의견 충돌',
-      effects:{stats:{relations:-1,stress:1}},
-      detail:'축제 사진을 삭제하자 조원이 왜 말도 없이 뺐냐며 따졌다. 너는 확인된 내용만 발표하겠다고 설명했다. 자료는 정확했지만 **조별 분위기는 냉랭해졌다.**'}
+      effects:{stats:{}},
+      detail:'추가 조사 대신 발표 범위를 줄였다. 축제 사진을 삭제하자 조원이 왜 말도 없이 뺐냐며 따졌다. 너는 확인된 내용만 발표하겠다고 설명했다. 자료는 정확했지만 **조별 분위기는 냉랭해졌다.**'}
    ]),
    S.selection('elementary:interest-followup',43,'관심 분야를 더 깊이 해볼 기회','축제 준비가 시작됐다. 수업 뒤 여러 주 동안 활동 하나를 맡을 수 있다.\n\n==전에 좋아했던 분야를 이어 가면 적성 특성이 된다.== 새로운 분야를 고르면 관심부터 남는다.',[
     {label:'발표문을 쓰고 토론을 진행한다',risk:'축제까지 여러 차례 원고를 고쳐야 함',effects:{stats:{stress:1}},detail:'짝과 서로 다른 주장을 발표했다. 질문을 받자 미처 준비하지 못한 반론이 있었다.',tags:['humanities'],
@@ -174,10 +174,12 @@ global.GukminDirector.register({
   const friends=stages.choices.find(c=>c.id==='elementary:friends');
   const sociable=friends.variants.find(v=>v.id==='first-friend');
   sociable.options[0].label='민서에게 그림을 설명하고 먼저 대화를 이끈다';
-  sociable.options[0].result.effects.stats={relations:1,stress:1};
+  sociable.options[0].result.effects.stats={relations:3,stress:2};
+  sociable.options[1].result.effects.stats={relations:1,stress:1};
   sociable.options[0].result.history.detail='이야깃거리를 계속 찾느라 조금 긴장했지만 민서와 금세 가까워졌다.';
+  for(const id of ['careful-friend','ordinary-friend'])friends.variants.find(v=>v.id===id).options[0].result.effects.stats={relations:2,stress:1};
   for(const v of stages.choices.find(c=>c.id==='elementary:lunch').variants){
-   v.options[0].result.effects.stats={relations:1,stress:1};
+   v.options[0].result.effects.stats={relations:3,stress:2};
    v.options[1].label='친구와 남은 메뉴를 나눠 먹는다';v.options[1].result.effects.stats={relations:1,stress:1};
    v.options[1].result.history.detail='서로 먹을 몫을 덜어 나눴다. 더 먹고 싶었지만 함께 줄을 서기로 했다.';
    v.options[2].result.effects.stats={};
@@ -185,9 +187,10 @@ global.GukminDirector.register({
   stages.choices.find(c=>c.id==='elementary:representative').presentation={type:'election'};
   const campaign=stand('공약을 다듬고 친구들을 한 명씩 찾아 설득한다');campaign.id='campaign';campaign.effects.stats={stress:4,relations:3};campaign.detail='쉬는 시간까지 공약 설명에 썼다. 부담은 컸지만 그동안 잘 몰랐던 친구들과도 이야기했다.';
   for(const script of stages.choices.find(c=>c.id==='elementary:representative').variants)script.options.push(S.selection('campaign',0,'반장 선거','',[campaign]).choice.options[0]);
+  stages.choices.find(c=>c.id==='elementary:graduation').variants.find(v=>v.id==='representative-followup').options[0].result.effects.stats={relations:2,stress:1};
   for(const id of ['election-lost','campaign-followup','graduation-ordinary']){
    const v=stages.choices.find(c=>c.id==='elementary:graduation').variants.find(v=>v.id===id);
-   v.options[1].result.effects.stats=id==='campaign-followup'?{relations:1,stress:1}:{relations:-1,stress:-1};
+   v.options[1].result.effects.stats=id==='campaign-followup'?{relations:2,stress:1}:{relations:-1,stress:-1};
   }
   // Retain the player's chosen resource in a later problem, without adding another stop.
   const project=stages.choices.find(choice=>choice.id==='elementary:project');

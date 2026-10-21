@@ -67,8 +67,8 @@ function cycle(pack,n){
  ],'한방 선택',{type:'admission-route',term:'대입 지원 경로'}),withGate());
  const studying=withGate({not:{attributes:{admissionRoute:'employment'}}});
  add(pack,S.selection(pre+':peer-practice',routeAt+1,'원서철의 단체방','친구가 기출문제의 풀이를 보내 왔다.\n\n오늘 남은 두 시간을 함께 검토할지, 혼자 복습할지 정하자.',[
- option('team','친구와 틀린 이유를 설명한다','친구와 검산하며 단원을 다시 익혔다.',{stats:{exam:1,relations:1,stress:1}}),
- option('intense','연락을 줄이고 기출을 집중 복습한다','문제를 다시 풀었지만 다른 약속은 줄었다.',{stats:{exam:1,relations:-1,stress:1}}),
+ option('team','친구와 틀린 이유를 설명한다','친구와 검산하며 단원을 다시 익혔다.',{stats:{exam:1,relations:1,stress:2}}),
+ option('intense','연락을 줄이고 기출을 집중 복습한다','문제를 다시 풀었지만 다른 약속은 줄었다.',{stats:{exam:2,relations:-1,stress:3}}),
  option('rest','기본 문제만 풀고 수면을 확보한다','추가 복습 대신 컨디션을 회복했다.',{stats:{exam:-1,stress:-1}})
  ]),studying);
  board(pack,pre,routeAt+1,'early',withGate({attributes:{admissionRoute:'early'}}));
@@ -78,14 +78,14 @@ function cycle(pack,n){
  option('recover','수면 리듬을 회복한다','추가 문제량보다 컨디션을 우선했다.',{stats:{exam:-1,stress:-2}})
  ]),studying);
  const csat=add(pack,S.selection(pre+':csat',routeAt+3,'대학수학능력시험 성적표','응시한 수능의 확정 성적을 확인하자.',[option('submit','수능 점수 확인하기','수능 성적을 확정했다. 이후 생활은 이번 점수를 바꾸지 않는다.',{attributes:{csatSubmitted:true},stats:{stress:1}},{conditional:[
- {before:true,when:{attributes:{preExamStrategy:'exam'}},result:{effects:{stats:{exam:1,stress:1}}}},
+ {before:true,when:{attributes:{preExamStrategy:'exam'}},result:{effects:{stats:{exam:2,stress:2}}}},
  {before:true,when:{attributes:{preExamStrategy:'balanced'}},result:{effects:{stats:{exam:1}}}},
  {before:true,when:{all:[{stats:{stress:{gte:21}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-1}}}}
  ]})],'한방 선택',{type:'grade-seal',category:'mock',term:'대학수학능력시험 성적표'}),studying);
  add(pack,S.selection(pre+':exam-evening',routeAt+3,'시험이 끝난 저녁','답안을 제출했다. 지금은 성적을 고칠 수 없다.\n\n발표까지 일상을 회복하고 다음 계획을 정하자.',[
- option('review','친구와 다음 지원 일정을 정리한다','일정을 대조했지만 결과 걱정도 나눴다.',{stats:{relations:1,stress:1}}),
+ option('review','친구들과 지원 일정과 서류를 서로 점검한다','일정을 대조했지만 결과 걱정도 나눴다.',{stats:{relations:2,stress:2}}),
  option('family','가족과 저녁을 먹는다','함께 식사하며 긴 시험을 마무리했다.',{stats:{relations:1,stress:-1}}),
- option('sleep','연락을 미루고 충분히 쉰다','쉬는 동안 단체방의 대화는 놓쳤다.',{stats:{stress:-1,relations:-1}})
+ option('sleep','연락을 미루고 충분히 쉰다','쉬는 동안 단체방의 대화는 놓쳤다.',{stats:{stress:-3,relations:-1}})
  ]),studying);
  board(pack,pre,routeAt+5,'regular',withGate({any:[{attributes:{admissionRoute:'regular'}},{attributes:{earlyStatus:'failed'}},{attributes:{earlyStatus:'skipped'}}]}));
  const retryOption=option('retry','다음 해 입시에 다시 도전한다','다음 연도 준비를 선택했다.',{}, {retryYear:true,risk:'나이 +1 · 연간 기본 준비비 30만원 · 정신병 +2. 정신병25·돈0·나이30 도달 시 종료'});

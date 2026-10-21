@@ -811,7 +811,7 @@ test('elementary presentation choice previews its real costs and benefits',()=>{
  assert.equal(project.options.length,3);
  assert.ok(project.options.every(o=>o.risk),'all three routes show a concrete burden');
  assert.deepEqual(plain(project.options.map(o=>o.result.effects.stats)),
-  [{study:1,stress:1},{relations:1,stress:1},{relations:-1,stress:1}]);
+  [{study:2,stress:2},{relations:2,stress:2},{}]);
 });
 
 test('changing interests records a new exploration without granting an unearned aptitude',()=>{
@@ -1089,15 +1089,16 @@ test('full humanities/science lives can prepare for science school and retain th
    let s=e.run();if(s.runtime.cinematic){s=e.run();}if(!s.choice)break;if(s.persona.stats.stress>=16&&e.storeStatus().items.find(o=>o.id==='break')?.available){e.buy('break');s=e.snapshot();}const c=s.choice;let o;
    if(c.id==='elementary:interest-exploration'||c.id==='elementary:interest-followup')o=c.options[field==='문과'?0:1];
    else if(c.id==='middle:admission-prep')o=c.options.find(o=>o.id==='public');
-   else if(c.presentation?.type==='exam')o=c.options.find(o=>o.id===(c.presentation.stage==='high'?(c.presentation.category==='mock'?'effort-0':'effort-4'):'effort-4'));
+   else if(c.presentation?.type==='exam')o=c.options.find(o=>o.id===(c.presentation.category==='mock'?'effort-0':s.persona.stats.schoolScore>=23?'effort-2':'effort-4'));
    else if(c.id==='middle:high-application'){o=c.options.find(o=>o.school.kind==='science');assert.equal(o.available,true);}
    else if(c.id==='admission:first:route')o=c.options.find(o=>o.id==='early');
    else if(c.id==='admission:first:early-application'){board=true;o=c.options.find(o=>o.school?.name.includes('서울대학교'));assert.ok(o,'sustained intensive preparation reaches the top application group');e.resolve(c.token,o.id,{admissionField:field==='문과'?'humanities':'science'});assert.equal(e.snapshot().persona.attributes.admissionField,field==='문과'?'humanities':'science');break;}
+   if(!o&&c.layer==='일상 선택')o=c.options.filter(o=>o.available).sort((a,b)=>{const value=o=>{const x=o.result?.effects?.stats||{};return -(x.stress||0)*3+(x.schoolScore||x.study||0)+(o.result?.effects?.traits?.add||[]).filter(t=>['인내심','꼼꼼함'].includes(t)).length*3;};return value(b)-value(a);})[0];
    o??=c.options.find(o=>o.available);e.resolve(c.token,o.id);const after=e.snapshot().persona;
    if(c.id==='middle:high-application'){entered=true;assert.equal(after.stats.exam,21);assert.equal(after.attributes.schoolTrack,'science');}
    if(c.presentation?.annual&&c.presentation.category==='school'&&field==='문과'){const sources=env.c.GukminGrades.assessment(s.persona,o.result.assessment).applied;assert.ok(sources.some(s=>s.trait==='문과'));applied=true;}
   }
-  assert.ok(entered&&board);if(field==='문과')assert.ok(applied);
+  assert.ok(entered&&board,JSON.stringify({entered,board,stats:e.snapshot().persona.stats,reason:e.snapshot().persona.attributes?.lifeEndReason}));if(field==='문과')assert.ok(applied);
  }
 });
 test('legacy completed retry resumes into the next year exactly once without deleting prior history',()=>{
@@ -1116,7 +1117,7 @@ test('childhood observation and school preparation grant fitting traits without 
  for(const choice of pack.choices.filter(x=>x.id.startsWith('infant:')))for(const script of [choice,...choice.variants||[]])for(const o of script.options)assert.equal(o.result.effects.stats?.stress,undefined);
  const curious=pack.choices.find(x=>x.id==='infant:play').variants.find(v=>v.id==='curious-play');
  assert.deepEqual(plain(curious.options[0].result.effects),{traits:{add:['꼼꼼함']}});assert.ok(curious.options[1].result.effects.traits.add.includes('배려심'));
- const prep=pack.choices.find(x=>x.id==='infant:prepare');assert.ok(prep.options[1].result.effects.traits.add.includes('꼼꼼함'));assert.deepEqual(plain(prep.options[2].result.effects),{});
+ const prep=pack.choices.find(x=>x.id==='infant:prepare');assert.ok(prep.options[1].result.effects.traits.add.includes('꼼꼼함'));assert.ok(prep.options[2].result.effects.traits.add.includes('인내심'));
  const watch=pack.choices.find(x=>x.id==='elementary:representative').variants.find(v=>v.id==='open-election').options[2];
  for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);const seed=P.generate();assert.deepEqual(plain(E.apply(seed,watch.result).stats),plain(seed.stats),'a neutral pass has no fabricated social penalty');
 });
@@ -1141,4 +1142,37 @@ test('convenience-store purchases are atomic, save their cooldown and never adva
  const {P,c}=setup(),p=P.generate();p.age=15;p.phase='middle';Object.assign(p.stats,{money:100000,stress:20});let e=c.GukminDirector.create({persona:p,persist:s=>P.save(s)});const turn=e.snapshot().runtime.turn;
  assert.ok(e.buy('break'));assert.equal(e.snapshot().persona.stats.stress,16);assert.equal(e.snapshot().persona.stats.money,60000);assert.equal(e.snapshot().runtime.turn,turn);assert.equal(e.buy('tea'),false);e=c.GukminDirector.create({persona:P.load()});assert.equal(e.storeStatus().remaining,4);assert.equal(e.buy('break'),false);
  for(const patch of [{money:14999,stress:20},{money:100000,stress:0},{money:100000,stress:25}]){const q=P.generate();q.age=15;q.phase='middle';Object.assign(q.stats,patch);assert.equal(c.GukminDirector.create({persona:q}).buy('tea'),false);}
+});
+
+test('plain choices have neither identical payouts nor an unconditionally worse risk/reward vector',()=>{
+ const {P,c}=setup();
+ for(const familyTier of ['bronze','gold']){
+  const p=P.generate();p.familyTier=familyTier;const pack=c.GukminDirector.content(p);
+  for(const choice of pack.choices.filter(c=>c.layer==='일상 선택'))for(const script of choice.variants?.length?choice.variants:[choice]){
+   const options=script.options.filter(o=>!o.result.conditional?.length&&!o.result.assessment);
+   for(let a=0;a<options.length;a++)for(let b=a+1;b<options.length;b++){
+    const x=options[a].result.effects||{},y=options[b].result.effects||{};
+    // Different actual traits or a deferred route need their own result tests below.
+    const extra=e=>JSON.stringify(Object.fromEntries(Object.entries(e).filter(([k])=>k!=='stats')));
+    if(extra(x)!==extra(y))continue;
+    const xs=x.stats||{},ys=y.stats||{},ids=[...new Set([...Object.keys(xs),...Object.keys(ys)])];
+    const sign=id=>id==='stress'?-1:1;
+    const better=ids.some(id=>(xs[id]||0)*sign(id)>(ys[id]||0)*sign(id));
+    const worse=ids.some(id=>(xs[id]||0)*sign(id)<(ys[id]||0)*sign(id));
+    assert.ok(better&&worse,`${familyTier}/${choice.id}/${script.id}: ${options[a].id} vs ${options[b].id} must exchange a real benefit for a real cost`);
+   }
+  }
+ }
+});
+test('elementary preparation, electives and admission strategies differ in their actual deferred results',()=>{
+ const {P,E,c}=setup(),p=P.generate();p.phase='high';p.age=17;p.traits=[];Object.assign(p.stats,{study:11,stress:10,schoolScore:15,exam:15});p.attributes={schoolTrack:'general',admissionAttempts:1};const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);
+ const entry=pack.events.find(e=>e.id==='middle:welcome').result;
+ assert.equal(E.apply(p,entry).stats.schoolScore,17);p.stats.study=15;assert.equal(E.apply(p,entry).stats.schoolScore,18);p.stats.study=19;assert.equal(E.apply(p,entry).stats.schoolScore,19);
+ const electives=pack.choices.find(x=>x.id==='high:electives').variants.find(x=>x.id==='regular-elective');const later=pack.events.find(x=>x.id==='high:age18').result;
+ const outcomes=electives.options.map(o=>E.apply(E.apply(p,o.result),later).stats);
+ assert.equal(outcomes[0].schoolScore,16);assert.equal(outcomes[1].stress,9);assert.ok(outcomes[2].relations>outcomes[0].relations);
+ const csat=pack.choices.find(x=>x.id==='admission:first:csat').options[0].result;
+ const final={};for(const strategy of ['balanced','exam','record']){const q=plain(p);q.attributes.preExamStrategy=strategy;final[strategy]=E.apply(q,csat);}
+ assert.equal(final.exam.stats.exam-final.balanced.stats.exam,1);assert.equal(final.exam.stats.stress-final.balanced.stats.stress,2);
+ assert.equal(final.balanced.stats.exam-final.record.stats.exam,1);assert.ok(c.GukminAdmissions.probability(final.record,{target:15},'early')>c.GukminAdmissions.probability(final.balanced,{target:15},'early'));
 });
