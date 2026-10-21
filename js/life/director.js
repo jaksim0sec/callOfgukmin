@@ -141,14 +141,14 @@ function create({persona,persist,onChange}){
  }
  function acknowledgePressure(){
   const s=timeline.snapshot(),a=s.persona.attributes||{},count=(a.pressureAdviceCount||0)+1,illness=s.persona.stats.illness||0;
-  return timeline.apply('pressure-advice:'+count,{effects:{attributes:{pressureGuideSeen:true,pressureNoticeBand:illness?illness+1:s.persona.stats.stress>=23?1:0,pressureAdviceCount:count}}});
+  return timeline.apply('pressure-advice:'+count,{effects:{attributes:{pressureGuideSeen:true,pressureCriticalSeen:!!a.pressureCriticalSeen||illness===4,pressureAdviceCount:count}}});
  }
  function buy(id){
   const status=storeStatus(),item=status.items.find(x=>x.id===id);
   if(!item)throw new Error('등록되지 않은 상품');
   if(!item.available)return false;
-  const s=timeline.snapshot(),illness=Math.max(0,(s.persona.stats.illness||0)-(item.recovery||0)),pressure=Math.max(0,s.persona.stats.stress-item.relief);
-  return timeline.apply('store:'+s.runtime.turn,{effects:{stats:{money:-item.price,stress:-item.relief,...(item.recovery?{illness:-item.recovery}:{})},attributes:{storeLastTurn:s.runtime.turn,pressureNoticeBand:illness?illness+1:pressure>=23?1:0}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
+  const s=timeline.snapshot();
+  return timeline.apply('store:'+s.runtime.turn,{effects:{stats:{money:-item.price,stress:-item.relief,...(item.recovery?{illness:-item.recovery}:{})},attributes:{storeLastTurn:s.runtime.turn}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
  }
  return Object.freeze({
    storeStatus,buy,acknowledgePressure,step,snapshot:()=>decorate(timeline.snapshot()),

@@ -72,7 +72,7 @@ const TRAIT_DEFS = {
   '리더십':{color:'#a06b2e',icon:'flag',description:'협업에서 관계 보너스를 얻는다. 수행평가 분담과 추가 부탁의 범위 조율에 활용할 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
   '언변':{color:'#7b65ad',icon:'speech',description:'토론·질의응답 방식으로 수행평가를 해결할 수 있다. 대표 발표의 준비 부족을 보완하지만 컨디션은 따로 관리해야 한다.'},
   '친화력':{color:'#ac597e',icon:'users',description:'친구들과 협력할 때 관계 보너스를 얻는다. 수행평가를 분담할 수 있지만 이후 부탁도 늘어날 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
-  '흡연':{icon:'pulse',negative:true,color:'#b55255',description:'흡연 습관은 압박과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{stress:1,money:-2000}}}}},
+  '흡연':{icon:'pulse',negative:true,revealOnAcquire:true,color:'#b55255',description:'흡연 습관은 압박과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{stress:1,money:-2000}}}}},
   '자기주장':{icon:'speech',color:'#427e9e',description:'자신의 한계를 표현한 경험. 추가 부탁을 전부 수락하거나 거절하는 대신 범위를 조율할 수 있다.'},
   '미루는 습관':{color:'#b55255',icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'},
   '호기심':{color:'#9a7a2d',icon:'sparkle',description:'새로운 물건과 상황을 먼저 탐색하는 성격'},

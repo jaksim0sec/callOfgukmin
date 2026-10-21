@@ -157,7 +157,7 @@ function activeMetrics(s) {
   return [...ids].map(id=>({id,...metricDefinition(id),value:s.stats?.[id]??null}));
 }
 const ATTRIBUTE_DEFS={
- pressureGuideSeen:{label:'압박 안내 확인',custom:true,hidden:true},pressureNoticeBand:{label:'경고 확인 단계',custom:true,hidden:true},pressureAdviceCount:{label:'상태 안내 횟수',custom:true,hidden:true},
+ pressureGuideSeen:{label:'압박 안내 확인',custom:true,hidden:true},pressureCriticalSeen:{label:'정신병 4 경고 확인',custom:true,hidden:true},pressureNoticeBand:{label:'경고 확인 단계',custom:true,hidden:true},pressureAdviceCount:{label:'상태 안내 횟수',custom:true,hidden:true},
  gender:{label:'성별',hidden:true},portraitVariant:{label:'초상',hidden:true},
  name:{label:'이름'},age:{label:'나이'},phase:{label:'생애 단계'},birthplace:{label:'출생지',icon:'pin'},
  family:{label:'집안',icon:'home'},job:{label:'직업',icon:'flag'},party:{label:'정당',icon:'flag'},

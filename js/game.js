@@ -290,24 +290,22 @@ function mount(root,navigate,content=global.GukminContent){
   $('choiceDialog').close();
   commit(item);
  }
- function adviceBand(){const illness=persona.stats.illness||0;return illness?illness+1:persona.stats.stress>=23?1:0;}
  function maybeShowAdvice(){
   const dialog=$('pressureAdvice');if(dialog.open)return true;
   if(verificationMode||snapshot?.runtime.contentId!==global.GukminDirector.contentId||persona.age<7||snapshot.reviewPending||cinematicShown||persona.attributes?.admissionDestination==='finished'||(persona.stats.illness||0)>=5)return false;
   if(root.querySelector('dialog[open]'))return false;
   const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=13;
-  const band=adviceBand();
-  if(!guide&&band<=(persona.attributes?.pressureNoticeBand||0))return false;
-  if(!guide&&!band)return false;
+  const critical=persona.stats.illness===4&&!persona.attributes?.pressureCriticalSeen;
+  if(!guide&&!critical)return false;
   const pressure=persona.stats.stress||0,illness=persona.stats.illness||0;
-  text('pressureAdviceTitle',guide?'부담을 알아차리는 첫 순간':illness?'마음의 경고를 확인하세요':'잠깐, 쉬어 갈 시간입니다');
-  text('pressureAdviceLead',guide?'압박이 절반에 닿았습니다. 이 인생의 두 가지 위험 수치를 알아둘까요?':illness?'정신병이 쌓였습니다. 압박이 25를 넘으면 초과분이 정신병에 더해집니다.':'압박이 한계에 가까워졌습니다. 선택을 계속하기 전에 쉬어 갈 수 있습니다.');
+  text('pressureAdviceTitle',critical?'정신병 4 · 한계까지 1 남았습니다':'압박이 절반에 닿았습니다');
+  text('pressureAdviceLead',critical?'정신병이 5가 되면 이번 인생이 끝납니다. 다음 선택 전에 회복할 수 있는지 확인해 보세요.':'부담이 쌓이면 압박이 오릅니다. 두 수치의 차이와 회복 방법을 한 번만 알려드릴게요.');
   text('advicePressureValue',pressure+'/25');text('adviceIllnessValue',illness+'/5');
   $('advicePressureProgress').value=pressure;$('adviceIllnessProgress').value=illness;
   $('advicePressureFill').style.transform='scaleX('+pressure/25+')';
-  $('adviceIllnessRing').style.setProperty('--illness-ratio',illness/5);
+  $('adviceIllnessFill').style.transform='scaleX('+illness/5+')';
   const status=engine.storeStatus();text('adviceStoreNote',status.remaining?'다음 편의점 이용까지 '+status.remaining+'턴 남았습니다.':'편의점은 4턴에 한 번 이용할 수 있습니다. 한계에 닿기 전에 틈틈이 쉬어 가세요.');
-  dialog.dataset.guide=String(guide);dailyUI.suspend();$('choiceTiming').hidden=true;dialog.showModal();return true;
+  dialog.dataset.guide=String(guide);dialog.dataset.critical=String(critical);dailyUI.suspend();$('choiceTiming').hidden=true;dialog.showModal();return true;
  }
  function finishAdvice(store=false){
   engine.acknowledgePressure();
@@ -325,7 +323,7 @@ function mount(root,navigate,content=global.GukminContent){
   const list=$('storeItems');list.replaceChildren();
   for(const item of status.items){
    const button=el('button','store-item');button.type='button';button.dataset.item=item.id;button.disabled=!item.available;
-   const art=el('span','store-product-art is-'+item.art);art.setAttribute('aria-hidden','true');art.append(el('i',''));
+   const art=el('span','store-product-art is-'+item.art);art.setAttribute('aria-hidden','true');art.append(el('i',''),el('span','store-pack-brand','GU'));
    const info=el('span','store-product-info');
    info.append(el('small','',item.recovery?'CARE / 마음 돌봄':'REST / 가벼운 쉼'),el('strong','',item.name),el('span','store-product-description',item.description));
    const relief=Math.min(stress,item.relief),recovery=Math.min(illness,item.recovery||0);

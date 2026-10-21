@@ -1,3 +1,7 @@
+## 2026-10-21 GU·안내 빈도 캐시 (현행)
+
+진입/화면 이동·CSS·변경된 JS의 쿼리는 `gu-care-20261021`이다. 기존 저장 키·정산 ID·턴·동결 스크립트는 유지한다. `pressureGuideSeen`과 새 `pressureCriticalSeen`을 별도로 저장하여 첫 안내/정신병4 경고를 반복하지 않는다. 검증은 `tests/pressure.mjs`의 PC·390·320 브라우저 경로에 포함한다.
+
 ## 2026-10-21 상태창 복원 캐시
 
 진입/화면 이동·CSS·statusView/game/boot 쿼리는 `vitals-grid-20261021`이다. 공통 정산·저장 모델은 그대로다.

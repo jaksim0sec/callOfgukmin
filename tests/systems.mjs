@@ -1204,3 +1204,11 @@ test('diverse store items and advice acknowledgement never advance the clock or 
  e=c.GukminDirector.create({persona:P.load()});assert.equal(e.storeStatus().remaining,4);assert.equal(e.buy('water'),false);
  const q=P.generate();q.phase='high';q.age=20;q.attributes={admissionAttempts:2};Object.assign(q.stats,{stress:25,illness:3,money:1000000});const pack=c.GukminDirector.content(q);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);const retry=E.apply(q,{retryYear:true});assert.equal(retry.stats.illness,5);assert.equal(retry.attributes.retryEndReason,'정신병 한계');
 });
+
+test('critical advice is acknowledged once across healing and restored saves without advancing time',()=>{
+ const {P,c}=setup(),p=P.generate();p.age=16;p.phase='high';Object.assign(p.stats,{stress:25,illness:3,money:200000});let e=c.GukminDirector.create({persona:p,persist:p=>P.save(p)});const turn=e.snapshot().runtime.turn;
+ e.acknowledgePressure();assert.equal(e.snapshot().runtime.turn,turn);assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,false,'intermediate illness is not a critical acknowledgement');
+ e.apply('critical',{effects:{stats:{illness:1}}});const settledTurn=e.snapshot().runtime.turn;e.acknowledgePressure();assert.equal(e.snapshot().runtime.turn,settledTurn);assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,true);
+ e.buy('care');assert.equal(e.snapshot().persona.stats.illness,3);assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,true,'buying care never resets the warning');
+ e=c.GukminDirector.create({persona:P.load()});e.apply('critical-again',{effects:{stats:{illness:1}}});assert.equal(e.snapshot().persona.attributes.pressureCriticalSeen,true);assert.equal(e.snapshot().runtime.turn,settledTurn);
+});

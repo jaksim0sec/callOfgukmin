@@ -322,6 +322,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
     const name=typeof trait==='string'?trait:trait.name;
     if(P.hasTrait(persona,name))continue;
     const def=P.traitDefinition(name);
+    if(def.revealOnAcquire)continue;
     if(def.hidden&&name.startsWith('관심-')){
      const interest=name.slice(3);
      const preview=S.createToken({type:'interest',name:interest,label:'관심 발견 · '+interest,
