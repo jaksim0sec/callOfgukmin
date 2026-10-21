@@ -40,6 +40,7 @@ try{
   const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
   await page.locator('#traits .trait-control').first().click();
   await page.locator('#traitDialog[open]').waitFor();assert.ok((await page.locator('#traitInfo').textContent()).trim());
+  assert.equal(await page.locator('#traitDialogTitle').innerHTML(),await page.locator('#traits .trait-control').first().innerHTML(),'popup preserves the trait token, icon and colors');
   assert.equal(await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height),heightBefore,'description popup does not reflow the panel');
   await page.keyboard.press('Escape');assert.equal(await page.locator('#traitDialog').isVisible(),false);
   assert.equal(await page.locator('.gauge-group-heading').count(),0,'academic heading and its space are removed');

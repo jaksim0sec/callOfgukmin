@@ -285,7 +285,7 @@ function showTraits(root,s){
     traits.querySelectorAll('.trait-control').forEach(b=>b.setAttribute('aria-expanded','false'));
     button.setAttribute('aria-expanded','true');
     dialog.dataset.traitKey=button.dataset.traitKey;
-    root.querySelector('#traitDialogTitle').textContent=token.querySelector('.token-name')?.textContent||token.textContent;
+    root.querySelector('#traitDialogTitle').replaceChildren(token.cloneNode(true));
     info.textContent=description;
     if(!dialog.open)dialog.showModal();
    });return button;
