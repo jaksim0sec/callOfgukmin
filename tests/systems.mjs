@@ -473,7 +473,7 @@ test('arts aptitude becomes a visible real trait only after consistent activitie
  assert.ok(!early.traits.includes('예체능'),'one try does not grant a permanent aptitude');
  const emerged=E.apply(early,later.options[2].result);
  assert.ok(emerged.traits.includes('예체능'),'related second activity grants the actual aptitude');
- assert.equal(P.traitDefinition('예체능').color,'#EB83C0');
+ assert.equal(P.traitDefinition('예체능').color,'#a7558a');
  assert.ok(!E.apply(base,later.options[2].result).traits.includes('예체능'),
   'an unrelated one-off choice does not grant arts expertise');
 });

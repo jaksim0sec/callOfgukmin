@@ -191,7 +191,7 @@ try{
   }else if(state.choice?.layer==='일상 선택'){
    assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'new routine popup is never forced open');
    await page.locator('#resumeDailyChoice').click();
-  }else if(state.persona.attributes?.retryEndReason||['college','employment'].includes(state.persona.attributes?.admissionDestination)||['high:graduation','admission:retry-graduation'].some(id=>state.runtime.events[id]?.status==='completed')){
+  }else if(state.persona.attributes?.lifeEndReason||state.persona.attributes?.retryEndReason||['college','employment'].includes(state.persona.attributes?.admissionDestination)||['high:graduation','admission:retry-graduation'].some(id=>state.runtime.events[id]?.status==='completed')){
    completed=true;break;
   }else await page.waitForTimeout(30);
  }
@@ -259,7 +259,7 @@ try{
   const before=await page.evaluate(()=>GukminGame.session.snapshot());assert.equal(before.choice.scenarioId,'senior-invitation','science school also receives first tobacco contact');
   assert.equal(await page.locator('.metric-stress progress').getAttribute('max'),'25');assert.equal(await page.locator('.metric-relations progress').getAttribute('max'),'25');
   await page.locator('#openConvenienceStore').click();await page.locator('#convenienceStore[open]').waitFor();assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false);
-  await page.screenshot({path:`${artifacts}/${name}-balance-store.png`});await page.locator('#storeItems .store-item').first().click();await page.locator('#convenienceStore').waitFor({state:'hidden'});
+  await page.screenshot({path:`${artifacts}/${name}-balance-store.png`});await page.locator('#storeItems .store-item').first().click();assert.match(await page.locator('#storeNotice').textContent(),/구매 완료/);await page.locator('#convenienceStore .close').click();await page.locator('#convenienceStore').waitFor({state:'hidden'});
   const after=await page.evaluate(()=>GukminGame.session.snapshot());assert.equal(after.persona.stats.money,before.persona.stats.money-15000);assert.equal(after.persona.stats.stress,18);assert.equal(after.runtime.turn,before.runtime.turn);assert.equal(await page.locator('#stressWarning').isVisible(),false);
   await page.reload();await page.locator('#openConvenienceStore').click();assert.equal(await page.locator('#storeItems button:not(:disabled)').count(),0);assert.match(await page.locator('#storeNotice').textContent(),/4턴/);
   assert.equal(await page.locator('#convenienceStore').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);assert.deepEqual(errors,[]);console.log('PASS balance '+name+': hidden childhood rewards, 25-point gauges, universal first contact, warning, purchase and saved cooldown');await context.close();

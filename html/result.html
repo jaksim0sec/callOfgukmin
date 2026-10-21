@@ -7,43 +7,44 @@
   <title>국민의 부름 · 결과</title>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=poster-stage-20261021">
+  <link rel="stylesheet" href="css/style.css?v=life-refresh-20261021">
 </head>
 <body data-screen="result">
 <main class="result-screen" aria-label="게임 결과 화면">
   <div class="result-copy">
-    <span class="view-eyebrow">LIFE RECORD · ENDING</span>
-    <h1>인생의 결과</h1>
-    <p class="result-lede">결과 화면을 위한 독립 구조를 준비했어.</p>
-    <div class="result-placeholder" role="status">
-      <strong>아직 완성된 인생 기록이 없어</strong>
-      <p>현재 게임 진행과 엔딩 판정은 개발 중이야. 이 화면은 레이아웃 미리보기이며 실제 엔딩이 아니야.</p>
-    </div>
+    <span class="view-eyebrow" id="resultEyebrow">A LIFE, IN CHOICES</span>
+    <h1 id="resultTitle">당신이 남긴 이야기</h1>
+    <p class="result-lede" id="resultSummary"></p>
+    <div id="resultFacts" class="result-facts"></div>
+    <div id="resultTraits" class="result-traits" aria-label="함께한 특성"></div>
+    <section class="result-memories"><h2>기억할 순간들</h2><ol id="resultHistory"></ol></section>
+    <div class="result-share-actions"><button type="button" id="shareResult" class="primary-action">기록 공유 ↗</button><button type="button" id="downloadResult" class="secondary-action">이미지 저장 ↓</button></div>
+    <p id="shareNotice" class="view-note" role="status" aria-live="polite"></p>
     <button type="button" id="resultBack" class="primary-action">대기 화면으로 돌아가기 <span aria-hidden="true">↩</span></button>
   </div>
   <div class="result-visual">
-    <div class="result-poster-mount" id="resultPosterMount" aria-label="인물 포스터 미리보기"></div>
-    <span class="waiting-visual-caption">ENDING POSTER · PREVIEW ONLY</span>
+    <div class="result-poster-mount" id="resultPosterMount" aria-label="인물 포스터"></div>
+    <span class="waiting-visual-caption">THE PEOPLE CALL · 나의 선택으로 남은 삶</span>
   </div>
 </main>
-<script src="js/poster.js?v=poster-stage-20261021" defer></script>
-<script src="js/data/base.js?v=balance25-20261021" defer></script>
-<script src="js/data/regions.js?v=balance25-20261021" defer></script>
-<script src="js/data/schools.js?v=balance25-20261021" defer></script>
-<script src="js/data/grades.js?v=balance25-20261021" defer></script>
-<script src="js/playerState.js?v=balance25-20261021" defer></script>
-<script src="js/effects.js?v=balance25-20261021" defer></script>
-<script src="js/timeline.js?v=balance25-20261021" defer></script>
-<script src="js/life/director.js?v=balance25-20261021" defer></script>
-<script src="js/life/story.js?v=balance25-20261021" defer></script>
-<script src="js/life/infant.js?v=choice-values-20261021" defer></script>
-<script src="js/life/elementary.js?v=choice-values-20261021" defer></script>
-<script src="js/life/middle.js?v=choice-values-20261021" defer></script>
-<script src="js/life/high.js?v=choice-values-20261021" defer></script>
-<script src="js/systemDemo.js?v=balance25-20261021" defer></script>
-<script src="js/statusView.js?v=balance25-20261021" defer></script>
-<script src="js/game.js?v=poster-stage-20261021" defer></script>
-<script src="js/majorView.js?v=balance25-20261021" defer></script>
-<script src="js/boot.js?v=poster-stage-20261021" defer></script>
+<script src="js/poster.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/base.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/regions.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/schools.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/grades.js?v=life-refresh-20261021" defer></script>
+<script src="js/playerState.js?v=life-refresh-20261021" defer></script>
+<script src="js/effects.js?v=life-refresh-20261021" defer></script>
+<script src="js/timeline.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/director.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/story.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/infant.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/elementary.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/middle.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/high.js?v=life-refresh-20261021" defer></script>
+<script src="js/systemDemo.js?v=life-refresh-20261021" defer></script>
+<script src="js/statusView.js?v=life-refresh-20261021" defer></script>
+<script src="js/game.js?v=life-refresh-20261021" defer></script>
+<script src="js/majorView.js?v=life-refresh-20261021" defer></script>
+<script src="js/boot.js?v=life-refresh-20261021" defer></script>
 </body>
 </html>

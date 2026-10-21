@@ -128,7 +128,7 @@ try{
   const traitTint=await page.evaluate(()=>{
    const sample=GukminStatus.traitToken('예체능');return sample.style.getPropertyValue('--trait-color');
   });
-  assert.equal(traitTint,'#EB83C0','trait owns its distinct color');
+  assert.equal(traitTint,'#a7558a','trait owns its distinct color');
   assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).animationName),/paper-sheet-rise/,
    'grid paper rises from the bottom');
   assert.equal(await page.locator('#dailyPaperGrip').count(),1,'paper uses common sheet grip');
@@ -182,7 +182,7 @@ try{
    assert.notEqual(token.background,'rgba(0, 0, 0, 0)','every token has a solid semantic background');
   }
   assert.equal(tokenContract[0].borderRadius,tokenContract[1].borderRadius,'all tokens share the same pill geometry');
-  assert.equal(tokenContract[1].background,'rgb(235, 131, 192)','trait uses its intrinsic custom color');
+  assert.equal(tokenContract[1].background,'rgb(167, 85, 138)','trait uses its intrinsic custom color');
   const schoolKindColor=await page.evaluate(()=>{
    const el=GukminStatus.createToken({type:'context',label:'과학고',icon:'graduation',classes:'token-school-kind school-kind-science'});
    document.body.append(el);
@@ -577,7 +577,12 @@ try{
      return {age:settled.persona.age,turn:settled.runtime.turn,choice:null};
     }
     if(choice.presentation?.type===target)return {age:snap.persona.age,turn:snap.runtime.turn,choice:choice.id};
-    const first=(snap.persona.stats.stress>=12?choice.options.find(o=>['rest','recover'].includes(o.id)&&o.available):null)||choice.options.find(o=>o.id===(snap.persona.stats.stress>=8?'effort-0':'effort-2'))||(choice.presentation?.type==='admission-finish'?choice.options.find(o=>o.id==='employment'&&o.available):null)||choice.options.find(o=>o.available);
+    // This UI route conserves mental capacity instead of repeatedly taking the first costly answer.
+    const calm=choice.layer==='일상 선택'?choice.options.filter(o=>o.available).sort((a,b)=>{
+     const after=o=>GukminEffects.apply(snap.persona,o.result,{turn:snap.runtime.turn}).stats;
+     const x=after(a),y=after(b);return x.stress-y.stress||(y.schoolScore||y.study||0)-(x.schoolScore||x.study||0);
+    })[0]:null;
+    const first=calm||(snap.persona.stats.stress>=12?choice.options.find(o=>['rest','recover'].includes(o.id)&&o.available):null)||choice.options.find(o=>o.id===(snap.persona.stats.stress>=8?'effort-0':'effort-2'))||(choice.presentation?.type==='admission-finish'?choice.options.find(o=>o.id==='employment'&&o.available):null)||choice.options.find(o=>o.available);
     if(!first)throw new Error('No legal choice: '+choice.id);
     s.resolve(choice.token,first.id);
     if(choice.layer==='한방 선택'&&!s.snapshot().reviewPending)throw new Error('Major choice review did not persist');
@@ -613,7 +618,8 @@ try{
   const ended=await walk('nothing');
   assert.equal(ended.age,19);assert.equal(ended.turn,88);
   assert.equal(await p.locator('#choiceTiming').isVisible(),false,'completed chapter has no meaningless progress bar');
-  assert.equal(await p.locator('.life-chapter-complete button').count(),1,'completed chapter has an explicit replay action');
+  assert.equal(await p.locator('.life-chapter-complete button').count(),2,'completed chapter offers result and replay actions');
+  assert.equal(await p.getByRole('button',{name:'새 인물로 다시 시작',exact:true}).count(),1);
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
   assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);
   assert.equal(await p.locator('.gauge-group-academics .gauge-progress-track').count(),0,'grades have no misleading completion bars');
@@ -630,7 +636,8 @@ try{
   assert.equal(schoolHistory.status,'graduated');
   await p.screenshot({path:`${artifacts}/${name}-life-graduate.png`,fullPage:true});
   assert.deepEqual(pageErrors,[]);
-  console.log('PASS real life '+name+': exam UI, school application, reload, age19 graduation');
+  const savedRecord=await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));await p.getByRole('button',{name:'내 인생 결과 보기 ↗',exact:true}).click();await p.locator('#resultTitle').waitFor();assert.equal(await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),savedRecord,'result navigation preserves the complete life');
+  console.log('PASS real life '+name+': exam UI, school application, reload, age19 graduation, result navigation');
   await ctx.close();
  }
 

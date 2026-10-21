@@ -3,23 +3,23 @@
 'use strict';
 const NS='http://www.w3.org/2000/svg';
 const ICONS=Object.freeze({
-  pin:'<path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
-  home:'<path d="m3 10 9-7 9 7v10H3Z"/><path d="M9 20v-7h6v7"/>',
-  school:'<path d="M3 21V8l9-5 9 5v13"/><path d="M7 21v-6h10v6M8 10h.01M12 10h.01M16 10h.01"/>',
-  users:'<circle cx="9" cy="8" r="3"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5v1"/>',
-  savings:'<path d="M5 12a7 7 0 0 1 12-4l3-1v5l-2 2v3a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3v-2l-2-1v-3l2 1Z"/><path d="M9 7V5h5M14 12h.01M8 20v1m7-1v1"/>',
-  hourglass:'<path d="M5 3h14M5 21h14M7 3v5l5 4-5 4v5m10-18v5l-5 4 5 4v5"/>',
-  check:'<path d="m4 13 5 5L20 6"/>',
-  flag:'<path d="M5 22V3m0 2c4-3 9 3 14 0v11c-5 3-10-3-14 0"/>',
-  speech:'<path d="M4 5h16v12H9l-5 4V5Z"/><path d="M8 10h8m-8 4h5"/>',
-  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-  heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/>',
-  pulse:'<path d="M3 12h4l3-6 4 12 3-6h4"/><path d="M3 4v4m18 8v4"/>',
-  book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1Z"/><path d="M12 6v14"/>',
-  chart:'<path d="M4 20V10m5 10V5m5 15v-8m5 8V3"/><path d="M2 21h20"/>',
-  coin:'<circle cx="12" cy="12" r="9"/><path d="M9 9c0-2 6-2 6 0s-6 1-6 3 6 1 6 3-6 2-6 0m3-9v12"/>',
-  sparkle:'<path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5Z"/>',
-  graduation:'<path d="m2 9 10-5 10 5-10 5-10-5ZM6 11v5c3 3 9 3 12 0v-5M22 9v7"/>'
+ pin:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',
+ home:'<path d="m4 10 6-5a3 3 0 0 1 4 0l6 5v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 20v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6"/>',
+ school:'<rect x="5" y="8" width="14" height="13" rx="2"/><path d="m7 8 5-5 5 5M9 21v-5h6v5M9 11h.01M15 11h.01"/>',
+ users:'<circle cx="9" cy="8" r="3"/><path d="M3 20v-1a6 6 0 0 1 12 0v1M17 5a3 3 0 0 1 0 6M18 15a5 5 0 0 1 3 5"/>',
+ savings:'<path d="M5 11a7 7 0 0 1 11-4l3-1v5l1 1v3l-3 1-1 4h-2v-3H9v3H7l-1-4-3-2v-3Z"/><path d="M9 7h4M15 11h.01"/>',
+ hourglass:'<path d="M7 3h10M7 21h10M8 3v4c0 3 8 7 8 10v4M16 3v4c0 3-8 7-8 10v4M10 18h4"/>',
+ check:'<rect x="4" y="4" width="16" height="16" rx="5"/><path d="m8 12 3 3 5-6"/>',
+ flag:'<path d="M5 21V5c5-4 9 4 14 0v10c-5 4-9-4-14 0"/>',
+ speech:'<path d="M8 4h8a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4H9l-5 4V8a4 4 0 0 1 4-4Z"/><path d="M8 9h8M8 13h5"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ heart:'<path d="M20 5a5 5 0 0 0-8 1 5 5 0 0 0-8 6l8 8 8-8a5 5 0 0 0 0-7Z"/>',
+ pulse:'<path d="M3 12h4l3-6 4 12 3-6h4"/>',
+ book:'<path d="M12 6C9 4 6 4 3 5v14c3-1 6-1 9 1 3-2 6-2 9-1V5c-3-1-6-1-9 1ZM12 6v14"/>',
+ chart:'<path d="M5 19v-6M12 19V5M19 19v-9"/>',
+ coin:'<circle cx="12" cy="12" r="9"/><path d="M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9M12 6v12"/>',
+ sparkle:'<path d="M12 3c1 6 3 8 9 9-6 1-8 3-9 9-1-6-3-8-9-9 6-1 8-3 9-9Z"/>',
+ graduation:'<path d="m3 9 9-5 9 5-9 5-9-5ZM7 12v5c3 2 7 2 10 0v-5M21 9v7"/>'
 });
 function node(tag,className,text){
   const el=document.createElement(tag);

@@ -222,6 +222,7 @@ function mount(root,navigate,content=global.GukminContent){
     const complete=el('section','life-chapter-complete');
     complete.append(el('small','','학생 시절 · 기록 완료'),el('h2','',persona.attributes?.lifeEndReason?'이번 삶은 여기까지':'다음 장을 기다리는 삶'),
      el('p','',(persona.attributes?.lifeEndReason?persona.attributes.lifeEndReason+'에 도달해 삶이 끝났습니다. ':persona.attributes?.retryEndReason?persona.attributes.retryEndReason+'으로 N수 준비를 마쳤습니다. ':'')+(persona.attributes?.lifeEndReason?'선택 기록은 그대로 보관됩니다. 새로운 인물로 다시 시작할 수 있습니다.':'현재 공개된 이야기는 여기까지입니다. 선택 기록은 그대로 보관됩니다. 다른 선택으로 새로운 삶을 시작할 수도 있습니다.')));
+    const record=el('button','continue-story','내 인생 결과 보기 ↗');record.type='button';record.addEventListener('click',()=>navigate('result'));complete.append(record);
     const replay=el('button','continue-story','새 인물로 다시 시작');replay.type='button';
     replay.addEventListener('click',safely(reset));complete.append(replay);log.prepend(complete);
    }
@@ -302,12 +303,18 @@ function mount(root,navigate,content=global.GukminContent){
   if(!dialog.open)return;
   const status=engine.storeStatus();
   text('storeBalance','재산 '+persona.stats.money.toLocaleString('ko-KR')+'원 · 정신병 '+stress+'/25');
-  text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?'현재는 이용할 수 없습니다.':'상품을 이용하면 4턴 뒤 다시 구매할 수 있습니다.');
+  text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?(stress===0?'지금은 충분히 쉬었습니다.':snapshot?.reviewPending?'선택 결과를 확인한 뒤 이용해 주세요.':'현재는 이용할 수 없습니다.'):'상품은 한 번에 하나 · 이용 후 4턴 동안 구매할 수 없습니다.');
   const list=$('storeItems');list.replaceChildren();
   for(const item of status.items){
    const button=el('button','store-item');button.type='button';button.disabled=!item.available;
-   button.append(el('strong','',item.name),el('span','',item.price.toLocaleString('ko-KR')+'원 · 정신병 −'+item.relief));
-   button.addEventListener('click',safely(()=>{if(engine.buy(item.id)){$('convenienceStore').close();}}));list.append(button);
+   const art=el('span','store-product-art '+(item.id==='tea'?'is-tea':'is-snack'));art.setAttribute('aria-hidden','true');art.append(el('i',''));
+   const info=el('span','store-product-info');
+   info.append(el('small','',item.id==='tea'?'WARM & SLOW':'A MOMENT FOR YOU'),el('strong','',item.name),el('span','store-product-description',item.id==='tea'?'따뜻한 한 모금, 생각을 비우는 시간.':'좋아하는 간식과 함께 잠깐의 여유.'));
+   const relief=Math.min(stress,item.relief);
+   info.append(el('span','store-relief','정신병 −'+relief+' · '+stress+' → '+Math.max(0,stress-item.relief)),el('b','store-price',item.price.toLocaleString('ko-KR')+'원'));
+   const reason=item.available?'구매하기 ↗':status.remaining?'재입고 대기':status.blocked?'지금은 이용 불가':'재산 부족';
+   button.append(art,info,el('span','store-buy-label',reason));
+   button.addEventListener('click',safely(()=>{if(engine.buy(item.id)){text('storeNotice',item.name+' 구매 완료 · '+item.price.toLocaleString('ko-KR')+'원 사용 · 정신병 '+relief+' 감소. 다음 이용까지 4턴.');}}));list.append(button);
   }
  }
  function openStore(){
@@ -335,13 +342,16 @@ function mount(root,navigate,content=global.GukminContent){
   currentCinematic=scene;
   cinematicShown=true;
   const body=$('lifeCinematicBody');body.replaceChildren();
+  cinematic.dataset.scene=scene.kind;
   const card=el('section','life-cinematic-card'+(scene.kind==='grade'?' is-grade':''));
+  const folio=el('div','cinematic-folio');folio.append(el('span','',persona.name),el('span','',headlineFor(persona)));card.append(folio);
   card.classList.toggle('is-sealed',!!scene.sealed);
   card.append(el('span','life-cinematic-kicker',scene.kind==='grade'?'학교 성적 통지표':scene.kind==='election'?'교실 개표 현황':scene.kind==='admission'?'입학 전형 결과':'인생의 전환점'));
   card.append(el('h2','life-cinematic-title',scene.title));
   if(scene.kind==='election')card.append(el('p','election-caption','우리 반의 한 표, 한 표가 모였다.'));
   if(scene.detail)card.append(el('p','life-cinematic-description',scene.detail));
   if(scene.kind==='grade'){
+   card.append(el('div','grade-rule','REPORT / '+(scene.sealed?'FINAL':'SEMESTER')));
    const row=el('div','life-cinematic-grade');
    if(scene.before)row.append(el('span','',scene.before),el('span','life-cinematic-arrow','→'));
    const grade=el('strong','',scene.after);grade.style.color=global.GukminGrades.color(scene.grade||scene.after);row.append(grade);
@@ -361,7 +371,8 @@ function mount(root,navigate,content=global.GukminContent){
    electionTicker=global.setInterval(()=>{const elapsed=performance.now()-start;const fraction=Math.min(1,Math.max(0,(elapsed-600)/4000));rows.forEach((node,i)=>{const count=Math.floor(votes[i]*fraction);node.textContent='正'.repeat(Math.floor(count/5))+(count%5?'一丨三四'[count%5-1]:'')+' · '+count+'표';});if(elapsed>=6000)scene.finish();},100);
    if(reduceMotion)scene.finish();
   }
-  if(scene.kind==='admission'){card.classList.add('is-admission-result');const image=el('img','school-placeholder');image.src='assets/svg/school-placeholder.svg';image.alt='';card.prepend(image);}
+  if(scene.kind==='admission'){card.append(el('span','cinematic-stamp','기록'));card.classList.add('is-admission-result');const image=el('img','school-placeholder');image.src='assets/svg/school-placeholder.svg';image.alt='';card.prepend(image);}
+  if(scene.kind==='transition'){card.classList.add('is-chapter');card.prepend(el('span','chapter-orbit',''));card.append(el('span','chapter-footer','새로운 장이 시작됩니다.'));}
   body.append(card);cinematic.hidden=false;document.body.classList.add('cinematic-open');
   $('lifeCinematicDismiss').textContent=scene.kind==='election'&&!scene.finished?'건너뛰기':scene.kind==='transition'?'시간이 흐른다…':'결과 확인하고 계속하기 →';
   $('lifeCinematicDismiss').focus({preventScroll:true});

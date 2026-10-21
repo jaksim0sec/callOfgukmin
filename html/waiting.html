@@ -7,24 +7,30 @@
   <title>국민의 부름 · 대기</title>
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
-  <link rel="stylesheet" href="css/style.css?v=poster-stage-20261021">
+  <link rel="stylesheet" href="css/style.css?v=life-refresh-20261021">
 </head>
 <body data-screen="waiting">
 <main class="waiting-screen" aria-label="게임 대기 화면">
   <div class="waiting-copy">
-    <span class="view-eyebrow">THE PEOPLE CALL · LIFE SIMULATION</span>
-    <h1>국민의 부름</h1>
-    <p class="waiting-lede">어떤 집안에서 태어나, 어떤 선택을 하고, 어디까지 올라갈 것인가.</p>
+    <span class="view-eyebrow">LIFE NO. 001 · 당신의 차례입니다</span>
+    <h1>태어나는 건 운.<br>살아가는 건 <em>선택.</em></h1>
+    <p class="waiting-lede">국민의 부름<br>작은 선택들이 모여, 당신이라는 한 사람이 됩니다.</p>
+    <div class="waiting-file-label"><span>새로운 인생의 첫 장</span><span aria-hidden="true">↗</span></div>
     <div class="waiting-identity" aria-label="이번 인생의 출생 정보">
       <span class="waiting-identity-name" id="waitingName">이름을 준비하는 중</span>
       <span class="waiting-identity-detail" id="waitingBackground"></span>
+    </div>
+    <div class="waiting-name-field">
+      <label for="personaName">이 인생을 살아갈 이름</label>
+      <div class="name-input-row"><input id="personaName" type="text" maxlength="12" autocomplete="off" spellcheck="false" aria-describedby="nameHint" required><button id="randomName" class="text-action" type="button">무작위 ↻</button></div>
+      <p id="nameHint">1~12자 · 출생 전에 이름을 정할 수 있습니다.</p>
     </div>
     <div class="waiting-actions">
       <button type="button" id="enterGame" class="primary-action">인생 시작하기 <span aria-hidden="true">→</span></button>
       <button type="button" id="rerollPersona" class="secondary-action">새 출생 배경 뽑기</button>
     </div>
     <p class="view-note" id="waitingSaveNotice">선택에 따라 다른 사건이 벌어지는 인생 이야기.</p>
-    <button type="button" class="text-action" id="previewResult">결과 화면 구조 미리보기 ↗</button>
+    <button type="button" class="text-action" id="previewResult">내 인생 기록 보기 ↗</button>
   </div>
   <div class="waiting-visual">
     <div class="waiting-poster-mount" id="waitingPosterMount" aria-label="현재 인물 포스터"></div>
@@ -54,24 +60,24 @@
     <button type="button" class="birth-intro-skip" id="birthIntroSkip">출생하기 <span aria-hidden="true">↗</span></button>
   </div>
 </section>
-<script src="js/poster.js?v=poster-stage-20261021" defer></script>
-<script src="js/data/base.js?v=balance25-20261021" defer></script>
-<script src="js/data/regions.js?v=balance25-20261021" defer></script>
-<script src="js/data/schools.js?v=balance25-20261021" defer></script>
-<script src="js/data/grades.js?v=balance25-20261021" defer></script>
-<script src="js/playerState.js?v=balance25-20261021" defer></script>
-<script src="js/effects.js?v=balance25-20261021" defer></script>
-<script src="js/timeline.js?v=balance25-20261021" defer></script>
-<script src="js/life/director.js?v=balance25-20261021" defer></script>
-<script src="js/life/story.js?v=balance25-20261021" defer></script>
-<script src="js/life/infant.js?v=choice-values-20261021" defer></script>
-<script src="js/life/elementary.js?v=choice-values-20261021" defer></script>
-<script src="js/life/middle.js?v=choice-values-20261021" defer></script>
-<script src="js/life/high.js?v=choice-values-20261021" defer></script>
-<script src="js/systemDemo.js?v=balance25-20261021" defer></script>
-<script src="js/statusView.js?v=balance25-20261021" defer></script>
-<script src="js/game.js?v=poster-stage-20261021" defer></script>
-<script src="js/majorView.js?v=balance25-20261021" defer></script>
-<script src="js/boot.js?v=poster-stage-20261021" defer></script>
+<script src="js/poster.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/base.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/regions.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/schools.js?v=life-refresh-20261021" defer></script>
+<script src="js/data/grades.js?v=life-refresh-20261021" defer></script>
+<script src="js/playerState.js?v=life-refresh-20261021" defer></script>
+<script src="js/effects.js?v=life-refresh-20261021" defer></script>
+<script src="js/timeline.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/director.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/story.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/infant.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/elementary.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/middle.js?v=life-refresh-20261021" defer></script>
+<script src="js/life/high.js?v=life-refresh-20261021" defer></script>
+<script src="js/systemDemo.js?v=life-refresh-20261021" defer></script>
+<script src="js/statusView.js?v=life-refresh-20261021" defer></script>
+<script src="js/game.js?v=life-refresh-20261021" defer></script>
+<script src="js/majorView.js?v=life-refresh-20261021" defer></script>
+<script src="js/boot.js?v=life-refresh-20261021" defer></script>
 </body>
 </html>
