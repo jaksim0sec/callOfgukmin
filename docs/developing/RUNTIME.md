@@ -1,3 +1,7 @@
+## 2026-10-21 학업 카드 캐시 갱신
+
+진입/화면 이동·CSS·boot 쿼리는 `academic-layout-20261021`로 갱신한다. 다른 JS는 기존 `life-refresh-20261021`을 유지한다.
+
 ## 2026-10-21 화면 개편 캐시 (현행)
 
 루트 진입·화면 이동 및 세 독립 HTML의 자산 쿼리는 `life-refresh-20261021`이다. 결과 화면은 `boot.js`에서 기존 저장을 읽고 DOM/Canvas로 표현하며 게임 엔진이나 새 저장을 만들지 않는다. UI 회귀는 `CHROMIUM_PATH=/usr/bin/chromium node tests/ui-refresh.mjs`로 이름/복구/공유 호출/PNG/구매/쿨다운을 PC·390×844·320×568에서 확인한다. OS 공유 창에서 실제 외부 전송하는 과정은 자동화하지 않는다.

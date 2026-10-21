@@ -36,6 +36,13 @@ try{
   }
   await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:20,exam:15},stats:{money:1575000,allowance:45000,stress:13,relations:8}}}));
   assert.equal(await page.locator('.gauges-heading').count(),0,'status heading and its layout box are removed');
+  const academicRows=await page.locator('.gauge-group-academics .gauge').evaluateAll(cards=>cards.map(card=>{
+   const label=card.querySelector('.gauge-title').getBoundingClientRect(),value=card.querySelector('.gauge-value').getBoundingClientRect();
+   return {labelBottom:label.bottom,valueTop:value.top};
+  }));
+  assert.equal(academicRows.length,2);
+  assert.ok(academicRows.every(row=>row.valueTop>=row.labelBottom),'both grades sit below their labels');
+  assert.ok(Math.abs(academicRows[0].valueTop-academicRows[1].valueTop)<1,'academic grades share a baseline');
   const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-relations').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'mental health and relationships share one flex row');
   const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
   await page.locator('#traits .trait-control').first().click();
