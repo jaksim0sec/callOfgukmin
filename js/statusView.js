@@ -185,7 +185,7 @@ function showMetrics(root,s){
  // Preserve metric definitions while grouping only their presentation.
  const groups=new Map();
  function metricGroup(metric){
-  if(metric.id==='stress'||metric.id==='illness')return 'vitals';
+  if(['stress','illness','relations'].includes(metric.id))return 'vitals';
   if(metric.type==='currency')return 'finance';
   if(metric.id==='schoolScore'||metric.id==='exam')return 'academics';
   return 'other';
@@ -203,6 +203,9 @@ function showMetrics(root,s){
  const phase=global.GukminPlayer.phaseOf(s);
  const metrics=global.GukminPlayer.activeMetrics(s);
  for(const metric of [...metrics.filter(item=>item.id!=='money'),...metrics.filter(item=>item.id==='money')]){
+  // One existing risk slot changes stage; never add a third vital card.
+  if(metric.id==='illness'&&!(s.stats.illness>0))continue;
+  if(metric.id==='stress'&&s.stats.illness>0)continue;
   // Keep study internally for admissions and earlier saves; do not duplicate school grades.
   if(metric.id==='study'&&(phase==='middle'||phase==='high'))continue;
   const wrap=node('div','gauge metric-'+metric.id);
@@ -223,7 +226,7 @@ function showMetrics(root,s){
   line.append(value);
   wrap.append(line);
   // Categorical grades must not look like completion percentages.
-  if(metric.type==='progress'&&!graded&&metric.id!=='illness'){
+  if(metric.type==='progress'&&!graded){
    const progress=node('progress');
    const min=metric.min??0,max=metric.max??100;
    progress.max=max-min;
@@ -238,12 +241,6 @@ function showMetrics(root,s){
    track.append(fill);
    wrap.append(progress,track);
    nextFills.push([fill,ratio]);
-  }
-  if(metric.id==='illness'){
-   const ring=node('span','illness-ring'),native=node('progress','illness-native');
-   native.max=5;native.value=number||0;native.setAttribute('aria-label','정신병');
-   ring.style.setProperty('--illness-ratio',Math.max(0,Math.min(1,(number||0)/5)));
-   value.textContent=(number||0)+'/5';ring.append(native,value);wrap.append(ring);
   }
   // Grade methodology is available on hover; avoid repeating warning text under each gauge.
   if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);

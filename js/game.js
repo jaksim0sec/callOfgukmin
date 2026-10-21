@@ -291,14 +291,14 @@ function mount(root,navigate,content=global.GukminContent){
   commit(item);
  }
  function adviceBand(){const illness=persona.stats.illness||0;return illness?illness+1:persona.stats.stress>=23?1:0;}
- function maybeShowAdvice(force=false){
+ function maybeShowAdvice(){
   const dialog=$('pressureAdvice');if(dialog.open)return true;
   if(verificationMode||snapshot?.runtime.contentId!==global.GukminDirector.contentId||persona.age<7||snapshot.reviewPending||cinematicShown||persona.attributes?.admissionDestination==='finished'||(persona.stats.illness||0)>=5)return false;
   if(root.querySelector('dialog[open]'))return false;
   const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=13;
   const band=adviceBand();
-  if(!force&&!guide&&band<=(persona.attributes?.pressureNoticeBand||0))return false;
-  if(!force&&!guide&&!band)return false;
+  if(!guide&&band<=(persona.attributes?.pressureNoticeBand||0))return false;
+  if(!guide&&!band)return false;
   const pressure=persona.stats.stress||0,illness=persona.stats.illness||0;
   text('pressureAdviceTitle',guide?'부담을 알아차리는 첫 순간':illness?'마음의 경고를 확인하세요':'잠깐, 쉬어 갈 시간입니다');
   text('pressureAdviceLead',guide?'압박이 절반에 닿았습니다. 이 인생의 두 가지 위험 수치를 알아둘까요?':illness?'정신병이 쌓였습니다. 압박이 25를 넘으면 초과분이 정신병에 더해집니다.':'압박이 한계에 가까워졌습니다. 선택을 계속하기 전에 쉬어 갈 수 있습니다.');
@@ -314,14 +314,11 @@ function mount(root,navigate,content=global.GukminContent){
   adviceToStore=store;$('pressureAdvice').close();
  }
  function renderStore(){
-  const warning=$('stressWarning'),open=$('openConvenienceStore'),dialog=$('convenienceStore');
+  const open=$('openConvenienceStore'),dialog=$('convenienceStore');
   const stress=persona.stats.stress||0,illness=persona.stats.illness||0,ended=persona.attributes?.admissionDestination==='finished';
-  warning.hidden=(stress<23&&!illness)||ended;
-  warning.textContent=illness?'상태 확인서 · 정신병 '+illness+'/5 ↗':'상태 확인서 · 압박 '+stress+'/25 ↗';
-  warning.classList.toggle('is-critical',illness>=3);
   open.hidden=persona.age<7||!engine?.storeStatus||ended;
   const status=engine?.storeStatus?.();
-  if(status){open.replaceChildren(global.GukminStatus.createToken({type:'context',label:'한숨돌림',icon:'home',classes:'store-launch-icon'}),el('span','store-launch-copy',status.remaining?'편의점 · '+status.remaining+'턴 후 이용':'편의점 · 잠깐 쉬어 가기'),el('span','store-launch-arrow','↗'));}
+  if(status)open.textContent=status.remaining?'편의점 · '+status.remaining+'턴 후 이용 ↗':'편의점 ↗';
   if(!dialog.open)return;
   text('storeBalance','재산 '+persona.stats.money.toLocaleString('ko-KR')+'원 · 압박 '+stress+'/25 · 정신병 '+illness+'/5');
   text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?(stress===0&&!illness?'지금은 충분히 쉬었습니다.':snapshot?.reviewPending?'선택 결과를 확인한 뒤 이용해 주세요.':'현재는 이용할 수 없습니다.'):'한 번에 하나 · 구매 후 4턴 간격 · 회복은 직접 선택합니다.');
@@ -603,7 +600,6 @@ function mount(root,navigate,content=global.GukminContent){
   [$('lifeCinematicDismiss'),'click',hideCinematic],
   [$('resetGame'),'click',reset],
   [$('openConvenienceStore'),'click',openStore],
-  [$('stressWarning'),'click',()=>maybeShowAdvice(true)],
   [$('adviceContinue'),'click',()=>finishAdvice(false)],
   [$('adviceStore'),'click',()=>finishAdvice(true)],
   [$('pressureAdvice'),'cancel',e=>{e.preventDefault();finishAdvice(false);}],

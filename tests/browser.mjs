@@ -43,7 +43,7 @@ try{
   assert.equal(academicRows.length,2);
   assert.ok(academicRows.every(row=>row.valueTop>=row.labelBottom),'both grades sit below their labels');
   assert.ok(Math.abs(academicRows[0].valueTop-academicRows[1].valueTop)<1,'academic grades share a baseline');
-  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-illness').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'pressure and the illness ring share one flex row');
+  const vitals=await page.locator('.gauge-group-vitals').evaluate(el=>{const a=el.querySelector('.metric-stress').getBoundingClientRect(),b=el.querySelector('.metric-relations').getBoundingClientRect();return Math.abs(a.top-b.top)<1&&a.right<=b.left;});assert.ok(vitals,'pressure and relationships share the original two-card row');
   const heightBefore=await page.locator('.status>.gauges').evaluate(el=>el.getBoundingClientRect().height);
   await page.locator('#traits .trait-control').first().click();
   await page.locator('#traitDialog[open]').waitFor();assert.ok((await page.locator('#traitInfo').textContent()).trim());
