@@ -315,8 +315,7 @@ function showTraits(root,s){
 }
 function render(root,persona){
   if(!root||!persona)return;
-  const age=root.querySelector('#age'),job=root.querySelector('#job');
-  if(age)age.textContent='#'+persona.age+'살';
+  const job=root.querySelector('#job');
   if(job)job.textContent=persona.job||'미정';
   showAttributes(root,persona);
   showMetrics(root,persona);

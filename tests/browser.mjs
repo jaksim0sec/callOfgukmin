@@ -20,6 +20,30 @@ try{
   for(let i=0;i<50;i++){try{if((await fetch(base+'html/waiting.html')).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  }
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
+ // The sheet owns the prominent life-stage label; the profile has no duplicate age.
+ for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
+  const context=await browser.newContext({viewport});const page=await context.newPage();
+  await page.addInitScript(()=>{window.GukminContent={contentId:'headline-check',events:[],choices:[]};});
+  await page.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+  await page.locator('#lifeHeadline').waitFor();
+  assert.equal(await page.locator('.profile #age').count(),0,'profile must not duplicate the age');
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'0살');
+  for(const [phase,age,expected] of [['elementary',7,'초등학교 1학년'],['middle',14,'중학교 2학년'],['high',17,'고등학교 2학년']]){
+   await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
+   assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
+  }
+  await page.evaluate(()=>{document.querySelector('#resumeMajorChoice').hidden=false;});
+  const dimensions=await page.locator('#lifeHeadline').evaluate(el=>{const r=el.getBoundingClientRect(),head=el.parentElement.getBoundingClientRect(),style=getComputedStyle(el);return {font:parseFloat(style.fontSize),right:r.right,headRight:head.right,height:r.height};});
+  assert.ok(dimensions.font>26.4,'headline is larger than the previous 1.65rem');
+  assert.ok(dimensions.right<=dimensions.headRight&&dimensions.height>0,'grade stays in the sheet header');
+  await page.screenshot({path:`${artifacts}/${name}-school-headline.png`,fullPage:true});
+  await page.evaluate(()=>GukminGame.session.apply('graduate',{effects:{attributes:{age:19},schools:[{id:'high',kind:'high',name:'검증 학교 high',status:'graduated'}]}}));
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'19살','graduated school is not presented as current enrollment');
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.evaluate(()=>GukminGame.session.apply('birthday',{effects:{attributes:{age:20}}}));
+  assert.equal(await page.locator('#lifeHeadline').evaluate(el=>el.getAnimations().length),0,'reduced motion disables the heading animation');
+  await context.close();console.log('PASS '+name+': larger sheet age, school year, graduation, reduced motion');
+ }
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
   const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop'});const page=await context.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
@@ -40,7 +64,8 @@ try{
   assert.ok(await page.locator('#birthIntroProgress').isVisible(),'semantic birth progress remains available');
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
-  assert.equal(await page.locator('#age').textContent(),'#2살');
+  assert.equal(await page.locator('#age').count(),0);
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
   assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no meaningless paused progress bar');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
@@ -467,6 +492,7 @@ try{
  await recallPage.locator('#enterGame').click();
  await recallPage.locator('#birthIntro').waitFor({state:'visible'});
  await recallPage.locator('#birthIntroSkip').evaluate(button=>button.click());
+ await recallPage.locator('#resumeDailyChoice').waitFor({state:'visible'});
  assert.equal(await recallPage.locator('#dailyChoiceDialog').isVisible(),false);
  assert.equal(await recallPage.locator('#resumeDailyChoice').isVisible(),true);
  const newStory=await recallPage.evaluate(()=>GukminGame.session.snapshot().choice.scenarioId);

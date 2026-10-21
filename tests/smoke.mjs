@@ -16,7 +16,7 @@ if(!entry.includes('href="./html/waiting.html"') || !entry.includes('location.re
 if(entry.includes('id="app"'))errors.push('Old fetch app host still present');
 const ids={
  waiting:['waitingName','waitingBackground','waitingPosterMount','enterGame','rerollPersona','previewResult','birthIntro','birthIntroName','birthIntroBackground','birthIntroFamily','birthIntroTrait','birthIntroSkip','birthIntroCountdown','birthIntroProgress'],
- game:['playerPosterMount','age','job','attributeRows','schools','gaugesList','traits','log','resetGame','previewSchool','previewParty','choiceDialog','modalTitle','options','summary','confirm','close','choiceTiming','nextChoiceProgress','currentChoice','lifeHeadline','sheetToggle','sheetContent','lifeSheet','startSystemDemo','advanceTurn','lifeDecisionDialog','dailyChoiceDialog','dailyChoiceBody','dailyModalHeading','dailyPaperGrip','dailyPaperConfirm','resumeDailyChoice'],
+ game:['playerPosterMount','job','attributeRows','schools','gaugesList','traits','log','resetGame','previewSchool','previewParty','choiceDialog','modalTitle','options','summary','confirm','close','choiceTiming','nextChoiceProgress','currentChoice','lifeHeadline','sheetToggle','sheetContent','lifeSheet','startSystemDemo','advanceTurn','lifeDecisionDialog','dailyChoiceDialog','dailyChoiceBody','dailyModalHeading','dailyPaperGrip','dailyPaperConfirm','resumeDailyChoice'],
  result:['resultPosterMount','resultBack']
 };
 for(const screen of screens){

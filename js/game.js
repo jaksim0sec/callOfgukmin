@@ -29,6 +29,15 @@ function lifeTitle(persona){
  if(phase==='high'&&age<=18)return '고등학교 '+Math.max(1,age-15)+'학년';
  return global.GukminPlayer.phaseDefinition(phase).label;
 }
+function headlineFor(persona){
+ const phase=global.GukminPlayer.phaseOf(persona);
+ const school=global.GukminPlayer.schoolsOf(persona).find(record=>
+  record.kind===phase&&['enrolled','active','attending'].includes(record.status));
+ const stages={elementary:{label:'초등학교',offset:6,years:6},middle:{label:'중학교',offset:12,years:3},high:{label:'고등학교',offset:15,years:3}};
+ const stage=stages[phase];
+ if(school&&stage)return stage.label+' '+Math.max(1,Math.min(stage.years,Math.floor(persona.age-stage.offset)))+'학년';
+ return persona.age+'살';
+}
 function posterData(persona){
  const phase=global.GukminPlayer.phaseOf(persona);
  const phrases={infant:'세상이 궁금한 아이',elementary:'꿈을 키우는\n초등학생',middle:'가능성을 찾는\n중학생',high:'내 길을 고르는\n고등학생'};
@@ -88,9 +97,17 @@ function mount(root,navigate,content=global.GukminContent){
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   global.GukminStatus.render(root,persona);
-  text('lifeHeadline',persona.age+'살');
+  const headline=$('lifeHeadline'),label=headlineFor(persona);
+  if(headline.textContent!==label){
+   headline.textContent=label;
+   headline.getAnimations().forEach(animation=>animation.cancel());
+   if(!global.matchMedia('(prefers-reduced-motion: reduce)').matches&&headline.animate){
+    headline.animate([{opacity:.55,transform:'translateY(.15rem)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'ease-out'});
+   }
+  }
   text('chapter',snapshot?.runtime.contentId===global.GukminSystemDemo.contentId
     ? '검증 · '+snapshot.runtime.turn+'턴' : lifeTitle(persona));
+  $('chapter').parentElement.hidden=$('chapter').textContent===label;
   const host=$('playerPosterMount'),data=posterData(persona);
   if(!host.firstElementChild)host.append(global.GukminPoster.create(data));
   else global.GukminPoster.update(host.firstElementChild,data);
