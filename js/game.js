@@ -55,7 +55,7 @@ function posterData(persona){
    [stage,phrase,portraitStage]=['기록 종료','이번 도전은\n여기까지',phase==='high'?'high':'adult'];
  }else if((a.admissionAttempts||1)>1){
    [stage,phrase,portraitStage]=['N수생','올해는\n진짜 간다','high'];
- else if(phase==='high'&&persona.age>=19){
+ }else if(phase==='high'&&persona.age>=19){
    [stage,phrase,portraitStage]=['입시생','다음 길을\n선택하다','high'];
  }
  // Older saved lives get a reproducible visual variant; new lives store it explicitly.
