@@ -181,6 +181,24 @@ function showMetrics(root,s){
  }
  const nextFills=[];
  list.replaceChildren();
+ // Preserve metric definitions while grouping only their presentation.
+ const groups=new Map();
+ function metricGroup(metric){
+  if(metric.id==='stress'||metric.id==='health')return 'vitals';
+  if(metric.type==='currency')return 'finance';
+  if(metric.id==='schoolScore'||metric.id==='exam')return 'academics';
+  return 'other';
+ }
+ function groupContent(kind){
+  if(groups.has(kind))return groups.get(kind);
+  const group=node('section','gauge-group gauge-group-'+kind);
+  if(kind==='academics')group.append(node('div','gauge-group-heading','학업 성적'));
+  const content=node('div','gauge-group-content');
+  group.append(content);
+  list.append(group);
+  groups.set(kind,content);
+  return content;
+ }
  const phase=global.GukminPlayer.phaseOf(s);
  for(const metric of global.GukminPlayer.activeMetrics(s)){
   // Keep study internally for admissions and earlier saves; do not duplicate school grades.
@@ -202,7 +220,8 @@ function showMetrics(root,s){
   if(result)value.title=result.detail;
   line.append(value);
   wrap.append(line);
-  if(metric.type==='progress'){
+  // Categorical grades must not look like completion percentages.
+  if(metric.type==='progress'&&!graded){
    const progress=node('progress');
    const min=metric.min??0,max=metric.max??100;
    progress.max=max-min;
@@ -222,7 +241,7 @@ function showMetrics(root,s){
   if(metricRenderers.has(metric.type))metricRenderers.get(metric.type)(wrap,metric);
   if(metric.type==='currency')wrap.classList.add('gauge-currency');
   if(metric.tone)wrap.classList.add('gauge-'+metric.tone);
-  list.append(wrap);
+  groupContent(metricGroup(metric)).append(wrap);
  }
  // The DOM is mounted before transitioning. Re-rendering no longer flashes a native bar.
  if(nextFills.length){

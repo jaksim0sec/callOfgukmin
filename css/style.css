@@ -15,7 +15,7 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:0.125rem solid #
 .profile{padding:clamp(0.9375rem,1.55vw,1.5rem);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#554b5b transparent}
 .age-row{display:flex;justify-content:space-between;align-items:center;gap:0.75rem;margin-bottom:0.9375rem}.age{font:normal clamp(1.8125rem,3vw,2.8125rem)/1.1 'Do Hyeon',sans-serif}.job{color:#c7bdd0;font-size:0.875rem}
 .school-list{display:grid;gap:0.625rem}.school-row{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}.label{width:4.875rem;flex:none;color:#a69caa;font-size:0.8125rem}.token{display:inline-flex;align-items:center;gap:0.3125rem;border-radius:62.4375rem;background:#393242;color:#f8f7fa;font-size:0.75rem;font-weight:600;padding:0.3125rem 0.6875rem;max-width:100%}.traits{display:flex;flex-wrap:wrap;gap:0.4375rem;align-items:center}.token-trait{background:#453553;color:#fff}
-.gauges{padding:clamp(1.0625rem,1.8vw,1.625rem)}.gauge{min-width:0}.gauge-label{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;font-size:0.9375rem;margin-bottom:0.5rem}.gauge-label b{font-size:0.875rem;color:#d8cbe3;font-weight:650}progress{appearance:none;width:100%;height:0.5625rem;display:block;background:#ffffff12;border:0;border-radius:0.5625rem;overflow:hidden}progress::-webkit-progress-bar{background:#ffffff12}progress::-webkit-progress-value{background:#bba0d4;border-radius:0.5625rem}progress::-moz-progress-bar{background:#bba0d4}.gauge-locked{opacity:.4}.spectrum{height:0.5625rem;border-radius:0.5625rem;background:linear-gradient(90deg,#466fc17a,#ffffff16,#b653687a);position:relative}.spectrum:after{content:'';width:0.25rem;height:1.0625rem;background:#e8def2;position:absolute;left:var(--pos,50%);top:-0.25rem;border-radius:0.1875rem}.ends{display:flex;justify-content:space-between;color:#a398af;font-size:0.6875rem;margin-top:0.3125rem}.resources{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.375rem 1rem;border-top:0.0625rem solid #ffffff10;padding-top:0.75rem;font-size:0.75rem;color:#a99cb2}.resources b{font-size:0.875rem;color:#f4eefa}.resources #economyHint{color:#817786;font-size:0.6875rem}
+.gauges{padding:clamp(1.0625rem,1.8vw,1.625rem);container-type:inline-size}.gauge{min-width:0}.gauge-label{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;font-size:0.9375rem;margin-bottom:0.5rem}.gauge-label b{font-size:0.875rem;color:#d8cbe3;font-weight:650}progress{appearance:none;width:100%;height:0.5625rem;display:block;background:#ffffff12;border:0;border-radius:0.5625rem;overflow:hidden}progress::-webkit-progress-bar{background:#ffffff12}progress::-webkit-progress-value{background:#bba0d4;border-radius:0.5625rem}progress::-moz-progress-bar{background:#bba0d4}.gauge-locked{opacity:.4}.spectrum{height:0.5625rem;border-radius:0.5625rem;background:linear-gradient(90deg,#466fc17a,#ffffff16,#b653687a);position:relative}.spectrum:after{content:'';width:0.25rem;height:1.0625rem;background:#e8def2;position:absolute;left:var(--pos,50%);top:-0.25rem;border-radius:0.1875rem}.ends{display:flex;justify-content:space-between;color:#a398af;font-size:0.6875rem;margin-top:0.3125rem}.resources{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:0.375rem 1rem;border-top:0.0625rem solid #ffffff10;padding-top:0.75rem;font-size:0.75rem;color:#a99cb2}.resources b{font-size:0.875rem;color:#f4eefa}.resources #economyHint{color:#817786;font-size:0.6875rem}
 .sheet{background:#111015;border:0.0625rem solid #ffffff14;border-radius:1.0625rem;display:flex;flex-direction:column;overflow:hidden;min-width:0;min-height:0}
 .sheet-grip{display:none}.sheet-head{display:flex;align-items:center;gap:0.625rem;min-height:4.0625em;padding:0.75rem 1.375rem;border-bottom:0.0625rem solid #ffffff10;flex:none}.sheet-head strong{font:normal 1.6875rem 'Do Hyeon',sans-serif}.mini-reset{border:0;border-radius:0.5rem;padding:0.25rem 0.4375rem;font-size:1.4375rem;color:#cbc0d4;background:#ffffff10}.chapter-meta{display:flex;align-items:center;gap:0.5625rem;margin-left:auto;color:#ad9eaf;font-size:0.8125rem}.mode-chip{background:#2d2833;padding:0.25rem 0.5625rem;border-radius:6.25rem;color:#d9cbe5;font-size:0.6875rem}
 .log{flex:1;min-height:0;overflow:auto;padding:0 1.375rem;overscroll-behavior:contain;scrollbar-color:#473c50 transparent;scrollbar-width:thin}.record{padding:1.0625rem 0 1.125rem;border-bottom:0.0625rem solid #ffffff0f}.record[data-importance="major"]{border-left:.15rem solid #aa92c7;padding-left:.7rem;background:linear-gradient(90deg,#aa92c70d,transparent 70%)}.record-top{display:flex;gap:0.6875rem;align-items:baseline}.record-age{font-size:0.8125rem;color:#b89bd2;white-space:nowrap}.record strong{font-size:1.0625rem;font-weight:750}.record p{font-size:0.9375rem;color:#aea2b7;margin:0.4375rem 0 0 2.9375rem;line-height:1.7}
@@ -46,10 +46,20 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .school-active-dot{width:0.375rem;height:0.375rem;flex:none;border-radius:50%;background:#e7cbff;box-shadow:0 0 0 0.125rem #e7cbff22;margin-left:0.0625rem}
 .gauges-heading,.gauges-list,.trait-section{grid-column:1/-1;min-width:0}
 .gauges-heading{font-size:0.875rem;margin-bottom:-0.125rem}
-.gauges-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0.875rem 1.75rem;min-width:0}
-.gauges-list .gauge{min-width:0}
-/* The first two values share a row; other gauges need clear hierarchy. */
-.gauges-list>.gauge:not(.metric-stress):not(.metric-health){grid-column:1/-1}
+.gauges-list{display:grid;grid-template-columns:minmax(0,1fr);gap:.625rem;min-width:0}
+.gauges-list .gauge,.gauge-group,.gauge-group-content{min-width:0}
+.gauge-group-content{display:grid;grid-template-columns:minmax(0,1fr);gap:.5rem}
+.gauge-group-vitals .gauge-group-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem}
+.gauge-group-vitals .gauge{padding:.5rem .55rem;background:#ffffff07;border-radius:.5625rem}
+.gauge-group-vitals .gauge-label,.gauge-group-other .gauge-label{margin-bottom:.3rem}
+.gauge-group-finance{padding:.35rem .55rem;background:#ffffff06;border:.0625rem solid #ffffff0c;border-radius:.625rem}
+.gauge-group-finance .gauge-group-content{gap:0}
+.gauge-group-finance .gauge+.gauge{border-top:.0625rem solid #ffffff12;margin-top:.32rem;padding-top:.32rem}
+.gauge-group-finance .gauge-label{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.25rem;flex-wrap:nowrap;margin:0}
+.gauge-group-finance .gauge-value{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+.gauge-group-academics .gauge-group-content{grid-template-columns:repeat(2,minmax(0,1fr));gap:.375rem}
+.gauge-group-heading{font-size:.7rem;color:#b7a7bf;font-weight:750;margin-bottom:.35rem}
+@container(max-width:17rem){.gauge-group-vitals .gauge-group-content{grid-template-columns:minmax(0,1fr)}}
 .gauge-currency{border-radius:0.5rem}
 .gauge-currency .gauge-label{margin-bottom:0}
 .gauge-currency .gauge-label b{color:#f1e4ff}
@@ -136,7 +146,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .waiting-copy h1,.result-copy h1{font-size:4.125rem}
  .waiting-poster-mount,.result-poster-mount{width:min(100%,18rem);height:22.5rem;min-height:0}
  .waiting-actions>*{flex:1}
- .gauges-list{grid-template-columns:repeat(4,minmax(0,1fr));gap:0.75rem 0.5625rem}
+ .gauges-list{gap:.5rem}
  .attribute-label{min-width:3.5625rem;font-size:0.6875rem}
  .school-unset{font-size:0.6875rem}
  .profile-heading{margin-bottom:0.4375rem;font-size:0.75rem}
@@ -147,7 +157,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .trait-heading span,.traits-empty{font-size:0.6875rem}
 }
 @media(max-width:27.5em){
- .gauges-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .gauges-list{gap:.45rem}
  .attribute-row{gap:0.25rem}
  .attribute-label{min-width:3.1875rem}
  .waiting-copy h1,.result-copy h1{font-size:3.625rem}
@@ -177,7 +187,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .player-poster-mount,.status>.gauges{height:clamp(12.125rem,41vw,16.5625rem)}.desktop-right>.profile{height:auto;max-height:none;padding:.875rem;overflow:visible}
  .gk-poster{font-size:.58rem;border-radius:0.9375rem}.gk-poster-stage{font-size:.82em;max-width:45%}.gk-portrait{inset:8% -14% 0 12%}
  .age{font-size:clamp(1.5625rem,5vw,2.1875rem)}.age-row{margin-bottom:0.75rem}.job{font-size:0.6875rem}.school-list{gap:0.4375rem}.school-row{gap:0.3125rem}.label{font-size:0.6875rem;width:3.5625rem}.token{font-size:0.6875rem;padding:0.25rem 0.5rem}.traits{gap:0.375rem}
- .status>.gauges{display:flex;flex-direction:column;gap:.55rem;margin-top:0;padding:.75rem;min-height:12.0625rem;height:auto;overflow:visible}
+ .status>.gauges{display:flex;flex-direction:column;gap:.4rem;margin-top:0;padding:.625rem;min-height:12.0625rem;height:auto;overflow:visible}
  .gauge-label{font-size:0.625rem;flex-wrap:wrap;gap:0.0625rem}.gauge-label b{font-size:0.625rem}.gauges progress,.spectrum{height:0.4375rem}.gauge-locked{opacity:.38}.ends{font-size:0.5625rem}.resources{grid-column:1/-1;font-size:0.6875rem;padding-top:0.5rem}.resources b{font-size:0.6875rem}.resources #economyHint{font-size:0.5625rem}
  .sheet{--sheet-min-ratio:.2;--sheet-mid-ratio:.55;--sheet-max-ratio:.9;--sheet-small-height:clamp(6rem,16dvh,10rem);--sheet-middle-height:calc(100dvh * var(--sheet-mid-ratio));--sheet-large-height:min(calc(100dvh * var(--sheet-max-ratio)),calc(100dvh - 1rem));position:fixed;left:0;right:0;bottom:0;z-index:5;height:var(--sheet-small-height);min-height:0;border-radius:1.3125rem 1.3125rem 0 0;border-color:#52415b;box-shadow:0 -1rem 3.125rem #0009;padding-bottom:env(safe-area-inset-bottom);overscroll-behavior:contain;transition:height .28s cubic-bezier(.22,.9,.28,1)}
  .sheet-grip{display:flex;align-items:center;justify-content:center;flex:none;border:0;background:transparent;width:100%;height:1.65rem;margin:0;touch-action:none;user-select:none;cursor:grab}.sheet-grip span{display:block;width:2.45rem;height:.34rem;border-radius:.5rem;background:#77617e;pointer-events:none}.sheet-head{padding:0.6875rem 1rem;min-height:3.625em}.sheet-head strong{font-size:1.5rem}.chapter-meta{font-size:0.6875rem}.mode-chip{font-size:0.625rem}.mini-reset{font-size:1.25rem}.log{padding:0 1rem}.record{padding:0.75rem 0}.record strong{font-size:0.9375rem}.record-age{font-size:0.75rem}.record p{font-size:0.8125rem;margin-left:0}.action-area{padding:0.75rem 0.9375rem 0.875rem}.current-line strong{font-size:0.875rem}.preview-btn{font-size:0.75rem;padding:0.625rem;min-height:2.75em}.fine{font-size:0.625rem}
@@ -306,16 +316,18 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .metric-awareness{--gauge-color:#AE6A9D}
 .gauge progress::-webkit-progress-value{background:var(--gauge-color)}
 .gauge progress::-moz-progress-bar{background:var(--gauge-color)}
-.gauge-label{align-items:flex-start;gap:.35rem}
+.gauge-label{align-items:center;gap:.35rem}
 .gauge-title{display:inline-flex;align-items:center;gap:.38rem;min-width:0;line-height:1.3}
 .gauge-metric-icon{color:color-mix(in srgb,var(--gauge-color) 84%,white);width:1rem;height:1rem;flex:none}
 .gauge-name{font-weight:650;overflow-wrap:anywhere}
 .gauge-label .gauge-value{color:color-mix(in srgb,var(--gauge-color) 84%,white);text-align:right;white-space:nowrap;flex:none}
 .gauge-grade-detail{display:block;font-size:.59rem;color:#baaec5;margin-top:.38rem;line-height:1.3}
-.gauge.metric-schoolScore,.gauge.metric-exam{padding:.65rem .7rem;background:#ffffff07;
- border:.0625rem solid #ffffff13;border-left:.2rem solid var(--gauge-color);border-radius:.65rem}
-.gauge.metric-schoolScore .gauge-label,.gauge.metric-exam .gauge-label{flex-wrap:wrap}
-.gauge.metric-schoolScore .gauge-grade-detail,.gauge.metric-exam .gauge-grade-detail{margin-top:.45rem}
+.gauge.metric-schoolScore,.gauge.metric-exam{padding:.45rem .5rem;background:#ffffff07;
+ border:.0625rem solid #ffffff13;border-left:.16rem solid var(--gauge-color);border-radius:.5625rem}
+.gauge.metric-schoolScore .gauge-label,.gauge.metric-exam .gauge-label{display:flex;flex-direction:column;align-items:flex-start;gap:.25rem;flex-wrap:nowrap;margin:0}
+.gauge.metric-schoolScore .gauge-value,.gauge.metric-exam .gauge-value{font-size:1.03rem;font-weight:800;line-height:1.2;white-space:nowrap}
+.gauge.metric-schoolScore .gauge-title,.gauge.metric-exam .gauge-title{gap:.25rem}
+.gauge.metric-schoolScore .gauge-grade-detail,.gauge.metric-exam .gauge-grade-detail{margin-top:.35rem}
 
 /* Realistic printed test handout: hierarchy, form cells, paper grain and OMR-style options. */
 .life-choice-dialog:has(.life-exam-paper){border-radius:.3rem;border-color:#d4cdc0;box-shadow:0 2rem 4.5rem #000c}
@@ -364,7 +376,12 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .daily-choice-effect{font-size:.61rem}
  .gauge-metric-icon{width:.9rem;height:.9rem}
  .gauge-grade-detail{font-size:.56rem}
- .gauge.metric-schoolScore,.gauge.metric-exam{padding:.48rem}
+ .gauge.metric-schoolScore,.gauge.metric-exam{padding:.375rem .4rem}
+ .gauge-group-vitals .gauge{padding:.375rem .45rem}
+ .gauge-group-finance{padding:.3rem .45rem}
+ .gauge-group-heading{font-size:.625rem;margin-bottom:.25rem}
+ .gauge-group-academics .gauge-value{font-size:.875rem}
+ .gauge-group-academics .gauge-title{font-size:.6rem}
  .life-exam-paper .life-modal-title{font-size:1.03rem}
  .life-paper-subject{font-size:.83rem}
  .life-paper-identification{grid-template-columns:.7fr 1fr 1.4fr}
@@ -380,11 +397,11 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
  .desktop-right{grid-template-rows:minmax(10rem,auto) minmax(0,1fr)}
  .desktop-right>.profile{max-height:35dvh;overflow:auto}
  .status>.gauges{min-height:0;scrollbar-width:thin}
- .status>.gauges .gauges-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .status>.gauges .gauges-list{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:47.5em){
  .desktop-right>.profile{margin-top:.625rem}
- .status>.gauges .gauges-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem}
+ .status>.gauges .gauges-list{gap:.4rem}
  .status>.gauges .gauges-heading{font-size:.75rem}
  .status>.gauges .gauge-grade-detail{font-size:.53rem}
  .status>.gauges .trait-section{margin:0;padding-bottom:.4rem}
@@ -920,7 +937,7 @@ dialog{width:min(38.75rem,calc(100% - 1.375rem));max-height:89dvh;padding:0;bord
 .ui-progress-fill{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:left center;
  border-radius:inherit;background:var(--gauge-color,#bba0d4);
  transition:transform var(--progress-duration) var(--progress-ease)}
-.gauge .ui-progress-track{height:.5625rem}
+.gauge .ui-progress-track{height:.4375rem}
 .gauge.gauge-negative .ui-progress-fill{background:var(--gauge-color,#b58ca7)}
 .choice-progress-fill{transition:transform var(--progress-duration) var(--progress-ease)}
 .birth-intro-timing .ui-progress-fill{background:#d6b6d4;transition:transform .12s linear}

@@ -307,7 +307,7 @@ try{
    await page.waitForTimeout(320);
    assert.equal(await page.locator('#lifeSheet').evaluate(el=>el.classList.contains('is-middle')),true,'keyboard advances to middle');
    assert.equal(await page.locator('.metric-stress .gauge-name').textContent(),'정신병');
-   assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>getComputedStyle(el).gridColumnEnd),'-1');
+   assert.equal(await page.locator('.gauge.metric-money').evaluate(el=>!!el.closest('.gauge-group-finance')),true,'currency rows share a compact group');
   }
   assert.ok(await page.locator('#gaugesList .gauge-metric-icon').count()>=3,'every active metric has its own SVG icon');
   // One confirmation settles inside the same daily paper; the reward claim closes it and resumes life.
@@ -562,6 +562,16 @@ try{
   assert.equal(await p.locator('.life-chapter-complete button').count(),1,'completed chapter has an explicit replay action');
   assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
   assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);
+  assert.equal(await p.locator('.gauge-group-academics .gauge-progress-track').count(),0,'grades have no misleading completion bars');
+  assert.equal(await p.locator('.metric-stress .gauge-name').textContent(),'정신병','approved metric name is preserved');
+  const metricOverflow=await p.locator('.status>.gauges').evaluate(card=>{
+   const bounds=card.getBoundingClientRect();
+   return [...card.querySelectorAll('.gauge-name,.gauge-value')].some(el=>{
+    const rect=el.getBoundingClientRect();
+    return rect.left<bounds.left-1||rect.right>bounds.right+1;
+   });
+  });
+  assert.equal(metricOverflow,false,'metric labels and values fit the status card');
   const schoolHistory=await p.evaluate(()=>GukminPlayer.schoolsOf(GukminGame.session.snapshot().persona).find(s=>s.kind==='high'));
   assert.equal(schoolHistory.status,'graduated');
   await p.screenshot({path:`${artifacts}/${name}-life-graduate.png`,fullPage:true});
