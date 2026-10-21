@@ -27,9 +27,11 @@ try{
   await page.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
   await page.locator('#lifeHeadline').waitFor();
   assert.equal(await page.locator('.profile #age').count(),0,'profile must not duplicate the age');
+  assert.equal(await page.locator('.profile #job').count(),0,'role belongs beside the sheet headline');
+  assert.equal(await page.locator('.life-heading #lifeHeadline + #job').textContent(),'아기');
   assert.equal(await page.locator('#lifeHeadline').textContent(),'0살');
   for(const [phase,age,expected] of [['elementary',7,'초등학교 1학년'],['middle',14,'중학교 2학년'],['high',17,'고등학교 2학년']]){
-   await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
+   await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
   }
   await page.evaluate(()=>{document.querySelector('#resumeMajorChoice').hidden=false;});
