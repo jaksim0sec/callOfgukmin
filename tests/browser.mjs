@@ -57,6 +57,13 @@ try{
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.evaluate(()=>GukminGame.session.apply('birthday',{effects:{attributes:{age:20}}}));
   assert.equal(await page.locator('#lifeHeadline').evaluate(el=>el.getAnimations().length),0,'reduced motion disables the heading animation');
+  await page.evaluate(()=>{const names=Object.keys(GukminPlayer.traitDefinitions).filter(name=>!GukminPlayer.traitDefinitions[name].hidden).slice(0,10);GukminGame.session.apply('trait-row',{effects:{traits:{add:names}}});});
+  assert.equal(await page.locator('#traits').evaluate(el=>getComputedStyle(el).flexWrap),'nowrap');
+  await page.locator('#traits').evaluate(el=>{el.scrollLeft=0;});
+  await page.evaluate(()=>GukminGame.session.apply('keep-trait-scroll',{effects:{stats:{health:-1}}}));
+  assert.equal(await page.locator('#traits').evaluate(el=>el.scrollLeft),0,'ordinary updates preserve manual position');
+  await page.evaluate(()=>{GukminPlayer.registerTrait('검증 새 특성',{description:'가로 스크롤 검증'});GukminGame.session.apply('new-trait',{effects:{traits:{add:['검증 새 특성']}}});});
+  assert.ok(await page.locator('#traits').evaluate(el=>{const r=el.getBoundingClientRect(),last=el.lastElementChild.getBoundingClientRect();return el.scrollLeft>0&&last.left>=r.left-1&&last.right<=r.right+1;}),'new trait is automatically revealed');
   await context.close();console.log('PASS '+name+': larger sheet age, school year, graduation, reduced motion');
  }
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){

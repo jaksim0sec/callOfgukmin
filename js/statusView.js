@@ -263,7 +263,10 @@ function traitToken(name,entry={}){
  return createToken({type:'trait',name,entry});
 }
 function showTraits(root,s){
-  const traits=root.querySelector('#traits');traits.replaceChildren();
+  const traits=root.querySelector('#traits'),rendered=traits.dataset.rendered==='true';
+  const previous=new Set([...traits.children].map(token=>token.dataset.traitKey)),scrollLeft=traits.scrollLeft;
+  traits.replaceChildren();traits.dataset.rendered='true';
+  function appendTrait(token,key){token.dataset.traitKey=key;traits.append(token);}
   const info=root.querySelector('#traitInfo');
   if(info){info.hidden=true;info.textContent='';}
   function inspect(token,description){
@@ -294,7 +297,7 @@ function showTraits(root,s){
        if(!learned){
         const developing=createToken({type:'interest',name:field});
         developing.title=field+' 활동을 다시 이어 가면 정식 특성으로 발전할 수 있어';
-        traits.append(inspect(developing,developing.title));
+        appendTrait(inspect(developing,developing.title),name);
        }
       }
       continue;
@@ -303,7 +306,7 @@ function showTraits(root,s){
     const token=traitToken(name,entry);
     token.title=entry.description||def.description||name;
     token.setAttribute('aria-label',name+(negative?' · 디버프':' · 특성'));
-    traits.append(inspect(token,token.title));
+    appendTrait(inspect(token,token.title),name);
   }
   // Derived presentation only: schoolHistory stays the single source of school identity.
   if(enrolled){
@@ -314,8 +317,15 @@ function showTraits(root,s){
     const token=createToken({type:'context',label:labels[kind],icon:'graduation',classes:'token-school-kind school-kind-'+kind});
     token.title=enrolled.name+' · 재학 중';
     token.setAttribute('aria-label',enrolled.name+' 재학 중 · '+labels[kind]);
-    traits.append(token);
+    appendTrait(token,'school:'+kind);
    }
+  }
+  traits.scrollLeft=scrollLeft;
+  const added=rendered&&[...traits.children].reverse().find(token=>!previous.has(token.dataset.traitKey));
+  if(added){
+   const bounds=traits.getBoundingClientRect(),target=added.getBoundingClientRect();
+   if(target.width>traits.clientWidth||target.left<bounds.left)traits.scrollLeft+=target.left-bounds.left;
+   else if(target.right>bounds.right)traits.scrollLeft+=target.right-bounds.right;
   }
 }
 function render(root,persona){
