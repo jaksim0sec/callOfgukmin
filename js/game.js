@@ -79,6 +79,7 @@ function mount(root,navigate,content=global.GukminContent){
  let disposed=false;
  const $=id=>root.querySelector('#'+id);
  const sheet=$('lifeSheet');
+ const historyNext=$('historyNext');
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
 
  // The compact snap fits its controls rather than a fixed fraction of the viewport.
@@ -127,10 +128,13 @@ function mount(root,navigate,content=global.GukminContent){
  function saveControls(){try{localStorage.setItem(controlsKey,JSON.stringify({mode:playbackMode,paused:userPaused}));}catch{}}
  function paintControls(){
   const auto=playbackMode==='auto';
-  text('playbackMode',auto?'자동':'수동');$('playbackMode').setAttribute('aria-pressed',String(auto));
+  $('playbackMode').setAttribute('aria-checked',String(auto));
   text('playbackPause',userPaused?'▶ 재개':'Ⅱ 일시정지');$('playbackPause').setAttribute('aria-pressed',String(userPaused));
   text('playbackNext',snapshot?.choice?'선택 열기 →':'다음 →');
   $('playbackNext').disabled=userPaused||tutorialActive||cinematicShown;
+  historyNext.disabled=$('playbackNext').disabled;
+  historyNext.hidden=verificationMode||!snapshot||!(snapshot.choice||snapshot.reviewPending||Number.isFinite(snapshot.progress?.remaining));
+  historyNext.querySelector('#historyNextLabel').textContent=snapshot?.choice?'현재 선택 열기':'다음 이야기로';
   $('playbackControls').dataset.paused=String(userPaused);
   dailyUI?.setAutomatic(canAuto());
  }
@@ -290,6 +294,7 @@ function mount(root,navigate,content=global.GukminContent){
     replay.addEventListener('click',safely(reset));complete.append(replay);log.prepend(complete);
    }
    
+  log.insertBefore(historyNext,log.children[1]||null);
   renderProgress();
  }
  function clearMajor(){presentationEpoch++;const dispose=disposeMajor;disposeMajor=null;presentedToken=null;dispose?.();}
@@ -695,6 +700,7 @@ function mount(root,navigate,content=global.GukminContent){
   [$('playbackMode'),'click',()=>{playbackMode=playbackMode==='auto'?'manual':'auto';setPlayback();}],
   [$('playbackPause'),'click',()=>{userPaused=!userPaused;setPlayback();}],
   [$('playbackNext'),'click',nextMoment],
+  [historyNext,'click',nextMoment],
   [$('playbackHelp'),'click',openTutorial],
   [$('tutorialSkip'),'click',finishTutorial],
   [$('tutorialNext'),'click',()=>{if(tutorialPage<guide.length-1){tutorialPage++;paintTutorial();}else finishTutorial();}],

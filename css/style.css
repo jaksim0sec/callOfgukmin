@@ -1522,3 +1522,17 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 .paper-choice-sheet[data-scene=sports] .daily-modal-head h2{color:#28543e}
 
 .metric-athletics{--gauge-color:#5f9270}
+
+/* Preserve the purple controls; the thumb makes automatic/manual state explicit. */
+.playback-controls #playbackMode.playback-toggle{position:relative;isolation:isolate;display:grid;grid-template-columns:1fr 1fr;gap:0;width:4.6rem;min-width:4.6rem;padding:.2rem;border-radius:2rem;background:#ffffff06;border:.0625rem solid #a586c355;flex:none}
+.playback-toggle>span:not(.playback-toggle-thumb){position:relative;z-index:1;font-size:.65rem;font-weight:650;line-height:1.4;color:#a99ab6}
+.playback-toggle-thumb{position:absolute;z-index:0;inset:.2rem auto .2rem .2rem;width:calc(50% - .2rem);border-radius:2rem;background:#a586c340;box-shadow:0 .08rem .2rem #0002;transition:transform .18s ease}
+.playback-toggle[aria-checked=true] .playback-toggle-thumb{transform:translateX(100%)}
+.playback-toggle[aria-checked=true] .playback-auto-label,.playback-toggle[aria-checked=false] .playback-manual-label{color:#f2e8fb}
+.history-next{display:flex;align-items:center;justify-content:space-between;gap:1rem;box-sizing:border-box;width:100%;min-height:3.4rem;padding:.95rem 1.2rem;margin:.8rem 0 1.15rem;border:.0625rem solid #b497cc66;border-radius:1rem;background:#ab8ac31c;color:#e7d9f1;font:750 1rem/1.45 system-ui,'Pretendard',sans-serif;text-align:left;cursor:pointer;transition:background .18s,border-color .18s}
+.history-next>span:last-child{font-size:1.35rem;font-weight:450;line-height:1}
+.history-next:hover:not(:disabled){background:#ab8ac332;border-color:#c7abdc}
+.history-next:focus-visible{outline:.125rem solid #d3b7ed;outline-offset:.15rem}
+.history-next:disabled{opacity:.4;cursor:default}
+@media(max-width:47.5em){.playback-controls{gap:.3rem}.playback-controls #playbackNext{padding-inline:.5rem}.history-next{min-height:3.3rem;font-size:.93rem;padding:.9rem 1rem;margin:.65rem 0 1rem}}
+@media(prefers-reduced-motion:reduce){.playback-toggle-thumb,.history-next{transition:none}}

@@ -8,15 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <base href="../">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icons/favicon.ico?v=classroom-scenes-20261022" sizes="16x16 32x32 48x48">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=classroom-scenes-20261022">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=classroom-scenes-20261022">
+  <link rel="icon" href="assets/icons/favicon.ico?v=history-toggle-20261022" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=history-toggle-20261022">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=history-toggle-20261022">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="국민의 부름">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="css/style.css?v=classroom-scenes-20261022">
+  <link rel="stylesheet" href="css/style.css?v=history-toggle-20261022">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -56,7 +56,7 @@
         <progress id="nextChoiceProgress" max="1" value="0" aria-label="다음 선택까지 진행도"></progress>
       </div>
       <nav id="playbackControls" class="playback-controls" aria-label="이야기 진행 조절">
-        <button id="playbackMode" type="button" aria-pressed="true" title="자동·수동 진행 전환">자동</button>
+        <button id="playbackMode" type="button" class="playback-toggle" role="switch" aria-checked="true" aria-label="자동 진행" title="자동·수동 진행 전환"><span class="playback-toggle-thumb" aria-hidden="true"></span><span class="playback-manual-label" aria-hidden="true">수동</span><span class="playback-auto-label" aria-hidden="true">자동</span></button>
         <button id="playbackPause" type="button" aria-pressed="false">Ⅱ 일시정지</button>
         <button id="playbackNext" type="button">다음 →</button>
         <button id="playbackHelp" type="button" aria-label="게임 도움말">?</button>
@@ -76,7 +76,7 @@
         <div class="current-line"><span>현재 선택</span><strong id="currentTitle"></strong></div>
         <div id="currentChoice" class="current-choice" aria-live="polite"></div>
       </div>
-      <div class="log" id="log" role="log" aria-live="polite"></div>
+      <div class="log" id="log" role="log" aria-live="polite"><button id="historyNext" class="history-next" type="button"><span id="historyNextLabel">다음 이야기로</span><span aria-hidden="true">→</span></button></div>
       </div>
     </section>
   </div>
@@ -133,29 +133,29 @@
   <footer class="daily-paper-footer"><button id="dailyPaperConfirm" class="daily-paper-confirm" type="button" disabled>이 선택으로 기록하기</button></footer>
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
-<script src="js/poster.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/data/base.js?v=classroom-scenes-20261022" defer></script>
+<script src="js/poster.js?v=history-toggle-20261022" defer></script>
+<script src="js/data/base.js?v=history-toggle-20261022" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/schools.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/data/grades.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/playerState.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/effects.js?v=classroom-scenes-20261022" defer></script>
+<script src="js/data/schools.js?v=history-toggle-20261022" defer></script>
+<script src="js/data/grades.js?v=history-toggle-20261022" defer></script>
+<script src="js/playerState.js?v=history-toggle-20261022" defer></script>
+<script src="js/effects.js?v=history-toggle-20261022" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/story.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/infant.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/elementary.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/classroom.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/middle.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/high.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/life/admissions.js?v=classroom-scenes-20261022" defer></script>
+<script src="js/life/director.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/story.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/infant.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/elementary.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/classroom.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/middle.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/high.js?v=history-toggle-20261022" defer></script>
+<script src="js/life/admissions.js?v=history-toggle-20261022" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=classroom-scenes-20261022" defer></script>
+<script src="js/statusView.js?v=history-toggle-20261022" defer></script>
 <script src="js/sheetController.js?v=pressure-care-20261021" defer></script>
-<script src="js/dailyScenes.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/dailyChoice.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/game.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/majorView.js?v=classroom-scenes-20261022" defer></script>
-<script src="js/boot.js?v=classroom-scenes-20261022" defer></script>
+<script src="js/dailyScenes.js?v=history-toggle-20261022" defer></script>
+<script src="js/dailyChoice.js?v=history-toggle-20261022" defer></script>
+<script src="js/game.js?v=history-toggle-20261022" defer></script>
+<script src="js/majorView.js?v=history-toggle-20261022" defer></script>
+<script src="js/boot.js?v=history-toggle-20261022" defer></script>
 </body>
 </html>

@@ -26,16 +26,17 @@ try{
   for(let i=0;i<3;i++)await page.locator('#tutorialNext').click();
   await page.locator('#hideTutorial').check();await page.locator('#tutorialNext').click();
   assert.equal(await page.locator('#gameTutorial[open]').count(),0);
-  await page.locator('#playbackMode').click();assert.match(await page.locator('#playbackMode').textContent(),/수동/);
+  assert.equal(await page.locator('#playbackMode').getAttribute('role'),'switch');assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'true');await page.locator('#playbackMode').click();assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false');
   const manual=await state();await page.waitForTimeout(5300);assert.deepEqual(await state(),manual);assert.equal(await page.locator('#dailyChoiceDialog[open]').count(),0,'manual mode never forces a choice open');
-  await page.locator('#playbackNext').click();await page.locator('#dailyChoiceDialog[open]').waitFor();
+  if(name!=='desktop'){await page.locator('#sheetToggle').click();await page.waitForFunction(()=>!document.getElementById('lifeSheet').classList.contains('is-springing'));}
+  const historyButton=page.locator('#log #historyNext');await historyButton.scrollIntoViewIfNeeded();const nextSize=await historyButton.boundingBox();assert.ok(nextSize.height>=48&&nextSize.width>=200,'history next is a large action');await historyButton.click();await page.locator('#dailyChoiceDialog[open]').waitFor();
   await page.locator('#dailyChoiceBody .inline-choice').first().click();await page.locator('#dailyPaperConfirm').click();await page.locator('#dailyChoiceDialog.is-reward').waitFor();
   const rewarded=await state();await page.locator('#dailyPaperConfirm').click();await page.waitForFunction(turn=>GukminGame.session.snapshot().runtime.turn>turn,rewarded.runtime.turn);
   const afterManual=await state();assert.ok(afterManual.runtime.turn>rewarded.runtime.turn,'claiming reward advances to a next moment in manual mode');
   await page.waitForTimeout(1000);assert.deepEqual(await state(),afterManual,'manual progression stops again');
   await page.locator('#playbackPause').click();assert.match(await page.locator('#playbackPause').textContent(),/재개/);
-  const paused=await state();assert.equal(await page.locator('#playbackNext').isDisabled(),true);await page.locator('#playbackNext').dispatchEvent('click');await page.waitForTimeout(500);assert.deepEqual(await state(),paused,'next cannot advance while paused');
-  await page.reload();assert.equal(await page.locator('#gameTutorial[open]').count(),0,'do not show again survives reload');assert.match(await page.locator('#playbackMode').textContent(),/수동/);assert.match(await page.locator('#playbackPause').textContent(),/재개/);
+  const paused=await state();assert.equal(await page.locator('#historyNext').isDisabled(),true);assert.equal(await page.locator('#playbackNext').isDisabled(),true);await page.locator('#playbackNext').dispatchEvent('click');await page.waitForTimeout(500);assert.deepEqual(await state(),paused,'next cannot advance while paused');
+  await page.reload();assert.equal(await page.locator('#gameTutorial[open]').count(),0,'do not show again survives reload');assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false');assert.match(await page.locator('#playbackPause').textContent(),/재개/);
   await page.locator('#playbackHelp').click();assert.equal(await page.locator('#gameTutorial[open]').count(),1,'help can be reopened');await page.keyboard.press('Escape');assert.match(await page.locator('#playbackPause').textContent(),/재개/,'closing help retains user pause');
   await page.locator('#playbackPause').click();await page.locator('#playbackMode').click();
   await page.waitForFunction(()=>!!GukminGame.session.snapshot().choice);
