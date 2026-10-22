@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='campaign-home-20261022';
+const RELEASE='korean-age-20261022';
 const screen=document.body.dataset.screen;
 const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let navigating=false;
@@ -32,7 +32,7 @@ function initWaiting(){
  const note=document.getElementById('waitingSaveNotice');
  const gender=document.getElementById('personaGender');
  const input=document.getElementById('personaName'),hint=document.getElementById('nameHint');
- const progressed=p=>!!(p.simulation||p.age>0);
+ const progressed=p=>!!(p.simulation||p.age>player.birthDefaults.age);
  function show(){
    const s=player.ensure();
    name.textContent=s.name;if(s.attributes?.lifeEndReason||s.attributes?.retryEndReason==='정신병 한계'){const mark=document.createElement('small');mark.className='deceased-mark';mark.textContent='故';name.append(mark);}input.value=s.name;gender.value=player.genderOf(s);gender.disabled=progressed(s);input.disabled=progressed(s);document.getElementById('randomName').disabled=progressed(s);

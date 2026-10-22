@@ -49,14 +49,14 @@ global.GukminDirector.register({
       {label:'혼자 먹겠다고 말한다',effects:{attributes:{friendRoute:'alone'}},detail:'민서는 빈자리를 찾아갔다. 너는 조용히 밥을 다 먹었다.'}
      ]}
    ]),
-   S.notice('elementary:age8',32,'초등학교 2학년','혼자 할 수 있는 일이 조금 더 늘었다.',{attributes:{age:8}}),
+   S.notice('elementary:age8',32,'초등학교 2학년','혼자 할 수 있는 일이 조금 더 늘었다.',{attributes:{age:9}}),
    S.selection('elementary:interest-exploration',34,'내가 재미있어하는 활동','학교에서 관심 있는 활동을 골라 체험해 보기로 했다.',[
     {label:'이야기를 쓰고 토론해 본다',effects:{traits:{add:['관심-문과']}},tags:['humanities'],detail:'짧은 이야기를 썼다. ==문과 분야의 관심이 발견됐다.== 관련 활동을 계속하면 진짜 특성으로 발전할 수 있다.'},
     {label:'과학 실험과 수학 퍼즐에 도전한다',effects:{traits:{add:['관심-이과']}},tags:['science'],detail:'실험을 끝내고 결과를 적었다. ==이과 분야의 관심이 발견됐다.== 다음에도 해 본다면 적성이 될지 모른다.'},
     {label:'그림과 음악을 만들어 본다',effects:{traits:{add:['관심-예체능']}},tags:['arts'],detail:'만든 작품을 교실 뒤에 걸었다. ==예체능 분야의 관심이 발견됐다.== 다음 학년에도 창작을 이어 가면 특성으로 발전할 수 있다.'},
     {label:'친구들과 운동을 해 본다',effects:{traits:{add:['관심-체육']}},tags:['sports'],detail:'체육 시간 외에도 공을 차러 나갔다. ==체육 분야의 관심이 발견됐다.== 꾸준히 운동하면 특성이 될 수 있다.'}
    ]),
-   S.notice('elementary:age9',36,'초등학교 3학년','수업과 숙제가 점점 다양해진다.',{attributes:{age:9}}),
+   S.notice('elementary:age9',36,'초등학교 3학년','수업과 숙제가 점점 다양해진다.',{attributes:{age:10}}),
     S.branch(S.selection('elementary:lunch',36,'급식 닭강정이 품절됐다',
      '급식실에서 기다린 끝에 네 차례가 됐다. 그런데 ==닭강정은 양념만 남았다.== 앞줄 친구의 접시는 아직 수북하다.',[
       {label:'배식량을 확인해 달라고 부탁한다',effects:{stats:{relations:1}},detail:'다음 날부터 적정량을 안내하는 종이가 붙었다. ~~닭강정은 여전히 없었다.~~'},
@@ -88,7 +88,7 @@ global.GukminDirector.register({
     {id:'library',label:'친구들과 놀러 다닌다',effects:{attributes:{afterschoolPath:'friends'},stats:{relations:2,study:-1}},detail:'친구들과 놀며 가까워졌다. 대신 복습에 쓸 시간이 줄었다.'},
     {id:'academy',label:'가족과 상의해 학원에 다닌다',requirement:'부모 등급 은수저 이상',risk:'재산 1만 원 · 수업과 숙제 부담',when:{stats:{money:{gte:10000}},any:['silver','gold','diamond'].map(familyTier=>({attributes:{familyTier}}))},effects:{attributes:{afterschoolPath:'academy'},stats:{relations:1,study:3,money:-10000,stress:3}},detail:'가족과 상의한 뒤 학원에 다니기 시작했다. 새 친구를 만나고 더 많이 배웠지만 수업과 숙제가 늘었다. 재산 1만 원을 사용했다.'}
    ]),
-   S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:10}}),
+   S.notice('elementary:age10',40,'초등학교 4학년',area+'에 대해 조사하는 수업이 열린다.',{attributes:{age:11}}),
    S.selection('elementary:project',41,'우리 동네 발표에 생긴 빈칸',
     '발표 전날 한 조원이 동네 소개 사진을 가져왔는데 그 사진은 ==전혀 다른 시의 축제==였다. 이미 PPT 표지에는 그 사진이 걸려 있다.',[
     {label:'지역 자료를 다시 조사해 사진과 출처를 고친다',risk:'마감 전 자료를 다시 찾아야 함',
@@ -111,7 +111,7 @@ global.GukminDirector.register({
     {label:'체육 활동과 연습을 이어간다',risk:'정기 연습에 맞춰 일정을 비워야 함',effects:{stats:{stress:1}},detail:'연습하던 동작이 마지막에 제대로 됐다. 다른 팀도 함께 박수를 쳤다.',tags:['sports'],
      conditional:[{when:{traits:['관심-체육']},result:{effects:{traits:{remove:['관심-체육'],add:['체육']}},history:{title:'체육 적성 발견',detail:'꾸준한 활동이 운동의 즐거움을 더했다.'}}}]}
    ]),
-   S.notice('elementary:age11',44,'초등학교 5학년','반 친구들과의 관계가 더 복잡해졌다.',{attributes:{age:11}}),
+   S.notice('elementary:age11',44,'초등학교 5학년','반 친구들과의 관계가 더 복잡해졌다.',{attributes:{age:12}}),
    S.branch(S.selection('elementary:representative',45,'반장 선거 · 학급 공약을 정하는 날','반장이 되어보라는 권유를 받았다.',[
     {label:'학급 대표에 도전한다',effects:{stats:{relations:1,stress:1},traits:{add:['리더십']}},detail:'작은 책임을 맡아 보았다.'},
     {label:'친구의 준비를 도와준다',effects:{stats:{relations:1,stress:1}},detail:'친구의 이야기를 함께 들어주었다.'},
@@ -130,7 +130,7 @@ global.GukminDirector.register({
      title:'누구나 나갈 수 있는 반장 선거',body:'반장 선거 공지가 붙었다. 민서는 선거 포스터에 "급식 먼저 먹기"라고 적었다가 담임에게 지웠다. 누구든 출마할 수 있다.',
      options:[stand('내 생각으로 출마해 본다'),support('민서가 준비하는 포스터를 도와준다'),watch]}
    ]),
-   S.notice('elementary:age12',48,'초등학교 6학년','중학교라는 새로운 환경이 가까워졌다.',{attributes:{age:12}}),
+   S.notice('elementary:age12',48,'초등학교 6학년','중학교라는 새로운 환경이 가까워졌다.',{attributes:{age:13}}),
    S.branch(S.selection('elementary:graduation',50,'졸업을 앞둔 봄','친구들이 졸업 후 바뀔 생활을 이야기한다.',[
     {label:'새 학교 정보와 시간표를 알아본다',effects:{stats:{study:1,stress:1}},detail:'변화를 준비했다.'},
     {label:'친구들과 추억을 남긴다',effects:{stats:{relations:1,stress:-1}},detail:'함께한 시간의 소중함을 느꼈다.'}
@@ -161,7 +161,7 @@ global.GukminDirector.register({
      ]}
    ]),
    S.notice('elementary:middle-entry',52,'중학교 입학','초등학교를 졸업하고 새로운 학교생활을 시작한다.',{
-    attributes:{age:13,phase:'middle',job:'중학생',roles:[]},
+    attributes:{age:14,phase:'middle',job:'중학생',roles:[]},
     schools:[
      {id:'local-elementary',kind:'elementary',name:'거주지 배정 초등학교',status:'graduated'},
      {id:'local-middle',kind:'middle',name:'거주지 배정 중학교',status:'enrolled'}

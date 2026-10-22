@@ -29,9 +29,9 @@ try{
   assert.equal(await page.locator('.profile #age').count(),0,'profile must not duplicate the age');
   assert.equal(await page.locator('.profile #job').count(),0,'role belongs beside the sheet headline');
   assert.equal(await page.locator('.life-heading #job').count(),0,'life heading contains one useful age or school-year label');
-  assert.equal(await page.locator('#lifeHeadline').textContent(),'0살');assert.equal(await page.locator('.chapter-meta').isVisible(),false,'ordinary play has no duplicate stage metadata');
-  for(const [phase,age,expected] of [['elementary',7,'초등학교 1학년'],['middle',14,'중학교 2학년'],['high',17,'고등학교 2학년']]){
-   await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'1살');assert.equal(await page.locator('.chapter-meta').isVisible(),false,'ordinary play has no duplicate stage metadata');
+  for(const [phase,age,expected] of [['elementary',8,'초등학교 1학년'],['elementary',13,'초등학교 6학년'],['middle',14,'중학교 1학년'],['middle',16,'중학교 3학년'],['high',17,'고등학교 1학년'],['high',19,'고등학교 3학년']]){
+   await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase+'-'+age,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
   }
   await page.evaluate(()=>GukminGame.session.apply('metric-layout',{effects:{activate:{schoolScore:20,exam:15},stats:{money:1575000,allowance:45000,stress:13,relations:8}}}));
@@ -66,10 +66,10 @@ try{
   assert.ok(dimensions.font>26.4,'headline is larger than the previous 1.65rem');
   assert.ok(dimensions.right<=dimensions.headRight&&dimensions.height>0,'grade stays in the sheet header');
   await page.screenshot({path:`${artifacts}/${name}-school-headline.png`,fullPage:true});
-  await page.evaluate(()=>GukminGame.session.apply('graduate',{effects:{attributes:{age:19},schools:[{id:'high',kind:'high',name:'검증 학교 high',status:'graduated'}]}}));
-  assert.equal(await page.locator('#lifeHeadline').textContent(),'19살','graduated school is not presented as current enrollment');
+  await page.evaluate(()=>GukminGame.session.apply('graduate',{effects:{attributes:{age:20},schools:[{id:'high',kind:'high',name:'검증 학교 high',status:'graduated'}]}}));
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'20살','graduated school is not presented as current enrollment');
   await page.emulateMedia({reducedMotion:'reduce'});
-  await page.evaluate(()=>GukminGame.session.apply('birthday',{effects:{attributes:{age:20}}}));
+  await page.evaluate(()=>GukminGame.session.apply('birthday',{effects:{attributes:{age:21}}}));
   assert.equal(await page.locator('#lifeHeadline').evaluate(el=>el.getAnimations().length),0,'reduced motion disables the heading animation');
   await page.evaluate(()=>{const names=Object.keys(GukminPlayer.traitDefinitions).filter(name=>!GukminPlayer.traitDefinitions[name].hidden).slice(0,10);GukminGame.session.apply('trait-row',{effects:{traits:{add:names}}});});
   assert.equal(await page.locator('#traits').evaluate(el=>getComputedStyle(el).flexWrap),'nowrap');

@@ -16,8 +16,8 @@ global.GukminDirector.register({
   const local=persona.regionTags?.includes('어촌')?'바닷가':persona.regionTags?.includes('농촌')?'마을':'동네';
   const stages=S.pack(
    {id:'infant:birth-registered',layer:'소식 이벤트',at:0,title:'출생 기록 확정'},
-   S.notice('infant:age1',4,'첫돌을 맞았다','가족에게 익숙한 웃음과 표정이 생겼다.',{attributes:{age:1}}),
-   S.notice('infant:age2',8,'두 살이 되었다','주변 세상을 알아가기 시작했다.',{attributes:{age:2}}),
+   S.notice('infant:age1',4,'첫돌을 맞았다','가족에게 익숙한 웃음과 표정이 생겼다.',{attributes:{age:2}}),
+   S.notice('infant:age2',8,'세 살이 되었다','주변 세상을 알아가기 시작했다.',{attributes:{age:3}}),
    S.branch(S.selection('infant:home',8,'곰 인형을 발견했다',scene,[
     {label:'인형을 꼭 끌어안는다',effects:{stats:{relations:1},traits:{add:['낯가림']}},detail:'낯선 게 있으면 익숙한 인형을 찾는다.'},
     {label:'인형의 귀와 꼬리를 만져 본다',effects:{stats:{relations:1},traits:{add:['호기심']}},detail:'새로운 물건은 꼭 만져 봐야 직성이 풀린다.'},
@@ -38,8 +38,8 @@ global.GukminDirector.register({
       {label:'남이 집어 주기 전에 직접 기어가 잡는다',effects:{attributes:{earlyTemperament:'independent'},traits:{add:['진취성']}},detail:'엉금엉금 기어가 직접 가져왔다. 무릎에는 먼지가 묻었다.'}
      ]}
    ]),
-   S.notice('infant:age3',12,'어린이집과 동네 생활',local+'에서 친구들을 만나고 낯선 생활을 접한다.',{attributes:{age:3}}),
-   S.notice('infant:age4',16,'네 살이 되었다','이제 친구들과 의견을 나눌 수 있다.',{attributes:{age:4}}),
+   S.notice('infant:age3',12,'어린이집과 동네 생활',local+'에서 친구들을 만나고 낯선 생활을 접한다.',{attributes:{age:4}}),
+   S.notice('infant:age4',16,'다섯 살이 되었다','이제 친구들과 의견을 나눌 수 있다.',{attributes:{age:5}}),
    S.branch(S.selection('infant:play',16,'친구가 내 모래삽을 잡았다',local+' 놀이터에서 친구가 내 모래삽을 가져가려 한다.',[
     {label:'같이 삽을 잡고 모래성을 만든다',effects:{stats:{relations:1},traits:{add:['배려심']}},detail:'함께 노니까 더 커다란 성을 만들 수 있었다.'},
     {label:'엄마 뒤로 쏙 숨는다',effects:{stats:{relations:1},traits:{add:['낯가림']}},detail:'친구가 다가오면 잠깐 숨어서 지켜본다.'},
@@ -75,8 +75,8 @@ global.GukminDirector.register({
       {label:'잠깐 다른 놀이터로 간다',detail:'모래를 손에서 털고 그네 쪽으로 갔다. 탑은 그대로 남아 있었다.'}
      ]}
    ]),
-   S.notice('infant:age5',20,'다섯 살의 일상','친구들과 더 복잡한 놀이를 시작한다.',{attributes:{age:5}}),
-   S.notice('infant:age6',24,'취학 준비','곧 초등학교에 들어간다.',{attributes:{age:6}}),
+   S.notice('infant:age5',20,'여섯 살의 일상','친구들과 더 복잡한 놀이를 시작한다.',{attributes:{age:6}}),
+   S.notice('infant:age6',24,'취학 준비','곧 초등학교에 들어간다.',{attributes:{age:7}}),
    S.selection('infant:prepare',24,'초등학교 가방을 처음 싸는 밤',
     '필통을 여닫느라 밤이 깊어졌다. 내일이 첫 등교다. 책상 위에는 새 연필과 이름표가 놓여 있다.',[
     {label:'공책 첫 장에 내 이름을 적는다',detail:'글씨가 삐뚤빼뚤해서 다시 썼다. 가족은 공책을 덮어 가방에 넣어 줬다.'},
@@ -84,7 +84,7 @@ global.GukminDirector.register({
     {label:'가방을 문 앞에 두고 잠자리에 든다',detail:'가방을 두 번이나 확인했다. 새 학교 생각에 한참 뒤척이다 잠들었다.'}
    ]),
    S.notice('infant:school-entry',28,'초등학교 입학','지역 배정 초등학교에서 학교생활을 시작한다.',{
-    attributes:{age:7,phase:'elementary',job:'초등학생'},
+    attributes:{age:8,phase:'elementary',job:'초등학생'},
     schools:[{id:'local-elementary',kind:'elementary',name:'거주지 배정 초등학교',status:'enrolled'}]
    })
   );

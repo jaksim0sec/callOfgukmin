@@ -10,6 +10,7 @@ const HOMES = [
   {name:'경제적으로 여유 있는 가정',place:'대전',description:'진로 선택의 여유가 있지만 주변의 기대도 있다.'},
   {name:'형편이 어려운 가정',place:'광주',description:'집안 형편이 넉넉하지는 않다.'}
 ];
+const SCHOOL_AGES=Object.freeze({elementary:8,middle:14,high:17,graduation:20});
 const SCHOOL_KINDS = [
   {id:'elementary',label:'초등학교'},
   {id:'middle',label:'중학교'},
@@ -41,7 +42,7 @@ const LIFE_STAGES = Object.freeze([
   {id:'political',label:'정치활동',next:['adult'],metrics:['stress','illness','relations','money','income','support','awareness']}
 ].map(stage=>Object.freeze({...stage,next:Object.freeze(stage.next),metrics:Object.freeze(stage.metrics)})));
 const BIRTH_DEFAULTS = Object.freeze({
-  age:0,phase:'infant',job:'아기',traits:Object.freeze([]),
+  age:1,phase:'infant',job:'아기',traits:Object.freeze([]),
   // Values are placeholders from the existing UI, NOT balanced game probabilities.
   stats:Object.freeze({
     stress:0,illness:0,money:0,allowance:null,relations:null,study:null,
@@ -74,7 +75,7 @@ const TRAIT_DEFS = {
   '리더십':{color:'#a06b2e',icon:'flag',description:'협업에서 관계 보너스를 얻는다. 수행평가 분담과 추가 부탁의 범위 조율에 활용할 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
   '언변':{color:'#7b65ad',icon:'speech',description:'토론·질의응답 방식으로 수행평가를 해결할 수 있다. 대표 발표의 준비 부족을 보완하지만 컨디션은 따로 관리해야 한다.'},
   '친화력':{color:'#ac597e',icon:'users',description:'친구들과 협력할 때 관계 보너스를 얻는다. 수행평가를 분담할 수 있지만 이후 부탁도 늘어날 수 있다.',modifiers:[{tags:['team'],stats:{relations:{add:1}}}]},
-  '흡연':{icon:'pulse',negative:true,revealOnAcquire:true,color:'#b55255',description:'흡연 습관은 압박과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:14}},result:{effects:{stats:{stress:1,money:-2000}}}}},
+  '흡연':{icon:'pulse',negative:true,revealOnAcquire:true,color:'#b55255',description:'흡연 습관은 압박과 재산에 지속적인 부담이 된다. 도움을 통해 그만둘 수 있다.',periodic:{every:4,when:{age:{gte:15}},result:{effects:{stats:{stress:1,money:-2000}}}}},
   '자기주장':{icon:'speech',color:'#427e9e',description:'자신의 한계를 표현한 경험. 추가 부탁을 전부 수락하거나 거절하는 대신 범위를 조율할 수 있다.'},
   '미루는 습관':{color:'#b55255',icon:'clock',negative:true,description:'준비와 일정 관리에 불리한 특성'},
   '호기심':{color:'#9a7a2d',icon:'sparkle',description:'새로운 물건과 상황을 먼저 탐색하는 성격'},
@@ -98,7 +99,7 @@ const freezeCopy=value=>{
 };
 global.GukminData=freezeCopy({
  names:NAMES,namesByGender:NAMES_BY_GENDER,homes:HOMES,schoolKinds:SCHOOL_KINDS,
- metrics:METRIC_DEFS,stages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,traits:TRAIT_DEFS,
+ schoolAges:SCHOOL_AGES,metrics:METRIC_DEFS,stages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,traits:TRAIT_DEFS,
  wealthTiers:WEALTH_TIERS,regionPresets:REGION_PRESETS,
  shopItems:[
   {id:'water',name:'시원한 생수',price:1000,relief:1,art:'water',description:'한 모금 마시며 잠깐 숨을 고른다.'},

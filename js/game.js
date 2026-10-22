@@ -3,6 +3,7 @@
  */
 (function(global){
 'use strict';
+const schoolAges=global.GukminData.schoolAges;
 const PARTIES=[
  {name:'자유국민당',icon:'▥',color:'#416f9e',desc:'성장과 책임'},
  {name:'민주혁신당',icon:'≋',color:'#be525f',desc:'복지와 개혁'},
@@ -25,9 +26,9 @@ function el(tag,cls,value){
 function lifeTitle(persona){
  if(persona.attributes?.admissionAttempts>1)return (persona.attributes.admissionAttempts===2?'재수':persona.attributes.admissionAttempts===3?'삼수':'N수생')+' · 입시'+persona.attributes.admissionAttempts+'회차';
  const age=persona.age,phase=global.GukminPlayer.phaseOf(persona);
- if(phase==='elementary')return '초등학교 '+Math.max(1,age-6)+'학년';
- if(phase==='middle')return '중학교 '+Math.max(1,age-12)+'학년';
- if(phase==='high'&&age<=18)return '고등학교 '+Math.max(1,age-15)+'학년';
+ if(phase==='elementary')return '초등학교 '+Math.max(1,age-schoolAges.elementary+1)+'학년';
+ if(phase==='middle')return '중학교 '+Math.max(1,age-schoolAges.middle+1)+'학년';
+ if(phase==='high'&&age<schoolAges.graduation)return '고등학교 '+Math.max(1,age-schoolAges.high+1)+'학년';
  return global.GukminPlayer.phaseDefinition(phase).label;
 }
 function headlineFor(persona){
@@ -35,7 +36,7 @@ function headlineFor(persona){
  const phase=global.GukminPlayer.phaseOf(persona);
  const school=global.GukminPlayer.schoolsOf(persona).find(record=>
   record.kind===phase&&['enrolled','active','attending'].includes(record.status));
- const stages={elementary:{label:'초등학교',offset:6,years:6},middle:{label:'중학교',offset:12,years:3},high:{label:'고등학교',offset:15,years:3}};
+ const stages={elementary:{label:'초등학교',offset:schoolAges.elementary-1,years:6},middle:{label:'중학교',offset:schoolAges.middle-1,years:3},high:{label:'고등학교',offset:schoolAges.high-1,years:3}};
  const stage=stages[phase];
  if(school&&stage)return stage.label+' '+Math.max(1,Math.min(stage.years,Math.floor(persona.age-stage.offset)))+'학년';
  return persona.age+'살';
@@ -55,7 +56,7 @@ function posterData(persona){
    [stage,phrase,portraitStage]=['기록 종료','이번 도전은\n여기까지',phase==='high'?'high':'adult'];
  }else if((a.admissionAttempts||1)>1){
    [stage,phrase,portraitStage]=['N수생','올해는\n진짜 간다','high'];
- }else if(phase==='high'&&persona.age>=19){
+ }else if(phase==='high'&&persona.age>=schoolAges.graduation){
    [stage,phrase,portraitStage]=['입시생','다음 길을\n선택하다','high'];
  }
  const portraitVariant=global.GukminPlayer.genderOf(persona);
@@ -293,7 +294,7 @@ function mount(root,navigate,content=global.GukminContent){
  }
  function maybeShowAdvice(){
   const dialog=$('pressureAdvice');if(dialog.open)return true;
-  if(verificationMode||snapshot?.runtime.contentId!==global.GukminDirector.contentId||persona.age<7||snapshot.reviewPending||cinematicShown||persona.attributes?.admissionDestination==='finished'||(persona.stats.illness||0)>=5)return false;
+  if(verificationMode||snapshot?.runtime.contentId!==global.GukminDirector.contentId||persona.age<schoolAges.elementary||snapshot.reviewPending||cinematicShown||persona.attributes?.admissionDestination==='finished'||(persona.stats.illness||0)>=5)return false;
   if(root.querySelector('dialog[open]'))return false;
   const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=13;
   const critical=persona.stats.illness===4&&!persona.attributes?.pressureCriticalSeen;
@@ -315,7 +316,7 @@ function mount(root,navigate,content=global.GukminContent){
  function renderStore(){
   const open=$('openConvenienceStore'),dialog=$('convenienceStore');
   const stress=persona.stats.stress||0,illness=persona.stats.illness||0,ended=persona.attributes?.admissionDestination==='finished';
-  open.hidden=persona.age<7||!engine?.storeStatus||ended;
+  open.hidden=persona.age<schoolAges.elementary||!engine?.storeStatus||ended;
   const status=engine?.storeStatus?.();
   if(status)open.textContent=status.remaining?'편의점 · '+status.remaining+'턴 후 이용 ↗':'편의점 ↗';
   if(!dialog.open)return;

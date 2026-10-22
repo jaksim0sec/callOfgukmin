@@ -56,13 +56,13 @@ function upgradeMental(persona){
 function generate() {
   const {home,region,tier,stats}=birthContext(),gender=Math.random()<.5?'male':'female';
   return {
-    version:1,statScale:25,mentalModel:2,gender,portraitVariant:gender,
+    version:1,ageSystem:'korean',statScale:25,mentalModel:2,gender,portraitVariant:gender,
     name:randomName(gender),age:BIRTH_DEFAULTS.age,phase:BIRTH_DEFAULTS.phase,job:BIRTH_DEFAULTS.job,party:'무소속',partyIcon:'◇',partyColor:'#677181',number:null,portraitSrc:null,
     family:home.name,birthplace:region.label,birthplaceId:region.id,regionTags:[...region.tags],familyTier:tier.id,description:home.description,
     school:{elementary:null,middle:null,high:null,uni:null},schoolHistory:[],
     roles:[],traits:[tier.name,...BIRTH_DEFAULTS.traits],
     stats,
-    history:[{age:0,title:'당신이 태어났다',detail:region.label+'에서 새로운 삶이 시작되었다.'},{age:0,title:'출생 배경',detail:home.description}],
+    history:[{age:1,title:'당신이 태어났다',detail:region.label+'에서 새로운 삶이 시작되었다.'},{age:1,title:'출생 배경',detail:home.description}],
     admissionSeed:Math.random().toString(36).slice(2),createdAt:new Date().toISOString()
   };
 }
@@ -96,8 +96,28 @@ function scaleRules(value,parent=''){
  }
  return copy;
 }
+// Shift the old zero-at-birth convention once, including archived snapshots and frozen choices.
+function ageRules(value){
+ if(Array.isArray(value))return value.map(ageRules);
+ if(!value||typeof value!=='object')return value;
+ const out={};
+ for(const [key,item] of Object.entries(value)){
+  if(key==='age'&&typeof item==='number')out[key]=item<30?item+1:item;
+  else if(key==='age'&&item&&typeof item==='object')out[key]=Object.fromEntries(Object.entries(item).map(([op,n])=>[op,typeof n==='number'&&n<30?n+1:n]));
+  else if(key==='title'&&typeof item==='string')out[key]=item.replace(/^(\d+)(세|살)(?=\s|$)/,(_,n,unit)=>(Number(n)<30?Number(n)+1:Number(n))+unit).replace('두 살이 되었다','세 살이 되었다').replace('네 살이 되었다','다섯 살이 되었다').replace('다섯 살의 일상','여섯 살의 일상');
+  else out[key]=ageRules(item);
+ }
+ return out;
+}
+function upgradeAge(persona){
+ if(persona.ageSystem==='korean')return persona;
+ const copy=ageRules(persona);copy.ageSystem='korean';
+ // Existing endings remain ended, and the thirty-year boundary stays thirty.
+ if(persona.age>=30&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason))copy.age=persona.age;
+ return copy;
+}
 function upgradeScale(persona){
- const copy=withoutHealth(persona);if(copy.statScale===25)return copy;
+ const copy=upgradeAge(withoutHealth(persona));if(copy.statScale===25)return copy;
  // Only standard bounded metrics change units; currency, time and custom stats do not.
  function walk(value,key=''){
   if(Array.isArray(value))return value.map(v=>walk(v,key));
@@ -141,10 +161,10 @@ function ensure() {
 }
 function phaseOf(s) {
   if(PHASE_METRICS[s.phase])return s.phase;
-  if(s.age<7)return 'infant';
-  if(s.age<13)return 'elementary';
-  if(s.age<16)return 'middle';
-  if(s.age<19)return 'high';
+  if(s.age<DATA.schoolAges.elementary)return 'infant';
+  if(s.age<DATA.schoolAges.middle)return 'elementary';
+  if(s.age<DATA.schoolAges.high)return 'middle';
+  if(s.age<DATA.schoolAges.graduation)return 'high';
   return 'adult';
 }
 function activeMetrics(s) {
@@ -214,7 +234,7 @@ function schoolsOf(s) {
   return [...records,...legacy.filter(old=>!records.some(r=>r.kind===old.kind&&r.name===old.name))];
 }
 global.GukminPlayer=Object.freeze({
-  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,upgradeScale,upgradeMental,genderOf,randomName,scaleRules,phaseOf,activeMetrics,schoolsOf,
+  storageKey:STORAGE_KEY,generate,valid,save,load,ensure,withoutHealth,ageRules,upgradeAge,upgradeScale,upgradeMental,genderOf,randomName,scaleRules,phaseOf,activeMetrics,schoolsOf,
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   birthContext,wealthTiers:DATA.wealthTiers,

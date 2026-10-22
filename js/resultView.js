@@ -23,7 +23,7 @@ function mount({navigate,renderPoster}){
  put('resultCardName',persona.name);if(isDeceased(persona)){const mark=node('small','故');mark.className='deceased-mark';document.getElementById('resultCardName').append(mark);}put('resultCardStage',persona.age+'살 · '+(reason||persona.job||'성장 중'));
  put('resultTitle',title);put('resultSummary',summary);put('resultEyebrow',finished?'LIFE RECORD · 한 장의 마침표':'LIFE RECORD · 지금까지의 나');
  renderPoster(document.getElementById('resultPosterMount'),persona,finished?'기록 완료':'진행 중',reason?'여기까지,\n나의 이야기':destination==='college'?'새로운 문 앞에\n서 있는 나':destination==='employment'?'교문 밖에서\n시작하는 내일':undefined);
- const facts=[['살아온 시간',persona.age+'년'],['마지막 학교',school?.name||'입학 전'],['남은 재산',persona.stats.money.toLocaleString('ko-KR')+'원'],['나의 선택',Object.values(persona.simulation?.choices||{}).filter(c=>c.status==='closed').length+'번']];
+ const facts=[['나이',persona.age+'살'],['마지막 학교',school?.name||'입학 전'],['남은 재산',persona.stats.money.toLocaleString('ko-KR')+'원'],['나의 선택',Object.values(persona.simulation?.choices||{}).filter(c=>c.status==='closed').length+'번']];
  const offer=a.earlyStatus==='accepted'?a.earlyOffer:a.regularOffer;
  if(destination==='college'&&offer)facts.push(['다음 목적지',offer]);
  else if(destination==='employment')facts.push(['다음 목적지','사회 진출 준비']);
@@ -76,7 +76,7 @@ function recap(persona,memories,title){
  const dialog=document.getElementById('resultRecap');
  const clean=s=>String(s||'').replace(/\*\*|==/g,'');
  const death=isDeceased(persona),cause=persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason;
- const frames=[...(death?[{scene:'death',age:persona.age,title:cause+'로 사망했습니다.',detail:persona.name+'의 이야기를 돌아봅니다.'}]:[]),{age:0,title:persona.name+'의 이야기가 시작됐다',detail:'작은 선택들이 하나의 삶이 되었습니다.'},...memories,{age:persona.age,title,detail:persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||'지금까지의 선택을 한 장에 담았습니다.'}];
+ const frames=[...(death?[{scene:'death',age:persona.age,title:cause+'로 사망했습니다.',detail:persona.name+'의 이야기를 돌아봅니다.'}]:[]),{age:1,title:persona.name+'의 이야기가 시작됐다',detail:'작은 선택들이 하나의 삶이 되었습니다.'},...memories,{age:persona.age,title,detail:persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||'지금까지의 선택을 한 장에 담았습니다.'}];
  const reduce=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  let index=0,timer;
  const finish=()=>{global.clearTimeout(timer);if(dialog.open)dialog.close();};

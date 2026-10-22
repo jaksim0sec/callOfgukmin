@@ -60,7 +60,7 @@ function create({persona,persist,onChange}){
  const onTurn=(person,turn)=>{
   const phase=global.GukminPlayer.phaseOf(person);
   const stats={};
-  if(tier&&person.age>=7&&person.age<=18&&['elementary','middle','high'].includes(phase))
+  if(tier&&!(person.attributes?.admissionAttempts>1)&&person.age>=global.GukminData.schoolAges.elementary&&person.age<global.GukminData.schoolAges.graduation&&['elementary','middle','high'].includes(phase))
    stats.money=Number.isFinite(person.stats.allowance)?Math.max(0,person.stats.allowance):tier.allowance;
   const pressure=person.stats.stress||0;
   if(pressure>=23&&(phase==='middle'||phase==='high')&&!person.attributes?.highFinalSubmitted)stats.schoolScore=-1;
@@ -137,7 +137,7 @@ function create({persona,persist,onChange}){
  function storeStatus(){
   const s=timeline.snapshot(),last=s.persona.attributes?.storeLastTurn;
   const remaining=Number.isFinite(last)?Math.max(0,4-(s.runtime.turn-last)):0;
-  const blocked=s.persona.age<7||(s.persona.stats.stress<=0&&(s.persona.stats.illness||0)<=0)||(s.persona.stats.illness||0)>=5||s.reviewPending||!!s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished';
+  const blocked=s.persona.age<global.GukminData.schoolAges.elementary||(s.persona.stats.stress<=0&&(s.persona.stats.illness||0)<=0)||(s.persona.stats.illness||0)>=5||s.reviewPending||!!s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished';
   return {remaining,blocked,items:global.GukminData.shopItems.map(item=>({...item,available:!blocked&&!remaining&&s.persona.stats.money>=item.price&&(!item.recovery||(s.persona.stats.illness||0)>0)&&(s.persona.stats.stress>0||!!item.recovery)}))};
  }
  function acknowledgePressure(){

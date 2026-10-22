@@ -104,7 +104,7 @@ test('birth defaults and stage routes are data-owned without triggering a clock 
  assert.deepEqual(plain(P.nextPhases('high')),['university','adult']);
  assert.deepEqual(plain(P.nextPhases('political')),['adult']);
  assert.throws(()=>P.phaseDefinition('unknown'),/생애 단계/);
- assert.equal(birth.phase,'infant');assert.equal(birth.age,0);assert.equal(birth.job,'아기');
+ assert.equal(birth.phase,'infant');assert.equal(birth.age,1);assert.equal(birth.job,'아기');
  assert.equal(birth.stats.health,undefined);assert.throws(()=>P.metricDefinition('health'));
  assert.equal(birth.stats.money,P.birthDefaults.stats.money);
  assert.equal(Number.isFinite(birth.stats.allowance),true);
@@ -126,7 +126,7 @@ test('director begins at family choice after birth news and restores without dup
  let engine=D.create({persona:P.generate(),persist:p=>P.save(p)});
  let s=engine.run();
  assert.equal(s.runtime.turn,8);
- assert.equal(s.persona.age,2);
+ assert.equal(s.persona.age,3);
  assert.equal(s.runtime.events['infant:birth-registered'].count,1);
  assert.equal(s.choice.id,'infant:home');
  assert.equal(s.choice.layer,'일상 선택');
@@ -173,7 +173,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
  assert.equal(exams,12,'six middle-school papers and two annual high-school strategy decisions per grade');
  assert.equal(applications,1,'one school application');
  assert.ok(decisions>=25);
- assert.equal(final.persona.age,19);
+ assert.equal(final.persona.age,20);
  assert.equal(final.runtime.turn,88);
  assert.equal(final.choice,null);
  assert.equal(final.progress.remaining,null);
@@ -722,7 +722,7 @@ test('pre-exam strategy is a deterministic preparatory memory, not a scored CSAT
  const expected=s.persona.stats.exam>=62?'csat-mock-strength':
   s.persona.stats.schoolScore>=67?'csat-record-strength':'csat-open-plan';
  assert.equal(s.choice.scenarioId,expected,'latest assessed state, not initial persona, decides the scenario');
- assert.equal(s.persona.age,18);
+ assert.equal(s.persona.age,19);
  const before={exam:s.persona.stats.exam,schoolScore:s.persona.stats.schoolScore};
  const examPlan=s.choice.options.find(o=>o.result?.effects?.attributes?.preExamStrategy==='exam');
  assert.ok(examPlan,'each route offers a realistic exam-preparation path');
@@ -1298,4 +1298,22 @@ test('career offers remain optional, accepting stops exam events, and ignored ye
 test('academy feedback helps deliberate retake preparation below twenty without granting top grades automatically',()=>{
  const {c,P}=setup(),p=P.generate();p.phase='high';p.traits=[];p.stats.exam=16;p.attributes={admissionAttempts:2,retakeMode:'self'};
  const self=c.GukminGrades.assessment(p,{metric:'exam',effort:3});p.attributes.retakeMode='academy';const academy=c.GukminGrades.assessment(p,{metric:'exam',effort:3});assert.equal(academy.actual,self.actual+1);assert.ok(academy.applied.some(x=>x.label==='재수학원'));p.stats.exam=20;assert.ok(!c.GukminGrades.assessment(p,{metric:'exam',effort:3}).applied.some(x=>x.label==='재수학원'));
+});
+
+
+test('Korean counting age starts at one and every authored school year matches entry ages',()=>{
+ const {c,P}=setup(),p=P.generate(),pack=c.GukminDirector.content(p),A=c.GukminData.schoolAges;
+ assert.equal(p.ageSystem,'korean');assert.equal(p.age,1);assert.ok(p.history.every(h=>h.age===1));assert.equal(A.elementary,8);assert.equal(A.middle,14);assert.equal(A.high,17);assert.equal(A.graduation,20);
+ const entry=pack.events.find(e=>e.id==='infant:school-entry');assert.equal(entry.result.effects.attributes.age,8);
+ assert.equal(pack.events.find(e=>e.id==='elementary:middle-entry').result.effects.attributes.age,14);
+ for(const choice of pack.choices.filter(c=>c.presentation?.type==='school'))for(const o of choice.options)assert.equal(o.result.effects.attributes.age,17);
+ for(const choice of pack.choices.filter(c=>c.presentation?.type==='exam'&&['middle','high'].includes(c.presentation.stage))){const q=choice.presentation;assert.equal(q.age,A[q.stage]+q.grade-1,choice.id);}
+ assert.equal(pack.events.find(e=>e.id==='high:age18').result.effects.attributes.age,19);assert.equal(pack.events.find(e=>e.id==='high:graduation').result.effects.attributes.age,20);
+ for(const [age,expected] of [[1,'infant'],[7,'infant'],[8,'elementary'],[13,'elementary'],[14,'middle'],[16,'middle'],[17,'high'],[19,'high'],[20,'adult']]){const q={...p,age};delete q.phase;assert.equal(P.phaseOf(q),expected);}
+});
+test('old age saves migrate once, retaining waiting decisions, money, history and settlement IDs',()=>{
+ const {P}=setup(),old=P.generate();delete old.ageSystem;old.age=7;old.phase='elementary';old.history=[{age:0,title:'당신이 태어났다'},{age:7,title:'초등학교 입학'}];old.stats.money=43210;old.simulation={version:1,contentId:'age-fixture',turn:28,events:{'infant:school-entry':{status:'completed',count:1}},applied:['entry-settled'],choices:{pending:{status:'waiting',token:'pending',script:{title:'13세 · 1학년 시험',presentation:{age:13},options:[{id:'enter',when:{age:{gte:15}},result:{effects:{attributes:{age:16}}}}]},outcome:{before:{age:7},after:{age:7}}}}};
+ const original=JSON.stringify(old),next=P.upgradeAge(old);assert.equal(JSON.stringify(old),original);assert.equal(next.age,8);assert.equal(next.stats.money,43210);assert.equal(next.history[0].age,1);assert.equal(next.history[1].age,8);assert.equal(next.simulation.turn,28);assert.equal(next.simulation.events['infant:school-entry'].count,1);assert.equal(next.simulation.choices.pending.script.title,'14세 · 1학년 시험');assert.equal(next.simulation.choices.pending.script.presentation.age,14);assert.equal(next.simulation.choices.pending.script.options[0].result.effects.attributes.age,17);assert.equal(next.simulation.choices.pending.outcome.before.age,8);assert.deepEqual(next.simulation.applied,old.simulation.applied);
+ P.save(next);const restored=P.load();P.save(restored);assert.equal(P.load().age,8);assert.equal(P.load().simulation.choices.pending.status,'waiting');assert.equal(P.load().stats.money,43210);
+ const ended={...old,age:30,history:[{age:30,title:'서른, 백수 엔딩'}],attributes:{retryEndReason:'백수 엔딩'}};assert.equal(P.upgradeAge(ended).age,30);assert.equal(P.upgradeAge(ended).history[0].age,30);
 });

@@ -79,15 +79,15 @@ function yearExam(age,year,at,kind){
  return x;
 }
 const old=[
- [16,1,65,'3월 모의고사','mock'],[16,1,66,'1학기 중간고사','school'],
- [16,1,67,'6월 모의고사','mock'],[16,1,68,'1학기 기말고사','school'],
- [17,2,70,'3월 모의고사','mock'],[17,2,71,'1학기 중간고사','school'],
- [17,2,72,'6월 모의고사','mock'],[17,2,73,'1학기 기말고사','school'],
- [18,3,75,'3월 모의고사','mock'],[18,3,76,'1학기 중간고사','school'],
- [18,3,77,'6월 모의고사','mock'],[18,3,78,'1학기 기말고사','school']
+ [17,1,65,'3월 모의고사','mock'],[17,1,66,'1학기 중간고사','school'],
+ [17,1,67,'6월 모의고사','mock'],[17,1,68,'1학기 기말고사','school'],
+ [18,2,70,'3월 모의고사','mock'],[18,2,71,'1학기 중간고사','school'],
+ [18,2,72,'6월 모의고사','mock'],[18,2,73,'1학기 기말고사','school'],
+ [19,3,75,'3월 모의고사','mock'],[19,3,76,'1학기 중간고사','school'],
+ [19,3,77,'6월 모의고사','mock'],[19,3,78,'1학기 기말고사','school']
 ];
 global.GukminDirector.register({
- id:'high',when:{phase:'high',age:{lte:18}},
+ id:'high',when:{phase:'high',age:{lte:19}},
  generate:persona=>{
   const countryside=persona.regionTags?.some(t=>['어촌','농촌','섬'].includes(t));
   const familyNeeds=['soil','bronze'].includes(persona.familyTier);
@@ -144,7 +144,7 @@ global.GukminDirector.register({
     {label:'내 시간표부터 정리하고 알림을 꺼둔다',effects:{attributes:{highPeer:'재호'},stats:{study:1}},detail:'재호의 메시지는 계속 왔다. 필요한 날짜만 달력에 적었다.'}
    ]}
  ]),
-   examWithPrelude(16,1,65,'mock'),
+   examWithPrelude(17,1,65,'mock'),
    choiceAt('high:recover',65,'학교생활을 다시 조율한다',
     '시험과 여러 활동이 겹쳐 몸과 마음이 지쳤다. 부담을 나누고 쉬어 갈 방법을 찾자.',[
      {label:'상담 뒤 한 달 동안 학습량과 수면 시간을 조정한다',effects:{stats:{stress:-5,schoolScore:-1}},detail:'과제 분량을 줄인 만큼 복습 한 단원을 포기했다. 상담만으로 달라지진 않았다. 과제 시간을 줄이고 잠드는 시간을 지키자 몇 주 뒤부터 버틸 여유가 생겼다.'},
@@ -173,8 +173,8 @@ global.GukminDirector.register({
       ]}
     ]),
    branches,
-   examWithPrelude(16,1,68,'school'),
-   S.notice('high:age17',69,'고등학교 2학년','교과 선택과 진로, 친구 관계가 복잡해지기 시작했다.',{attributes:{age:17}}),
+   examWithPrelude(17,1,68,'school'),
+   S.notice('high:age17',69,'고등학교 2학년','교과 선택과 진로, 친구 관계가 복잡해지기 시작했다.',{attributes:{age:18}}),
    S.branch(choiceAt('high:career',69,'가까운 친구의 고민',
     '친구가 학교생활과 진로에 대한 불안을 털어놓았다. 어떻게 이야기를 이어갈까?',[
      {label:'판단을 미루고 친구 이야기를 충분히 듣는다',effects:{stats:{relations:2,stress:1}},detail:'친구가 마음을 정리하는 데 함께했다.'},
@@ -203,7 +203,7 @@ global.GukminDirector.register({
     {label:'신청을 포기하고 다음 모집을 확인한다',detail:'신청서는 접었다. 다음 모집 날짜를 적었다.'}
    ]}
  ]),
-   examWithPrelude(17,2,70,'mock'),
+   examWithPrelude(18,2,70,'mock'),
    S.branch(choiceAt('high:electives',71,'신청한 선택과목이 사라졌다',
     '신청자가 부족한 과목이 폐강 위기다. 희망표를 다시 작성해야 한다.',[
      {label:'학교 밖 공동교육과정을 알아본다',effects:{attributes:{electiveRoute:'shared'}},detail:'수업을 들을 수 있는 학교를 찾았지만 이동 시간이 문제였다. 상담을 예약했다.'},
@@ -273,9 +273,9 @@ global.GukminDirector.register({
     {label:'문제 장면을 통째로 삭제해 올린다',detail:'급한 불은 껐다. 갑자기 영상이 짧아진 이유를 댓글에서 물었다.'}
    ]}
  ]),
-   examWithPrelude(17,2,73,'school'),
-   S.notice('high:age18',74,'고등학교 3학년','졸업을 앞두고 있다. 공부뿐 아니라 사람들과의 시간도 중요해졌다.',{attributes:{age:18}}),
-   examWithPrelude(18,3,75,'mock'),
+   examWithPrelude(18,2,73,'school'),
+   S.notice('high:age18',74,'고등학교 3학년','졸업을 앞두고 있다. 공부뿐 아니라 사람들과의 시간도 중요해졌다.',{attributes:{age:19}}),
+   examWithPrelude(19,3,75,'mock'),
    choiceAt('high:family-time',76,'토요일 오후에 걸려 온 가족의 전화',
     familyNeeds?'가족의 일이 겹쳐 집안일을 도와 달라는 전화가 왔다. 네게도 내일까지 끝내야 할 시험 준비가 남았다.':'가족이 오래전 잡은 모임에 오라고 한다. 일요일에는 공부하려고 했는데 돌아오는 시간이 늦어질 듯하다.',[
      {label:'필요한 시간만 돕고 돌아와 남은 과제를 마친다',effects:{stats:{relations:1,stress:1}},detail:'가족과 시간을 나눠 일을 마쳤다. 돌아왔을 때 책상 위 계획표에는 아직 빈칸이 있었다. ==오늘 밤은 조금 늦어졌다.=='},
@@ -294,7 +294,7 @@ global.GukminDirector.register({
      {label:'선생님과 진로에 관한 마지막 질문을 나눈다',detail:'선생님은 답을 대신 정해 주진 않았다. 다만 준비해야 할 서류 하나를 알려 줬다.'},
      {label:'촬영이 끝나면 조용히 가방을 챙겨 돌아간다',detail:'뒤돌아보니 교실은 여전히 시끄러웠다. 찍힌 사진은 아직 볼 수 없었다.'}
     ]),
-   examWithPrelude(18,3,78,'school'),
+   examWithPrelude(19,3,78,'school'),
    S.branch(choiceAt('high:csat-strategy',78,'수능을 앞두고 고르는 마지막 학습 방향',
     '3학년 1학기 평가를 마쳤다. 대학과 전형을 확정할 때까지 시간이 남았지만 준비 방향은 이제 미루기 어렵다.',[
      {label:'지원 전형을 비교해 계획을 정리한다',detail:'접수 일정과 준비할 서류를 따로 적었다.'},
@@ -324,7 +324,7 @@ global.GukminDirector.register({
     ]),
    S.notice('high:graduation',88,'고등학교를 졸업했다',
     '시험과 관계, 선택한 과목과 원서 결과가 남았다. 다음 이야기는 대학·사회생활에서 이어진다.',{
-     attributes:{age:19,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]
+     attributes:{age:20,job:'고교 졸업'},schools:[{kind:'high',status:'graduated'}]
     }),
    legacy
   );

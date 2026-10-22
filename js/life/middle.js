@@ -18,7 +18,7 @@ global.GukminDirector.register({
     ...(Object.keys(requirements).length?{when:{stats:requirements,...(['science','gifted'].includes(school.kind)?{any:['official','mentor','paid'].map(admissionResearch=>({attributes:{admissionResearch}}))}:{})}}:{}),
     highEntry:{track:school.kind},
     effects:{
-     attributes:{age:16,phase:'high',job:'고등학생',schoolTrack:school.kind,schoolProgram:school.program},
+     attributes:{age:17,phase:'high',job:'고등학생',schoolTrack:school.kind,schoolProgram:school.program},
      schools:[
       {id:'local-middle',kind:'middle',name:'거주지 배정 중학교',status:'graduated'},
       {id:school.id,kind:'high',name:school.name,status:'enrolled'}
@@ -33,9 +33,9 @@ global.GukminDirector.register({
   const stages=S.pack(
    S.notice('middle:welcome',52,'중학교 첫 등교','과목별 시험과 수행평가가 시작된다.',{activate:{schoolScore:17}}),
    S.examPrelude('middle',1,53,'1학기 중간고사'),
-   S.exam('middle',13,1,53,'1학기 중간고사'),
+   S.exam('middle',14,1,53,'1학기 중간고사'),
    S.examPrelude('middle',1,54,'1학기 기말고사'),
-   S.exam('middle',13,1,54,'1학기 기말고사'),
+   S.exam('middle',14,1,54,'1학기 기말고사'),
    S.branch(S.selection('middle:friends',55,'새로운 동아리 모집','수업 외에 함께할 활동을 찾는다.',[
     {label:'친구와 봉사 동아리에 참가한다',effects:{stats:{relations:2,stress:1}},detail:'봉사 활동을 통해 새로운 친구를 알게 됐다.'},
     {label:'독서·토론 모임을 신청한다',effects:{stats:{study:1,stress:1}},detail:'토론과 발표 경험을 쌓았다.'},
@@ -68,11 +68,11 @@ global.GukminDirector.register({
     {label:'급하지 않은 활동을 접고 규칙적으로 자며 쉬어 간다',effects:{stats:{stress:-6,schoolScore:-2,relations:-1}},detail:'과제와 친구 약속을 미루고 몇 주간 잠자는 시간이 일정해졌다. 쉬는 동안 미뤄 둔 과제는 별도로 정리했다.'},
     {label:'친구에게 부담을 털어놓고 과제 진행을 함께 점검한다',effects:{stats:{stress:-2,schoolScore:-1,relations:1}},detail:'개인 복습 시간을 줄이고 친구와 제출 날짜를 대조한 뒤 할 수 있는 것부터 나눴다. 불안이 완전히 사라지진 않았지만 다음 주 일정은 보였다.'}
    ]),event:{...S.selection('middle:recover',55,'', '',[{label:'회복'}]).event,when:{turn:{eq:55},any:[{stats:{stress:{gte:16}}},{stats:{illness:{gte:1}}}]}}},
-   S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:14}}),
+   S.notice('middle:age14',56,'중학교 2학년','시험 준비 방법을 조금씩 익혀 간다.',{attributes:{age:15}}),
    S.examPrelude('middle',2,57,'1학기 중간고사'),
-   S.exam('middle',14,2,57,'1학기 중간고사'),
+   S.exam('middle',15,2,57,'1학기 중간고사'),
    S.examPrelude('middle',2,58,'1학기 기말고사'),
-   S.exam('middle',14,2,58,'1학기 기말고사'),
+   S.exam('middle',15,2,58,'1학기 기말고사'),
    S.branch(S.selection('middle:group-chat',59,'단톡방에서 아무도 대답하지 않는다',
     '내일이 수행평가 제출일이다. "이거 어떻게 하는 거임?" ==단톡방이 10분째 조용하다.== 너는 과제를 이미 끝냈다.',[
      {label:'풀이 과정을 한 번 정리해 보내 준다',effects:{stats:{relations:1}},detail:'"아 이거였냐"라는 답장이 왔다. 답을 베끼게 하지는 않았지만 친구는 제출 방법을 찾았다.'},
@@ -121,7 +121,7 @@ global.GukminDirector.register({
       {id:'paid',label:'한 달간 학원 보충 수업을 듣는다 (23만 원'+(parentFunds?' · 가족 부담':' · 직접 부담')+')',...pay(academyCost),risk:'정해진 진도와 숙제를 따라가야 함',effects:{stats:{...costStats(academyCost,5),stress:1}},detail:'매주 연습 문제를 풀었다. '+receipt(academyCost)}
      ]}
    ]),
-   S.notice('middle:age15',60,'중학교 3학년','고등학교 진학을 생각할 때가 왔다.',{attributes:{age:15}}),
+   S.notice('middle:age15',60,'중학교 3학년','고등학교 진학을 생각할 때가 왔다.',{attributes:{age:16}}),
    S.selection('middle:admission-prep',60,'고교 원서보다 먼저 필요한 것',
     family?'친구들은 입학 컨설팅을 예약하는데 비용이 부담된다. 교실 뒤에는 무료 교육청 설명회 공지가 붙어 있다.':'가족이 여러 학교의 교육과정을 비교해 보자고 했다. 설명회와 유료 상담 안내가 함께 들어왔다.',[
      {id:'public',label:'교육청 무료 설명회에서 실제 모집요강을 확인한다',
@@ -132,9 +132,9 @@ global.GukminDirector.register({
        effects:{attributes:{admissionResearch:'paid'},stats:{...costStats(consultingCost,0),schoolScore:1,stress:2}},detail:'상담 계획으로 취약 단원을 다시 풀고 받은 자료를 실제 모집요강과 대조했다. '+receipt(consultingCost)+' 합격 보장은 믿지 않았다.'}
     ]),
    S.examPrelude('middle',3,61,'1학기 중간고사'),
-   S.exam('middle',15,3,61,'1학기 중간고사'),
+   S.exam('middle',16,3,61,'1학기 중간고사'),
    S.examPrelude('middle',3,62,'1학기 기말고사'),
-   S.exam('middle',15,3,62,'1학기 기말고사'),
+   S.exam('middle',16,3,62,'1학기 기말고사'),
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
   );
