@@ -25,6 +25,7 @@ function create(parameters){
  function preference(g,id){const p=catalog.get(id);if(!p||!groups[g])throw new Error('집단 의견 입력 오류');return p.scores[groups[g].id]+Math.floor(roll('taste:'+g+':'+id)*(rules.tasteVariance*2+1))-rules.tasteVariance;}
  function surveyCost(id){const group=groups.find(g=>g.id===id);if(!group)throw new Error('유권자 집단 오류');return Math.min(rules.surveyMaxCost,rules.surveyBaseCost+Math.floor((group.size-1)/rules.surveyGroupStep));}
  function survey(id){const g=groups.findIndex(g=>g.id===id);if(g<0)throw new Error('유권자 집단 오류');return {group:{...groups[g]},cost:surveyCost(id),opinions:Object.fromEntries(pledges.map(p=>[p.id,preference(g,p.id)]))};}
+ function surveyMany(ids,visited=[]){if(!Array.isArray(ids)||!ids.length||new Set(ids).size!==ids.length||ids.some(id=>visited.includes(id)))throw new Error('조사할 새 모임을 골라야 함');const visits=ids.map(survey);return {visits,cost:visits.reduce((n,v)=>n+v.cost,0),size:visits.reduce((n,v)=>n+v.group.size,0)};}
  function wishes(id,ids=pledges.map(p=>p.id)){const data=survey(id),ordered=ids.map(id=>{if(!catalog.has(id))throw new Error('조사 공약 오류');return {...catalog.get(id),value:data.opinions[id]};}).sort((a,b)=>b.value-a.value);return {likes:ordered.slice(0,2),dislikes:ordered.at(-1)};}
  function forecast(ids=candidates[playerIndex].pledges){
   validate(ids);const field=candidates.map((c,i)=>i===playerIndex?{...c,pledges:ids}:c);
@@ -60,7 +61,7 @@ function create(parameters){
   }
   return {candidates:candidates.map((c,i)=>({...c,votes:totals[i]})),rows,winner,won:winner===playerIndex,tied:tied.length>1,...(runoff?{runoff}:{})};
  }
- return Object.freeze({forecast,count,survey,surveyCost,wishes,opinion:(group,id)=>{const g=groups.findIndex(x=>x.id===group);return preference(g,id);}});
+ return Object.freeze({forecast,count,survey,surveyMany,surveyCost,wishes,opinion:(group,id)=>{const g=groups.findIndex(x=>x.id===group);return preference(g,id);}});
 }
 global.GukminElectionEngine=Object.freeze({create});
 })(window);

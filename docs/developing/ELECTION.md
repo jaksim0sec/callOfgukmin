@@ -6,8 +6,8 @@
 
 | 파일 | 소유 책임 |
 |---|---|
-| `js/election/engine.js` | 파라미터 검증, 시드 선호, 집단 조사, 지지 예상, 투표율·후보 간 표 배분·동률 판정. 인물/저장/DOM 접근 없음 |
-| `js/election/view.js` | 지지율 그래픽, 시즌 진입 버튼, 후보 슬라이드·포스터·민심 탭. 전달받은 읽기 전용 모델 표시 |
+| `js/election/engine.js` | 파라미터 검증, 시드 선호, 집단/복수 조사 비용 합산, 지지 예상, 투표율·후보 간 표 배분·동률 판정. 인물/저장/DOM 접근 없음 |
+| `js/election/view.js` | 지지율 그래픽, 저장 표의 개표 재생, 시즌 진입 버튼, 후보 슬라이드·포스터·민심 탭. 전달받은 읽기 전용 모델 표시 |
 | `js/election/choices.js` | 조사 대상 선택과 공약 카드 DOM, 접기/재열기. 확정 시 전달받은 resolve 호출 |
 | `js/life/election.js` | 반장 선거 카탈로그·이야기 단계·등장 조건·인물 관계의 수치 변환, 비용/특성/기록 정산 데이터 |
 | `js/timeline.js`, `js/effects.js` | 선택 동결·중복 방지·원자적 저장·공통 효과 적용. 선거 UI는 직접 정산하지 않음 |
@@ -27,6 +27,7 @@ const election = GukminElectionEngine.create({
   rules: {maxPledges:3}
 });
 election.forecast(); // 읽기 전용 예상: 후보별 지지 + 미결정 합계 100%
+election.surveyMany(['residents'], []); // 방문할 ID 배열/이미 방문한 ID 배열 → visits, cost 합계, size 합계
 election.survey('residents'); // 해당 집단의 시드 고정 선호; 방문 비용은 스토리 정산
 election.count(); // 각 집단 실제 투표수와 후보별 득표 합계 일치
 ```
@@ -54,3 +55,13 @@ election.count(); // 각 집단 실제 투표수와 후보별 득표 합계 일�
 엔진의 runoff는 1차 최고 득표 동점자만 대상으로 같은 투표 인원에게 다시 표를 받는다. voter 키를 별도로 avalanche 해시하여 인접 번호의 선택이 한쪽에 몰리지 않게 한다. 후보별 1차 표와 결선 표를 구분하며 재동률만 공개 추첨한다. winner/won은 최종 판정이다. 결과를 저장한 뒤에는 정책·화면 변경으로 과거 당선자를 바꾸지 않는다. 학교 이야기의 revision1/2는 기존 판정을 보존한다.
 
 조사 비용은 surveyCost(id)와 survey(id).cost가 제공한다. 기본 rules는 surveyBaseCost=1, surveyGroupStep=8, surveyMaxCost=3이며 정수로 제한한다. skip에는 비용이 없다. 집단 장소/관심사와 공약의 실행 가능성은 스토리 카탈로그에서 공급한다.
+
+## 복수 방문·토큰·개표 재생 (2026-10-22 현행)
+
+첫 조사와 추가 조사 모두 여러 집단을 선택할 수 있다. 엔진 surveyMany(ids, visited)는 중복/미등록/기방문을 거부하고 비용/인원을 합산한다. 스토리는 조용한 집단의 최초 학업 비용과 선거 단계를 정산하고, 타임라인은 groups 입력을 단일 원자적 선택으로 저장한다. electionSurveyed/electionCoreGroups는 숫자 비트마스크이며 기존 단일 방문 속성도 호환한다. 모든 집단을 방문한 뒤에는 추가 조사 선택을 닫는다.
+
+model.riskMetric은 현재 정신 단계의 스탯 ID다. 전용 UI는 공통 토큰 팩토리로 방문 비용을 표시하며 UI에서 임의로 비용을 적용하지 않는다. 후보 화면은 기호·현재 조사 지지 막대·실행 가능성 토큰으로 정보를 구분한다.
+
+GukminElectionView.countScene(report)는 저장된 1차/결선 득표로만 투표지 표시 순서를 만들고 update(elapsed)/finish()를 제공한다. 득표 계산/새 추첨/저장은 하지 않는다. 호스트는 타이머·건너뛰기·결과 기록을 소유한다. 결선은 최종 라운드 후보의 표수를 표시하며 1차 모임별 분석은 별도로 남긴다. reduced-motion/건너뛰기에서는 저장된 최종 표와 당선/낙선을 바로 표시한다.
+
+검증: 시스템126개(복수 합산·잘못된 입력 롤백·재클릭·복원·전 모임 조사 포함), 전용 Chromium 통합은320×568/390×844/1365×900의 조사/후보 스와이프/결선/결과와 시험 노력 토큰·실제 정산을 확인한다.

@@ -30,7 +30,7 @@ function effectList(option,person,turn,labels={}){
 // Show the exact settlement as separate tokens; grades stay in the forecast below.
 function examOutcomes(option,person,metric,turn,effort,label){
  const wrap=make('div','exam-outcomes');
- wrap.append(make('small','exam-effort-label','노력 '+effort+' / 4'));
+ wrap.append(global.GukminStatus.createToken({label:'노력 '+effort+' / 4',icon:'book',classes:'exam-effort-label'}));
  const tokens=effectList(option,person,turn,{[metric]:label});tokens.classList.add('exam-effect-tokens');
  if(!tokens.childElementCount)tokens.append(global.GukminStatus.createToken({label:'현재 역량 유지',icon:'check'}));
  wrap.append(tokens);return wrap;

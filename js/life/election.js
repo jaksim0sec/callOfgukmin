@@ -32,21 +32,23 @@ function rivals(p){
 function personality(p,g,response=p.attributes?.electionResponse){
  const a=p.attributes||{};let value=(p.stats.relations||0)/6-1.5+(a.teacherTrust??12)/12-.5;
  if(has(p,'리더십'))value+=.8;if(g===1&&has(p,'꼼꼼함'))value+=.7;if(g===3&&has(p,'체육'))value+=.7;
- if(response==='honest')value+=g===groups.findIndex(x=>x.id===a.electionHeard)?2.5:.3;
- if(response==='boast')value+=g===groups.findIndex(x=>x.id===a.electionHeard)?2:.4;
+ if(response==='honest')value+=coreGroup(p,groups[g].id)?2.5:.3;
+ if(response==='boast')value+=coreGroup(p,groups[g].id)?2:.4;
  if(response==='smear')value+=1.2;return value;
 }
 function parameters(p,ids=chosen(p).map(x=>x.id),response=p.attributes?.electionResponse){
  const a=p.attributes||{},effects=response&&response!==a.electionResponse?decision(p,{action:'respond',response}).effects:null;
  const projected=effects?{...p,stats:{...p.stats,relations:clamp((p.stats.relations||0)+(effects.stats.relations||0))},attributes:{...a,...effects.attributes}}:p;
  return {id:'class-election',seed:String(p.admissionSeed||p.createdAt||p.name)+'|class-election',playerId:'player',
-  groups:groups.map(g=>({...g,known:knows(p,g.id),undecided:Math.max(16,(a.electionHeard===g.id?22:a.electionPollGroup===g.id?28:38)-(response==='honest'&&a.electionHeard===g.id?6:response==='smear'?4:0)+(response==='ignore'?2:0))})),
+  groups:groups.map(g=>({...g,known:knows(p,g.id),undecided:Math.max(16,(coreGroup(p,g.id)?22:knows(p,g.id)?28:38)-(response==='honest'&&coreGroup(p,g.id)?6:response==='smear'?4:0)+(response==='ignore'?2:0))})),
   pledges:pledges.map(x=>({...x,scores:Object.fromEntries(groups.map((g,i)=>[g.id,x.scores[i]]))})),
   candidates:[{id:'player',name:p.name,pledges:ids,support:Object.fromEntries(groups.map((g,i)=>[g.id,personality(projected,i,response)]))},...rivals(p).map(c=>({...c,support:Object.fromEntries(groups.map((g,i)=>[g.id,c.base[i]]))}))],
   rules:{runoff:(a.electionRevision||0)>=3?1:0,lateSwing:(a.electionRevision||0)>=2?3.2:0,uncertainty:(a.electionRevision||0)>=2?2:.4}};
 }
 const engine=p=>global.GukminElectionEngine.create(parameters(p));
-function knows(p,id){return p.attributes?.electionHeard===id||p.attributes?.electionPollGroup===id;}
+function groupBit(id){const i=groups.findIndex(g=>g.id===id);return i<0?0:1<<i;}
+function coreGroup(p,id){return !!((p.attributes?.electionCoreGroups||0)&groupBit(id))||p.attributes?.electionHeard===id;}
+function knows(p,id){return !!((p.attributes?.electionSurveyed||0)&groupBit(id))||coreGroup(p,id)||p.attributes?.electionPollGroup===id;}
 function opinion(p,group,id){if(!groups.some(g=>g.id===group)||!pledges.some(x=>x.id===id))throw new Error('친구 의견 입력 오류');return knows(p,group)?engine(p).opinion(group,id):null;}
 function wishes(p,id){if(!groups.some(g=>g.id===id))throw new Error('친구 모임 오류');return knows(p,id)?engine(p).wishes(id,available(p).map(x=>x.id)):null;}
 function hint(p,index){const group=groups[index],wish=engine(p).wishes(group.id,available(p).map(x=>x.id));return group.name+' '+group.size+'명은 「'+wish.likes[0].name+'」와 「'+wish.likes[1].name+'」를 좋아했다. 「'+wish.dislikes.name+'」는 별로라고 했다.';}
@@ -56,7 +58,7 @@ function ballot(p){const result=engine(p).count();result.rows.forEach((row,g)=>{
 function model(p){
  const config=parameters(p),a=p.attributes||{},core=global.GukminElectionEngine.create(config);
  return {id:config.id,playerId:config.playerId,title:'우리 반 반장 선거',active:p.phase==='elementary'&&a.classElection==='ran'&&a.electionStage!=='finished',
-  groups:groups.map((g,i)=>({...g,shortName:['급식·놀이','공부','조용','운동'][i],surveyCost:(a.electionRevision||0)>=3?core.surveyCost(g.id):1,firstStudyCost:g.id==='quiet'?1:0})),pledges,available:available(p).map(x=>({...x,feasibilityLabel:x.difficulty>=2?'선생님 허락이 필요해':'내가 해 볼 수 있어'})),chosen:chosen(p),maxPledges:3,revision:a.electionRevision||1,riskLabel:p.stats.illness>0?'정신병':'압박',
+  groups:groups.map((g,i)=>({...g,shortName:['급식·놀이','공부','조용','운동'][i],surveyCost:(a.electionRevision||0)>=3?core.surveyCost(g.id):1,firstStudyCost:g.id==='quiet'?1:0})),pledges,available:available(p).map(x=>({...x,feasibilityLabel:x.difficulty>=2?'선생님 허락이 필요해':'내가 해 볼 수 있어'})),chosen:chosen(p),maxPledges:3,revision:a.electionRevision||1,riskLabel:p.stats.illness>0?'정신병':'압박',riskMetric:p.stats.illness>0?'illness':'stress',
   forecast:ids=>forecast(p,ids),opinion:(group,id)=>opinion(p,group,id),wishes:id=>wishes(p,id),known:id=>knows(p,id),
   candidates:config.candidates.map((c,i)=>({...c,title:i===0?'우리 반의 변화를 약속합니다':c.title,portrait:{portraitStage:'elementary',portraitVariant:i===0?P.genderOf(p):c.id==='model'?'female':'male'},poster:{name:c.name,number:i+1,age:p.age,headerLabel:'우리 반 반장 선거',partyName:'무소속',stage:'반장 후보',phrase:i===0?'우리 반의\n다음 이야기':c.id==='popular'?'같이 놀자\n우리 모두':c.id==='model'?'작은 약속도\n끝까지':'약속은 크게\n학교는 즐겁게',portraitStage:'elementary',portraitVariant:i===0?P.genderOf(p):c.id==='model'?'female':'male',imageSrc:i===0?p.portraitSrc||null:null},
    pledges:c.pledges.map(id=>pledges.find(x=>x.id===id)),relations:i===0?[{label:'친구 사이',value:p.stats.relations,max:25},{label:'선생님 믿음',value:a.teacherTrust??12,max:25}]:[],copied:!!c.copied}))};
@@ -66,16 +68,21 @@ function billTarget(p,slot=0){const ordered=[...chosen(p)].sort((a,b)=>b.difficu
 function decision(p,request,context={}){
  if(!request||!['listen','survey','pledges','finalize','respond','count','bill','debt'].includes(request.action))throw new Error('선거 정산 요청 오류');
  const a=p.attributes||{},attributes={},stats={},traits={add:[]};let title='',detail='';
- if(request.action==='listen'){
-  attributes.electionStage='pledges';
-  if(request.group==='skip'){attributes.electionHeard=null;title='내 생각대로 약속을 골라 보기로 했다';detail='쉬는 시간을 아꼈다. 친구들이 뭘 좋아하는지는 아직 잘 모른다.';}
-  else{const index=groups.findIndex(g=>g.id===request.group);if(index<0)throw new Error('유권자 집단 오류');stats.stress=(a.electionRevision||0)>=3?engine(p).surveyCost(request.group):1;if(index===2)stats.study=-1;attributes.electionHeard=request.group;title='직접 물어보니 알게 된 것';detail='쉬는 시간을 내서 친구들을 만나고 왔다. '+hint(p,index)+' 말만 들었다고 표를 얻은 건 아니다. 이제 좋아할 약속을 골라 보자.';}
- }
- if(request.action==='survey'){
-  const index=groups.findIndex(g=>g.id===request.group);if(index<0||knows(p,request.group))throw new Error('조사할 새 모임을 골라야 함');
-  if(a.electionStage!=='survey')throw new Error('지금은 추가 조사 시간이 아님');
-  stats.stress=engine(p).surveyCost(request.group);attributes.electionPollGroup=request.group;attributes.electionStage='revise';title='다른 친구들의 생각도 들었다';
-  detail='쉬는 시간을 내서 '+groups[index].name+' '+groups[index].size+'명을 만났다. '+hint(p,index)+' 표를 약속받은 건 아니지만, 공약을 고칠 근거가 생겼다.';
+ if(request.action==='listen'||request.action==='survey'){
+  const first=request.action==='listen';
+  if(!first&&a.electionStage!=='survey')throw new Error('지금은 추가 조사 시간이 아님');
+  attributes.electionStage=first?'pledges':'revise';
+  if(first&&request.group==='skip'&&!request.groups){attributes.electionHeard=null;title='내 생각대로 약속을 골라 보기로 했다';detail='쉬는 시간을 아꼈다. 친구들이 뭘 좋아하는지는 아직 잘 모른다.';}
+  else{
+   const ids=request.groups??[request.group],batch=engine(p).surveyMany(ids,groups.filter(g=>knows(p,g.id)).map(g=>g.id));
+   stats.stress=(a.electionRevision||0)>=3?batch.cost:ids.length;
+   if(first&&ids.includes('quiet'))stats.study=-1;
+   const mask=ids.reduce((n,id)=>n|groupBit(id),0),known=groups.filter(g=>knows(p,g.id)).reduce((n,g)=>n|groupBit(g.id),0);
+   attributes.electionSurveyed=known|mask;
+   if(first){attributes.electionCoreGroups=mask;attributes.electionHeard=ids[0];}else attributes.electionPollGroup=ids[0];
+   title=first?'직접 물어보니 알게 된 것':'다른 친구들의 생각도 들었다';
+   detail=ids.map(id=>hint(p,groups.findIndex(g=>g.id===id))).join(' ')+' 총 '+batch.size+'명을 만났다. 표를 약속받은 건 아니지만 공약을 고칠 근거가 생겼다.';
+  }
  }
  if(request.action==='pledges'||request.action==='finalize'){
   const ids=request.ids;if(!Array.isArray(ids)||ids.length!==3||new Set(ids).size!==3||ids.some(id=>!available(p).some(x=>x.id===id)))throw new Error('서로 다른 해금된 공약 세 개를 골라야 함');
@@ -119,7 +126,7 @@ function decision(p,request,context={}){
  }
  return {effects:{attributes,stats,traits},history:{title,detail,importance:request.action==='count'?'major':'normal'}};
 }
-function canChoose(p,request){if(request?.action==='survey')return groups.some(g=>g.id===request.group)&&!knows(p,request.group);if(request?.action!=='bill'||request.mode!=='keep')return true;const target=billTarget(p,request.slot);return !!target&&target.difficulty<2&&(p.stats.money||0)>=target.cost;}
+function canChoose(p,request){if(request?.action==='respond'&&request.response==='poll'&&(p.attributes?.electionRevision||0)>=3)return groups.some(g=>!knows(p,g.id));if(request?.action==='survey')return groups.some(g=>g.id===request.group)&&!knows(p,request.group);if(request?.action!=='bill'||request.mode!=='keep')return true;const target=billTarget(p,request.slot);return !!target&&target.difficulty<2&&(p.stats.money||0)>=target.cost;}
 function report(p){
  const a=p.attributes||{};if(a.electionWinner===undefined)return null;
  const candidates=[{name:p.name,id:'player'},...rivals(p)].map((c,i)=>({...c,votes:groups.reduce((n,_,g)=>n+(a['electionVotes'+g+'_'+i]||0),0)}));
@@ -127,7 +134,7 @@ function report(p){
  const runoff=a.electionRunoff?{candidates:candidates.flatMap((c,i)=>a['electionFinalist'+i]?[{...c,index:i,votes:a['electionRunoffVote'+i]||0}]:[]),drawn:!!a.electionRunoffDraw}:null;
  return {candidates,rows,winner:a.electionWinner,won:a.electionWinner===0,tied:a.electionTie,...(runoff?{runoff}:{})};
 }
-const attributes={electionDraftPledges:'임시 공약',electionPollGroup:'추가 민심 조사',electionRevision:'선거 규칙',electionStage:'선거 진행',electionHeard:'들은 민심',electionPledges:'세 가지 공약',electionResponse:'선거 대응',teacherTrust:'담임 신뢰',electionSmearDebt:'네거티브 외상',electionDebtResolved:'과거 소문 대응',electionWinner:'당선 후보',electionRunoff:'결선투표',electionRunoffDraw:'결선 공개 추첨',electionTie:'1차 동률',electionHardBill:'권한 밖 공약',electionBillCost:'다음 공약 비용',electionBill0:'첫 약속 이행',electionBill1:'두 번째 약속 이행'};
+const attributes={electionSurveyed:'조사한 모임',electionCoreGroups:'처음 만난 모임',electionDraftPledges:'임시 공약',electionPollGroup:'추가 민심 조사',electionRevision:'선거 규칙',electionStage:'선거 진행',electionHeard:'들은 민심',electionPledges:'세 가지 공약',electionResponse:'선거 대응',teacherTrust:'담임 신뢰',electionSmearDebt:'네거티브 외상',electionDebtResolved:'과거 소문 대응',electionWinner:'당선 후보',electionRunoff:'결선투표',electionRunoffDraw:'결선 공개 추첨',electionTie:'1차 동률',electionHardBill:'권한 밖 공약',electionBillCost:'다음 공약 비용',electionBill0:'첫 약속 이행',electionBill1:'두 번째 약속 이행'};
 for(let c=0;c<3;c++){attributes['electionFinalist'+c]='결선 진출';attributes['electionRunoffVote'+c]='결선 득표';}
 for(let g=0;g<4;g++){attributes['electionTurnout'+g]='집단 투표수';for(let c=0;c<3;c++){attributes['electionVotes'+g+'_'+c]='집단 득표';attributes['electionScore'+g+'_'+c]='집단 호감도';}}
 global.GukminElection=Object.freeze({parameters,model,groups,pledges,available,chosen,rivals,hint,knows,opinion,wishes,pollTarget,roll,ballot,forecast,decision,report,billTarget,canChoose});

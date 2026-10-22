@@ -32,6 +32,31 @@ function runoffSummary(report){
  for(const candidate of report.runoff.candidates){const row=make('div',candidate.index===report.winner?'is-winner':'');row.append(make('span','',candidate.name),make('strong','',candidate.votes+'표'));element.append(row);}
  element.append(make('p','',report.runoff.drawn?'결선도 동률 · 동점 후보의 공개 추첨으로 당선자를 정했어요.':'다른 후보를 찍었던 친구들도 두 번째 투표에 참여했어요. 결선 득표로 당선자를 정했어요.'));return element;
 }
+// Replay stored ballots only. This view never decides an election or rerolls a winner.
+function countScene(report){
+ const element=make('section','election-live-count'),phase=make('div','election-count-phase'),stage=make('strong'),box=make('div','election-ballot-box'),slip=make('span','election-ballot-slip','投票'),counter=make('strong','election-count-progress'),leader=make('small','election-count-leader'),list=make('div','election-count-rows');
+ phase.append(global.GukminStatus.createToken({label:'개표 중',icon:'flag'}),stage);box.append(slip,make('span','','우리 반 투표함'));element.append(phase,box,counter,leader,list);
+ const rounds=report?[{title:report.runoff?'1차 투표':'반장 선거',candidates:report.candidates.map((c,index)=>({...c,index}))},...(report.runoff?[{title:'동점! 결선투표',candidates:report.runoff.candidates}]:[])]:[];
+ function sequence(candidates){
+  const left=candidates.map(c=>c.votes),out=[];let seed=2166136261;for(const c of candidates.map(c=>c.id+':'+c.votes).join('|'))seed=Math.imul(seed^c.charCodeAt(0),16777619)>>>0;
+  while(left.some(Boolean)){seed=(Math.imul(seed,1664525)+1013904223)>>>0;let pick=seed/4294967296*left.reduce((n,v)=>n+v,0),i=0;for(;i<left.length-1;i++){if(pick<left[i])break;pick-=left[i];}left[i]--;out.push(i);}return out;
+ }
+ rounds.forEach(r=>r.ballots=sequence(r.candidates));
+ let active=-1,views=[],last=-1;const totalDuration=rounds.reduce((n,r)=>n+900+r.ballots.length*115,0)+600;
+ function paint(roundIndex,n,finished=false){
+  const round=rounds[roundIndex];if(!round){counter.textContent='이전 선거 · 세부 득표 미기록';return;}
+  if(active!==roundIndex){active=roundIndex;stage.textContent=round.title;list.replaceChildren();views=round.candidates.map(c=>{const row=make('div','election-candidate'+(c.id==='player'?' is-player':'')),heading=make('div','election-count-identity'),track=make('div','election-vote-track'),fill=make('i'),number=make('strong','election-tally');row.dataset.candidate=c.id;heading.append(make('span','election-count-number',String(c.index+1)),make('span','',c.name),number);track.append(fill);row.append(heading,track);list.append(row);return {row,fill,number};});}
+  const totals=round.candidates.map(()=>0);round.ballots.slice(0,n).forEach(i=>totals[i]++);const top=Math.max(...totals),leaders=totals.flatMap((v,i)=>v===top?[i]:[]),total=round.ballots.length;
+  counter.textContent='개표 '+n+' / '+total+'표';
+  leader.textContent=n===0?'첫 투표지를 펼치는 중…':leaders.length>1?'공동 선두 · '+leaders.map(i=>round.candidates[i].name).join(' · '):round.candidates[leaders[0]].name+' '+(finished?'최다 득표':'선두');
+  views.forEach((v,i)=>{v.number.textContent=totals[i]+'표';v.fill.style.width=(total?totals[i]/total*100:0)+'%';v.row.classList.toggle('is-leading',totals[i]>0&&totals[i]===top);v.row.classList.toggle('is-last-vote',n>0&&round.ballots[n-1]===i);});
+  if(n!==last){last=n;box.classList.remove('is-ballot-cast');void box.offsetWidth;if(!finished)box.classList.add('is-ballot-cast');}
+  element.classList.toggle('is-final-round',roundIndex>0);element.classList.toggle('is-complete',finished);
+ }
+ function update(elapsed){let offset=0;for(let i=0;i<rounds.length;i++){const r=rounds[i],duration=900+r.ballots.length*115;if(elapsed<offset+duration||i===rounds.length-1){paint(i,Math.min(r.ballots.length,Math.max(0,Math.floor((elapsed-offset-700)/115))));break;}offset+=duration;}return elapsed>=totalDuration;}
+ function finish(){const i=rounds.length-1;paint(i,rounds[i]?.ballots.length||0,true);phase.firstChild.replaceWith(global.GukminStatus.createToken({label:report?.runoff?'결선 개표 완료':'개표 완료',icon:'check'}));}
+ update(0);return {element,update,finish,duration:totalDuration};
+}
 function board(model,{compact=false,collapsible=false}={}){
  const playerIndex=Math.max(0,model.candidates.findIndex(c=>c.id===model.playerId));
  const E=model,element=make('section','support-board'+(compact?' is-compact':'')),head=make('header','support-head'),total=make('strong','support-total'),range=make('small','support-range');
@@ -63,11 +88,11 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
  let model=null,signature='',tab='candidates',selected=0,disposeSlides=()=>{},fitSlides=()=>{};
  function close(){if(drawer.open)drawer.close();}
  function render(){
-  disposeSlides();const head=make('header','election-drawer-head'),title=make('h2','','후보와 민심');title.id='electionDrawerTitle';const exit=make('button','election-drawer-close','닫기 ×');exit.type='button';exit.addEventListener('click',close);
+  disposeSlides();const head=make('header','election-drawer-head'),title=make('h2','','반장 후보 비교');title.id='electionDrawerTitle';const exit=make('button','election-drawer-close','닫기 ×');exit.type='button';exit.addEventListener('click',close);
   const heading=make('div');heading.append(make('small','',model.title),title);head.append(heading,exit);
   const tabs=make('div','election-drawer-tabs');tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','선거 정보');
   const candidatePane=make('section','election-candidate-pane'),surveyPane=make('section','election-electorate-pane');candidatePane.id='electionCandidatesPane';surveyPane.id='electionElectoratePane';
-  const tabButtons=['후보 살펴보기','유권자 · 조사'].map((text,i)=>{const button=make('button','',text);button.type='button';button.id='electionDrawerTab'+i;button.setAttribute('role','tab');const pane=i?surveyPane:candidatePane;pane.setAttribute('role','tabpanel');pane.setAttribute('aria-labelledby',button.id);button.setAttribute('aria-controls',pane.id);
+  const tabButtons=['후보와 공약','민심 조사 현황'].map((text,i)=>{const button=make('button','',text);button.type='button';button.id='electionDrawerTab'+i;button.setAttribute('role','tab');const pane=i?surveyPane:candidatePane;pane.setAttribute('role','tabpanel');pane.setAttribute('aria-labelledby',button.id);button.setAttribute('aria-controls',pane.id);
    button.addEventListener('click',()=>{tab=i?'survey':'candidates';syncTabs();});button.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(event.key)){event.preventDefault();tabButtons[event.key==='Home'?0:event.key==='End'?1:1-i].click();tabButtons[tab==='survey'?1:0].focus();}});tabs.append(button);return button;});
   function syncTabs(){tabButtons.forEach((button,i)=>{const active=(tab==='survey')===!!i;button.setAttribute('aria-selected',String(active));button.tabIndex=active?0:-1;});candidatePane.hidden=tab==='survey';surveyPane.hidden=tab!=='survey';if(tab==='candidates')global.requestAnimationFrame(()=>fitSlides());}
   const forecast=model.forecast(),slider=make('div','candidate-slides'),nav=make('nav','candidate-slide-nav');slider.setAttribute('aria-label','후보별 정보');
@@ -82,8 +107,8 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
    const card=make('article','candidate-slide'),poster=make('div','candidate-poster');
    poster.append(global.GukminPoster.create(candidate.poster||{...candidate.portrait,name:candidate.name,number:i+1,stage:'후보',phrase:candidate.title}));
    const info=make('div','candidate-information'),identity=make('div','candidate-identity'),share=make('div','candidate-poll');
-   identity.append(make('small','candidate-intro',candidate.title),make('h3','candidate-person-name',candidate.name));share.append(identity,make('strong','',forecast.pollShares[i]+'%'));info.append(share,make('small','candidate-poll-note','현재 조사 지지 · 확정 득표가 아니에요 · 고민 중 '+forecast.undecided+'%'));
-   const promises=make('ol','candidate-promises');candidate.pledges.forEach(p=>{const li=make('li');const line=make('div','candidate-promise-heading');line.append(make('strong','',p.name),make('span','candidate-feasibility',p.difficulty>=3?'권한 밖':p.difficulty>=2?'협의 필요':'직접 이행'));li.append(line,make('small','',p.limit));promises.append(li);});
+   identity.append(global.GukminStatus.createToken({label:'기호 '+(i+1)+(candidate.id===model.playerId?' · 나':''),icon:'flag',classes:'candidate-number'}),make('h3','candidate-person-name',candidate.name));share.append(identity,make('strong','',forecast.pollShares[i]+'%'));info.append(share);const support=make('progress','candidate-support-meter');support.max=100;support.value=forecast.pollShares[i];support.setAttribute('aria-label',candidate.name+' 현재 조사 지지');info.append(support,make('small','candidate-poll-note','현재 조사 지지 · 아직 고민 중 '+forecast.undecided+'%'));
+   const promises=make('ol','candidate-promises');candidate.pledges.forEach(p=>{const li=make('li');const line=make('div','candidate-promise-heading');line.append(make('strong','',p.name),global.GukminStatus.createToken({label:p.difficulty>=3?'권한 밖':p.difficulty>=2?'협의 필요':'직접 이행',icon:p.difficulty>=2?'speech':'check',classes:'candidate-feasibility'}));li.append(line,make('small','',p.limit));promises.append(li);});
    info.append(make('h4','','내건 약속'),candidate.pledges.length?promises:make('p','candidate-empty','아직 공약을 고르는 중이에요.'));
    if(candidate.copied)info.append(make('p','candidate-copy-note','내 임시 공약과 겹치는 약속이 있어요. 같은 친구들에게 표를 부탁하고 있어요.'));
    if(candidate.relations?.length){const data=make('div','candidate-relations');candidate.relations.forEach(item=>{const row=make('label');row.append(make('span','',item.label),make('b','',item.value+'/'+item.max));const meter=make('progress');meter.max=item.max;meter.value=item.value;row.append(meter);data.append(row);});info.append(data);}
@@ -115,5 +140,5 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
  return {update(next){model=next;trigger.hidden=!next?.active;if(!next?.active)close();else{const key=JSON.stringify([next.candidates,next.groups,next.chosen,next.forecast()]);if(key!==signature&&drawer.open)render();signature=key;}},isOpen:()=>drawer.open,
   dispose(){disposeSlides();trigger.removeEventListener('click',open);drawer.removeEventListener('cancel',cancel);drawer.removeEventListener('click',backdrop);drawer.removeEventListener('close',handleClose);close();drawer.remove();trigger.remove();}};
 }
-global.GukminElectionView=Object.freeze({board,bar,mount,population,runoffSummary});
+global.GukminElectionView=Object.freeze({board,bar,mount,population,runoffSummary,countScene});
 })(window);

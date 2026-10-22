@@ -1590,3 +1590,22 @@ test('survey effort scales in small integer steps and the school model supplies 
  const model=X.model(p),costs=model.groups.map(g=>g.surveyCost);assert.deepEqual(plain(costs),[1,1,2,1]);
  for(const group of model.groups){const after=E.apply(p,{electionDecision:{action:'listen',group:group.id}});assert.equal(after.stats.stress,group.surveyCost);assert.ok(Number.isInteger(group.surveyCost));}
 });
+
+test('multiple survey visits add costs once, reveal every paid group and reject invalid batches atomically',()=>{
+ const {P,T,c}=setup(),X=c.GukminElection,p=P.generate();p.phase='elementary';p.age=12;p.traits=[];Object.assign(p.stats,{stress:0,illness:0,study:12});p.attributes={electionRevision:3,electionStage:'listen',classElection:'ran'};
+ const pack=c.GukminDirector.content(p),cfg={...pack,events:pack.events.filter(e=>e.id.startsWith('election:')),choices:pack.choices.filter(c=>c.id.startsWith('election:')),pauseAfterChoice:true,persist:q=>P.save(q)};
+ let e=T.create({...cfg,persona:p});e.advance(45);const token=e.snapshot().choice.token,before=plain(e.snapshot());
+ for(const groups of [[],['play','play'],['play','missing'],['study']]){assert.throws(()=>e.resolve(token,'play',{groups}));assert.deepEqual(plain(e.snapshot()),before);}
+ e.resolve(token,'play',{groups:['play','quiet']});assert.equal(e.resolve(token,'play',{groups:['play','quiet']}),false);
+ let q=e.snapshot().persona;assert.equal(q.stats.stress,3);assert.equal(q.stats.study,11);assert.equal(X.knows(q,'play'),true);assert.equal(X.knows(q,'quiet'),true);assert.match(e.snapshot().runtime.choices[token].outcome.label,/급식.*조용/);
+ e=T.create({...cfg,persona:P.load()});assert.equal(X.knows(e.snapshot().persona,'quiet'),true);e.resume();e.resolve(e.snapshot().choice.token,'submit',{pledges:['library','quiet','lost']});e.resume();e.resolve(e.snapshot().choice.token,'poll');e.resume();
+ const pending=plain(e.snapshot());assert.throws(()=>e.resolve(pending.choice.token,'study',{groups:['study','quiet']}));assert.deepEqual(plain(e.snapshot()),pending);
+ e.resolve(pending.choice.token,'study',{groups:['study','sports']});q=e.snapshot().persona;assert.equal(q.stats.stress,6);assert.equal(X.forecast(q).rows.filter(r=>r.known).length,4);assert.equal(q.attributes.electionStage,'revise');
+ const core=c.GukminElectionEngine.create(X.parameters(p));assert.equal(core.surveyMany(['play','quiet']).cost,3);assert.throws(()=>core.surveyMany(['play','play']));assert.throws(()=>core.surveyMany(['play'],['play']));
+});
+
+test('surveying everyone initially leaves no empty follow-up survey option',()=>{
+ const {P,T,c}=setup(),p=P.generate();p.phase='elementary';p.age=12;p.traits=[];Object.assign(p.stats,{stress:0,illness:0});p.attributes={electionRevision:3,electionStage:'listen',classElection:'ran'};
+ const pack=c.GukminDirector.content(p),e=T.create({...pack,events:pack.events.filter(e=>e.id.startsWith('election:')),choices:pack.choices.filter(c=>c.id.startsWith('election:')),persona:p,pauseAfterChoice:true});
+ e.advance(45);e.resolve(e.snapshot().choice.token,'play',{groups:['play','study','quiet','sports']});e.resume();e.resolve(e.snapshot().choice.token,'submit',{pledges:['library','quiet','lost']});e.resume();assert.equal(e.snapshot().choice.options.find(o=>o.id==='poll').available,false);
+});

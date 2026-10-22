@@ -169,10 +169,13 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    if(presentation?.type==='election-pledges'){
     if(Object.keys(input).some(k=>k!=='pledges')||!Array.isArray(input.pledges))throw new Error('공약 선택 입력 오류');
     result={...clone(result),electionDecision:{action:result.electionDecision?.action||'pledges',ids:[...input.pledges]}};r.input={pledges:[...input.pledges]};
+   }else if(presentation?.type==='election-survey'&&Object.keys(input).length){
+    if(Object.keys(input).some(k=>k!=='groups')||!Array.isArray(input.groups)||!input.groups.length||input.groups[0]!==optionId||optionId==='skip')throw new Error('민심 조사 입력 오류');
+    result={...clone(result),electionDecision:{...result.electionDecision,groups:[...input.groups]}};r.input={groups:[...input.groups]};
    }else if(Object.keys(input).length){if(presentation?.type!=='university'||Object.keys(input).some(k=>k!=='admissionField')||!['humanities','science'].includes(input.admissionField))throw new Error('선택 입력 오류');result={...clone(result),effects:{...clone(result.effects||{}),attributes:{...result.effects?.attributes,admissionField:input.admissionField}}};}
    settlement(s,`choice:${token}`,result,'choice:'+r.choiceId);
    // Preserve real settled deltas and the related log range after future turns.
-   r.outcome={label:option.label,historyFrom,historyTo:s.persona.history.length-1,
+   r.outcome={label:r.input?.groups?r.input.groups.map(id=>(r.script?.options||def.options).find(o=>o.id===id)?.label||id).join(' · '):option.label,historyFrom,historyTo:s.persona.history.length-1,
     before,after:outcomeState(s.persona)};
    r.status='settled';
    delete s.runtime.events[r.eventId].waitingToken;

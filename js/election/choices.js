@@ -41,26 +41,38 @@ function presentPledges({choice,resolve,root,model}){
 }
 
 function presentSurvey({choice,resolve,root,model}){
- const dialog=root.querySelector('#lifeDecisionDialog'),reopen=root.querySelector('#resumeMajorChoice');let selected=null,closed=false;
+ const dialog=root.querySelector('#lifeDecisionDialog'),reopen=root.querySelector('#resumeMajorChoice'),selected=new Set();let closed=false;
+ const token=options=>global.GukminStatus.createToken(options),risk=amount=>token({type:'metric',id:model.riskMetric||'stress',amount});
  const sheet=make('section','life-modal-wrap election-survey-paper'),header=make('header','life-modal-head'),fold=make('button','life-modal-collapse','접기 ⌄');fold.type='button';
- header.append(make('span','life-modal-serial',model.title+' · 민심 조사'),fold);
- const content=make('div','election-survey-content');content.append(make('small','campaign-eyebrow',choice.presentation.first?'01 · 처음 만나는 민심':'03 · 내 편 밖으로'),make('h2','life-modal-title',choice.title),make('p','election-survey-intro','모임 하나를 골라 직접 찾아가자. 표를 사는 게 아니라, 무엇을 원하는지 알아보는 거야.'));
- const cost=make('div','survey-cost');const costValue=make('strong','',model.riskLabel+' '+Math.min(...model.groups.map(g=>g.surveyCost||1))+'–'+Math.max(...model.groups.map(g=>g.surveyCost||1))),costCopy=make('span','','큰 모임은 만날 친구가 많아 조금 더 수고가 들어요');cost.append(costValue,costCopy);content.append(cost);
- const list=make('div','survey-groups');list.setAttribute('role','group');list.setAttribute('aria-label','만나러 갈 모임');
- const footer=make('footer','life-modal-foot survey-footer'),status=make('span','survey-selection','만나러 갈 모임을 골라 줘'),confirm=make('button','life-submit','이 친구들 만나러 가기');confirm.type='button';confirm.disabled=true;status.setAttribute('aria-live','polite');
+ header.append(make('span','life-modal-serial',model.title),fold);
+ const content=make('div','election-survey-content'),steps=make('ol','election-steps');steps.setAttribute('aria-label','선거 진행');
+ ['민심 조사','공약 정하기','투표'].forEach((label,i)=>{const step=make('li',i===0?'is-current':'');step.append(make('b','',String(i+1)),document.createTextNode(label));if(i===0)step.setAttribute('aria-current','step');steps.append(step);});
+ const heading=make('div','survey-heading');heading.append(token({label:'민심 조사',icon:'speech'}),make('h2','life-modal-title',choice.presentation.first?'어떤 친구들을 만나 볼까?':'더 들어 보고 싶은 모임은?'),make('p','election-survey-intro','여러 모임을 골라도 돼. 만난 친구들의 공약 취향이 공개돼.'));
+ content.append(steps,heading);
+ const list=make('div','survey-groups');list.setAttribute('role','group');list.setAttribute('aria-label','만나러 갈 모임 · 여러 개 선택 가능');
+ const footer=make('footer','life-modal-foot survey-footer'),summary=make('div','survey-summary'),status=make('strong','survey-selection','모임을 골라 줘'),cost=make('div','survey-cost'),confirm=make('button','life-submit','조사할 모임 선택');confirm.type='button';confirm.disabled=true;summary.setAttribute('aria-live','polite');summary.append(status,cost);footer.append(summary,confirm);
+ function paint(){
+  const visits=model.groups.filter(g=>selected.has(g.id)),fee=visits.reduce((n,g)=>n+(g.surveyCost||1),0),study=choice.presentation.first?visits.reduce((n,g)=>n+(g.firstStudyCost||0),0):0;
+  status.textContent=visits.length?visits.length+'개 모임 · '+visits.reduce((n,g)=>n+g.size,0)+'명':'모임을 골라 줘';cost.replaceChildren();
+  if(visits.length){cost.append(risk(fee));if(study)cost.append(token({type:'metric',id:'study',amount:-study}));}else cost.append(make('small','','선택한 모임의 방문 비용을 합산해요'));
+  confirm.disabled=!visits.length;confirm.textContent=visits.length?visits.length+'개 모임 조사하기 →':'조사할 모임 선택';
+  for(const button of list.children)button.setAttribute('aria-pressed',String(selected.has(button.dataset.group)));
+ }
  for(const group of model.groups){
   const option=choice.options.find(o=>o.id===group.id),known=model.known(group.id),button=make('button','survey-group');button.type='button';button.dataset.group=group.id;button.disabled=!option?.available||known;button.setAttribute('aria-pressed','false');
-  const heading=make('span','survey-group-heading');heading.append(make('strong','',group.name),make('b','',group.size+'명'));
-  const size=global.GukminElectionView.population(group,model.groups.reduce((n,g)=>n+g.size,0)),facts=make('span','survey-group-facts');facts.append(make('strong','',model.riskLabel+' +'+(group.surveyCost||1)));if(choice.presentation.first&&group.firstStudyCost)facts.append(make('small','','학업역량 −'+group.firstStudyCost));
-  button.append(heading,size,make('small','',known?'이미 이야기를 들었어':group.description||'좋아하는 약속과 싫어하는 약속 확인'),make('small','survey-location',group.place||'직접 만나기'),facts);
-  button.addEventListener('click',()=>{selected=group.id;for(const node of list.children)node.setAttribute('aria-pressed',String(node===button));status.textContent=group.name+' · '+group.size+'명';costValue.textContent=model.riskLabel+' +'+(group.surveyCost||1);costCopy.textContent=choice.presentation.first&&group.firstStudyCost?'곳곳에 찾아가느라 학업역량도 '+group.firstStudyCost+' 줄어요.':'이 모임의 원하는 약속을 정확히 알게 됩니다.';confirm.disabled=false;});list.append(button);
+  const heading=make('span','survey-group-heading'),name=make('span');name.append(make('strong','',group.name),make('b','',group.size+'명'));heading.append(name,make('span','survey-check',known?'✓':''));
+  const size=global.GukminElectionView.population(group,model.groups.reduce((n,g)=>n+g.size,0)),facts=make('span','survey-group-facts');
+  if(!known){facts.append(risk(group.surveyCost||1));if(choice.presentation.first&&group.firstStudyCost)facts.append(token({type:'metric',id:'study',amount:-group.firstStudyCost}));}
+  else facts.append(token({label:'조사 완료',icon:'check'}));
+  button.append(heading,size,make('small','survey-location',group.place||'직접 만나기'),facts);
+  button.addEventListener('click',()=>{if(selected.has(group.id))selected.delete(group.id);else selected.add(group.id);paint();});list.append(button);
  }
- content.append(list);footer.append(status,confirm);
+ content.append(list);
  if(choice.presentation.first){const skip=make('button','survey-skip','방문하지 않고 공약 고르기 →');skip.type='button';skip.addEventListener('click',()=>commit('skip'));content.append(skip);}
- sheet.append(header,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-survey');
+ sheet.append(header,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-survey');paint();
  const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},collapse=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();collapse();};
- function commit(id){if(closed)return;dialog.close();resolve(id);}
- confirm.addEventListener('click',()=>{if(selected)commit(selected);});fold.addEventListener('click',collapse);reopen.addEventListener('click',open);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);open();
+ function commit(id,input={}){if(closed)return;dialog.close();resolve(id,input);}
+ confirm.addEventListener('click',()=>{const ids=[...selected];if(ids.length)commit(ids[0],{groups:ids});});fold.addEventListener('click',collapse);reopen.addEventListener('click',open);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);open();
  return ()=>{closed=true;reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-election-survey');sync();};
 }
 global.GukminElectionChoices=Object.freeze({present:options=>options.choice.presentation.type==='election-survey'?presentSurvey(options):presentPledges(options)});

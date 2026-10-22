@@ -441,7 +441,7 @@ function mount(root,navigate,content=global.GukminContent){
   card.append(el('span','life-cinematic-kicker',scene.kind==='grade'?'학교 성적 통지표':scene.kind==='election'?'교실 개표 현황':scene.kind==='admission'?'입학 전형 결과':'인생의 전환점'));
   card.append(el('h2','life-cinematic-title',scene.title));
   if(scene.kind==='election')card.append(el('p','election-caption','우리 반의 한 표, 한 표가 모였다.'));
-  if(scene.detail)card.append(el('p','life-cinematic-description',scene.detail));
+  if(scene.detail&&scene.kind!=='election')card.append(el('p','life-cinematic-description',scene.detail));
   if(scene.kind==='grade'){
    card.append(el('div','grade-rule','REPORT / '+(scene.sealed?'FINAL':'SEMESTER')));
    const row=el('div','life-cinematic-grade');
@@ -456,9 +456,8 @@ function mount(root,navigate,content=global.GukminContent){
    card.classList.add('is-election');
    const report=global.GukminElection?.report(persona);
    if(report)scene.won=report.won;
-   const candidates=report?report.candidates.map(c=>c.name):[persona.name,'당시 경쟁 후보','다른 후보'],votes=report?report.candidates.map(c=>c.votes):[null,null,null];
-   const box=el('div','election-ballot-box',report?.runoff?'1차 투표':'투표함'),rows=[];card.append(box);
-   candidates.forEach((name,i)=>{const row=el('div','election-candidate'+(i===0?' is-player':''));const tally=el('strong','election-tally');row.append(el('span','',name),tally);card.append(row);rows.push(tally);});
+   const candidates=report?report.candidates.map(c=>c.name):[persona.name,'당시 경쟁 후보','다른 후보'];
+   const countView=global.GukminElectionView.countScene(report);card.append(countView.element);
    const runoff=global.GukminElectionView.runoffSummary(report);runoff.hidden=true;if(report?.runoff)card.append(runoff);
    const result=el('p','election-result');card.append(result);
    const analysis=el('section','election-analysis');analysis.hidden=true;
@@ -471,8 +470,8 @@ function mount(root,navigate,content=global.GukminContent){
    }else analysis.append(el('p','','이전 저장의 선거입니다. 세부 득표는 기록되지 않았습니다.'));
    card.append(analysis);
    const start=performance.now();
-   scene.finish=()=>{scene.finished=true;rows.forEach((node,i)=>node.textContent=votes[i]===null?'세부 득표 미기록':'正'.repeat(Math.floor(votes[i]/5))+(votes[i]%5?'一丨三四'[votes[i]%5-1]:'')+ ' · '+votes[i]+'표');analysis.hidden=false;runoff.hidden=!report?.runoff;result.replaceChildren(el('small','',report?.runoff?(report.runoff.drawn?'결선 동률 · 공개 추첨 결과':'결선투표 결과'):report?.tied?'동률 · 공개 추첨 결과':scene.won?'친구들이 내 이름을 불렀다.':'마지막 표까지 세었다.'),el('strong','',scene.won?'내가 뽑혔다.':candidates[report?.winner??1]+' 당선'),el('span','',scene.won?'우리 반의 반장이 되었다.':'이번에는 아쉽지만, 도전은 남았다.'));card.classList.add('is-counted');if(scene.won)card.classList.add('is-elected');$('lifeCinematicDismiss').textContent='결과 확인';if(electionTicker)global.clearInterval(electionTicker);electionTicker=null;};
-   electionTicker=global.setInterval(()=>{const elapsed=performance.now()-start;const fraction=Math.min(1,Math.max(0,(elapsed-600)/4000));rows.forEach((node,i)=>{if(votes[i]===null){node.textContent='기록 확인 중';return;}const count=Math.floor(votes[i]*fraction);node.textContent='正'.repeat(Math.floor(count/5))+(count%5?'一丨三四'[count%5-1]:'')+' · '+count+'표';});if(elapsed>=6000)scene.finish();},100);
+   scene.finish=()=>{scene.finished=true;countView.finish();analysis.hidden=false;runoff.hidden=!report?.runoff;result.replaceChildren(el('small','',report?.runoff?(report.runoff.drawn?'결선 동률 · 공개 추첨 결과':'결선투표 결과'):report?.tied?'동률 · 공개 추첨 결과':'개표 완료'),el('b','election-verdict',scene.won?'당선':'낙선'),el('strong','',candidates[report?.winner??1]+' 당선'),el('span','',scene.won?'내가 뽑혔다. 이제 우리 반의 약속을 지킬 차례!':'이번에는 아쉽지만, 도전은 남았다.'));card.classList.add('is-counted');if(scene.won)card.classList.add('is-elected');$('lifeCinematicDismiss').textContent='결과 확인';if(electionTicker)global.clearInterval(electionTicker);electionTicker=null;};
+   electionTicker=global.setInterval(()=>{if(countView.update(performance.now()-start))scene.finish();},80);
    if(reduceMotion)scene.finish();
   }
   if(scene.kind==='admission'){
