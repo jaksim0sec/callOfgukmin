@@ -4,7 +4,7 @@
 
 공통 `GukminGrades.assessment`의 effort=2는 성적 20 이상에서 더 이상 -1 하락하지 않는다. 브라우저 시험지의 예상 변화는 공통 `GukminEffects.apply`로 산출되며 평가 점수·압박을 별도 엔진으로 재계산하지 않는다. 고교 원서의 유형 토큰은 `option.school.kind`를 읽는 출력 전용이다.
 
-`exam-chat-20261022`은 진입 HTML·boot 서비스 워커·PWA 검증의 동일 릴리스 태그다. 과거 저장 키나 이벤트 ID는 바꾸지 않으며 신규/동결 대본을 구별한다. 증분 검증은 `tests/smoke.mjs`, `tests/systems.mjs`, `tests/browser.mjs`, `tests/classroom.mjs` 및 기존 저장/PWA에 따른다.
+`exam-tradeoff-20261022`은 진입 HTML·boot 서비스 워커·PWA 검증의 동일 릴리스 태그다. 과거 저장 키나 이벤트 ID는 바꾸지 않으며 신규/동결 대본을 구별한다. 증분 검증은 `tests/smoke.mjs`, `tests/systems.mjs`, `tests/browser.mjs`, `tests/classroom.mjs` 및 기존 저장/PWA에 따른다.
 
 ## 2026-10-22 진행 타이밍·교실 경기 재현성 (현행)
 

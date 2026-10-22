@@ -1106,7 +1106,7 @@ test('admission draw is stable, varies by seed, obeys prerequisites and uses rea
 });
 test('final current-year scores freeze; next retake reopens only the exam, never high-school grades',()=>{
  const env=setup(),p=env.P.generate(),pack=env.c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);p.phase='high';p.age=18;p.stats={...p.stats,money:1000000,stress:5,schoolScore:20,exam:23};p.attributes={admissionAttempts:1,csatSubmitted:true,highFinalSubmitted:true};
- let s=env.E.apply(p,{effects:{stats:{schoolScore:1,exam:1}}});assert.equal(s.stats.schoolScore,20);assert.equal(s.stats.exam,23);s=env.E.apply(s,{retryYear:true});assert.equal(s.age,19);assert.equal(s.stats.exam,23);assert.equal(s.attributes.csatSubmitted,false);s=env.E.apply(s,{assessment:{metric:'exam',effort:3}});assert.equal(s.stats.exam,23);assert.equal(s.stats.schoolScore,20);
+ let s=env.E.apply(p,{effects:{stats:{schoolScore:1,exam:1}}});assert.equal(s.stats.schoolScore,20);assert.equal(s.stats.exam,23);s=env.E.apply(s,{retryYear:true});assert.equal(s.age,19);assert.equal(s.stats.exam,23);assert.equal(s.attributes.csatSubmitted,false);s=env.E.apply(s,{assessment:{metric:'exam',effort:3}});assert.equal(s.stats.exam,24,'retake effort at a high score now makes a real gain');assert.equal(s.stats.schoolScore,20);
 });
 test('N-year cost and termination boundaries do not charge blocked years or duplicate transactions',()=>{
  const env=setup(),pack=env.c.GukminDirector.content(env.P.generate());for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);
