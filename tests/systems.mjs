@@ -1328,7 +1328,7 @@ function classroomFixture(seat='doyun'){
 test('classroom: desk choice remembers a class and friend, who returns in a chat and sports meet',()=>{
  const {engine,P,T,pack}=classroomFixture();let s=engine.snapshot();assert.equal(s.persona.attributes.seatmate,'도윤');assert.ok(s.persona.attributes.elementaryClass>=1&&s.persona.attributes.elementaryClass<=6);assert.equal(s.persona.stats.athletics,6);
  engine.advance(4);s=engine.snapshot();assert.equal(s.choice.presentation.type,'chat');assert.ok(s.choice.presentation.messages.some(m=>m.sender==='도윤'));const token=s.choice.token;engine.resolve(token,'practice');assert.equal(engine.resolve(token,'practice'),false);engine.resume();engine.advance(3);s=engine.snapshot();assert.equal(s.choice.presentation.type,'sports');assert.match(s.choice.body,/도윤/);
- engine.resolve(s.choice.token,'sprint');s=engine.snapshot();assert.equal(s.persona.attributes.sportsPlace,1);assert.equal(s.persona.stats.athletics,11);assert.ok(s.persona.history.some(h=>h.title.includes('계주')&&h.detail.includes('도윤')));
+ engine.resolve(s.choice.token,'sprint');s=engine.snapshot();assert.equal(s.persona.attributes.sportsPlace,1);assert.equal(s.persona.stats.athletics,13);assert.equal(s.persona.stats.relations,11);assert.ok(s.persona.history.some(h=>h.title.includes('계주')&&h.detail.includes('도윤')));
  const restored=T.create({...pack,persona:P.load(),pauseAfterChoice:true}).snapshot();assert.equal(restored.persona.attributes.seatmate,'도윤');assert.equal(restored.persona.attributes.sportsPlace,1);assert.equal(restored.runtime.turn,38);assert.equal(restored.reviewPending,true);
 });
 test('classroom: preparation changes the actual finish; old completed lives get no inserted decisions',()=>{
