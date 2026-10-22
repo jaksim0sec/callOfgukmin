@@ -83,11 +83,12 @@ try{
    const projected=GukminEffects.apply(snap.persona,option.result,{turn:snap.runtime.turn});
    return projected.stats.schoolScore-snap.persona.stats.schoolScore;
   });
-  const effect=await page.locator('#lifeDecisionDialog .life-answer[data-choice=effort-3]').locator('.life-effects .metric-schoolScore').first();
-  assert.equal(await effect.locator('.impact-amount').textContent(),Math.abs(realPreview).toLocaleString('ko-KR'),
-   'exam preview calculates the same actual numeric value including conditional trait modifiers');
-  assert.ok(await effect.locator('.impact-arrow').count()>0,'exam direction is rendered with the shared triangle SVG');
-  assert.match(await effect.getAttribute('aria-label'),/내신.*증가/,'the arrow includes accessible direction text');
+  const effect=page.locator('#lifeDecisionDialog .life-answer[data-choice=effort-3] .exam-tradeoff');
+  const projectedText=(realPreview>0?'+':'')+realPreview.toLocaleString('ko-KR',{maximumFractionDigits:1});
+  assert.equal(await effect.locator('.exam-tradeoff-labels strong').first().textContent(),'내신 '+projectedText,
+   'exam tradeoff bar uses the same settled score projection including trait modifiers');
+  assert.equal(await effect.locator('.exam-tradeoff-track').count(),1,'exam option shows exactly one opposing bar');
+  assert.match(await effect.locator('.exam-tradeoff-track').getAttribute('aria-label'),/내신.*압박/,'tradeoff bar labels both opposing metrics accessibly');
   await page.screenshot({path:`${artifacts}/${name}-exam.png`});
   await page.locator('#lifeDecisionDialog .life-submit').click();
   assert.ok(await page.locator('#lifeCinematicDismiss').isVisible(),'result remains until acknowledged');
