@@ -516,6 +516,7 @@ try{
  const recall=await browser.newContext({viewport:{width:390,height:844}});
  const recallPage=await returningPage(recall);
  await recallPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+ await recallPage.evaluate(()=>GukminGame.session.run()); // Create a resumable decision in manual mode.
  const original=await recallPage.evaluate(()=>{const s=GukminGame.session.snapshot();return {turn:s.runtime.turn,token:s.choice?.token};});
  await recallPage.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
  assert.match(await recallPage.locator('#enterGame').textContent(),/이어서 플레이하기/);

@@ -24,7 +24,7 @@ try{
   const page=await returningPage(context),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://fonts.googleapis.com/**',r=>r.abort());
-  await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').click();
+  await page.goto(base+'html/game.html');await page.evaluate(()=>GukminGame.session.run());await page.locator('#resumeDailyChoice').click();
   await page.keyboard.press('Escape');
   await page.locator('#traits .trait-control').first().click();
   assert.ok(await page.locator('#traitInfo').isVisible(),'trait explanation works without hover');
@@ -116,7 +116,7 @@ try{
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
  const page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
- await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').waitFor({state:'visible'});
+ await page.goto(base+'html/game.html');await page.evaluate(()=>GukminGame.session.run());await page.locator('#resumeDailyChoice').waitFor({state:'visible'});
  let completed=false,terminated=false,decisions=0,reloadedContact=false,specialtyUsed=false,sawRevelation=false,invitationSeen=false,sawMetricSummary=false;
  for(let i=0;i<500;i++){
   if(page.url().includes('/result.html')){await page.locator('#resultTitle').waitFor();terminated=true;completed=true;break;}
@@ -261,7 +261,7 @@ try{
  if(!process.env.EXPERIENCE_SCOPE||process.env.EXPERIENCE_SCOPE==='balance')for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
   const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await returningPage(context),errors=[];
   page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
-  await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').click();
+  await page.goto(base+'html/game.html');await page.evaluate(()=>GukminGame.session.run());await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-effects,#dailyChoiceBody .daily-choice-risk,#dailyChoiceBody .daily-choice-outlook,#dailyChoiceBody .interest-transition').count(),0,'childhood rewards stay hidden until commitment');
   await page.locator('#dailyChoiceBody .inline-choice').first().click();assert.equal(await page.locator('#dailyChoiceBody .daily-choice-effects').count(),0);await page.locator('#dailyPaperConfirm').click();await page.locator('#dailyChoiceDialog.is-reward').waitFor();assert.ok(await page.locator('.daily-reward-tokens .token-trait').count()>0,'actual childhood reward is disclosed after confirmation');
   await page.evaluate(()=>{
