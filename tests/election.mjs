@@ -25,7 +25,7 @@ try{
   });await page.reload();await page.waitForFunction(()=>!!window.GukminGame?.session);
   const run=()=>page.evaluate(()=>GukminGame.session.run());
   const daily=async index=>{await page.locator('#resumeDailyChoice').click();await page.locator('#dailyChoiceBody .inline-choice').nth(index).click();await page.locator('#dailyPaperConfirm').click();await page.locator('#dailyChoiceDialog.is-reward').waitFor();};
-  await run();await daily(0);assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.attributes.classElection),'ran');await run();await page.locator('#lifeDecisionDialog.is-election-survey[open]').waitFor();assert.equal(await page.locator('.survey-group').count(),4);await page.locator('.survey-group[data-group=quiet]').click();await page.locator('.survey-footer .life-submit').click();await run();
+  await run();await daily(0);assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.attributes.classElection),'ran');await run();await page.locator('#lifeDecisionDialog.is-election-survey[open]').waitFor();assert.equal(await page.locator('.survey-group').count(),4);assert.equal(await page.locator('.survey-people').count(),0);await page.screenshot({path:'/tmp/gukmin-election-survey-'+name+'.png'});const beforeSurvey=await page.evaluate(()=>GukminGame.session.snapshot().persona.stats.stress);await page.locator('.survey-group[data-group=quiet]').click();assert.match(await page.locator('.survey-cost').textContent(),/압박 \+2/);await page.locator('.survey-footer .life-submit').click();assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.stats.stress),beforeSurvey+2);await run();
   await page.locator('#lifeDecisionDialog.is-pledges[open]').waitFor();assert.equal(await page.locator('.pledge-card').count(),7);
   assert.ok(await page.locator('.pledge-footer .life-submit').isDisabled());
   assert.equal(await page.locator('.pledge-reactions .is-unknown').count(),21,'only the visited group reveals its opinion on each card');assert.deepEqual(await page.locator('.support-group-size').allTextContents(),['7명','6명','10명','7명']);
@@ -56,8 +56,10 @@ try{
   await page.screenshot({path:'/tmp/gukmin-puzzle-'+name+'.png'});
   await page.locator('.life-modal-collapse').click();
   const saved=await page.evaluate(()=>JSON.stringify(GukminGame.session.snapshot()));
-  await page.locator('#electionCandidates').click();await page.locator('.election-drawer[open]').waitFor();assert.equal(await page.locator('.candidate-slide').count(),3);assert.equal(await page.locator('.candidate-name').first().isVisible(),true);
+  await page.locator('#electionCandidates').click();await page.locator('.election-drawer[open]').waitFor();assert.equal(await page.locator('.candidate-slide').count(),3);assert.equal(await page.locator('.candidate-poster .gk-poster').count(),3);assert.equal(await page.locator('.candidate-poster .gk-poster-canvas').count(),3);assert.equal(await page.locator('.candidate-person-name').first().isVisible(),true);
   assert.ok(await page.locator('.election-drawer').evaluate(e=>{const b=e.getBoundingClientRect();return b.top>0&&b.left>0&&b.bottom<innerHeight&&b.right<innerWidth;}),'candidate glass card floats with space on all four sides');
+  assert.ok(await page.locator('.election-drawer').evaluate(e=>{const b=e.getBoundingClientRect();return Math.abs(b.top+b.height/2-innerHeight/2)<3&&getComputedStyle(e).backgroundColor==='rgba(0, 0, 0, 0)';}),'the viewer is vertically centered without an enclosing background panel');
+  assert.ok(await page.locator('.candidate-poster .gk-poster').evaluateAll(nodes=>nodes.every((n,i)=>n._posterData.number===i+1&&n._posterData.headerLabel==='우리 반 반장 선거')),'candidate posters are built by the shared generator');
   const slideBox=await page.locator('.candidate-slides').boundingBox(),startX=slideBox.x+slideBox.width*.85,endX=slideBox.x+slideBox.width*.15,gestureY=slideBox.y+Math.min(70,slideBox.height/2);
   if(name==='desktop'){
    await page.mouse.move(startX,gestureY);await page.mouse.down();await page.mouse.move(endX,gestureY,{steps:12});await page.mouse.up();
@@ -68,6 +70,7 @@ try{
   }
   await page.waitForFunction(()=>document.querySelectorAll('.candidate-slide-nav button')[0].getAttribute('aria-current')==='false');
   await page.locator('.candidate-slide-nav button').nth(1).click();await page.waitForFunction(()=>document.querySelectorAll('.candidate-slide-nav button')[1].getAttribute('aria-current')==='true');
+  await page.waitForFunction(()=>{const e=document.querySelector('.candidate-slides');return Math.abs(e.scrollLeft-e.clientWidth)<1;});
   assert.ok(await page.locator('.candidate-slide').nth(1).evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth+1;}));
   assert.ok(await page.locator('.candidate-slide').nth(1).evaluate(card=>{const poster=card.querySelector('.candidate-poster').getBoundingClientRect(),info=card.querySelector('.candidate-information').getBoundingClientRect();return info.left>=poster.right-1||info.top>=poster.bottom-1;}),'candidate data and poster never overlap');
   await page.screenshot({path:'/tmp/gukmin-election-drawer-'+name+'.png'});
@@ -97,8 +100,18 @@ try{
     const p=GukminGame.session.snapshot().persona,config=GukminElection.parameters(p);config.groups.forEach(g=>{g.size=30000;g.known=true;});config.playerId=config.candidates[1].id;config.candidates.push({...config.candidates[2],id:'fourth',name:'네 번째 후보'});
     const core=GukminElectionEngine.create(config),original=GukminElection.model(p),model={...original,playerId:config.playerId,groups:config.groups,candidates:config.candidates,forecast:ids=>core.forecast(ids),wishes:id=>core.wishes(id)};
     const view=GukminElectionView.board(model);document.body.append(view.element);const f=core.forecast(original.chosen.map(p=>p.id));
-    const result={dots:view.element.querySelectorAll('.support-seats i').length,share:view.element.querySelector('.support-total').textContent,expected:f.pollShares[1]+'%',segments:view.element.querySelector('.support-track').children.length};view.element.remove();return result;
-   });assert.deepEqual(reusable,{dots:120,share:reusable.expected,expected:reusable.expected,segments:5},'reusable UI handles a nonfirst player, four candidates and large electorates without one DOM node per voter');
+    const result={dots:view.element.querySelectorAll('.support-seats i').length,sizeBars:view.element.querySelectorAll('.electorate-size-track').length,share:view.element.querySelector('.support-total').textContent,expected:f.pollShares[1]+'%',segments:view.element.querySelector('.support-track').children.length};view.element.remove();return result;
+   });assert.deepEqual(reusable,{dots:0,sizeBars:4,share:reusable.expected,expected:reusable.expected,segments:5},'reusable UI handles a nonfirst player, four candidates and large electorates without one DOM node per voter');
+  }
+  if(name==='mobile'){
+   await page.evaluate(()=>{
+    const p=GukminPlayer.generate();p.phase='elementary';p.age=12;p.traits=[];Object.assign(p.stats,{relations:15,stress:0,illness:0});p.attributes={electionRevision:3,electionStage:'count',electionPledges:104,classElection:'ran',teacherTrust:12,pressureGuideSeen:true};
+    for(let i=0;i<1000;i++){p.admissionSeed='runoff-ui-'+i;if(GukminElection.ballot(p).runoff)break;}
+    if(!GukminElection.ballot(p).runoff)throw new Error('No tied seed found');
+    const pack=GukminDirector.content(p),state=GukminTimeline.create({...pack,persona:p}).snapshot();for(const event of pack.events)state.runtime.events[event.id]={status:'completed',count:1,nextAt:event.at||0};state.runtime.events['election:count']={status:'unseen',count:0,nextAt:45};state.runtime.turn=45;p.simulation=state.runtime;GukminPlayer.save(p);
+   });await page.reload();await page.waitForFunction(()=>!!window.GukminGame?.session);await run();await page.locator('.election-runoff:not([hidden])').waitFor();
+   const saved=await page.evaluate(()=>GukminElection.report(GukminGame.session.snapshot().persona));assert.ok(saved.runoff);assert.match(await page.locator('.election-result').textContent(),/결선/);for(const candidate of saved.runoff.candidates)assert.match(await page.locator('.election-runoff').textContent(),new RegExp(candidate.votes+'표'));
+   await page.reload();await page.waitForFunction(()=>!!window.GukminGame?.session);await run();await page.locator('.election-runoff:not([hidden])').waitFor();assert.deepEqual(await page.evaluate(()=>GukminElection.report(GukminGame.session.snapshot().persona)),saved,'saved runoff does not reroll or disappear after reload');
   }
   assert.deepEqual(errors,[]);console.log('PASS campaign '+name+': nomination, hints, 3-card selection, folding/reload, rivals, actual tally and bills');await context.close();
  }

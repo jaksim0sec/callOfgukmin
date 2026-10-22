@@ -45,15 +45,15 @@ function presentSurvey({choice,resolve,root,model}){
  const sheet=make('section','life-modal-wrap election-survey-paper'),header=make('header','life-modal-head'),fold=make('button','life-modal-collapse','접기 ⌄');fold.type='button';
  header.append(make('span','life-modal-serial',model.title+' · 민심 조사'),fold);
  const content=make('div','election-survey-content');content.append(make('small','campaign-eyebrow',choice.presentation.first?'01 · 처음 만나는 민심':'03 · 내 편 밖으로'),make('h2','life-modal-title',choice.title),make('p','election-survey-intro','모임 하나를 골라 직접 찾아가자. 표를 사는 게 아니라, 무엇을 원하는지 알아보는 거야.'));
- const cost=make('div','survey-cost');cost.append(make('strong','',model.riskLabel+' +1'),make('span','','방문 비용 · 아는 만큼 공약을 고치기 쉬워져'));content.append(cost);
+ const cost=make('div','survey-cost');const costValue=make('strong','',model.riskLabel+' '+Math.min(...model.groups.map(g=>g.surveyCost||1))+'–'+Math.max(...model.groups.map(g=>g.surveyCost||1))),costCopy=make('span','','큰 모임은 만날 친구가 많아 조금 더 수고가 들어요');cost.append(costValue,costCopy);content.append(cost);
  const list=make('div','survey-groups');list.setAttribute('role','group');list.setAttribute('aria-label','만나러 갈 모임');
  const footer=make('footer','life-modal-foot survey-footer'),status=make('span','survey-selection','만나러 갈 모임을 골라 줘'),confirm=make('button','life-submit','이 친구들 만나러 가기');confirm.type='button';confirm.disabled=true;status.setAttribute('aria-live','polite');
  for(const group of model.groups){
   const option=choice.options.find(o=>o.id===group.id),known=model.known(group.id),button=make('button','survey-group');button.type='button';button.dataset.group=group.id;button.disabled=!option?.available||known;button.setAttribute('aria-pressed','false');
   const heading=make('span','survey-group-heading');heading.append(make('strong','',group.name),make('b','',group.size+'명'));
-  const dots=make('span','survey-people');dots.setAttribute('aria-hidden','true');for(let n=0;n<group.size;n++)dots.append(make('i',''));
-  button.append(heading,dots,make('small','',known?'이미 이야기를 들었어':group.id==='quiet'&&choice.presentation.first?'찾아다니는 시간이 더 필요해 · 학업역량 −1':'좋아하는 약속과 싫어하는 약속 확인'));
-  button.addEventListener('click',()=>{selected=group.id;for(const node of list.children)node.setAttribute('aria-pressed',String(node===button));status.textContent=group.name+' · '+group.size+'명';confirm.disabled=false;});list.append(button);
+  const size=global.GukminElectionView.population(group,model.groups.reduce((n,g)=>n+g.size,0)),facts=make('span','survey-group-facts');facts.append(make('strong','',model.riskLabel+' +'+(group.surveyCost||1)));if(choice.presentation.first&&group.firstStudyCost)facts.append(make('small','','학업역량 −'+group.firstStudyCost));
+  button.append(heading,size,make('small','',known?'이미 이야기를 들었어':group.description||'좋아하는 약속과 싫어하는 약속 확인'),make('small','survey-location',group.place||'직접 만나기'),facts);
+  button.addEventListener('click',()=>{selected=group.id;for(const node of list.children)node.setAttribute('aria-pressed',String(node===button));status.textContent=group.name+' · '+group.size+'명';costValue.textContent=model.riskLabel+' +'+(group.surveyCost||1);costCopy.textContent=choice.presentation.first&&group.firstStudyCost?'곳곳에 찾아가느라 학업역량도 '+group.firstStudyCost+' 줄어요.':'이 모임의 원하는 약속을 정확히 알게 됩니다.';confirm.disabled=false;});list.append(button);
  }
  content.append(list);footer.append(status,confirm);
  if(choice.presentation.first){const skip=make('button','survey-skip','방문하지 않고 공약 고르기 →');skip.type='button';skip.addEventListener('click',()=>commit('skip'));content.append(skip);}

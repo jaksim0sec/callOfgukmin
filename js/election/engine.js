@@ -10,19 +10,21 @@ function allocate(values,total=100){
 }
 function create(parameters){
  const config=JSON.parse(JSON.stringify(parameters)),{groups,pledges,candidates,playerId,seed}=config;
- const rules={temperature:3.8,tasteVariance:1,noise:.8,lateSwing:3.2,turnoutLossChance:.35,turnoutLoss:1,maxPledges:3,uncertainty:2,...config.rules};
+ const rules={temperature:3.8,tasteVariance:1,noise:.8,lateSwing:3.2,turnoutLossChance:.35,turnoutLoss:1,maxPledges:3,uncertainty:2,runoff:1,surveyBaseCost:1,surveyGroupStep:8,surveyMaxCost:3,...config.rules};
  const unique=rows=>Array.isArray(rows)&&rows.length>0&&rows.every(x=>typeof x.id==='string'&&x.id.length)&&new Set(rows.map(x=>x.id)).size===rows.length;
  if(!unique(groups)||!unique(pledges)||!unique(candidates)||!candidates.some(c=>c.id===playerId)||typeof seed!=='string')throw new Error('선거 구성 오류');
  for(const [key,value] of Object.entries(rules))if(!Number.isFinite(value)||value<0)throw new Error('선거 규칙 오류: '+key);
  if(!rules.temperature||!Number.isInteger(rules.maxPledges)||!rules.maxPledges||!Number.isInteger(rules.tasteVariance)||!Number.isInteger(rules.turnoutLoss)||rules.turnoutLossChance>1)throw new Error('선거 규칙 범위 오류');
+ if(![rules.surveyBaseCost,rules.surveyGroupStep,rules.surveyMaxCost].every(n=>Number.isInteger(n)&&n>=1)||rules.surveyMaxCost<rules.surveyBaseCost||![0,1].includes(rules.runoff))throw new Error('조사·결선 규칙 오류');
  if(groups.some(g=>!Number.isSafeInteger(g.size)||g.size<1||!Number.isFinite(g.undecided??38)||(g.undecided??38)<0||(g.undecided??38)>100))throw new Error('유권자 규모 오류');
  const catalog=new Map(pledges.map(p=>[p.id,p])),playerIndex=candidates.findIndex(c=>c.id===playerId),totalSize=groups.reduce((n,g)=>n+g.size,0);
  function validate(ids){if(!Array.isArray(ids)||ids.length>rules.maxPledges||new Set(ids).size!==ids.length||ids.some(id=>!catalog.has(id)))throw new Error('공약 입력 오류');}
  candidates.forEach(c=>{validate(c.pledges);for(const g of groups)if(!Number.isFinite(c.support?.[g.id]??0))throw new Error('후보 지지 데이터 오류');});
  pledges.forEach(p=>{for(const g of groups)if(!Number.isFinite(p.scores?.[g.id]))throw new Error('공약 집단 점수 오류');});
- const roll=key=>random(seed,key),weights=scores=>{const top=Math.max(...scores);return scores.map(n=>Math.exp((n-top)/rules.temperature));};
+ const roll=key=>random(seed,key),ballotRoll=key=>{let n=Math.floor(roll(key)*4294967296);n=Math.imul(n^(n>>>16),0x7feb352d);n=Math.imul(n^(n>>>15),0x846ca68b);return ((n^(n>>>16))>>>0)/4294967296;},weights=scores=>{const top=Math.max(...scores);return scores.map(n=>Math.exp((n-top)/rules.temperature));};
  function preference(g,id){const p=catalog.get(id);if(!p||!groups[g])throw new Error('집단 의견 입력 오류');return p.scores[groups[g].id]+Math.floor(roll('taste:'+g+':'+id)*(rules.tasteVariance*2+1))-rules.tasteVariance;}
- function survey(id){const g=groups.findIndex(g=>g.id===id);if(g<0)throw new Error('유권자 집단 오류');return {group:{...groups[g]},opinions:Object.fromEntries(pledges.map(p=>[p.id,preference(g,p.id)]))};}
+ function surveyCost(id){const group=groups.find(g=>g.id===id);if(!group)throw new Error('유권자 집단 오류');return Math.min(rules.surveyMaxCost,rules.surveyBaseCost+Math.floor((group.size-1)/rules.surveyGroupStep));}
+ function survey(id){const g=groups.findIndex(g=>g.id===id);if(g<0)throw new Error('유권자 집단 오류');return {group:{...groups[g]},cost:surveyCost(id),opinions:Object.fromEntries(pledges.map(p=>[p.id,preference(g,p.id)]))};}
  function wishes(id,ids=pledges.map(p=>p.id)){const data=survey(id),ordered=ids.map(id=>{if(!catalog.has(id))throw new Error('조사 공약 오류');return {...catalog.get(id),value:data.opinions[id]};}).sort((a,b)=>b.value-a.value);return {likes:ordered.slice(0,2),dislikes:ordered.at(-1)};}
  function forecast(ids=candidates[playerIndex].pledges){
   validate(ids);const field=candidates.map((c,i)=>i===playerIndex?{...c,pledges:ids}:c);
@@ -43,10 +45,22 @@ function create(parameters){
    const scores=candidates.map(c=>c.pledges.reduce((n,id)=>n+preference(g,id),0)+(c.support?.[group.id]??0)+(roll('noise:'+g+':'+c.id)-.5)*rules.noise+(roll('late:'+g+':'+c.id)-.5)*rules.lateSwing);
    return {group,turnout,scores,votes:allocate(weights(scores),turnout)};
   });
-  const totals=candidates.map((_,i)=>rows.reduce((n,row)=>n+row.votes[i],0)),top=Math.max(...totals),tied=totals.map((n,i)=>n===top?i:-1).filter(i=>i>=0),winner=tied[Math.floor(roll('tie')*tied.length)];
-  return {candidates:candidates.map((c,i)=>({...c,votes:totals[i]})),rows,winner,won:winner===playerIndex,tied:tied.length>1};
+  const totals=candidates.map((_,i)=>rows.reduce((n,row)=>n+row.votes[i],0)),top=Math.max(...totals),tied=totals.map((n,i)=>n===top?i:-1).filter(i=>i>=0);
+  let winner=tied[Math.floor(roll('tie')*tied.length)],runoff=null;
+  if(tied.length>1&&rules.runoff){
+   // Each voter chooses again among the tied finalists; eliminated votes can move.
+   const finalRows=rows.map((row,g)=>{
+    const w=weights(tied.map(i=>row.scores[i])),sum=w.reduce((a,b)=>a+b,0),votes=tied.map(()=>0);
+    for(let voter=0;voter<row.turnout;voter++){const pick=ballotRoll('runoff:'+g+':'+voter)*sum;let cumulative=0,index=0;for(;index<w.length-1;index++){cumulative+=w[index];if(pick<cumulative)break;}votes[index]++;}
+    return {group:row.group,turnout:row.turnout,votes};
+   });
+   const votes=tied.map((_,i)=>finalRows.reduce((n,row)=>n+row.votes[i],0)),most=Math.max(...votes),again=tied.filter((_,i)=>votes[i]===most);
+   winner=again[Math.floor(roll('runoff:draw')*again.length)];
+   runoff={candidates:tied.map((index,i)=>({...candidates[index],index,votes:votes[i]})),rows:finalRows,drawn:again.length>1};
+  }
+  return {candidates:candidates.map((c,i)=>({...c,votes:totals[i]})),rows,winner,won:winner===playerIndex,tied:tied.length>1,...(runoff?{runoff}:{})};
  }
- return Object.freeze({forecast,count,survey,wishes,opinion:(group,id)=>{const g=groups.findIndex(x=>x.id===group);return preference(g,id);}});
+ return Object.freeze({forecast,count,survey,surveyCost,wishes,opinion:(group,id)=>{const g=groups.findIndex(x=>x.id===group);return preference(g,id);}});
 }
 global.GukminElectionEngine=Object.freeze({create});
 })(window);

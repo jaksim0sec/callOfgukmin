@@ -86,9 +86,9 @@ function emblem(ctx,label,p){
 }
 function header(ctx,data,p){
  const party=(data.partyName||'무소속').trim();const political=party!=='무소속';
- const label=party;
- if(political){emblem(ctx,party,p);fit(ctx,label,162,115,710,53,{color:p.ink,fontFamily:plain});}
- else{ctx.fillStyle=p.accent;ctx.fillRect(57,66,66,6);fit(ctx,label||'인생 기록',57,139,710,58,{color:p.ink,fontFamily:plain});}
+ const label=data.headerLabel||party;
+ if(political&&!data.headerLabel){emblem(ctx,party,p);fit(ctx,label,162,115,710,53,{color:p.ink,fontFamily:plain});}
+ else{ctx.fillStyle=p.accent;ctx.fillRect(57,66,66,6);fit(ctx,data.headerLabel||label||'인생 기록',57,139,710,58,{color:p.ink,fontFamily:plain});}
 }
 function slogan(ctx,data,p){
  let lines=String(data.phrase||'세상은 아직\n놀이터').split(/\n+/).map(s=>s.trim()).filter(Boolean).slice(0,4);
@@ -129,7 +129,7 @@ function paint(el){
 }
 function update(el,data={}){
  if(!el?.classList?.contains('gk-poster'))throw new TypeError('Expected GukminPoster.create element');
- const signature=JSON.stringify([data.name,data.deceased,data.age,data.number,data.partyName,data.stage,data.phrase,data.portraitStage,data.portraitVariant,data.imageSrc]);
+ const signature=JSON.stringify([data.name,data.deceased,data.headerLabel,data.age,data.number,data.partyName,data.stage,data.phrase,data.portraitStage,data.portraitVariant,data.imageSrc]);
  if(el._posterSignature===signature)return el;
  el._posterSignature=signature;el._posterData={...data};el.dataset.age=data.portraitStage||'infant';
  const text=el.querySelector('.gk-poster-accessible');

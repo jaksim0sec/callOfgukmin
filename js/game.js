@@ -457,20 +457,21 @@ function mount(root,navigate,content=global.GukminContent){
    const report=global.GukminElection?.report(persona);
    if(report)scene.won=report.won;
    const candidates=report?report.candidates.map(c=>c.name):[persona.name,'당시 경쟁 후보','다른 후보'],votes=report?report.candidates.map(c=>c.votes):[null,null,null];
-   const box=el('div','election-ballot-box','투표함'),rows=[];card.append(box);
+   const box=el('div','election-ballot-box',report?.runoff?'1차 투표':'투표함'),rows=[];card.append(box);
    candidates.forEach((name,i)=>{const row=el('div','election-candidate'+(i===0?' is-player':''));const tally=el('strong','election-tally');row.append(el('span','',name),tally);card.append(row);rows.push(tally);});
+   const runoff=global.GukminElectionView.runoffSummary(report);runoff.hidden=true;if(report?.runoff)card.append(runoff);
    const result=el('p','election-result');card.append(result);
    const analysis=el('section','election-analysis');analysis.hidden=true;
    if(report){
-    analysis.append(el('h3','','누가 누구를 뽑았을까?'),el('p','election-analysis-note','좋아하는 약속이 겹치면 표도 나뉘어. 친구 사이와 어떤 약속을 했는지가 함께 영향을 줘.'));
+    analysis.append(el('h3','',report.runoff?'1차 투표 · 모임별 득표':'누가 누구를 뽑았을까?'),el('p','election-analysis-note','좋아하는 약속이 겹치면 표도 나뉘어. 친구 사이와 어떤 약속을 했는지가 함께 영향을 줘.'));
     for(const row of report.rows){const group=el('article','election-group-result');group.append(el('strong','',row.group.name+' · '+row.turnout+'/'+row.group.size+'명 투표'));
      const total=row.votes.reduce((n,v)=>n+v,0),shares=row.votes.map(v=>v/total*100);group.append(global.GukminElectionView.bar(shares,report.candidates.map(c=>c.name)).element);
      const split=el('div','election-vote-split');report.candidates.forEach((candidate,i)=>{const token=el('span',i===0?'is-player':'',candidate.name+' '+row.votes[i]+'표');split.append(token);});group.append(split,el('p','',row.hint));analysis.append(group);}
-    if(report.tied)analysis.append(el('p','election-analysis-note','표가 똑같아서 제비뽑기로 정했어.'));
+    if(report.tied&&!report.runoff)analysis.append(el('p','election-analysis-note','표가 똑같아서 제비뽑기로 정했어.'));
    }else analysis.append(el('p','','이전 저장의 선거입니다. 세부 득표는 기록되지 않았습니다.'));
    card.append(analysis);
    const start=performance.now();
-   scene.finish=()=>{scene.finished=true;rows.forEach((node,i)=>node.textContent=votes[i]===null?'세부 득표 미기록':'正'.repeat(Math.floor(votes[i]/5))+(votes[i]%5?'一丨三四'[votes[i]%5-1]:'')+ ' · '+votes[i]+'표');analysis.hidden=false;result.replaceChildren(el('small','',scene.won?'친구들이 내 이름을 불렀다.':'마지막 표까지 세었다.'),el('strong','',scene.won?'내가 뽑혔다.':candidates[report?.winner??1]+' 당선'),el('span','',scene.won?'우리 반의 반장이 되었다.':'이번에는 아쉽지만, 도전은 남았다.'));card.classList.add('is-counted');if(scene.won)card.classList.add('is-elected');$('lifeCinematicDismiss').textContent='결과 확인';if(electionTicker)global.clearInterval(electionTicker);electionTicker=null;};
+   scene.finish=()=>{scene.finished=true;rows.forEach((node,i)=>node.textContent=votes[i]===null?'세부 득표 미기록':'正'.repeat(Math.floor(votes[i]/5))+(votes[i]%5?'一丨三四'[votes[i]%5-1]:'')+ ' · '+votes[i]+'표');analysis.hidden=false;runoff.hidden=!report?.runoff;result.replaceChildren(el('small','',report?.runoff?(report.runoff.drawn?'결선 동률 · 공개 추첨 결과':'결선투표 결과'):report?.tied?'동률 · 공개 추첨 결과':scene.won?'친구들이 내 이름을 불렀다.':'마지막 표까지 세었다.'),el('strong','',scene.won?'내가 뽑혔다.':candidates[report?.winner??1]+' 당선'),el('span','',scene.won?'우리 반의 반장이 되었다.':'이번에는 아쉽지만, 도전은 남았다.'));card.classList.add('is-counted');if(scene.won)card.classList.add('is-elected');$('lifeCinematicDismiss').textContent='결과 확인';if(electionTicker)global.clearInterval(electionTicker);electionTicker=null;};
    electionTicker=global.setInterval(()=>{const elapsed=performance.now()-start;const fraction=Math.min(1,Math.max(0,(elapsed-600)/4000));rows.forEach((node,i)=>{if(votes[i]===null){node.textContent='기록 확인 중';return;}const count=Math.floor(votes[i]*fraction);node.textContent='正'.repeat(Math.floor(count/5))+(count%5?'一丨三四'[count%5-1]:'')+' · '+count+'표';});if(elapsed>=6000)scene.finish();},100);
    if(reduceMotion)scene.finish();
   }

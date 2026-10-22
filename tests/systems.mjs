@@ -1574,3 +1574,19 @@ test('large campaign promise trades pressure for shamelessness without granting 
  const result=E.apply(p,{electionDecision:{action:'respond',response:'boast'},tags:['public-speech']});assert.equal(result.stats.stress,4);assert.equal(P.hasTrait(result,'뻔뻔함'),true);assert.equal(result.attributes.teacherTrust,12);assert.equal(result.attributes.electionStage,'revise');assert.equal(c.GukminElection.canChoose(result,{action:'bill',slot:0,mode:'keep'}),false);
  const speech=E.apply(result,{tags:['public-speech'],effects:{stats:{stress:2}}});assert.equal(speech.stats.stress,result.stats.stress+1);
 });
+
+test('tied first ballots use a persisted seeded runoff instead of an unexplained loss',()=>{
+ const c=vm.createContext({});c.window=c;vm.runInContext(readFileSync('js/election/engine.js','utf8'),c);
+ const cfg={id:'tie',seed:'tie-fixture',playerId:'a',groups:[{id:'class',name:'우리 반',size:12}],pledges:[{id:'same',name:'같은 약속',scores:{class:0}}],candidates:['a','b','c'].map(id=>({id,name:id,pledges:['same'],support:{class:0}})),rules:{turnoutLoss:0,noise:0,lateSwing:0}};
+ const result=c.GukminElectionEngine.create(cfg).count();assert.deepEqual(plain(result.candidates.map(c=>c.votes)),[4,4,4]);assert.ok(result.runoff,'ties require an explicit second ballot');
+ assert.equal(result.runoff.candidates.reduce((n,c)=>n+c.votes,0),12);assert.deepEqual(plain(result),plain(c.GukminElectionEngine.create(plain(cfg)).count()));
+ const winner=result.runoff.candidates.find(c=>c.index===result.winner);assert.equal(winner.votes,Math.max(...result.runoff.candidates.map(c=>c.votes)));assert.equal(result.won,result.winner===0);
+ const winners=new Set();for(let seed=0;seed<30;seed++)winners.add(c.GukminElectionEngine.create({...cfg,seed:'tie-'+seed}).count().winner);assert.ok(winners.size>1,'runoffs must not always favor the player');
+});
+
+test('survey effort scales in small integer steps and the school model supplies matching costs',()=>{
+ const {P,c,E}=setup(),X=c.GukminElection,p=P.generate();p.phase='elementary';p.stats.stress=0;p.stats.illness=0;p.traits=[];p.attributes={electionRevision:3,electionStage:'listen',classElection:'ran'};
+ const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);
+ const model=X.model(p),costs=model.groups.map(g=>g.surveyCost);assert.deepEqual(plain(costs),[1,1,2,1]);
+ for(const group of model.groups){const after=E.apply(p,{electionDecision:{action:'listen',group:group.id}});assert.equal(after.stats.stress,group.surveyCost);assert.ok(Number.isInteger(group.surveyCost));}
+});
