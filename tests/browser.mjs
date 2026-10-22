@@ -1,5 +1,6 @@
 /* Optional real Chromium integration. Install Playwright outside the app if unavailable. */
 import assert from 'node:assert/strict';
+import {returningPage} from './browserSession.mjs';
 import {createRequire} from 'node:module';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
@@ -22,7 +23,7 @@ try{
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  // The sheet owns the prominent life-stage label; the profile has no duplicate age.
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
-  const context=await browser.newContext({viewport});const page=await context.newPage();
+  const context=await browser.newContext({viewport});const page=await returningPage(context);
   await page.addInitScript(()=>{window.GukminContent={contentId:'headline-check',events:[],choices:[]};});
   await page.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
   await page.locator('#lifeHeadline').waitFor();
@@ -81,7 +82,7 @@ try{
   await context.close();console.log('PASS '+name+': larger sheet age, school year, graduation, reduced motion');
  }
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small-mobile',{width:360,height:640}]]){
-  const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop'});const page=await context.newPage(),errors=[];
+  const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop'});const page=await returningPage(context),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
   page.on('response',r=>{if(r.url().startsWith(base)&&r.status()>=400)errors.push(`${r.status()} ${r.url()}`);});
@@ -102,7 +103,7 @@ try{
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').count(),0);
-  assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'3살');
   assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no meaningless paused progress bar');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
@@ -271,13 +272,13 @@ try{
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>!document.querySelector('#dailyChoiceDialog').open);
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'Escape collapses without choosing');
-  assert.equal(await page.locator('#lifeHeadline').textContent(),'2살');
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'3살');
   if(name!=='desktop'){
    const old=await page.locator('#lifeSheet').boundingBox();
    assert.ok(old.height<viewport.height*.3,'sheet starts compact and does not cover most of the game');
    const chrome=await page.evaluate(()=>{
     const sheet=document.querySelector('#lifeSheet');
-    const parts=['#sheetToggle','.sheet-head','#choiceTiming','#systemTools','#systemError'];
+    const parts=['#sheetToggle','.sheet-head','#choiceTiming','#playbackControls','#systemTools','#systemError'];
     return parts.map(sel=>sheet.querySelector(sel)).filter(Boolean)
       .reduce((sum,node)=>sum+node.getBoundingClientRect().height,0)
       +parseFloat(getComputedStyle(sheet).paddingBottom);
@@ -445,7 +446,7 @@ try{
   const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));assert.equal(saved.simulation.turn,4);assert.equal(saved.metricHistory.at(-1).value,3);
   // F: restore data across independent pages; legacy save never touched.
   await page.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});await page.locator('#waitingName').waitFor();assert.equal(await page.locator('#waitingName').textContent(),initial);
-  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#resultBack').click();
+  await page.locator('#previewResult').click();await page.locator('#resultPosterMount .gk-poster').waitFor();await page.locator('#skipResultRecap').click();await page.locator('#resultBack').click();
   await page.waitForFunction(()=>document.querySelector('#enterGame')?.textContent.includes('이어서 플레이하기'));
   await page.locator('#enterGame').click();
   await page.locator('.school-token-complete').waitFor();
@@ -464,7 +465,7 @@ try{
 
  // The countdown is presentation-only: the bar progresses for five seconds and never settles a choice.
  const timedContext=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
- const timedPage=await timedContext.newPage(),timerErrors=[];
+ const timedPage=await returningPage(timedContext),timerErrors=[];
  timedPage.on('pageerror',e=>timerErrors.push(e.message));
  await timedPage.route('https://fonts.googleapis.com/**',route=>route.abort());
  await timedPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
@@ -508,7 +509,7 @@ try{
 
  // Saved game visibility: continuing must not silently restart, resetting must be confirmed.
  const recall=await browser.newContext({viewport:{width:390,height:844}});
- const recallPage=await recall.newPage();
+ const recallPage=await returningPage(recall);
  await recallPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
  const original=await recallPage.evaluate(()=>{const s=GukminGame.session.snapshot();return {turn:s.runtime.turn,token:s.choice?.token};});
  await recallPage.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
@@ -539,7 +540,7 @@ try{
 
  // The built-in exam presenter uses a paper-style modal and settles through the same timeline.
  const examContext=await browser.newContext();
- const examPage=await examContext.newPage();
+ const examPage=await returningPage(examContext);
  await examPage.addInitScript(()=>{
   window.GukminContent={
    contentId:'exam-view-check',events:[{id:'exam-view',layer:'한방 이벤트',at:0,choice:'exam-view'}],
@@ -568,11 +569,11 @@ try{
  // Complete real game life through school on desktop and mobile using actual dialogs.
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}]]){
   const ctx=await browser.newContext({viewport});
-  const p=await ctx.newPage(),pageErrors=[];
+  const p=await returningPage(ctx),pageErrors=[];
   p.on('pageerror',e=>pageErrors.push(e.message));
   await p.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
   let start=await p.evaluate(()=>GukminGame.session.snapshot());
-  assert.equal(start.persona.age,2);
+  assert.equal(start.persona.age,3);
   const walk=async target=>p.evaluate(target=>{
    const s=GukminGame.session;
    for(let index=0;index<80;index++){
@@ -600,7 +601,7 @@ try{
    throw new Error('Life path did not reach '+target);
   },target);
   const examState=await walk('exam');
-  assert.equal(examState.age,13);
+  assert.equal(examState.age,14);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
   assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),5);
   assert.equal(await p.locator('#lifeDecisionDialog .life-paper-identification').count(),1);
@@ -617,7 +618,7 @@ try{
   assert.equal(afterReload.runtime.turn,beforeReload.runtime.turn,'restored turn');
   assert.equal(afterReload.persona.age,beforeReload.persona.age,'restored age');
   const schoolState=await walk('school');
-  assert.equal(schoolState.age,15);
+  assert.equal(schoolState.age,16);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
   assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),4);
   const schoolBounds=await p.locator('#lifeDecisionDialog').boundingBox();
@@ -626,7 +627,7 @@ try{
   assert.ok((await p.locator('#lifeDecisionDialog .life-school-source').getAttribute('href')).startsWith('https://'));
   await p.locator('#lifeDecisionDialog .life-submit').click();
   const ended=await walk('nothing');
-  assert.equal(ended.age,19);assert.equal(ended.turn,88);
+  assert.equal(ended.age,20);assert.equal(ended.turn,88);
   assert.equal(await p.locator('#choiceTiming').isVisible(),false,'completed chapter has no meaningless progress bar');
   assert.equal(await p.locator('.life-chapter-complete button').count(),2,'completed chapter offers result and replay actions');
   assert.equal(await p.getByRole('button',{name:'새 인물로 다시 시작',exact:true}).count(),1);
@@ -647,12 +648,12 @@ try{
   await p.screenshot({path:`${artifacts}/${name}-life-graduate.png`,fullPage:true});
   assert.deepEqual(pageErrors,[]);
   const savedRecord=await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));await p.getByRole('button',{name:'내 인생 결과 보기 ↗',exact:true}).click();await p.locator('#resultTitle').waitFor();assert.equal(await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),savedRecord,'result navigation preserves the complete life');
-  console.log('PASS real life '+name+': exam UI, school application, reload, age19 graduation, result navigation');
+  console.log('PASS real life '+name+': exam UI, school application, reload, age20 graduation, result navigation');
   await ctx.close();
  }
 
  // A future major-choice popup can attach later; the infrastructure itself opens none.
- const context=await browser.newContext();const page=await context.newPage();
+ const context=await browser.newContext();const page=await returningPage(context);
  await page.addInitScript(()=>{window.GukminContent={contentId:'major-adapter-check',events:[{id:'major',layer:'한방 이벤트',at:0,title:'검증 한방',choice:'major'}],choices:[{id:'major',layer:'한방 선택',title:'중요한 선택',options:[{id:'accept',label:'확정',result:{effects:{stats:{money:7}}}}]}]};});
  await page.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
  await page.locator('#currentChoice').waitFor();assert.match(await page.locator('#currentChoice').textContent(),/한방 선택 응답 대기/);
@@ -661,7 +662,7 @@ try{
  assert.equal(await page.evaluate(()=>{const s=GukminGame.session;s.advance(10);return s.snapshot().runtime.turn;}),0);
  await page.evaluate(()=>{GukminGame.registerMajorPresenter(({choice,resolve})=>{window.majorTestChoice=choice;window.finishMajor=resolve;});window.finishMajor('accept');window.finishMajor('accept');});
  assert.match(await page.locator('.gauge.metric-money').textContent(),/7원/);assert.equal(await page.locator('dialog[open]').count(),0);console.log('PASS major adapter: wait, reload, no popup, callback settlement once');await context.close();
- const lifecycle=await browser.newContext();const lifecyclePage=await lifecycle.newPage();
+ const lifecycle=await browser.newContext();const lifecyclePage=await returningPage(lifecycle);
  await lifecyclePage.addInitScript(()=>{window.GukminContent={contentId:'lifecycle-check',events:[{id:'major',layer:'한방 이벤트',at:0,title:'한방',choice:'major'}],choices:[{id:'major',layer:'한방 선택',options:[{id:'accept',label:'확인',result:{effects:{stats:{money:7}}}}]}]};});
  await lifecyclePage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});await lifecyclePage.locator('#currentChoice').waitFor();
  const afterDispose=await lifecyclePage.evaluate(()=>{

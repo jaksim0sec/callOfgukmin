@@ -75,6 +75,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  let token=null,folded=true,review=false,delta=[],selectedId=null,currentChoice=null,pendingDecision=null,reward=null;
  const confirm=dialog.querySelector('#dailyPaperConfirm');
  const AUTO_OPEN_MS=5000;
+ let automatic=true;
  let autoReady=false,autoRemaining=AUTO_OPEN_MS,autoStarted=0,autoTimeout=0,autoTicker=0;
  const autoLabel=el('span','auto-choice-label','선택 열기');
  const autoTime=el('small','auto-choice-time','5초 후 자동 열림');
@@ -90,8 +91,9 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  function paintClock(){
   autoTime.textContent=Math.max(0,Math.ceil(autoRemaining/1000))+'초 후 자동 열림';
   autoLabel.textContent='선택 바로 열기';
-  autoTime.hidden=!autoReady;
-  autoTrack.hidden=!autoReady;
+  autoTime.hidden=!autoReady||!automatic;
+  autoTrack.hidden=!autoReady||!automatic;
+  if(!automatic)autoLabel.textContent='선택 열기';
  }
  function pauseClock(){
   if(!autoReady)return;
@@ -107,7 +109,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   paintClock();
  }
  function startClock(){
-  if(!autoReady||autoStarted||!token||dialog.open||document.hidden)return;
+  if(!automatic||!autoReady||autoStarted||!token||dialog.open||document.hidden)return;
   if(autoRemaining<=0){open();return;}
   const currentToken=token;
   autoStarted=performance.now();
@@ -201,7 +203,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  }
  function sync(){
   resumeButton.hidden=token===null||review||dialog.open||!!reward;
-  resumeButton.classList.toggle('is-auto-opening',autoReady);
+  resumeButton.classList.toggle('is-auto-opening',autoReady&&automatic);
   if(!autoReady){autoLabel.textContent='선택 열기';autoTime.hidden=true;autoTrack.hidden=true;}
   else paintClock();
   confirm.textContent=reward?'보상 받기':'이 선택으로 기록하기';
@@ -283,7 +285,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   dialog.querySelector('.daily-modal-head small').textContent=persona.age+'살 · '+(labels[stage]||P.phaseDefinition(stage).label);
   const compact=el('div','daily-choice-compact');
   compact.append(el('strong','',choice.title),
-   el('p','','일기장이 잠시 후 열려. 위 버튼을 누르면 바로 시작할 수 있어.'));
+   el('p','daily-choice-hint',automatic?'잠시 후 선택이 열려. 바로 열어도 좋아.':'준비되면 선택 열기 또는 다음 버튼을 눌러 줘.'));
   host.append(compact);
   const situation=el('section','daily-scenario');
   situation.append(el('span','daily-scenario-kicker','지금 상황'),el('strong','daily-scenario-title',choice.title));
@@ -386,7 +388,11 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   confirm.removeEventListener('click',confirmSelection);
   dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('click',backdrop);dialog.removeEventListener('close',sync);
  }
- return Object.freeze({suspend:()=>{cancelClock();if(dialog.open)dialog.close();},showChoice,changesFor,capture,restore,openRestoredReward,highlight,reset,dispose,isReview:()=>review,isRewardVisible:()=>!!reward});
+ function setAutomatic(value){
+  if(automatic===!!value)return;
+  pauseClock();automatic=!!value;sync();startClock();
+ }
+ return Object.freeze({setAutomatic,open,suspend:()=>{cancelClock();if(dialog.open)dialog.close();},showChoice,changesFor,capture,restore,openRestoredReward,highlight,reset,dispose,isReview:()=>review,isRewardVisible:()=>!!reward});
 }
 global.GukminDailyChoice=Object.freeze({create});
 global.GukminMarkup=Object.freeze({render:renderRich,text:displayText});

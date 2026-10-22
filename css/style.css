@@ -1406,3 +1406,37 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 .home-route li{display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:#dacbe5}.home-route li+li::before{content:'›';color:#786480;margin-right:.6rem;font-size:1rem}.home-route li>span{display:grid;place-items:center;width:1.6rem;height:1.6rem;border:.0625rem solid #9c83b1;border-radius:50%;background:#35283f;color:#ddc8ee;font-size:.7rem;font-weight:800}.home-route .is-future{color:#d5bf8d}.home-route .is-future>span{border-color:#9d865c;background:#352e22;color:#e4cc91}.home-route small{font-size:.55rem;color:#978b78}
 .home-start-card{border-radius:.75rem;border-top:.22rem solid #bba1d2}.home-start-form .primary-action{font-size:.95rem;font-weight:850;letter-spacing:.015em}
 @media(max-width:40em){.home-hero h1{font-size:clamp(2.5rem,10vw,3.5rem)}.home-route{gap:.6rem;margin-top:1.25rem}.home-route li{font-size:.6rem;gap:.3rem}.home-route li+li::before{margin-right:.15rem}.home-route li>span{width:1.35rem;height:1.35rem;font-size:.6rem}.home-route small{font-size:.5rem}.home-start-form .primary-action{font-size:.85rem}}
+
+/* Player pacing lives in the record sheet, independently of the status cards. */
+.playback-controls{display:flex;align-items:center;gap:.4rem;flex:none;padding:.45rem 1rem .65rem;border-bottom:.0625rem solid #ffffff12}
+.playback-controls button{display:inline-flex;align-items:center;justify-content:center;min-height:2.15rem;padding:.4rem .75rem;border:.0625rem solid #ffffff1c;border-radius:.7rem;background:#ffffff06;color:#d6cde0;font:inherit;font-size:.75rem;white-space:nowrap}
+.playback-controls #playbackMode{color:#d5bee9;min-width:3.2rem}
+.playback-controls #playbackMode[aria-pressed=true]{background:#a586c326;border-color:#a586c366}
+.playback-controls #playbackPause[aria-pressed=true]{color:#f2d7a4;background:#dcb26615;border-color:#dcb26660}
+.playback-controls #playbackNext{margin-left:auto;background:#bda6ce;color:#201928;font-weight:750;border-color:transparent}
+.playback-controls #playbackHelp{padding:.4rem;min-width:2.15rem;border-radius:50%;font-weight:750}
+.playback-controls button:disabled{opacity:.45;cursor:default}
+.playback-controls button:focus-visible,.game-tutorial button:focus-visible{outline:.125rem solid #d3b7ed;outline-offset:.15rem}
+.choice-timing.is-paused .choice-progress-fill{transition:none}
+.game-tutorial{width:min(32rem,calc(100vw - 2rem));max-height:calc(100dvh - 2rem);padding:1.6rem;border:.0625rem solid #ab90c260;border-radius:1.4rem;background:#1b1722;color:#f3edf8;overflow:auto;overscroll-behavior:contain}
+.game-tutorial::backdrop{background:#08060dd9;backdrop-filter:blur(.35rem)}
+.tutorial-top{display:flex;justify-content:space-between;align-items:center;gap:1rem;color:#c5b1d6;font-size:.7rem}
+.tutorial-top button{border:0;padding:.45rem 0;background:none;color:#d1c6dc;font:inherit;white-space:nowrap}
+.tutorial-art{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.7rem 0;padding:1.5rem .5rem;border-radius:1rem;background:radial-gradient(ellipse at center,#76509633,transparent 80%);border:.0625rem solid #ffffff0a}
+.tutorial-symbol{display:flex;flex:1;min-width:0;align-items:center;flex-direction:column;gap:.7rem;text-align:center}
+.tutorial-symbol b{display:flex;align-items:center;justify-content:center;min-width:3rem;height:3rem;border-radius:1rem;background:#b08bc523;color:#dac3ee;font-size:1.2rem;font-weight:650}
+.tutorial-symbol small{font-size:.7rem;color:#c6b8d3;word-break:keep-all}
+.tutorial-copy>small{font-size:.7rem;color:#bba0ce;letter-spacing:.15em}
+.tutorial-copy h2{font-size:1.45rem;line-height:1.45;margin:.6rem 0 .8rem;word-break:keep-all;letter-spacing:-.025em}
+.tutorial-copy p{font-size:.9rem;line-height:1.9;color:#d2c8dc;word-break:keep-all;margin:0;min-height:7rem}
+.tutorial-dots{display:flex;justify-content:center;gap:.4rem;margin:1.2rem 0}
+.tutorial-dots span{width:.35rem;height:.35rem;border-radius:1rem;background:#665970}
+.tutorial-dots .is-current{width:1.2rem;background:#ceb3e2}
+.tutorial-hide{display:flex;align-items:center;gap:.5rem;color:#c4b8ce;font-size:.75rem;padding:.5rem 0;cursor:pointer}
+.tutorial-hide input{accent-color:#bda6ce;width:1rem;height:1rem;margin:0}
+.tutorial-actions{display:flex;gap:.6rem;margin-top:.8rem}
+.tutorial-actions button{border:.0625rem solid #ffffff25;border-radius:.75rem;background:transparent;color:#ded2e7;font:inherit;font-size:.85rem;padding:.8rem 1rem}
+.tutorial-actions #tutorialNext{flex:1;background:#c2a9d2;border-color:transparent;color:#241b2b;font-weight:750}
+.tutorial-actions button:disabled{opacity:.3}
+@media(max-width:47.5em){.playback-controls{padding:.4rem 1rem .55rem}.playback-controls button{min-height:2rem;padding:.35rem .6rem;font-size:.7rem}.playback-controls #playbackHelp{min-width:2rem}.game-tutorial{padding:1.2rem}.tutorial-art{margin:1rem 0;padding:1rem .3rem}.tutorial-copy h2{font-size:1.25rem}.tutorial-copy p{font-size:.85rem;min-height:0}}
+@media(prefers-reduced-motion:reduce){.game-tutorial,.playback-controls button{animation:none;transition:none}}

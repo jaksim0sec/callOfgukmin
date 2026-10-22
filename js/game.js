@@ -83,7 +83,7 @@ function mount(root,navigate,content=global.GukminContent){
 
  // The compact snap fits its controls rather than a fixed fraction of the viewport.
  function collapsedSheetHeight({rem}){
-  const visible=[$('sheetToggle'),sheet.querySelector('.sheet-head'),$('choiceTiming'),$('systemTools'),$('systemError')];
+  const visible=[$('sheetToggle'),sheet.querySelector('.sheet-head'),$('choiceTiming'),$('playbackControls'),$('systemTools'),$('systemError')];
   const controls=visible.reduce((sum,node)=>sum+(node?.getBoundingClientRect().height||0),0);
   const safeBottom=Number.parseFloat(getComputedStyle(sheet).paddingBottom)||0;
   const height=Math.ceil(Math.max(6*rem,controls+safeBottom+rem*.375));
@@ -111,7 +111,71 @@ function mount(root,navigate,content=global.GukminContent){
  let adviceToStore=false,resultRouted=false;
  const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
+ const controlsKey='callOfgukmin__controls__v1',tutorialKey='callOfgukmin__tutorial_hidden__v1';
+ let preferences={},tutorialHidden=false;
+ try{preferences=JSON.parse(localStorage.getItem(controlsKey)||'{}')||{};tutorialHidden=localStorage.getItem(tutorialKey)==='1';}catch{}
+ let playbackMode=preferences.mode==='manual'?'manual':'auto',userPaused=preferences.paused===true;
+ let tutorialActive=!verificationMode&&!tutorialHidden,lifeDeferred=false,tutorialPage=0;
+ const tutorial=$('gameTutorial');
+ const guide=[
+  {title:'한 번의 선택이, 한 사람의 삶으로',body:'태어난 환경은 제각각. 작은 선택으로 특성을 얻고, 학교와 진로를 거쳐 더 큰 도전을 준비하세요. 지금은 학생 시절과 대학 입시까지 플레이할 수 있어요.',art:[['01','태어남'],['02','선택과 성장'],['03','더 큰 도전']]},
+  {title:'내 속도로 이야기를 넘기세요',body:'자동은 이야기를 이어 주고, 일상 선택을 5초 뒤 열어요. 수동은 다음 버튼을 누를 때만 진행합니다. 일시정지하면 시간과 자동 열기가 멈춰요. 선택은 언제나 직접 고릅니다.',art:[['▶','자동'],['→','수동'],['Ⅱ','일시정지']]},
+  {title:'특성은 강점, 압박은 부담',body:'특성 토큰을 누르면 효과를 볼 수 있어요. 관계는 기회에 영향을 주고, 압박이 25를 넘으면 정신병으로 바뀝니다. 정신병 5는 게임오버. GU 편의점은 4턴에 한 번 이용할 수 있어요.',art:[['✧','특성'],['25','압박 한계'],['GU','잠깐의 쉼']]},
+  {title:'선택은 고르고, 결과는 챙기고',body:'일상 선택은 종이 시트에서 고른 뒤 보상 받기로 이어 가세요. 시험·진학은 별도 서류로 열려요. 모든 결과는 인생 기록에 남고 자동 저장됩니다. ? 버튼으로 이 안내를 다시 볼 수 있어요.',art:[['✓','선택'],['+','결과'],['↗','인생 기록']]}
+ ];
+ function canAuto(){return playbackMode==='auto'&&!userPaused&&!tutorialActive&&!document.hidden;}
+ function saveControls(){try{localStorage.setItem(controlsKey,JSON.stringify({mode:playbackMode,paused:userPaused}));}catch{}}
+ function paintControls(){
+  const auto=playbackMode==='auto';
+  text('playbackMode',auto?'자동':'수동');$('playbackMode').setAttribute('aria-pressed',String(auto));
+  text('playbackPause',userPaused?'▶ 재개':'Ⅱ 일시정지');$('playbackPause').setAttribute('aria-pressed',String(userPaused));
+  text('playbackNext',snapshot?.choice?'선택 열기 →':'다음 →');
+  $('playbackNext').disabled=userPaused||tutorialActive||cinematicShown;
+  $('playbackControls').dataset.paused=String(userPaused);
+  dailyUI?.setAutomatic(canAuto());
+ }
+ function paintTutorial(){
+  const step=guide[tutorialPage];text('tutorialStep',String(tutorialPage+1).padStart(2,'0')+' / 04');
+  text('tutorialTitle',step.title);text('tutorialBody',step.body);
+  $('tutorialArt').replaceChildren(...step.art.map(([mark,label])=>{const item=el('span','tutorial-symbol');item.append(el('b','',mark),el('small','',label));return item;}));
+  $('tutorialDots').replaceChildren(...guide.map((_,i)=>{const dot=el('span','');dot.classList.toggle('is-current',i===tutorialPage);return dot;}));
+  $('tutorialBack').disabled=tutorialPage===0;text('tutorialNext',tutorialPage===guide.length-1?'플레이 시작 →':'다음 →');
+ }
+ function openTutorial(){
+  tutorialActive=true;tutorialPage=0;stopJourney();paintControls();paintTutorial();
+  if(!tutorial.open)tutorial.showModal();
+ }
+ function finishTutorial(){
+  if(!tutorialActive||disposed)return;
+  try{if($('hideTutorial').checked)localStorage.setItem(tutorialKey,'1');else localStorage.removeItem(tutorialKey);}catch{}
+  tutorialActive=false;if(tutorial.open)tutorial.close();
+  if(lifeDeferred){lifeDeferred=false;restoreLife();}
+  renderProgress();if(!snapshot?.choice&&!snapshot?.reviewPending&&!cinematicShown)startJourney();
+ }
+ function setPlayback(){
+  saveControls();stopJourney();renderProgress();
+  if(canAuto()&&!snapshot?.choice&&!snapshot?.reviewPending&&!cinematicShown)startJourney();
+ }
+ function nextMoment(){
+  if(userPaused||tutorialActive||cinematicShown||root.querySelector('dialog[open]'))return;
+  stopJourney();
+  if(snapshot?.choice){
+   if(snapshot.choice.layer==='일상 선택')dailyUI.open();else $('resumeMajorChoice').click();
+   return;
+  }
+  // Skip silent logical turns only. A visible event or decision always stops this click.
+  if(engine?.step){
+   for(let count=0;count<10000;count++){
+    const before=engine.snapshot(),changed=engine.step(),now=engine.snapshot();
+    if(!changed||now.choice||now.reviewPending||cinematicShown||root.querySelector('dialog[open]')||now.persona.history.slice(before.persona.history.length).some(item=>item.display!=='hidden'))break;
+   }
+  }else engine?.run();
+  renderProgress();
+  if(canAuto()&&!snapshot?.choice&&!snapshot?.reviewPending&&!cinematicShown)journeyTimer=global.setTimeout(startJourney,1250);
+ }
+ function continueJourney(){if(playbackMode==='manual'&&!userPaused)nextMoment();else startJourney();}
  $('systemTools').hidden=!verificationMode;
+ $('playbackControls').hidden=verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   if(!verificationMode&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason)){if(!resultRouted){resultRouted=true;stopJourney();clearCinematics();clearMajor();dailyUI?.reset();navigate('result');}return;}
@@ -148,7 +212,7 @@ function mount(root,navigate,content=global.GukminContent){
     if(continued)return;
     continued=true;
     const next=el('button','continue-story','다음 이야기 보기 →');
-    next.type='button';next.addEventListener('click',safely(startJourney));
+    next.type='button';next.addEventListener('click',safely(continueJourney));
     host.append(next);
    }
    for(let i=history.length-1;i>=0;i--){
@@ -359,14 +423,14 @@ function mount(root,navigate,content=global.GukminContent){
   dialog:$('dailyChoiceDialog'),body:$('dailyChoiceBody'),heading:$('dailyModalHeading'),
   resumeButton:$('resumeDailyChoice'),
   resolve:(token,id)=>safely(()=>engine.resolve(token,id))(),
-  proceed:()=>safely(startJourney)()
+  proceed:()=>safely(continueJourney)()
  });
  const cinematics=[],cinematic=$('lifeCinematic');
  let cinematicTimer=null,cinematicShown=false,currentCinematic=null,electionTicker=null,examBreakTimer=null;
  cinematic.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();$('lifeCinematicDismiss').focus();}});
  const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  function nextCinematic(){
-  if(disposed||cinematicShown||!cinematics.length)return;
+  if(disposed||tutorialActive||cinematicShown||!cinematics.length)return;
   const scene=cinematics.shift();
   currentCinematic=scene;
   cinematicShown=true;
@@ -411,10 +475,10 @@ function mount(root,navigate,content=global.GukminContent){
   }
   if(scene.kind==='transition'){card.classList.add('is-chapter');card.prepend(el('span','chapter-orbit',''));card.append(el('span','chapter-footer','새로운 장이 시작됩니다.'));}
   body.append(card);cinematic.hidden=false;document.body.classList.add('cinematic-open');
-  $('lifeCinematicDismiss').textContent=scene.kind==='election'&&!scene.finished?'건너뛰기':scene.kind==='transition'?'시간이 흐른다…':'결과 확인하고 계속하기 →';
+  $('lifeCinematicDismiss').textContent=scene.kind==='election'&&!scene.finished?'건너뛰기':scene.kind==='transition'?(playbackMode==='manual'?'다음 이야기 →':'시간이 흐른다…'):'결과 확인하고 계속하기 →';
   $('lifeCinematicDismiss').focus({preventScroll:true});
-  if(scene.kind==='transition')cinematicTimer=global.setTimeout(hideCinematic,reduceMotion?0:1200);
-  else if(!['grade','election','admission'].includes(scene.kind))cinematicTimer=global.setTimeout(hideCinematic,reduceMotion?850:2200);
+  if(scene.kind==='transition'&&canAuto())cinematicTimer=global.setTimeout(()=>{if(canAuto())hideCinematic();},reduceMotion?0:1200);
+  else if(!['grade','election','admission'].includes(scene.kind)&&canAuto())cinematicTimer=global.setTimeout(()=>{if(canAuto())hideCinematic();},reduceMotion?850:2200);
  }
  function hideCinematic(){
   if(currentCinematic?.kind==='election'&&!currentCinematic.finished){currentCinematic.finish();return;}
@@ -517,10 +581,12 @@ function mount(root,navigate,content=global.GukminContent){
  }
  function startJourney(){
   stopJourney();
+  if(!canAuto()){renderProgress();return;}
   if(!engine?.step){engine?.run();return;}
   journeyActive=true;
   function tick(){
    if(disposed||!journeyActive)return;
+   if(!canAuto()){stopJourney();renderProgress();return;}
    if(cinematicShown||examBreakTimer!==null||$('convenienceStore').open||$('pressureAdvice').open){journeyTimer=global.setTimeout(tick,80);return;}
    const before=engine.snapshot(),had=before.persona.history.length;
    if(before.choice&&!before.reviewPending){stopJourney();renderProgress();return;}
@@ -547,6 +613,10 @@ function mount(root,navigate,content=global.GukminContent){
    persona,persist:s=>global.GukminPlayer.save(s),onChange
   });
   snapshot=engine.snapshot();persona=snapshot.persona;
+  if(tutorialActive){lifeDeferred=true;return;}
+  restoreLife();
+ }
+ function restoreLife(){
   const restoredDailyReward=dailyUI.restore(snapshot);
   if(snapshot.runtime.cinematic){queueCinematic(snapshot.runtime.cinematic);return;}
   if(snapshot.reviewPending){
@@ -554,9 +624,11 @@ function mount(root,navigate,content=global.GukminContent){
    if(last?.script?.presentation?.type==='election'&&!last.presentationAcknowledged&&['elected','lost'].includes(persona.attributes?.classElection)){queueCinematic({kind:'election',title:'반장선거',won:persona.attributes?.classElection==='elected'});}
    else if(['exam','grade-seal'].includes(last?.script?.presentation?.type)&&!last.presentationAcknowledged){const p=last.script.presentation,key=p.category==='mock'?'exam':'schoolScore',a=last.outcome?.after||persona,b=last.outcome?.before||persona;queueCinematic({kind:'grade',title:p.term,after:global.GukminGrades.report(key,a.stats[key],p.stage||'high').display,before:p.type==='exam'?global.GukminGrades.report(key,b.stats[key],p.stage||'high').display:null});}
    else if(restoredDailyReward)dailyUI.openRestoredReward();
-   else if(last?.layer==='일상 선택')engine.run(); // Old outcome without a recoverable before/after.
+   else if(last?.layer==='일상 선택'&&canAuto())engine.run(); // Old outcome without a recoverable before/after.
    else lifeSheet.revealResults();
-  }else engine.run();
+  }else if(snapshot.choice)renderProgress();
+  else if(playbackMode==='manual'||userPaused)renderProgress();
+  else engine.run();
  }
  function startDemo(){
   stopJourney();dailyUI.reset();clearCinematics();clearMajor();
@@ -565,6 +637,7 @@ function mount(root,navigate,content=global.GukminContent){
  }
  function renderProgress(){
   if(disposed)return;
+  paintControls();
   const active=!!engine,choice=snapshot?.choice,p=snapshot?.progress;
   const reviewing=!!snapshot?.reviewPending;
   const demo=snapshot?.runtime.contentId===global.GukminSystemDemo.contentId;
@@ -577,11 +650,12 @@ function mount(root,navigate,content=global.GukminContent){
   text('currentTitle',reviewing?'':choice?.title||'');
   const hasTarget=Number.isFinite(p?.remaining);
   // This bar means time actually passing, never a fake 100% on a paused decision.
-  const advancing=journeyActive&&!choice&&!reviewing&&hasTarget;
-  $('choiceTiming').hidden=!advancing;
-  $('choiceTiming').classList.remove('is-paused');
-  text('nextChoiceLabel',advancing?p.remaining+'턴 뒤 다음 선택':'');
-  const progressValue=advancing?p.value||0:0;
+  const advancing=journeyActive&&canAuto()&&!choice&&!reviewing&&hasTarget;
+  const showProgress=!demo&&!choice&&!reviewing&&hasTarget;
+  $('choiceTiming').hidden=!showProgress;
+  $('choiceTiming').classList.toggle('is-paused',!advancing);
+  text('nextChoiceLabel',showProgress?(userPaused?'일시정지 · ':playbackMode==='manual'?'수동 · ':'')+p.remaining+'턴 뒤 다음 선택':'');
+  const progressValue=showProgress?p.value||0:0;
   $('nextChoiceProgress').value=progressValue;
   $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
   snapSheet.refresh(); // A visible progress bar changes the compact height.
@@ -592,6 +666,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(!sameMajor)current.replaceChildren();
   if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
+  if(tutorialActive)return;
   if(dailyUI.isRewardVisible()||reviewing)return;
   if($('convenienceStore').open||maybeShowAdvice())return;
   if(!choice){dailyUI.reset();return;}
@@ -615,7 +690,17 @@ function mount(root,navigate,content=global.GukminContent){
  else connectLife();
  refreshMounted=renderProgress;resetMajorPresentation=clearMajor;
 
+ if(tutorialActive)openTutorial();
  const subscriptions=[
+  [$('playbackMode'),'click',()=>{playbackMode=playbackMode==='auto'?'manual':'auto';setPlayback();}],
+  [$('playbackPause'),'click',()=>{userPaused=!userPaused;setPlayback();}],
+  [$('playbackNext'),'click',nextMoment],
+  [$('playbackHelp'),'click',openTutorial],
+  [$('tutorialSkip'),'click',finishTutorial],
+  [$('tutorialNext'),'click',()=>{if(tutorialPage<guide.length-1){tutorialPage++;paintTutorial();}else finishTutorial();}],
+  [$('tutorialBack'),'click',()=>{tutorialPage=Math.max(0,tutorialPage-1);paintTutorial();}],
+  [tutorial,'cancel',event=>{event.preventDefault();finishTutorial();}],
+  [document,'visibilitychange',()=>{if(document.hidden){stopJourney();dailyUI.setAutomatic(false);}else setPlayback();}],
   [$('lifeCinematicDismiss'),'click',hideCinematic],
   [$('resetGame'),'click',reset],
   [$('openConvenienceStore'),'click',openStore],
@@ -634,7 +719,7 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose

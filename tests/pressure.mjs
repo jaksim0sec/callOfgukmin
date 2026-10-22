@@ -1,5 +1,6 @@
 /* Pressure/illness progression, result previews, tutorial and store use in real browsers. */
 import assert from 'node:assert/strict';
+import {returningPage} from './browserSession.mjs';
 import {createRequire} from 'node:module';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
@@ -13,7 +14,7 @@ try{
  for(let i=0;i<30;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small',{width:320,height:568}]]){
-  const context=await browser.newContext({viewport,reducedMotion:'reduce',hasTouch:name!=='desktop'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
+  const context=await browser.newContext({viewport,reducedMotion:'reduce',hasTouch:name!=='desktop'}),page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/waiting.html');await page.locator('#personaGender').selectOption('female');await page.locator('#randomName').click();assert.equal(await page.evaluate(()=>GukminData.namesByGender.female.includes(document.getElementById('personaName').value)),true);assert.equal(await page.locator('#waitingPosterMount .gk-poster').evaluate(el=>el._posterData.portraitVariant),'female');
   await page.locator('#personaName').fill('김병인');assert.equal(await page.locator('#personaGender').inputValue(),'male');assert.equal(await page.locator('#waitingPosterMount .gk-poster').evaluate(el=>el._posterData.portraitVariant),'male');
   await page.locator('#enterGame').click();await page.locator('#skipFictionNotice').click();await page.locator('#birthIntroSkip').click();await page.locator('#lifeHeadline').waitFor();assert.equal(await page.locator('#gaugesList .metric-illness').count(),0,'illness is not shown at birth');

@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='korean-age-20261022';
+const RELEASE='playback-guide-20261022';
 const screen=document.body.dataset.screen;
 const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let navigating=false;

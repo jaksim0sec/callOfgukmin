@@ -1,5 +1,6 @@
 /* Interaction regressions against real life content, including short mobile screens. */
 import assert from 'node:assert/strict';
+import {returningPage} from './browserSession.mjs';
 import {createRequire} from 'node:module';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
@@ -20,7 +21,7 @@ try{
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  if(!['checkpoints','balance'].includes(process.env.EXPERIENCE_SCOPE))for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
   const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop',reducedMotion:'reduce'});
-  const page=await context.newPage(),errors=[];
+  const page=await returningPage(context),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').click();
@@ -113,7 +114,7 @@ try{
  // Whole lives driven only by visible controls; the second builds a character and repeats a risky routine.
  if(!['checkpoints','balance'].includes(process.env.EXPERIENCE_SCOPE))for(const itinerary of ['default','creative-habit']){
  const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});
- const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://fonts.googleapis.com/**',r=>r.abort());
  await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').waitFor({state:'visible'});
  let completed=false,terminated=false,decisions=0,reloadedContact=false,specialtyUsed=false,sawRevelation=false,invitationSeen=false,sawMetricSummary=false;
@@ -215,7 +216,7 @@ try{
  }
  // Focused real-content checkpoints cover outcomes without replaying an entire life for each screen.
  if(process.env.EXPERIENCE_SCOPE!=='balance')for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
-  const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());await page.goto(base+'html/game.html');
+  const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());await page.goto(base+'html/game.html');
   const seed=async(id,patch={})=>{
    if(!page.url().includes('/game.html')){await page.evaluate(()=>GukminPlayer.save(GukminPlayer.generate()));await page.goto(base+'html/game.html');}
    await page.evaluate(({id,patch})=>{
@@ -258,7 +259,7 @@ try{
   assert.deepEqual(errors,[]);console.log('PASS checkpoints '+name+': applied traits, sealed grades, both election/admission outcomes, fields, family-funded retakes, career opportunities, final endings and restore');await context.close();
  }
  if(!process.env.EXPERIENCE_SCOPE||process.env.EXPERIENCE_SCOPE==='balance')for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
-  const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await context.newPage(),errors=[];
+  const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await returningPage(context),errors=[];
   page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/game.html');await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-effects,#dailyChoiceBody .daily-choice-risk,#dailyChoiceBody .daily-choice-outlook,#dailyChoiceBody .interest-transition').count(),0,'childhood rewards stay hidden until commitment');

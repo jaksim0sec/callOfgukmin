@@ -1,5 +1,6 @@
 /* Focused browser coverage for naming, real result sharing and store purchases. */
 import assert from 'node:assert/strict';
+import {returningPage} from './browserSession.mjs';
 import {createRequire} from 'node:module';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
@@ -17,7 +18,7 @@ try{
  for(let i=0;i<50;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  for(const [name,viewport] of [['desktop',{width:1365,height:900}],['mobile',{width:390,height:844}],['small',{width:320,height:568}]]){
-  const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop',reducedMotion:name==='mobile'?'no-preference':'reduce',acceptDownloads:true}),page=await context.newPage(),errors=[];
+  const context=await browser.newContext({viewport,hasTouch:name!=='desktop',isMobile:name!=='desktop',reducedMotion:name==='mobile'?'no-preference':'reduce',acceptDownloads:true}),page=await returningPage(context),errors=[];
   page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/result.html');assert.match(await page.locator('#resultTitle').textContent(),/아직 쓰이지/);assert.equal(await page.locator('#shareResult').isDisabled(),true);assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),null,'viewing an empty result creates no save');
   await page.goto(base+'html/waiting.html');await page.locator('#personaName').fill('   ');await page.locator('#enterGame').click();assert.equal(await page.locator('#birthIntro').isVisible(),false,'blank names cannot start a life');
