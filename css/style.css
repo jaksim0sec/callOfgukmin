@@ -1893,3 +1893,23 @@ body[data-screen=result]{background:radial-gradient(ellipse at 85% 0,#29203166,t
 @media(prefers-reduced-motion:reduce){.election-vote-track i,.election-live-count .election-candidate{transition:none}.is-ballot-cast .election-ballot-slip{animation:none}}
 
 .is-election:not(.is-counted) .election-result{display:none}.election-live-count.is-complete .election-ballot-box{display:none}.election-live-count.is-complete .election-count-progress{font-size:.85rem;margin-top:.6rem;color:#d8d9bd}
+
+/* Clean photographic opening: title and rich story share the shaded image area. */
+.paper-choice-sheet.is-illustrated{background-color:#fffdf8}
+.paper-choice-sheet.is-illustrated .daily-modal-head h2{position:absolute;width:.0625rem;height:.0625rem;padding:0;margin:-.0625rem;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.paper-choice-sheet.is-illustrated .daily-modal-head{padding-bottom:.15rem}
+.daily-illustration{display:grid;isolation:isolate;width:100%;margin:.15rem 0 1rem;border:0;border-radius:.65rem;overflow:hidden;background:#302d29}
+.daily-illustration>img{grid-area:1/1;display:block;width:100%;height:100%;min-height:0;aspect-ratio:3/2;object-fit:cover}
+.daily-illustration figcaption{grid-area:1/1;z-index:1;align-self:end;min-width:0;padding:3rem 1rem 1rem;text-align:left;background:linear-gradient(180deg,transparent,#11141bbd 36%,#11141bed);color:#fff;text-shadow:0 .0625rem .35rem #0008}
+.daily-illustration figcaption>strong{display:block;font:700 1.2rem/1.45 'Noto Serif KR','Batang',serif;letter-spacing:-.035em;color:#fff;word-break:keep-all}
+.paper-choice-sheet .daily-illustration .daily-choice-story{margin:.5rem 0 0;font-size:.87rem;line-height:1.75;font-weight:450;color:#f4f2ef;letter-spacing:-.025em;word-break:keep-all}
+.paper-choice-sheet .daily-illustration .daily-choice-story strong{color:#fff;font-weight:750}
+.paper-choice-sheet .daily-illustration .daily-choice-story em{color:#fff;text-decoration-color:#d9cbea}
+.paper-choice-sheet .daily-illustration .daily-choice-story mark{background:#eee4ff;color:#29203e;text-shadow:none}
+.paper-choice-sheet .daily-illustration .daily-choice-story del{color:#c4c1c7}
+.paper-choice-sheet.is-illustrated .inline-choice{background:#fffdf866}
+.paper-choice-sheet.is-illustrated .inline-choice.is-selected{background:#ece4f09c}
+.daily-illustration.is-recollection{width:min(100%,18rem);margin:.2rem auto 1.3rem}
+.daily-illustration.is-recollection figcaption>strong{font-size:.95rem}
+.is-illustrated.is-reward .daily-reward-hero{padding-top:.3rem}
+@media(max-width:47.5em){.paper-choice-sheet.is-illustrated .daily-modal-body{padding-top:.65rem}.daily-illustration{margin-bottom:.65rem}.daily-illustration figcaption{padding:2.75rem .85rem .85rem}.daily-illustration figcaption>strong{font-size:1.07rem}.paper-choice-sheet .daily-illustration .daily-choice-story{font-size:.8rem;line-height:1.7}.daily-illustration.is-recollection{width:min(100%,14rem)}}

@@ -3,6 +3,50 @@
 'use strict';
 function el(tag,cls,text){const node=document.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=String(text);return node;}
 function rich(tag,cls,text){return global.GukminMarkup.render(el(tag,cls),text);}
+// User-supplied 3:2 artwork. Match frozen event/variant IDs, never guess from story text.
+const dailyArt={
+ '01':{file:'01-teddy.jpg',title:'곰 인형 발견'},
+ '02':{file:'02-sandplay.jpg',title:'모래놀이'},
+ '03':{file:'03-schoolbag.jpg',title:'첫 책가방'},
+ '04':{file:'04-toy-car.jpg',title:'장난감 자동차'},
+ '05':{file:'05-cafeteria.jpg',title:'급식실 친구'},
+ '06':{file:'06-afterschool.jpg',title:'방과 후 활동'},
+ '07':{file:'07-project-materials.jpg',title:'우리 동네 발표 자료'},
+ '08':{file:'08-project-preparation.jpg',title:'우리 동네 발표 준비'},
+ '09':{file:'09-club-notice.jpg',title:'동아리 모집'},
+ '10':{file:'10-broadcast.jpg',title:'방송부 활동'},
+ '11':{file:'11-science-club.jpg',title:'과학 동아리'},
+ '12':{file:'12-exam-preparation.jpg',title:'시험 준비'},
+ '13':{file:'13-missed-bus.jpg',title:'등교 버스 놓침'},
+ '14':{file:'14-lab-reservation.jpg',title:'탐구실 예약 취소'},
+ '15':{file:'15-electives.jpg',title:'선택과목 변경'},
+ '16':{file:'16-experiment-error.jpg',title:'실험 오류'},
+ '17':{file:'17-before-exam.jpg',title:'수능 전 일상'},
+ '18':{file:'18-after-exam.jpg',title:'시험 끝난 저녁'},
+ '19':{file:'19-retake.jpg',title:'재수 준비'},
+ '20':{file:'20-applications.jpg',title:'대학 지원 준비'}};
+function artworkFor(choice,optionId){
+ if(!choice||['chat','seating','sports','study-app','campaign','exam'].includes(choice.presentation?.type))return null;
+ const id=choice.choiceId||choice.id,scenario=choice.scenarioId;let art=choice.presentation?.illustration;
+ if(!art){
+  const common={'infant:play':'02','infant:prepare':'03','elementary:friends':'05','elementary:afterschool':'06','elementary:project':'07','middle:resources':'12'};
+  art=common[id];
+  if(id==='infant:home')art=scenario==='toy-care'?'04':'01';
+  if(id==='elementary:project'&&optionId)art='08';
+  if(id==='middle:friends'){const club=choice.options?.find(o=>o.id===optionId)?.result?.effects?.attributes?.clubPath;art=club==='media'?'10':club==='science'?'11':!optionId&&scenario==='arts-group'?'10':!optionId&&scenario==='science-group'?'11':'09';}
+  if(id==='high:commute'&&scenario==='morning-commute')art='13';
+  if(id==='high:electives')art=scenario==='research-slot'?'14':['regular-elective',undefined,null].includes(scenario)?'15':null;
+  if(id==='high:teamwork'&&scenario==='team-sea')art='16';
+  if(/^admission:[^:]+:last-week$/.test(id))art='17';
+  if(/^admission:[^:]+:exam-evening$/.test(id))art='18';
+ }
+ const entry=dailyArt[art];return entry?{id:art,src:'assets/daily/'+entry.file,title:entry.title}:null;
+}
+function illustration(art,{title=art.title,compact=false}={}){
+ const figure=el('figure','daily-illustration'+(compact?' is-recollection':'')),image=el('img');image.src=art.src;image.alt=art.title;image.width=660;image.height=440;image.decoding='async';
+ const caption=el('figcaption');caption.append(el('strong','',title));figure.append(image,caption);
+ image.addEventListener('error',()=>{figure.closest('dialog')?.classList.remove('is-illustrated');const fallback=el('section','daily-scenario');const story=caption.querySelector('.daily-choice-story');if(story)fallback.append(story);figure.replaceWith(fallback);},{once:true});return figure;
+}
 function bubble(message,mine=false){
  const row=el('div','chat-message'+(mine?' is-mine':''));
  if(!mine){const avatar=el('span','chat-avatar',String(message.sender||'친구').slice(-1));avatar.setAttribute('aria-hidden','true');row.append(avatar);}
@@ -133,6 +177,7 @@ function studyApp(presentation,reaction,portrait={}){
  sync(reaction);return app;
 }
 function decorate({dialog,body,list,choice,persona,state={},onSelect}){
+ const art=artworkFor(choice);dialog.classList.toggle('is-illustrated',!!art);if(art){const figure=illustration(art,{title:choice.title}),situation=body.querySelector('.daily-scenario'),story=situation?.querySelector('.daily-choice-story');if(story)figure.querySelector('figcaption').append(story);situation?.remove();body.prepend(figure);}
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='campaign'){
   const E=global.GukminElection,step=choice.presentation.step;
@@ -165,7 +210,8 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
   buttons.forEach(button=>button.addEventListener('click',sync));sync();
  }
 }
-function reward({dialog,body,presentation,attributes,stats,traits,portrait,optionId,label,onReady,restored}){
+function reward({dialog,body,presentation,attributes,stats,traits,portrait,optionId,label,onReady,restored,artwork}){
+ dialog.classList.toggle('is-illustrated',!!artwork);if(artwork)body.prepend(illustration(artwork,{compact:true}));
  const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='chat'){
   const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation));
@@ -181,5 +227,5 @@ function reward({dialog,body,presentation,attributes,stats,traits,portrait,optio
  if(kind==='sports')return raceReplay({body,presentation,attributes,stats,traits,onReady,restored});
  return null;
 }
-global.GukminDailyScenes=Object.freeze({decorate,reward,raceProgress,raceRanks,raceCourse});
+global.GukminDailyScenes=Object.freeze({decorate,reward,artworkFor,raceProgress,raceRanks,raceCourse});
 })(window);

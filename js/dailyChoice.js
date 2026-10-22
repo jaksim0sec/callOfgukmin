@@ -140,10 +140,10 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
    history.slice(from,to+1):history.slice(before?.history?.length||0);
   return entries.filter(item=>item.display!=='hidden').map(item=>item.detail||'').filter(Boolean).join(' ');
  }
- function rewardModel(before,after,label,from,to,presentation,optionId){
+ function rewardModel(before,after,label,from,to,presentation,optionId,choice){
   const route=after.attributes?.admissionResearch,score=after.stats?.schoolScore||0;
   const guidance=route&&route!==before.attributes?.admissionResearch?global.GukminStory.admissionGuide(after,route):'';
-  return {presentation,optionId,portrait:global.GukminGame.posterData(after),attributes:after.attributes||{},stats:after.stats,traits:after.traits,guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
+  return {presentation,optionId,artwork:global.GukminDailyScenes.artworkFor(choice,optionId),portrait:global.GukminGame.posterData(after),attributes:after.attributes||{},stats:after.stats,traits:after.traits,guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
  }
  function renderReward(){
   if(!reward)return;
@@ -185,7 +185,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   }
   if(!ordered.length)tray.append(el('p','daily-reward-empty','수치 변화 없이 이야기에 기록됐어.'));
   section.append(tray);body.append(section);
-  sceneHandle=global.GukminDailyScenes.reward({dialog,body,presentation:reward.presentation,attributes:reward.attributes,stats:reward.stats,traits:reward.traits,portrait:reward.portrait,optionId:reward.optionId,label:reward.label,restored:reward.restored,onReady:sync});
+  sceneHandle=global.GukminDailyScenes.reward({dialog,body,presentation:reward.presentation,attributes:reward.attributes,stats:reward.stats,traits:reward.traits,portrait:reward.portrait,optionId:reward.optionId,label:reward.label,restored:reward.restored,artwork:reward.artwork,onReady:sync});
   if(reward.presentation?.type==='seating')body.insertBefore(section,hero);
   body.scrollTop=0;
   if(!global.matchMedia('(prefers-reduced-motion: reduce)').matches)body.animate([{opacity:.55,transform:'translateY(.25rem)'},{opacity:1,transform:'none'}],{duration:220,easing:'cubic-bezier(.22,.7,.25,1)'});
@@ -226,7 +226,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   sceneHandle?.dispose();sceneHandle=null;sceneState={};
   cancelClock();
   if(dialog.open)dialog.close();
-  dialog.dataset.scene='';body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward');
+  dialog.dataset.scene='';body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward','is-illustrated');
   sync();
  }
  function cancel(event){event.preventDefault();fold();}
@@ -258,7 +258,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   review=!!reviewPending;
   if(!pendingDecision||pendingDecision.token!==choice.token)return;
   const selected=choice.options.find(item=>item.id===pendingDecision.id);
-  reward=rewardModel(before,after,selected?.label,(before.history||[]).length,(after.history||[]).length-1,choice.presentation,selected?.id);
+  reward=rewardModel(before,after,selected?.label,(before.history||[]).length,(after.history||[]).length-1,choice.presentation,selected?.id,choice);
   pendingDecision=null;
   renderReward();
  }
@@ -269,7 +269,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   const outcome=last.outcome;
   if(!outcome?.before||!outcome?.after)return false;
   token=last.token;review=true;folded=false;delta=differences(outcome.before,outcome.after);
-  reward=rewardModel(outcome.before,outcome.after,outcome.label,outcome.historyFrom,outcome.historyTo,last.script?.presentation,last.optionId);reward.restored=true;
+  reward=rewardModel(outcome.before,outcome.after,outcome.label,outcome.historyFrom,outcome.historyTo,last.script?.presentation,last.optionId,{id:last.choiceId,scenarioId:last.scenarioId,presentation:last.script?.presentation,options:last.script?.options});reward.restored=true;
   return true;
  }
  function showChoice(choice,host,persona){

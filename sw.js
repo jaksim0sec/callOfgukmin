@@ -1,7 +1,7 @@
 /* Static app shell only. Player saves remain exclusively in localStorage. */
 'use strict';
 const ROOT=new URL('./',self.location.href);
-const VERSION=new URL(self.location.href).searchParams.get('v')||'election-survey-20261022';
+const VERSION=new URL(self.location.href).searchParams.get('v')||'daily-illustrations-20261022';
 const PREFIX='gukmin-shell-';
 const CACHE=PREFIX+VERSION;
 const SHELL=[
@@ -41,6 +41,26 @@ const SHELL=[
  "js/election/choices.js",
  "js/systemDemo.js",
  "js/timeline.js",
+ "assets/daily/01-teddy.jpg",
+ "assets/daily/02-sandplay.jpg",
+ "assets/daily/03-schoolbag.jpg",
+ "assets/daily/04-toy-car.jpg",
+ "assets/daily/05-cafeteria.jpg",
+ "assets/daily/06-afterschool.jpg",
+ "assets/daily/07-project-materials.jpg",
+ "assets/daily/08-project-preparation.jpg",
+ "assets/daily/09-club-notice.jpg",
+ "assets/daily/10-broadcast.jpg",
+ "assets/daily/11-science-club.jpg",
+ "assets/daily/12-exam-preparation.jpg",
+ "assets/daily/13-missed-bus.jpg",
+ "assets/daily/14-lab-reservation.jpg",
+ "assets/daily/15-electives.jpg",
+ "assets/daily/16-experiment-error.jpg",
+ "assets/daily/17-before-exam.jpg",
+ "assets/daily/18-after-exam.jpg",
+ "assets/daily/19-retake.jpg",
+ "assets/daily/20-applications.jpg",
  "assets/svg/school-placeholder.svg",
  "assets/svg/store-products.svg",
  "assets/icons/apple-touch-icon.png",
