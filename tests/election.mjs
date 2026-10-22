@@ -35,6 +35,13 @@ try{
    return bounds.top>=content.top&&bounds.bottom<=footer.top&&card.contains(point);
   }),'the first pledge card is fully visible on entry without scrolling or a sticky overlay');
 
+  if(name!=='desktop'){
+   const before=await page.locator('.pledge-slots').boundingBox();
+   await page.locator('.pledge-content').evaluate(e=>e.scrollTop=e.scrollHeight);
+   const after=await page.locator('.pledge-slots').boundingBox();assert.ok(Math.abs(before.y-after.y)<1,'rack stays fixed while the catalog scrolls');
+   assert.ok(await page.locator('.pledge-dock').evaluate(dock=>{const d=dock.getBoundingClientRect(),c=document.querySelector('.pledge-content').getBoundingClientRect();return d.bottom<=c.top+1&&dock.contains(document.elementFromPoint(d.left+d.width/2,d.top+d.height/2));}),'dock and catalog have separate non-overlapping boxes');
+   await page.locator('.pledge-content').evaluate(e=>e.scrollTop=0);
+  }
   for(const id of ['library','quiet','lost'])await page.locator('[data-pledge='+id+']').click();
   await page.locator('[data-pledge=holiday]').click();assert.equal(await page.locator('.pledge-card[aria-pressed=true]').count(),3);
   const detail=page.locator('.support-details');assert.equal(await detail.evaluate(e=>e.open),name==='desktop');

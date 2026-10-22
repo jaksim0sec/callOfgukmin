@@ -1835,11 +1835,15 @@ body[data-screen=result]{background:radial-gradient(ellipse at 85% 0,#29203166,t
 .support-board .candidate-color-3{background:#6f6b79}
 .campaign-question{margin:.7rem 0;padding:.75rem .85rem;border-left:.2rem solid #9b79b8;background:#e6dbeb75;border-radius:0 .5rem .5rem 0}.campaign-question>strong{font:750 .8rem/1.6 system-ui,sans-serif;color:#604b6d}.campaign-question>p{font:.85rem/1.75 'Batang',serif;color:#4a3d50;margin:.4rem 0}.campaign-question>small{font:.65rem/1.6 system-ui,sans-serif;color:#89748f}.campaign-poll-target{display:block;font:650 .7rem/1.6 system-ui,sans-serif;color:#7f697f;margin-top:.4rem}
 @media(max-width:47.5em){
- .is-pledges .pledge-content>.campaign-eyebrow{display:none}.is-pledges .pledge-content>.life-modal-title{font-size:1.35rem;margin:.15rem 0 .65rem}
+ .is-pledges .pledge-dock>.campaign-eyebrow{display:none}.is-pledges .pledge-dock>.life-modal-title{font-size:1.35rem;margin:.15rem 0 .65rem}
  .is-pledges .support-board{padding:.6rem .7rem}.is-pledges .support-legend{margin-bottom:0}.is-pledges .support-head{margin-bottom:.4rem}.is-pledges .support-total{font-size:1.6rem}.is-pledges .support-details .support-legend{margin:.3rem 0 .6rem}
  .is-pledges .pledge-slot{min-height:3.65rem}.is-pledges .pledge-slot-help{margin:.3rem .1rem .5rem}.is-pledges .pledge-catalog-heading{margin:.55rem 0 .4rem}
  .is-pledges .pledge-footer{padding-top:.5rem;flex-wrap:nowrap;gap:.5rem}.is-pledges .pledge-footer .life-submit{width:auto;flex:0 0 auto;min-height:3rem}.is-pledges .pledge-footer-counts{flex:1;min-width:0}.is-pledges .pledge-counter{font-size:.75rem}.is-pledges .pledge-live-share{font-size:.65rem}
 }
 @media(max-height:42em) and (max-width:47.5em){
- .is-pledges .pledge-slot-help{display:none}.is-pledges .pledge-puzzle>.support-board{margin-top:.5rem}.is-pledges .pledge-slot{min-height:3rem}.is-pledges .pledge-content>.life-modal-title{font-size:1.2rem;margin-bottom:.45rem}.is-pledges .pledge-catalog-heading{display:none}.is-pledges .pledge-cards{margin-top:.65rem}
+ .is-pledges .pledge-slot-help{display:none}.is-pledges .pledge-puzzle>.support-board{margin-top:.5rem}.is-pledges .pledge-slot{min-height:3rem}.is-pledges .pledge-dock>.life-modal-title{font-size:1.2rem;margin-bottom:.45rem}.is-pledges .pledge-catalog-heading{display:none}.is-pledges .pledge-cards{margin-top:.65rem}
 }
+
+/* The mobile rack occupies its own row; scrolling cards cannot paint behind it. */
+.pledge-dock{flex:none;min-width:0;background:#f5f0e6}.pledge-dock:empty{display:none}
+@media(max-width:47.5em){.is-pledges .pledge-dock{padding:.2rem .1rem .25rem;border-bottom:.0625rem solid #c8bfae}.is-pledges .pledge-content{padding-top:.2rem}.is-pledges .pledge-dock>.life-modal-title{margin-top:.15rem}.is-pledges .pledge-puzzle{padding-bottom:0}}

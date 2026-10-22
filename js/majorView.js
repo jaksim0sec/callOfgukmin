@@ -145,7 +145,7 @@ function presentPledges({choice,resolve,root},person){
  const E=global.GukminElection,isFinal=choice.presentation.mode==='final',isDraft=!isFinal&&(person.attributes?.electionRevision||0)>=2,slots=isFinal?E.chosen(person).map(p=>p.id):[null,null,null];let activeSlot=0,closed=false;
  const sheet=make('section','life-modal-wrap election-pledge-paper'),head=make('header','life-modal-head'),foldButton=make('button','life-modal-collapse','접기 ⌄');foldButton.type='button';
  head.append(make('span','life-modal-serial','우리 반 선거관리위원회'),foldButton);
- const content=make('div','pledge-content');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title',isFinal?'최종 공약 조정':isDraft?'임시 공약 만들기':'공약 세 가지 선택'));
+ const content=make('div','pledge-content'),dock=make('div','pledge-dock');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title',isFinal?'최종 공약 조정':isDraft?'임시 공약 만들기':'공약 세 가지 선택'));
  const puzzle=make('section','pledge-puzzle'),rack=make('div','pledge-slots');rack.setAttribute('role','group');rack.setAttribute('aria-label','공약 세 칸');
  const slotButtons=slots.map((_,i)=>{const button=make('button','pledge-slot');button.type='button';button.addEventListener('click',()=>{activeSlot=i;paint();});button.addEventListener('keydown',e=>{if(['Delete','Backspace'].includes(e.key)){e.preventDefault();slots[i]=null;activeSlot=i;paint();}});rack.append(button);return button;});
  puzzle.append(rack,make('small','pledge-slot-help','카드를 눌러 끼우기 · 칸을 누르면 교체 · 고른 카드를 다시 누르면 빼기'));
@@ -168,12 +168,15 @@ function presentPledges({choice,resolve,root},person){
   });cards.append(card);
  }
  const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','공약 카드'),make('small','','기본 성향 · 실제 민심은 집단마다 달라집니다'));content.append(catalogHead,cards);
- footer.append(counts,confirm);sheet.append(head,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
+ footer.append(counts,confirm);sheet.append(head,dock,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
+ const mobile=global.matchMedia('(max-width:47.5em)'),eyebrow=content.querySelector('.campaign-eyebrow'),title=content.querySelector('.life-modal-title'),help=puzzle.querySelector('.pledge-slot-help');
+ const syncDock=()=>{if(mobile.matches)dock.append(eyebrow,title,rack,help);else{content.prepend(eyebrow,title);puzzle.prepend(rack,help);}};
+ mobile.addEventListener('change',syncDock);syncDock();
  const reopen=root.querySelector('#resumeMajorChoice');
  const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},fold=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();fold();};
  reopen.addEventListener('click',open);foldButton.addEventListener('click',fold);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);
  confirm.addEventListener('click',()=>{const ids=slots.filter(Boolean);if(closed||ids.length!==3)return;dialog.close();resolve('submit',{pledges:ids});});open();
- return ()=>{closed=true;reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-pledges');sync();};
+ return ()=>{closed=true;mobile.removeEventListener('change',syncDock);reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-pledges');sync();};
 }
 
 function present({choice,resolve,root}){
