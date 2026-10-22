@@ -9,6 +9,7 @@
 | [../README.md](../README.md) | 플레이 범위·실행·검증 |
 | [../AGENTS.md](../AGENTS.md) | 개발 지침·파일 책임·작업 절차 |
 | [VISION.md](VISION.md) | 장기 목표 **(구현 명세 아님)** |
+| [developing/SEO.md](developing/SEO.md) | 검색 대표 주소·메타데이터·사이트맵·Search Console 등록 |
 | [developing/RUNTIME.md](developing/RUNTIME.md) | 독립 페이지·로드 순서·화면/복원 흐름 |
 | [developing/SYSTEMS.md](developing/SYSTEMS.md) | 이벤트 3종·선택 2종·정산·조건·턴·복구 |
 | [developing/LIFE.md](developing/LIFE.md) | 출생/생애·학생 플레이·대입/재도전 |
