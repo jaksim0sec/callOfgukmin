@@ -1325,6 +1325,26 @@ function classroomFixture(seat='doyun'){
  const engine=env.T.create({...pack,persona:p,pauseAfterChoice:true,persist:person=>env.P.save(person)});
  engine.advance(31);assert.equal(engine.snapshot().choice.presentation.type,'seating');engine.resolve(engine.snapshot().choice.token,seat);engine.resume();return {...env,engine,pack};
 }
+test('classroom: seat bonuses are distinct and race luck stays inside a reproducible one-point band',()=>{
+ const {P,c}=setup(),p=P.generate();
+ p.age=8;p.phase='elementary';p.attributes={classroomRevision:1};
+ const first=c.GukminDirector.content(p),second=c.GukminDirector.content(p);
+ const seats=first.choices.find(x=>x.id==='classroom:seating').options;
+ const [minseo,doyun,jiwoo]=seats;
+ assert.equal(minseo.result.effects.stats.relations,2);
+ assert.equal(minseo.result.effects.activate?.athletics,undefined);
+ assert.equal(doyun.result.effects.activate.athletics,4);
+ assert.equal(doyun.result.effects.stats.athletics,2);
+ assert.equal(jiwoo.result.effects.stats.study,2);
+ assert.equal(jiwoo.result.effects.activate?.athletics,undefined);
+ const relay=first.choices.find(x=>x.id==='classroom:sports');
+ const again=second.choices.find(x=>x.id==='classroom:sports');
+ const threshold=relay.variants[0].options[0].result.conditional[0].when.all[1].any[0].stats.athletics.gte;
+ assert.ok([8,9,10].includes(threshold),'race day shifts the athletic cutoff by at most one point');
+ assert.deepEqual(relay.variants[0].options[0].result.conditional,again.variants[0].options[0].result.conditional,'same person seed reproduces the finish conditions');
+ assert.equal(relay.variants[0].options[0].result.effects.activate.athletics,4,'untrained peers begin athletics on joining the relay');
+ assert.equal(relay.variants[1].options[0].result.effects.activate?.athletics,undefined,'Doyun training must not be reset at the starting line');
+});
 test('classroom: desk choice remembers a class and friend, who returns in a chat and sports meet',()=>{
  const {engine,P,T,pack}=classroomFixture();let s=engine.snapshot();assert.equal(s.persona.attributes.seatmate,'도윤');assert.ok(s.persona.attributes.elementaryClass>=1&&s.persona.attributes.elementaryClass<=6);assert.equal(s.persona.stats.athletics,6);
  engine.advance(4);s=engine.snapshot();assert.equal(s.choice.presentation.type,'chat');assert.ok(s.choice.presentation.messages.some(m=>m.sender==='도윤'));const token=s.choice.token;engine.resolve(token,'practice');assert.equal(engine.resolve(token,'practice'),false);engine.resume();engine.advance(3);s=engine.snapshot();assert.equal(s.choice.presentation.type,'sports');assert.match(s.choice.body,/도윤/);

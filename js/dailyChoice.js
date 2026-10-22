@@ -203,6 +203,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   if(!ordered.length)tray.append(el('p','daily-reward-empty','수치 변화 없이 이야기에 기록됐어.'));
   section.append(tray);body.append(section);
   global.GukminDailyScenes.reward({dialog,body,presentation:reward.presentation,attributes:reward.attributes,optionId:reward.optionId,label:reward.label});
+  // Seating rewards: show the actual earned tokens immediately below the classmate receipt.
+  if(reward.presentation?.type==='seating')body.insertBefore(section,hero);
   body.scrollTop=0;
   sync();
  }

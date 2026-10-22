@@ -27,8 +27,10 @@ try{
   for(let i=0;i<3;i++)await page.locator('#tutorialNext').click();
   await page.locator('#hideTutorial').check();await page.locator('#tutorialNext').click();
   assert.equal(await page.locator('#gameTutorial[open]').count(),0);
-  assert.equal(await page.locator('#playbackMode').getAttribute('role'),'switch');assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'true');await page.locator('#playbackMode').click();assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false');
+  assert.equal(await page.locator('#playbackMode').getAttribute('role'),'switch');assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false','manual is the default on new installs');await page.locator('#playbackMode').click();assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'true');await page.locator('#playbackMode').click();assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false');
   const manual=await state();await page.waitForTimeout(5300);assert.deepEqual(await state(),manual);assert.equal(await page.locator('#dailyChoiceDialog[open]').count(),0,'manual mode never forces a choice open');
+  for(let i=0;i<10;i++){if(await page.evaluate(()=>!!GukminGame.session.snapshot().choice))break;await page.locator('#playbackNext').click();}
+  assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().choice?.id),'infant:home','early news is delivered a step at a time');
   if(name!=='desktop'){await page.locator('#sheetToggle').click();await page.waitForFunction(()=>!document.getElementById('lifeSheet').classList.contains('is-springing'));}
   assert.equal(await page.locator('#historyNext').isVisible(),false,'no duplicate history choice opener');assert.equal(await page.locator('#playbackNext').isVisible(),false,'no duplicate playback choice opener');
   const choiceButton=page.locator('#resumeDailyChoice');assert.equal(await choiceButton.isVisible(),true,'header owns one choice opener');await choiceButton.click();await page.locator('#dailyChoiceDialog[open]').waitFor();

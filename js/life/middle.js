@@ -247,6 +247,8 @@ global.GukminDirector.register({
    const labels=science?['단위 계산부터 다시 봐봐. 내가 체크해줌','낼 실험실에서 같이 보자 ㄱㄱ','난 내 거 먼저 끝내고 답할게']:['정답 말고 방법 알려줄게','지금 같이 확인할 사람? ㄱㄱ','난 먼저 잠. 낼 학교에서 얘기하자'];
    const replies=science?['아 단위 바꾼 데서 틀렸네 ㅋㅋ ㄳ','ㅇㅋㅇㅋ 계산기 챙겨감','ㅇㅋ 먼저 해']:['아 ㅇㅋ 이해함 고마워','ㅇㅋㅇㅋ 나 지금 가능','굿밤 ㅋㅋ'];
    script.options.forEach((option,i)=>{option.label=labels[i]||option.label;});
+   const outgoing=science?['나도 이거 계산해봤는데 단위부터 틀린 듯','지금은 바쁨 ㅠ 낼 실험실에서 같이 보자','나 내 거 먼저 마무리하고 볼게']:['그거 정답 말고 푸는 법 알려줄까?','나 지금 가능함 ㅋㅋ 같이 볼 사람?','나 자러 간다 낼 학교에서 알려줄게'];
+   script.presentation.playerMessages=Object.fromEntries(script.options.map((option,i)=>[option.id,outgoing[i]||'ㅇㅋ 확인해볼게']));
    script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender,text:replies[i]||'ㅇㅋ 확인함'}]]));
   }
   return {...stages,attributes:{

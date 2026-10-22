@@ -485,6 +485,8 @@ global.GukminDirector.register({
    ]};
    const sender=science?'세아':foreign?'하린':'재호';
    const answers=science?['ㅇㅋㅇㅋ 그럼 가정부터 맞춰 보자','좋아 내가 계산 다시 봄']:foreign?['ㅇㅋ 그럼 질문 모아서 쌤한테 물어보자','ㅇㅇ 원문 기준으로 적어둠']:['아 ㅋㅋ 날짜 잘못 봤네 ㄳ','ㅇㅋ 내일 확인하자'];
+   const outgoing=science?['잠깐 내가 가정부터 정리해볼게','자료 나한테 보내봐. 계산 다시 할게']:foreign?['날짜부터 쌤한테 확인하고 공지하자','원문 링크 가져왔음. 이거부터 보자']:['내가 공지 다시 확인해봄 ㅋㅋ','낼 학교에서 같이 물어보자'];
+   script.presentation.playerMessages=Object.fromEntries(script.options.map((option,i)=>[option.id,outgoing[i]||'나도 확인해볼게']));
    script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender:!science&&!foreign&&i===1?'알림':sender,text:answers[i]||'ㅇㅋ 확인함'}]]));
   }
   return {...stages,attributes:{projectStyle:{label:'수행평가 해결 방식',hidden:true},projectResult:{label:'수행평가 결과',hidden:true},projectObligation:{label:'다음 부탁',hidden:true},habitStage:{label:'쉬는 시간의 선택',hidden:true},highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};

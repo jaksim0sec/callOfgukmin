@@ -23,7 +23,7 @@ function decorateChat(body,list,choice){
  const draft=el('div','chat-draft');draft.hidden=true;draft.setAttribute('aria-live','polite');thread.append(draft);
  const replies=el('section','chat-replies');replies.append(el('strong','scene-choice-label','어떻게 답할까?'),list);
  body.replaceChildren(thread,replies);
- function preview(button){draft.replaceChildren(el('small','chat-draft-label','선택한 답장 · 확정 전'),bubble({text:button.querySelector('.daily-choice-title').textContent},true));draft.hidden=false;}
+ function preview(button){const option=choice.options[[...list.querySelectorAll('.inline-choice')].indexOf(button)];const text=p.playerMessages?.[option?.id]||option?.label||'확인해볼게';draft.replaceChildren(el('small','chat-draft-label','보낼 답장 · 확정 전'),bubble({text},true));draft.hidden=false;}
  for(const button of list.querySelectorAll('.inline-choice')){button.addEventListener('click',()=>preview(button));if(button.getAttribute('aria-pressed')==='true')preview(button);}
 }
 function decorateSeats(body,list,choice){
@@ -40,7 +40,7 @@ function decorateSeats(body,list,choice){
   for(let j=0;j<2;j++)list.append(el('div','occupied-desk','친구'));
   button.addEventListener('click',()=>detail(button,peer));if(button.getAttribute('aria-pressed')==='true')detail(button,peer);
  }
- room.append(list,el('small','classroom-door','복도 · 출입문 ↗'));body.append(room,preview);
+ room.append(list,el('small','classroom-door','복도 · 출입문 ↗'));body.append(preview,room);
 }
 const svgNS='http://www.w3.org/2000/svg';
 const ovalLanes=[
@@ -52,13 +52,17 @@ function oval(number){
  const field=el('div','sports-oval');
  const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox','0 0 360 240');svg.setAttribute('role','img');svg.setAttribute('aria-label','둥근 사각형 운동장 세 트랙에서 반별 주자들이 달리고 있습니다');
  const paths=[],runners=[];
+ const runnerLayer=document.createElementNS(svgNS,'g');runnerLayer.setAttribute('class','sports-runner-layer');
  for(let i=0;i<3;i++){
   const path=document.createElementNS(svgNS,'path');path.setAttribute('d',ovalLanes[i]);path.setAttribute('class','sports-ring sports-ring-'+i);svg.append(path);paths.push(path);
-  const runner=document.createElementNS(svgNS,'g');runner.setAttribute('class','sports-avatar sports-avatar-'+i);
-  const badge=document.createElementNS(svgNS,'circle');badge.setAttribute('r','11');runner.append(badge);
-  const label=document.createElementNS(svgNS,'text');label.textContent=(i===0?number:i===1?number%6+1:(number+1)%6+1)+'반';label.setAttribute('text-anchor','middle');label.setAttribute('dy','3.3');runner.append(label);svg.append(runner);runners.push(runner);
+  const runner=document.createElementNS(svgNS,'g');runner.setAttribute('class','sports-avatar sports-avatar-'+i+(i===0?' is-ours':''));
+  const badge=document.createElementNS(svgNS,'circle');badge.setAttribute('r',i===0?'14':'11');runner.append(badge);
+  const label=document.createElementNS(svgNS,'text');label.textContent=(i===0?number:i===1?number%6+1:(number+1)%6+1)+'반';label.setAttribute('text-anchor','middle');label.setAttribute('dy','3.3');runner.append(label);runners.push(runner);
  }
- field.append(svg);return {field,paths,runners};
+ // SVG paints in DOM order, not via z-index. All runners go after all lanes;
+ // our class is appended last so it remains above opponents in overlaps.
+ runnerLayer.append(runners[1],runners[2],runners[0]);svg.append(runnerLayer);
+ field.append(svg,el('strong','sports-our-lane','● 우리 '+number+'반'));return {field,paths,runners};
 }
 function placeRunners(track,progress){
  for(let i=0;i<3;i++){
@@ -69,13 +73,20 @@ function placeRunners(track,progress){
 function raceView(number,place){
  const finished=Number.isFinite(place),view=el('section',finished?'race-finish':'sports-preview');
  const board=el('div','sports-scoreboard');
- board.append(el('small','','SPORTS DAY · CLASS RELAY'),el('strong','',finished?number+'반 · '+place+'등':number+'반 · 오늘은 운동회!'),el('span','',finished?(place===1?'마지막 코너에서 역전! 우리 반 우승!':'끝까지 달려 결승선을 통과했다!'):'트랙 한 바퀴, 바통을 이어 달리자'));
+ board.append(el('small','','SPORTS DAY · 우리 '+number+'반'),el('strong','',finished?'우리 '+number+'반 · '+place+'등':number+'반 · 오늘은 운동회!'),el('span','',finished?(place===1?'🏆 우리 반 우승!':place===2?'🥈 우리 반 준우승!':'🥉 우리 반 3등 · 끝까지 잘 달렸어!'):'금색 주자가 우리 반! 세 반이 트랙 한 바퀴를 달려'));
  view.append(board);
  const track=oval(number);view.append(track.field);
  placeRunners(track,finished?(place===1?[.999,.93,.87]:place===2?[.92,.999,.84]:[.83,.999,.94]):[0,0,0]);
  if(finished){
-  if(place===1)view.append(el('strong','sports-victory','🏆 우리 반 우승!'));
-  view.append(el('p','sports-result-text','이번 계주는 내 선택과 운동능력으로 결정됐어.'));
+  view.append(el('strong','sports-victory'+(place===1?' is-winner':''),'우리 '+number+'반 · '+place+'등 '+(place===1?'🏆':place===2?'🥈':'🥉')));
+  const standings=el('div','sports-standings');standings.setAttribute('aria-label','계주 최종 순위');
+  const rivals=[number%6+1,(number+1)%6+1];
+  for(let pos=1;pos<=3;pos++){
+   const ours=pos===place;
+   const other=pos<place?rivals[pos-1]:rivals[pos-2];
+   standings.append(el('div','sports-standing'+(ours?' is-ours':''),pos+'등  ·  '+(ours?'우리 '+number+'반':other+'반')));
+  }
+  view.append(standings,el('p','sports-result-text','준비한 실력과 경기 당일의 작은 변수까지 반영된 순위야.'));
  }
  return view;
 }
@@ -83,7 +94,7 @@ function raceView(number,place){
 function playRace({dialog,body,presentation,attributes,onFinish}){
  dialog.dataset.scene='sports';body.replaceChildren();
  const view=raceView(presentation.classNumber,null);view.className='sports-running';
- view.querySelector('.sports-scoreboard strong').textContent='반 대항 계주 · 경기 중';
+ view.querySelector('.sports-scoreboard strong').textContent='우리 '+presentation.classNumber+'반 · 계주 진행 중';
  const status=el('p','sports-live','출발! 세 반이 첫 코너로 달려간다');
  view.append(status);body.append(view);body.scrollTop=0;
  const track={paths:[...view.querySelectorAll('.sports-ring')],runners:[...view.querySelectorAll('.sports-avatar')]};
@@ -119,12 +130,12 @@ function decorate({dialog,body,list,choice}){
 function reward({dialog,body,presentation,attributes,optionId,label}){
  const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports'].includes(kind)?kind:'';
  if(kind==='chat'){
-  const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation),bubble({text:label},true));
+  const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation),bubble({text:presentation.playerMessages?.[optionId]||label},true));
   for(const response of presentation.responses?.[optionId]||[])receipt.append(bubble(response));
   body.prepend(receipt);
  }
  if(kind==='seating'){
-  const receipt=el('div','seat-receipt');receipt.append(el('small','','새로운 짝꿍'),el('strong','',attributes.seatmate+' 옆자리'),el('span','',attributes.elementaryClass+'반 · 이 친구와 이야기가 이어집니다.'));body.prepend(receipt);
+  const receipt=el('div','seat-receipt');receipt.append(el('small','','새로운 짝꿍'),el('strong','',attributes.seatmate+' 옆자리'),el('span','',attributes.elementaryClass+'반 · 새로운 인연이 시작돼'));body.prepend(receipt);
  }
  if(kind==='sports')body.prepend(raceView(presentation.classNumber,attributes.sportsPlace));
 }

@@ -1581,3 +1581,75 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 @keyframes sports-win{from{opacity:0;transform:translateY(.65rem) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:47.5em){.sports-oval svg{max-height:12rem}.sports-opening{min-height:10rem}.sports-live{font-size:.75rem;padding:.5rem .65rem}}
 @media(prefers-reduced-motion:reduce){.sports-opening{display:none!important}.sports-victory{animation:none!important}}
+
+/* 2026-10-22 seating: the selected seat's real rewards should be visible without scrolling. */
+.paper-choice-sheet[data-scene=seating] .daily-modal-head{padding-block:.1rem .35rem}
+.paper-choice-sheet[data-scene=seating] .daily-modal-body{padding-top:.3rem}
+.paper-choice-sheet[data-scene=seating] .daily-scenario{padding-bottom:.3rem}
+.paper-choice-sheet[data-scene=seating] .daily-choice-story{font-size:.82rem;line-height:1.5;margin:.15rem 0 .35rem}
+.paper-choice-sheet[data-scene=seating] .seat-preview{
+ position:sticky;top:-.45rem;z-index:3;min-height:3rem;
+ margin:.35rem 0 .5rem;padding:.55rem .75rem;
+ background:#f6f5e9;border:.07rem solid #c9d7c8;border-radius:.7rem;
+ box-shadow:0 .25rem .6rem #344c3120
+}
+.paper-choice-sheet[data-scene=seating] .seat-preview-empty{padding:.2rem;font-size:.76rem}
+.paper-choice-sheet[data-scene=seating] .seat-peer-name{font-size:.97rem}
+.paper-choice-sheet[data-scene=seating] .seat-peer-note{font-size:.72rem;margin:.1rem 0}
+.paper-choice-sheet[data-scene=seating] .seat-preview .daily-choice-effects{margin:.18rem 0 0}
+.paper-choice-sheet[data-scene=seating] .classroom-room{padding:.55rem .65rem .4rem}
+.paper-choice-sheet[data-scene=seating] .classroom-blackboard{padding:.35rem .5rem;margin-bottom:.35rem}
+.paper-choice-sheet[data-scene=seating] .classroom-instruction{margin:.2rem 0 .5rem}
+.paper-choice-sheet[data-scene=seating] .classroom-desks{gap:.35rem .35rem}
+.paper-choice-sheet[data-scene=seating] .classmate-desk,
+.paper-choice-sheet[data-scene=seating] .occupied-desk,
+.paper-choice-sheet[data-scene=seating] .empty-desk{min-height:2.9rem;padding:.2rem .12rem}
+.paper-choice-sheet[data-scene=seating] .desk-avatar{width:1.15rem;height:1.15rem;font-size:.6rem}
+.paper-choice-sheet[data-scene=seating] .classroom-door{margin-top:.4rem}
+.paper-choice-sheet[data-scene=seating].is-reward .seat-receipt{
+ margin:0 0 .35rem;padding:.55rem .8rem;gap:.15rem;border-radius:.7rem
+}
+.paper-choice-sheet[data-scene=seating].is-reward .seat-receipt strong{font-size:1.03rem}
+.paper-choice-sheet[data-scene=seating].is-reward .daily-reward-changes{margin:.25rem 0 .45rem}
+.paper-choice-sheet[data-scene=seating].is-reward .daily-reward-hero{padding-top:.5rem}
+@media(max-width:47.5em){
+ .paper-choice-sheet[data-scene=seating] .classroom-desks{gap:.3rem .2rem}
+ .paper-choice-sheet[data-scene=seating] .seat-preview{top:-.3rem}
+ .paper-choice-sheet[data-scene=seating] .classmate-desk,
+ .paper-choice-sheet[data-scene=seating] .occupied-desk,
+ .paper-choice-sheet[data-scene=seating] .empty-desk{min-height:2.7rem}
+}
+
+/* Relay track: runners are physically drawn in the final SVG group above the tracks. */
+.sports-oval{isolation:isolate}
+.sports-runner-layer{filter:drop-shadow(0 .13rem .1rem #37271c8a)}
+.sports-avatar-0 circle{fill:#ffe072;stroke:#fff5ce;stroke-width:3.5}
+.sports-avatar-0 text{fill:#39260e;font-weight:900}
+.sports-avatar-1 circle,.sports-avatar-2 circle{stroke-width:2.5}
+.sports-our-lane{position:absolute;z-index:2;left:.55rem;top:.45rem;
+ background:#fff5c8;color:#584218;padding:.28rem .55rem;border-radius:100rem;
+ font-size:.71rem;font-weight:900;box-shadow:0 .1rem .35rem #283d2770}
+.race-finish .sports-our-lane{opacity:1}
+.sports-victory{background:#e9eee7;border-color:#b5c3b1;color:#365440}
+.sports-victory.is-winner{background:#fff2b5;border-color:#cea24a;color:#735010}
+.sports-standings{display:grid;gap:.3rem;margin:.5rem 0}
+.sports-standing{padding:.48rem .7rem;border:.07rem solid #aebdaa77;border-radius:.45rem;
+ font-size:.83rem;font-weight:670;color:#5d685b;background:#f7f9f1}
+.sports-standing.is-ours{background:#e1eec9;border-color:#72954f;color:#31552a;font-weight:900;font-size:.94rem}
+
+/* Trait pickups glow softly in preview and reward only, preserving their distinct hues. */
+.paper-choice-sheet .daily-trait-preview.token-trait:not(.trait-negative),
+.paper-choice-sheet .daily-reward-token.token-trait:not(.trait-negative),
+.paper-choice-sheet .daily-paper-impact.token-trait:not(.trait-negative){
+ box-shadow:0 0 .4rem #ffcf6580,0 0 .85rem #ffa65b28;
+ animation:trait-warm-halo 3.2s ease-in-out infinite
+}
+@keyframes trait-warm-halo{
+ 0%,100%{filter:brightness(1);box-shadow:0 0 .26rem #ffcd614d,0 0 .55rem #ffa65b22}
+ 55%{filter:brightness(1.06);box-shadow:0 0 .52rem #ffe2918a,0 0 1rem #ffa65b45}
+}
+@media(prefers-reduced-motion:reduce){
+ .paper-choice-sheet .daily-trait-preview.token-trait,
+ .paper-choice-sheet .daily-reward-token.token-trait,
+ .paper-choice-sheet .daily-paper-impact.token-trait{animation:none!important}
+}

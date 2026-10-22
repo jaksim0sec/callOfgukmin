@@ -108,14 +108,14 @@ function mount(root,navigate,content=global.GukminContent){
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
  let dailyUI=null;
  let renderedHistory=null;
- let journeyTimer=null,journeyActive=false,newsTimer=null;
+ let journeyTimer=null,journeyActive=false,newsTimer=null,paintedProgress=null;
  let adviceToStore=false,resultRouted=false;
  const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
  const controlsKey='callOfgukmin__controls__v1',tutorialKey='callOfgukmin__tutorial_hidden__v1';
  let preferences={},tutorialHidden=false;
  try{preferences=JSON.parse(localStorage.getItem(controlsKey)||'{}')||{};tutorialHidden=localStorage.getItem(tutorialKey)==='1';}catch{}
- let playbackMode=preferences.mode==='manual'?'manual':'auto',userPaused=preferences.paused===true;
+ let playbackMode=preferences.mode==='auto'?'auto':'manual',userPaused=preferences.paused===true;
  let tutorialActive=!verificationMode&&!tutorialHidden,lifeDeferred=false,tutorialPage=0;
  const tutorial=$('gameTutorial');
  const guide=[
@@ -158,7 +158,7 @@ function mount(root,navigate,content=global.GukminContent){
   try{if($('hideTutorial').checked)localStorage.setItem(tutorialKey,'1');else localStorage.removeItem(tutorialKey);}catch{}
   tutorialActive=false;if(tutorial.open)tutorial.close();
   if(lifeDeferred){lifeDeferred=false;restoreLife();}
-  renderProgress();if(!snapshot?.choice&&!snapshot?.reviewPending&&!cinematicShown)startJourney();
+  renderProgress();if(!snapshot?.choice&&!snapshot?.reviewPending&&!cinematicShown&&canAuto())startJourney();
  }
  function setPlayback(){
   saveControls();stopJourney();renderProgress();
@@ -574,6 +574,8 @@ function mount(root,navigate,content=global.GukminContent){
   journeyActive=false;
   if(journeyTimer!==null){global.clearTimeout(journeyTimer);journeyTimer=null;}
   if(newsTimer!==null){global.clearTimeout(newsTimer);newsTimer=null;}
+  const fill=$('choiceProgressFill');
+  if(fill){fill.style.transition='none';fill.style.transform='scaleX('+Math.max(0,Math.min(1,snapshot?.progress?.value||0))+')';}
   const toast=$('lifeNewsToast');if(toast)toast.hidden=true;
  }
  function showJourneyNews(item){
@@ -586,7 +588,20 @@ function mount(root,navigate,content=global.GukminContent){
   }
   toast.hidden=false;toast.classList.remove('is-arriving');void toast.offsetWidth;
   toast.classList.add('is-arriving');
-  newsTimer=global.setTimeout(()=>{toast.hidden=true;newsTimer=null;},prefersLessMotion?350:1100);
+  newsTimer=global.setTimeout(()=>{toast.hidden=true;newsTimer=null;},2750);
+ }
+ // Smooth motion belongs to the scheduled time between actual logical turns.
+ // Only presentation advances here, never player state or choice settlement.
+ function animateJourneyProgress(duration){
+  const p=snapshot?.progress;
+  if(!canAuto()||!journeyActive||!Number.isFinite(p?.remaining)||p.remaining<=0)return;
+  const ratio=Math.max(0,Math.min(1,p.value||0));
+  const next=ratio+(1-ratio)/Math.max(1,p.remaining);
+  const fill=$('choiceProgressFill');
+  fill.style.transition='none';fill.style.transform='scaleX('+ratio+')';
+  void fill.offsetWidth;
+  fill.style.transition='transform '+duration+'ms linear';
+  fill.style.transform='scaleX('+Math.min(1,next)+')';
  }
  function startJourney(){
   stopJourney();
@@ -605,7 +620,9 @@ function mount(root,navigate,content=global.GukminContent){
     stopJourney();renderProgress();return;
    }
    const news=now.persona.history.slice(had).some(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
-   journeyTimer=global.setTimeout(tick,prefersLessMotion?0:news?1250:170);
+   const delay=news?3000:450;
+    animateJourneyProgress(delay);
+    journeyTimer=global.setTimeout(tick,delay);
   }
   tick();
  }
@@ -666,7 +683,11 @@ function mount(root,navigate,content=global.GukminContent){
   text('nextChoiceLabel',showProgress?(userPaused?'일시정지 · ':playbackMode==='manual'?'수동 · ':'')+p.remaining+'턴 뒤 다음 선택':'');
   const progressValue=showProgress?p.value||0:0;
   $('nextChoiceProgress').value=progressValue;
-  $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
+  if(paintedProgress!==progressValue||!advancing){
+   const fill=$('choiceProgressFill');fill.style.transition='none';
+   fill.style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
+   paintedProgress=progressValue;
+  }
   snapSheet.refresh(); // A visible progress bar changes the compact height.
   const current=$('currentChoice');
   // The major presenter owns its reopen button until the choice token changes.
