@@ -30,19 +30,19 @@ function effectList(option,person,turn){
 // One opposing progress surface for the actual projected exam score and pressure.
 function examBalance(option,person,metric,turn,effort,label){
  const before=person.stats,after=global.GukminEffects.apply(person,option.result,{turn,source:'estimate'}).stats;
- const score=(after[metric]||0)-(before[metric]||0),pressure=(after.stress||0)-(before.stress||0);
+ const score=(after[metric]||0)-(before[metric]||0),riskMetric=(before.illness||0)>0||(after.illness||0)>0?'illness':'stress',riskLabel=riskMetric==='illness'?'정신병':'압박',pressure=(after[riskMetric]||0)-(before[riskMetric]||0);
  const magnitude=Math.abs(score)+Math.abs(pressure);
  const split=magnitude?Math.round(Math.abs(score)/magnitude*100):50;
  const signed=n=>(n>0?'+':'')+n.toLocaleString('ko-KR',{maximumFractionDigits:1});
- const wrap=make('div','exam-tradeoff');
+ const wrap=make('div','exam-tradeoff'+(riskMetric==='illness'?' is-illness-risk':''));
  const head=make('div','exam-tradeoff-head');
  head.append(make('small','exam-tradeoff-effort','노력 '+Math.max(0,effort)+' / 4'),
-  make('small','exam-tradeoff-caption','예상 성적 변화 vs 압박'));
+  make('small','exam-tradeoff-caption','역량 변화 · '+riskLabel+' 비용'));
  const labels=make('div','exam-tradeoff-labels');
  labels.append(make('strong',score<0?'is-loss':'is-gain',label+' '+signed(score)),
-  make('strong',pressure<0?'is-relief':'is-cost','압박 '+signed(pressure)));
+  make('strong',pressure<0?'is-relief':'is-cost',riskLabel+' '+signed(pressure)));
  const bar=make('div','exam-tradeoff-track');bar.setAttribute('role','img');
- bar.setAttribute('aria-label',label+' '+signed(score)+', 압박 '+signed(pressure)+', 노력 '+effort+'단계');
+ bar.setAttribute('aria-label',label+' '+signed(score)+', '+riskLabel+' '+signed(pressure)+', 노력 '+effort+'단계');
  bar.style.setProperty('--tradeoff-split',split+'%');
  if(score<0)bar.classList.add('has-score-loss');
  if(pressure<0)bar.classList.add('has-relief');
@@ -139,14 +139,12 @@ function presentAdmission({choice,resolve,root}){
  confirm.addEventListener('click',()=>{if(!selected||closed)return;const id=selected;dialog.close();resolve(id,p.type==='university'?{admissionField:field}:undefined);});
  footer.append(confirm);modal.append(footer);dialog.replaceChildren(modal);
  dialog.classList.add('is-admission');
- const reopen=make('button','inline-choice major-choice-reopen','📄 '+label+' 다시 열기');
- reopen.type='button';root.querySelector('#currentChoice').append(reopen);
  const headerReopen=root.querySelector('#resumeMajorChoice');
  function sync(){if(headerReopen)headerReopen.hidden=closed||dialog.open;}
  function open(){if(!closed&&!dialog.open){dialog.showModal();sync();}}
  function fold(){if(dialog.open)dialog.close();sync();headerReopen?.focus({preventScroll:true});}
  function cancel(e){e.preventDefault();fold();}
- reopen.addEventListener('click',open);headerReopen?.addEventListener('click',open);
+ headerReopen?.addEventListener('click',open);
  foldButton.addEventListener('click',fold);
  dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);
  open();
@@ -154,7 +152,7 @@ function presentAdmission({choice,resolve,root}){
   closed=true;dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);
   headerReopen?.removeEventListener('click',open);
   if(dialog.open)dialog.close();
-  dialog.replaceChildren();dialog.classList.remove('is-admission');reopen.remove();sync();
+  dialog.replaceChildren();dialog.classList.remove('is-admission');sync();
  };
 }
 
@@ -203,6 +201,8 @@ function present({choice,resolve,root}){
    make('p','',p.annual?'한 학년 전체의 준비 강도를 선택하시오.':'이번 시험에 투자할 노력 수준을 선택하시오.'));
  }
  let schoolSourceLink=null;
+ const sourceDetail=make('details','exam-source-detail');sourceDetail.hidden=true;sourceDetail.append(make('summary','','선택에 적용되는 특성·학교 효과'));
+ const sourceContent=make('div','');sourceDetail.append(sourceContent);
  const confirm=make('button','life-submit',isSchool?'선택한 학교에 지원':'선택한 준비 수준 확정');
  confirm.type='button';confirm.disabled=true;
  const effortOf=option=>option.result?.assessment?.effort??Number(/^effort-(\d)$/.exec(option.id)?.[1]??-1);
@@ -252,7 +252,7 @@ function present({choice,resolve,root}){
    }
   }
   if(isSchool){const outcome=make('span','school-option-outcome');outcome.append(effectList(option,person,choice.openedAt||0));copy.append(outcome);}
-  else copy.append(examBalance(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),p.category==='mock'?(String(p.term||'').includes('수능')?'수능':'모의고사'):'내신'));
+  else copy.append(examBalance(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),p.category==='mock'?'시험 역량':'교과 성취'));
   if(isSchool&&['science','gifted'].includes(option.school?.kind))copy.append(make('small','','학교 시작 효과 · 모의고사 1등급 · 이후 준비에 따라 변동'));
   if(!isSchool&&global.GukminGrades){
    const metric=p.category==='mock'?'exam':'schoolScore';
@@ -267,11 +267,12 @@ function present({choice,resolve,root}){
     copy.append(make('small','life-paper-estimate',before+' → '+after+' (예상)'));
    }
   }
-  if(!isSchool)copy.append(appliedSources(person,option.result));
+  if(!isSchool){const sources=appliedSources(person,option.result);sources.classList.add('is-compact');copy.append(sources);}
   row.append(copy);if(isSchool)row.append(make('span','life-answer-seal','印'));
   row.setAttribute('aria-pressed','false');
   row.addEventListener('click',()=>{
    selected=option.id;confirm.disabled=false;
+   if(!isSchool){const sources=appliedSources(person,option.result);sourceContent.replaceChildren(sources);sourceDetail.hidden=!sources.childElementCount;}
    if(isSchool&&schoolSourceLink){
     schoolSourceLink.href=option.school?.source||'https://hischool.go.kr/';
     schoolSourceLink.textContent=option.school?.verified?'학교·전형 자료 열기 ↗':'고입정보포털에서 조회 ↗';
@@ -282,6 +283,7 @@ function present({choice,resolve,root}){
  });
  const footer=make('footer','life-modal-foot');
  const note=make('p','',isSchool?'현재 성적과 지원 조건을 확인하세요.':'예상 성적입니다. 실제 준비와 적용 특성 효과를 포함합니다.');
+ if(!isSchool)footer.append(sourceDetail);
  footer.append(note,confirm);
  if(isSchool){
   const source=make('a','life-school-source','학교 정보 공시 검색 ↗');
@@ -289,18 +291,18 @@ function present({choice,resolve,root}){
   schoolSourceLink=source;footer.prepend(source);
  }
  body.append(head);
- if(!isSchool)body.append(formTop);
- body.append(title,sub,desc);
- if(!isSchool)body.append(question);
- body.append(options,footer);
+ if(isSchool)body.append(title,sub,desc,options,footer);
+ else{
+  const content=make('div','exam-paper-content');
+  content.append(formTop,title,sub,desc,question,options);
+  body.append(content,footer);
+ }
  dialog.replaceChildren(body);
- const reopen=make('button','inline-choice major-choice-reopen','📄 '+(isSchool?'진학 지원서 열기':'시험지 다시 열기'));
- reopen.type='button';root.querySelector('#currentChoice').append(reopen);
  const headerReopen=root.querySelector('#resumeMajorChoice');
  function sync(){if(headerReopen)headerReopen.hidden=closed||dialog.open;}
  function open(){if(!closed&&!dialog.open){dialog.showModal();sync();}}
  function fold(){dialog.close();sync();headerReopen?.focus({preventScroll:true});}
- reopen.addEventListener('click',open);headerReopen?.addEventListener('click',open);
+ headerReopen?.addEventListener('click',open);
  collapse.addEventListener('click',fold);
  const handleCancel=e=>{e.preventDefault();fold();};
  dialog.addEventListener('cancel',handleCancel);
@@ -319,7 +321,6 @@ function present({choice,resolve,root}){
   if(dialog.open)dialog.close();
   dialog.replaceChildren();
   dialog.classList.remove('is-exam');
-  reopen.remove();
  };
 }
 global.GukminGame.registerMajorPresenter(present);

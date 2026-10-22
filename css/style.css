@@ -1442,19 +1442,19 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 @media(prefers-reduced-motion:reduce){.game-tutorial,.playback-controls button{animation:none;transition:none}}
 
 /* Contextual daily scenes keep the same saved choices, modal and confirmation. */
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]){background-image:none;font-family:system-ui,'Pretendard',sans-serif;--paper-ink:#27303c;--paper-muted:#627080;--paper-accent:#44657a}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports])::before{display:none}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-head{padding:.2rem 1.2rem .6rem}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-body{padding:.5rem 1.2rem 1rem}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-paper-footer{padding:.7rem 1.2rem calc(.8rem + env(safe-area-inset-bottom))}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-choice-title{font-family:inherit;font-size:.94rem;line-height:1.55;font-weight:650;letter-spacing:-.02em}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-choice-story{font-size:.92rem;line-height:1.8;font-weight:450;letter-spacing:-.02em}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-paper-confirm{font-family:inherit;font-weight:750}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]){background-image:none;font-family:system-ui,'Pretendard',sans-serif;--paper-ink:#27303c;--paper-muted:#627080;--paper-accent:#44657a}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app])::before{display:none}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-modal-head{padding:.2rem 1.2rem .6rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-modal-body{padding:.5rem 1.2rem 1rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-paper-footer{padding:.7rem 1.2rem calc(.8rem + env(safe-area-inset-bottom))}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-choice-title{font-family:inherit;font-size:.94rem;line-height:1.55;font-weight:650;letter-spacing:-.02em}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-choice-story{font-size:.92rem;line-height:1.8;font-weight:450;letter-spacing:-.02em}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-paper-confirm{font-family:inherit;font-weight:750}
 .scene-choice-label{display:block;font-size:.75rem;color:#637184;letter-spacing:.015em;margin:.8rem 0 .5rem}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .inline-choices{gap:.6rem}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .inline-choice{padding:.85rem;border:.08rem solid #c8d1d7;border-radius:.8rem;background:#ffffffb5;gap:.65rem}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .inline-choice.is-selected{border-color:#4f7288;background:#fff;box-shadow:0 0 0 .1rem #4f72881c}
-.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .daily-choice-effects{gap:.3rem;margin-top:.45rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports],[data-scene=study-app]) .inline-choices{gap:.6rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports],[data-scene=study-app]) .inline-choice{padding:.85rem;border:.08rem solid #c8d1d7;border-radius:.8rem;background:#ffffffb5;gap:.65rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports],[data-scene=study-app]) .inline-choice.is-selected{border-color:#4f7288;background:#fff;box-shadow:0 0 0 .1rem #4f72881c}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports],[data-scene=study-app]) .daily-choice-effects{gap:.3rem;margin-top:.45rem}
 .paper-choice-sheet[data-scene=chat]{background:#b9cbd9;--paper-accent:#f5dc47}
 .paper-choice-sheet[data-scene=chat] .daily-modal-head{background:#b9cbd9}
 .paper-choice-sheet[data-scene=chat] .daily-modal-head h2{font-family:inherit;font-size:1.15rem;letter-spacing:-.035em}
@@ -1514,7 +1514,7 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 .sports-ranking{margin:0 0 1rem;padding:0;list-style:none}.sports-ranking li{display:flex;align-items:center;gap:1rem;padding:.5rem .7rem;font-size:.8rem;border-bottom:.0625rem solid #bacbb455;color:#596653}.sports-ranking li.is-ours{font-weight:750;background:#dfeacd;border-radius:.5rem;color:#36512e}.sports-ranking small{margin-left:auto;font-size:.65rem}
 .race-finish .race-runner{animation:class-relay 1.25s cubic-bezier(.2,.65,.4,1) both}
 @keyframes class-relay{from{left:10%}to{left:var(--finish)}}
-@media(max-width:47.5em){.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-body{padding:.4rem .9rem .85rem}.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-head{padding:.15rem .9rem .4rem}.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-paper-footer{padding:.6rem .9rem calc(.7rem + env(safe-area-inset-bottom))}.chat-bubble{font-size:.83rem;padding:.6rem .7rem}.classroom-room{padding:.7rem .55rem .5rem}.paper-choice-sheet .classroom-desks{gap:.6rem .3rem}.classmate-desk,.occupied-desk,.paper-choice-sheet .empty-desk{min-height:3.5rem}.sports-scoreboard strong{font-size:1.2rem}}
+@media(max-width:47.5em){.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-modal-body{padding:.4rem .9rem .85rem}.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-modal-head{padding:.15rem .9rem .4rem}.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports],[data-scene=study-app]) .daily-paper-footer{padding:.6rem .9rem calc(.7rem + env(safe-area-inset-bottom))}.chat-bubble{font-size:.83rem;padding:.6rem .7rem}.classroom-room{padding:.7rem .55rem .5rem}.paper-choice-sheet .classroom-desks{gap:.6rem .3rem}.classmate-desk,.occupied-desk,.paper-choice-sheet .empty-desk{min-height:3.5rem}.sports-scoreboard strong{font-size:1.2rem}}
 @media(prefers-reduced-motion:reduce){.race-finish .race-runner{animation:none}}
 
 .paper-choice-sheet[data-scene=chat] .daily-modal-head h2{color:#263e50}
@@ -1537,50 +1537,59 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 @media(max-width:47.5em){.playback-controls{gap:.3rem}.playback-controls #playbackNext{padding-inline:.5rem}.history-next{min-height:3.3rem;font-size:.93rem;padding:.9rem 1rem;margin:.65rem 0 1rem}}
 @media(prefers-reduced-motion:reduce){.playback-toggle-thumb,.history-next{transition:none}}
 
-/* 2026-10-22: one prominent choice opener on a fully collapsed record sheet. */
-.playback-controls #playbackNext[hidden],#log #historyNext[hidden]{display:none!important}
-.sheet:not(.is-minimized) .sheet-choice-resume:not([hidden]){background:#b89fcd18;border-color:#b89fcd40;color:#d5c3e2;box-shadow:none;font-weight:650}
-.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]){background:#bda5d2;color:#241a2d;border-color:#d9c4ec;box-shadow:0 0 0 .12rem #bda5d21c,0 .35rem 1.2rem #ad8ece37;font-weight:800}
-.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-label{color:#241a2d;font-weight:800}
-.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-time{color:#483459}
-.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-track{background:#30213a40}
-.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-fill{background:#47335b}
-.tutorial-copy p{min-height:0}
-.tutorial-metrics{display:grid;grid-template-columns:1fr;gap:.45rem;margin:.8rem 0 .1rem}
-.tutorial-metrics[hidden]{display:none}
-.tutorial-stat{display:flex;align-items:flex-start;gap:.8rem;padding:.67rem .75rem;border-radius:.65rem;border:.0625rem solid #bca6cb33;background:#b69bc313}
-.tutorial-stat strong{font-size:.78rem;color:#dec8ee;min-width:5.9rem;flex:none;line-height:1.5}
-.tutorial-stat span{font-size:.76rem;line-height:1.6;color:#d4cbdc}
-@media(max-width:47.5em){
- .sheet.is-minimized.is-awaiting-choice .sheet-choice-resume{min-width:8rem;max-width:10rem;min-height:2.6rem}
- .tutorial-art{padding:.65rem .35rem;margin:.65rem 0}
- .tutorial-copy h2{margin:.35rem 0 .5rem}
- .tutorial-stat{gap:.5rem;padding:.5rem .65rem}
- .tutorial-stat strong{min-width:5.1rem;font-size:.73rem}
- .tutorial-stat span{font-size:.72rem}
-}
-/* Announce the school sports day, then keep the entire race inside the existing daily sheet. */
-.paper-choice-sheet[data-scene=sports] .daily-modal-body{position:relative}
-.sports-opening{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.9rem;z-index:4;min-height:13rem;background:linear-gradient(140deg,#214b39f5,#387450f7);color:#f8fae6;opacity:0;pointer-events:none;text-align:center;border-radius:.85rem}
-.sports-opening small{font-size:.7rem;letter-spacing:.26em;color:#c4e6af}
-.sports-opening strong{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.04em}
-.sports-opening span{font-size:.82rem;color:#e5efd7}
-.paper-choice-sheet.sports-entered .sports-opening{animation:sports-intro 1.5s both}
-@keyframes sports-intro{0%{opacity:0;transform:scale(.98)}12%,76%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.02)}}
-.sports-oval{position:relative;overflow:hidden;padding:.45rem .3rem;border:.25rem solid #d7d9bc;border-radius:0 0 1rem 1rem;background:repeating-linear-gradient(35deg,#598a62,#598a62 1.5rem,#5e9467 1.5rem,#5e9467 3rem)}
-.sports-oval svg{display:block;width:100%;height:auto;max-height:17rem;overflow:visible}
-.sports-ring{fill:none;stroke:#ba6151;stroke-width:12;stroke-linecap:round}
-.sports-ring-1{stroke:#c77865}.sports-ring-2{stroke:#d18c77}
-.sports-avatar circle{fill:#f8d668;stroke:#3d633c;stroke-width:2}
-.sports-avatar-1 circle{fill:#77d1e7;stroke:#256078}.sports-avatar-2 circle{fill:#e8b0e6;stroke:#85557c}
-.sports-avatar text{font-size:.5rem;font-weight:800;fill:#2e3930}
-.sports-running .sports-scoreboard{border-radius:.9rem .9rem 0 0;background:#1f4637}
-.sports-live{margin:.6rem .8rem 1rem;padding:.7rem .85rem;border-radius:.65rem;background:#d9e9d5;color:#2c563c;font-size:.83rem;font-weight:750;line-height:1.5}
-.sports-victory{display:block;padding:.75rem 1rem;margin:.7rem 0;border-radius:.75rem;background:#fff2b5;border:.095rem solid #cea24a;color:#735010;font-weight:850;font-size:1.3rem;text-align:center;animation:sports-win .8s ease-out both}
-.sports-result-text{color:#537058;font-size:.8rem;margin:.35rem 0 .9rem;text-align:center}
-@keyframes sports-win{from{opacity:0;transform:translateY(.65rem) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-@media(max-width:47.5em){.sports-oval svg{max-height:12rem}.sports-opening{min-height:10rem}.sports-live{font-size:.75rem;padding:.5rem .65rem}}
-@media(prefers-reduced-motion:reduce){.sports-opening{display:none!important}.sports-victory{animation:none!important}}
+/* One stable action area and one timing region; no transient news toast. */
+.history-advance{flex:none;padding:.45rem 1.1rem calc(.65rem + env(safe-area-inset-bottom));border-top:.0625rem solid #b497cc25;background:#131118}
+.history-advance .history-next{margin:0;min-height:3.15rem;display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.05rem;max-width:none;flex-direction:row}
+.history-advance .history-next .auto-choice-label{font:inherit;color:inherit}
+.history-advance .history-next.is-auto-opening{min-width:0;max-width:none}
+.playback-controls #playbackHelp{margin-left:auto}
+.choice-timing{min-height:2.7rem}.choice-timing .timing-label{gap:1rem}.choice-timing .timing-label>span:last-child{white-space:normal;text-align:right}
+.current-choice:empty{display:none}.action-area .current-line{margin-bottom:0}
+.tutorial-art.has-stat-guide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:.65rem;padding:1rem .6rem}
+.tutorial-stat-card{padding:.75rem .65rem;background:#ffffff08;border:.0625rem solid #ffffff10;border-radius:.85rem;min-width:0}
+.tutorial-stat-card small{display:block;color:#ded1e8;font-size:.76rem}.tutorial-stat-card strong{display:block;color:var(--guide-color);font-size:1.5rem;margin:.45rem 0}
+.tutorial-stat-card p{color:#c7bacf;font-size:.67rem;margin:.5rem 0 0;line-height:1.6}
+.tutorial-stat-track{height:.4rem;background:#ffffff13;border-radius:1rem;overflow:hidden}.tutorial-stat-track>span{display:block;height:100%;transform-origin:left;background:var(--guide-color);border-radius:inherit}
+.tutorial-example-note{grid-column:1/-1;color:#a999b8;text-align:center;font-size:.62rem}
+.tutorial-money-card{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:.7rem;text-align:center}.tutorial-money-card>small{color:#bfb0cb;font-size:.75rem}.tutorial-money-card>strong{font-size:1.6rem;color:#e0c47d}.tutorial-money-card>p{color:#d2c6dc;font-size:.75rem;line-height:1.7;margin:0}
+/* Neutral white acquisition sheen, retaining each trait's established token colour. */
+.trait-shimmer,.is-trait-new .token{position:relative;overflow:hidden;isolation:isolate}
+.paper-choice-sheet .daily-reward-tokens .trait-shimmer.token-icon-pill{animation:none}
+.trait-shimmer::after,.is-trait-new .token::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(100deg,transparent 15%,#ffffff70 48%,transparent 78%);transform:translateX(-120%);animation:trait-white-sheen 1.15s .1s ease-in-out both;mix-blend-mode:screen}
+@keyframes trait-white-sheen{from{transform:translateX(-120%)}to{transform:translateX(120%)}}
+.sports-day-intro{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;text-align:center;min-height:19rem;padding:1.4rem 1rem;border-radius:1rem;background:radial-gradient(ellipse at top,#fff3bd,#e1edcf);color:#31533a;animation:sports-day-enter .55s ease-out both}
+.sports-day-intro>span{font-size:2.3rem;color:#ba654b;letter-spacing:.35em}.sports-day-intro small{font-size:.72rem;letter-spacing:.1em}.sports-day-intro h3{font-size:2rem;letter-spacing:-.04em;margin:0}.sports-day-intro p{font-size:.9rem;line-height:1.85;max-width:23rem;margin:0}.sports-day-intro button{margin-top:.5rem;border:0;border-radius:.8rem;padding:.8rem 1.4rem;color:#fff;background:#446d4b;font:inherit;font-size:.9rem;font-weight:700;line-height:1.5}
+@keyframes sports-day-enter{from{opacity:0;transform:translateY(.4rem)}to{opacity:1;transform:none}}
+.sports-preparation{padding:.8rem;border:.0625rem solid #aabf9a;border-radius:.7rem;background:#e1ead8;margin:.6rem 0}.sports-preparation strong{font-size:.9rem;color:#315b3c}.sports-preparation p{font-size:.77rem;line-height:1.7;color:#586a50;margin:.4rem 0 0}
+.oval-track{display:block;width:100%;height:auto;aspect-ratio:16/9;border:0;border-radius:.9rem;background:#d9e6cb;margin:.6rem 0}
+.race-field-label{font:700 1.375rem system-ui,sans-serif;letter-spacing:.03em}
+.race-our-team{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem .6rem;color:#2c4f37;margin:.8rem .1rem;font-size:.84rem}.race-our-team small{font-size:.72rem;color:#56684c;flex-basis:100%;padding-left:1.35rem}.race-team-dot{width:.75rem;height:.75rem;border-radius:50%;background:#ffe285;outline:.12rem solid #647b51}
+.race-live-ranking{font-size:.73rem;text-align:center;color:#46613e;line-height:1.7;padding:.4rem 0}
+.race-skip{display:block;position:sticky;bottom:0;margin:.6rem auto 0;padding:.5rem .8rem;background:#edf3e7;border:.0625rem solid #aabb9d;border-radius:.6rem;color:#4b6141;font-size:.75rem;cursor:pointer}
+.race-pending>.daily-reward-hero,.race-pending>.daily-reward-changes,.race-pending>.admission-guidance{display:none}
+.race-arena.race-finish .sports-scoreboard{background:#315b40}.race-arena .sports-ranking{margin-top:.5rem}
+.paper-choice-sheet[data-scene=study-app]{background:#f6f4ef;--paper-accent:#e17938}.paper-choice-sheet[data-scene=study-app] .daily-modal-head h2{color:#44362d}
+.study-app{background:#fff;border:.0625rem solid #e7dfd3;border-radius:1rem;overflow:hidden;margin:.25rem 0 1rem;font-family:system-ui,sans-serif;color:#413b35}
+.study-app-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 1rem;background:#ee8a40;color:#fff}.study-app-header strong{font-size:1.2rem}.study-app-header>span{font-size:.52rem;letter-spacing:.1em}
+.study-app-profile{display:grid;grid-template-columns:2.2rem 1fr;gap:.2rem .6rem;padding:1rem 1rem .4rem}.study-avatar{grid-row:span 2;display:grid;place-items:center;background:#efdfc7;color:#916c40;border-radius:.8rem;font-size:.95rem}.study-app-profile strong{font-size:.8rem}.study-app-profile small{font-size:.65rem;color:#9a8e81}
+.study-app-clock{display:flex;flex-direction:column;gap:.35rem;align-items:center;justify-content:center;width:11rem;aspect-ratio:1;margin:.6rem auto .9rem;border:.5rem solid #f3b16e;border-radius:50%;background:radial-gradient(circle,#fff,#fff8ef);box-shadow:0 0 0 .35rem #fff3e5}
+.study-app-clock small{font-size:.6rem;color:#a18a73;letter-spacing:.15em}.study-app-clock b{font-size:1.9rem;font-variant-numeric:tabular-nums;letter-spacing:-.05em;color:#b76023}.study-app-clock>span{font-size:.72rem;color:#9a7d62}
+.study-likes{padding:.55rem 1rem;font-size:.8rem;color:#b86c43;border-top:.0625rem solid #f2e9dd}.study-app-caption,.study-app-comment{font-size:.8rem;line-height:1.75;padding:0 1rem .7rem;margin:0;color:#78695d}.study-app-comment{padding:.7rem 1rem;background:#fff5e9;color:#9c572b}
+.life-exam-paper .exam-effort-options .life-answer-copy{display:flex;flex-direction:column;min-width:0;gap:.5rem;width:100%}
+.life-exam-paper .exam-effort-options .life-answer-copy>strong{font-size:.95rem;line-height:1.6}
+.exam-effort-meter{display:flex;align-items:center;gap:.2rem}.exam-effort-meter small{font-size:.65rem;min-width:4rem;color:#8b765f}.exam-effort-meter i{display:block;width:1.15rem;height:.28rem;background:#e7e0d5;border-radius:1rem}.exam-effort-meter i.is-filled{background:#a7875c}
+.life-exam-paper .exam-option-outcome{display:grid;gap:.5rem}.life-exam-paper .life-paper-estimate{padding:.45rem .6rem;border-radius:.4rem;background:#f2eee6;color:#5e523f;font-size:.75rem;line-height:1.6;font-weight:650}.life-exam-paper .assessment-sources{font-size:.68rem;gap:.25rem;padding-top:.4rem}.life-exam-paper .assessment-source{gap:.35rem;align-items:center}.life-exam-paper .assessment-source>span:last-child{font-size:.68rem;line-height:1.6}
+@media(max-width:47.5em){.history-advance{padding:.4rem 1rem calc(.5rem + env(safe-area-inset-bottom))}.history-advance .history-next{min-height:3.5rem;padding:.75rem 1rem}.sports-day-intro{min-height:16rem}.sports-day-intro h3{font-size:1.7rem}.tutorial-stat-card{padding:.55rem}.tutorial-stat-card strong{font-size:1.3rem}}
+@media(prefers-reduced-motion:reduce){.trait-shimmer::after,.is-trait-new .token::after,.sports-day-intro{animation:none}.trait-shimmer::after,.is-trait-new .token::after{display:none}}
+
+.race-result-reason{font-size:.78rem;line-height:1.85;color:#516749;background:#dfead4;border-radius:.65rem;padding:.75rem;margin:.7rem 0}
+
+.life-exam-paper .assessment-sources.is-compact{display:flex;flex-direction:row;flex-wrap:wrap;gap:.3rem;border:0;padding-top:0}
+.life-exam-paper .assessment-sources.is-compact>small,.life-exam-paper .assessment-sources.is-compact .assessment-source>span:last-child{display:none}
+.life-exam-paper .assessment-sources.is-compact .assessment-source{display:inline-flex;margin:0}
+.exam-source-detail{width:100%;font-size:.72rem;color:#6d5b46;text-align:left;margin-bottom:.4rem}.exam-source-detail summary{cursor:pointer;padding:.25rem 0}.exam-source-detail>div{max-height:6rem;overflow:auto}.exam-source-detail .assessment-sources{border:0;padding:.4rem 0}
+.life-exam-paper .life-paper-instruction{margin:.4rem 0;font-size:.65rem;line-height:1.5}
+.life-exam-paper .exam-effort-options .life-answer{padding:.7rem;gap:.5rem}.life-exam-paper .exam-effort-options .life-answer-copy{gap:.35rem}
 
 /* 2026-10-22 seating: the selected seat's real rewards should be visible without scrolling. */
 .paper-choice-sheet[data-scene=seating] .daily-modal-head{padding-block:.1rem .35rem}
@@ -1620,39 +1629,6 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
  .paper-choice-sheet[data-scene=seating] .empty-desk{min-height:2.7rem}
 }
 
-/* Relay track: runners are physically drawn in the final SVG group above the tracks. */
-.sports-oval{isolation:isolate}
-.sports-runner-layer{filter:drop-shadow(0 .13rem .1rem #37271c8a)}
-.sports-avatar-0 circle{fill:#ffe072;stroke:#fff5ce;stroke-width:3.5}
-.sports-avatar-0 text{fill:#39260e;font-weight:900}
-.sports-avatar-1 circle,.sports-avatar-2 circle{stroke-width:2.5}
-.sports-our-lane{position:absolute;z-index:2;left:.55rem;top:.45rem;
- background:#fff5c8;color:#584218;padding:.28rem .55rem;border-radius:100rem;
- font-size:.71rem;font-weight:900;box-shadow:0 .1rem .35rem #283d2770}
-.race-finish .sports-our-lane{opacity:1}
-.sports-victory{background:#e9eee7;border-color:#b5c3b1;color:#365440}
-.sports-victory.is-winner{background:#fff2b5;border-color:#cea24a;color:#735010}
-.sports-standings{display:grid;gap:.3rem;margin:.5rem 0}
-.sports-standing{padding:.48rem .7rem;border:.07rem solid #aebdaa77;border-radius:.45rem;
- font-size:.83rem;font-weight:670;color:#5d685b;background:#f7f9f1}
-.sports-standing.is-ours{background:#e1eec9;border-color:#72954f;color:#31552a;font-weight:900;font-size:.94rem}
-
-/* Trait pickups glow softly in preview and reward only, preserving their distinct hues. */
-.paper-choice-sheet .daily-trait-preview.token-trait:not(.trait-negative),
-.paper-choice-sheet .daily-reward-token.token-trait:not(.trait-negative),
-.paper-choice-sheet .daily-paper-impact.token-trait:not(.trait-negative){
- box-shadow:0 0 .4rem #ffcf6580,0 0 .85rem #ffa65b28;
- animation:trait-warm-halo 3.2s ease-in-out infinite
-}
-@keyframes trait-warm-halo{
- 0%,100%{filter:brightness(1);box-shadow:0 0 .26rem #ffcd614d,0 0 .55rem #ffa65b22}
- 55%{filter:brightness(1.06);box-shadow:0 0 .52rem #ffe2918a,0 0 1rem #ffa65b45}
-}
-@media(prefers-reduced-motion:reduce){
- .paper-choice-sheet .daily-trait-preview.token-trait,
- .paper-choice-sheet .daily-reward-token.token-trait,
- .paper-choice-sheet .daily-paper-impact.token-trait{animation:none!important}
-}
 
 /* High-school admission: emphasize special tracks inside the existing application row. */
 .life-school-titleline{display:flex;align-items:center;flex-wrap:wrap;gap:.38rem .5rem;min-width:0}
@@ -1699,4 +1675,19 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
  .life-school-highlight.token-icon-pill{font-size:.61rem;padding:.2rem .4rem}
  .exam-tradeoff-head small{font-size:.6rem}
  .exam-tradeoff-labels strong{font-size:.7rem}
+}
+
+.exam-tradeoff.is-illness-risk .is-cost{color:#8756a3}.exam-tradeoff.is-illness-risk .exam-tradeoff-track:not(.has-relief){background:linear-gradient(to right,#4a967b 0 var(--tradeoff-split),#9565b3 var(--tradeoff-split) 100%)}
+.exam-tradeoff.is-illness-risk .exam-tradeoff-track.has-score-loss:not(.has-relief){background:linear-gradient(to right,#b56968 0 var(--tradeoff-split),#9565b3 var(--tradeoff-split) 100%)}
+
+/* Scroll the complete test body, leaving the collapse and submission controls reachable. */
+.life-exam-paper{overflow:hidden}
+.life-exam-paper>.life-modal-head,.life-exam-paper>.life-modal-foot{flex:none}
+.exam-paper-content{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.life-exam-paper .exam-paper-content .exam-effort-options{overflow:visible;flex:none}
+@media(max-width:47.5em) and (max-height:43.75em){
+ .life-exam-paper .life-paper-heading,.life-exam-paper .life-paper-identification{display:none}
+ .life-exam-paper .life-paper-form{padding:.25rem 0;margin:0;border-bottom:0}
+ .life-exam-paper .exam-fit-note{margin:.15rem 0;padding:.5rem .6rem}
+ .life-exam-paper .life-modal-title{margin:.45rem 0 .25rem}
 }

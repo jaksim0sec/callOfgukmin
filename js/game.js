@@ -79,12 +79,13 @@ function mount(root,navigate,content=global.GukminContent){
  let disposed=false;
  const $=id=>root.querySelector('#'+id);
  const sheet=$('lifeSheet');
- const historyNext=$('historyNext');
+ const historyNext=$('historyNext'),historyAdvance=$('historyAdvance');
+ let dailyClock=null;
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
 
  // The compact snap fits its controls rather than a fixed fraction of the viewport.
  function collapsedSheetHeight({rem}){
-  const visible=[$('sheetToggle'),sheet.querySelector('.sheet-head'),$('choiceTiming'),$('playbackControls'),$('systemTools'),$('systemError')];
+  const visible=[$('sheetToggle'),sheet.querySelector('.sheet-head'),$('choiceTiming'),$('playbackControls'),$('historyAdvance'),$('systemTools'),$('systemError')];
   const controls=visible.reduce((sum,node)=>sum+(node?.getBoundingClientRect().height||0),0);
   const safeBottom=Number.parseFloat(getComputedStyle(sheet).paddingBottom)||0;
   const height=Math.ceil(Math.max(6*rem,controls+safeBottom+rem*.375));
@@ -108,7 +109,7 @@ function mount(root,navigate,content=global.GukminContent){
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
  let dailyUI=null;
  let renderedHistory=null;
- let journeyTimer=null,journeyActive=false,newsTimer=null,paintedProgress=null;
+ let journeyTimer=null,journeyActive=false;
  let adviceToStore=false,resultRouted=false;
  const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
@@ -119,11 +120,11 @@ function mount(root,navigate,content=global.GukminContent){
  let tutorialActive=!verificationMode&&!tutorialHidden,lifeDeferred=false,tutorialPage=0;
  const tutorial=$('gameTutorial');
  const guide=[
-  {title:'이 삶은 선택으로 달라져',body:'출생 배경과 학교 생활부터 대학 입시까지 이어지는 인생 시뮬레이션이야. 선택은 수치뿐 아니라 다음 사건과 조건에도 영향을 줄 수 있어.',art:[['01','출생'],['02','성장'],['03','진로']]},
-  {title:'스탯부터 읽으면 훨씬 쉬워',body:'왼쪽 막대는 쓸 수 있는 자원과 부담을 보여 줘. 선택지에 붙은 +와 − 토큰은 실제로 달라지는 양이야. 재산과 용돈은 서로 다른 수치야.',art:[['+','얻는 것'],['−','잃는 것'],['↗','다음 선택']],stats:[['재산','교육비와 진로 선택 같은 큰 지출에 쓰여.'],['용돈','학생 시절 받는 별도의 소액 자금이야.'],['관계','친구와의 신뢰, 함께할 기회에 영향을 줘.'],['내신 · 모의고사','학교 성적과 통합 시험 역량을 각각 표시해.']]},
-  {title:'압박과 정신병은 따로 관리해',body:'압박은 활동 부담이 쌓이는 막대(0~25)야. 25를 초과한 수치가 정신병으로 누적되고 정신병 5에 이르면 게임이 종료돼. 휴식과 돌봄 선택도 전략이야.',art:[['25','압박 상한'],['5','정신병 상한'],['GU','돌봄']],stats:[['압박','높아질수록 불리한 부담이야. 회복 선택으로 줄일 수 있어.'],['정신병','압박 상한을 넘어 누적되는 별도 위험 수치야.'],['GU 편의점','이용 간격은 4턴. 상품마다 회복되는 수치가 달라.']]},
-  {title:'특성은 다음 이야기의 열쇠',body:'특성 토큰을 눌러서 효과와 조건을 확인해. 학업 역량과 운동능력 등은 활동을 거쳐 열리고, 시험·동아리·경기에서 실제 차이를 만들 수 있어.',art:[['✧','특성'],['▥','역량'],['★','분기']],stats:[['학업 역량','학창 시절 쌓은 준비 정도야. 내신 자체와는 달라.'],['운동능력','체육 활동에서 열리고 운동회 결과에도 영향을 줘.'],['특성 토큰','얻은 특성과 적용 효과를 눌러 확인할 수 있어.']]},
-  {title:'진행은 편한 속도로',body:'자동은 이야기를 넘기고 일상 선택을 약 5초 후 열어. 수동은 다음 버튼으로 진행해. 선택은 자동 확정되지 않아. 결과는 자동 저장되고, ?에서 이 안내를 다시 볼 수 있어.',art:[['▶','자동'],['→','수동'],['Ⅱ','일시정지']]}
+  {title:'스탯은 선택의 방향을 보여 줍니다',body:'수치는 보통 0~25입니다. 관계가 오르면 친구들의 지지를 얻기 쉽지만, 압박이 오르면 위험이 커집니다. 같은 ▲라도 모두 보상은 아니에요. 선택 아래 토큰에서 얻는 것과 잃는 것을 함께 읽어 보세요.',stats:[{label:'압박',value:8,max:25,color:'#d65b62',note:'높을수록 부담'},{label:'관계',value:12,max:25,color:'#8769d8',note:'친구와 주변의 지지'}]},
+  {title:'압박 25를 넘으면 정신병으로 바뀝니다',body:'압박 24에서 +3이면 초과한 2가 정신병이 됩니다. 그때부터 선택의 부담·회복도 정신병부터 적용됩니다. 정신병 5는 게임오버예요. GU는 4턴에 한 번 이용할 수 있고, 압박만 줄이는 상품과 정신병도 낮추는 상품이 다릅니다. 자동으로 쉬어 주지는 않아요.',stats:[{label:'압박 한계',value:25,max:25,color:'#d65b62',note:'초과한 만큼 다음 단계'},{label:'정신병',value:2,max:5,color:'#9556bf',note:'5에 도달하면 생애 종료'}]},
+  {title:'공부한 능력과 시험 등급은 다릅니다',body:'학업 역량은 초등 시기의 공부 기반이고 운동능력은 계주에 쓰입니다. 중학교 교과 성취는 A~E, 고교 내신은 1~5등급, 모의고사·수능은 1~9등급이에요. 등급 숫자는 작을수록 좋습니다. 시험에서는 노력의 비용과 예상 성적을 함께 비교하세요.',stats:[{label:'학업 역량',value:15,max:25,color:'#6f82ba',note:'초등 시기의 공부 기반'},{label:'운동능력',value:8,max:25,color:'#5f9270',note:'연습으로 키워 계주에 활용'}]},
+  {title:'재산은 돈, 특성은 행동을 바꾸는 힘',body:'용돈은 학생 시기에 받는 금액이고, 재산은 실제로 쓸 수 있는 돈입니다. 특성은 별도의 버프·디버프로, 관련 사건이나 시험의 결과에 영향을 줍니다. 토큰을 누르면 효과를 읽을 수 있어요. 재학·졸업 같은 학교 이력도 별도로 보존됩니다.',money:true,trait:'꼼꼼함'},
+  {title:'진행은 언제나 같은 다음 버튼으로',body:'기록 아래의 다음 버튼 하나로 이야기를 넘기거나 대기 중인 선택을 엽니다. 자동은 이야기를 이어 주고 준비된 일상 선택을 5초 뒤 열어요. 수동은 누를 때만 진행하고, 일시정지는 시간을 멈춥니다. 선택은 직접 고르며 결과는 자동 저장됩니다.',art:[['→','다음'],['Ⅱ','일시정지'],['?','다시 도움말']]}
  ];
  function canAuto(){return playbackMode==='auto'&&!userPaused&&!tutorialActive&&!document.hidden;}
  function saveControls(){try{localStorage.setItem(controlsKey,JSON.stringify({mode:playbackMode,paused:userPaused}));}catch{}}
@@ -131,12 +132,12 @@ function mount(root,navigate,content=global.GukminContent){
   const auto=playbackMode==='auto';
   $('playbackMode').setAttribute('aria-checked',String(auto));
   text('playbackPause',userPaused?'▶ 재개':'Ⅱ 일시정지');$('playbackPause').setAttribute('aria-pressed',String(userPaused));
-  text('playbackNext','다음 →');
-  $('playbackNext').hidden=!!snapshot?.choice||!!snapshot?.reviewPending;
-  $('playbackNext').disabled=userPaused||tutorialActive||cinematicShown;
-  historyNext.disabled=$('playbackNext').disabled;
-  historyNext.hidden=verificationMode||!snapshot||!!snapshot.choice||!!snapshot.reviewPending||!Number.isFinite(snapshot.progress?.remaining);
-  historyNext.querySelector('#historyNextLabel').textContent='다음 이야기로';
+  const disabled=userPaused||tutorialActive||cinematicShown;
+  for(const id of ['historyNext','resumeDailyChoice','resumeMajorChoice'])$(id).disabled=disabled;
+  const available=!!snapshot&&(snapshot.choice||snapshot.reviewPending||Number.isFinite(snapshot.progress?.remaining));
+  historyAdvance.hidden=(verificationMode&&snapshot?.runtime.contentId!==global.GukminSystemDemo.contentId)||!available;
+  historyNext.hidden=!!snapshot?.choice||!!dailyUI?.isRewardVisible();
+  text('historyNextLabel','다음');
   $('playbackControls').dataset.paused=String(userPaused);
   $('lifeSheet').classList.toggle('is-awaiting-choice',!!snapshot?.choice);
   dailyUI?.setAutomatic(canAuto());
@@ -144,8 +145,10 @@ function mount(root,navigate,content=global.GukminContent){
  function paintTutorial(){
   const step=guide[tutorialPage];text('tutorialStep',String(tutorialPage+1).padStart(2,'0')+' / '+String(guide.length).padStart(2,'0'));
   text('tutorialTitle',step.title);text('tutorialBody',step.body);
-  $('tutorialArt').replaceChildren(...step.art.map(([mark,label])=>{const item=el('span','tutorial-symbol');item.append(el('b','',mark),el('small','',label));return item;}));
-  const metricCards=$('tutorialMetrics');metricCards.replaceChildren(...(step.stats||[]).map(([name,detail])=>{const card=el('div','tutorial-stat');card.append(el('strong','',name),el('span','',detail));return card;}));metricCards.hidden=!step.stats?.length;
+  const art=$('tutorialArt');art.replaceChildren();art.classList.toggle('has-stat-guide',!!step.stats||!!step.money);
+  if(step.stats){for(const metric of step.stats){const card=el('div','tutorial-stat-card');card.style.setProperty('--guide-color',metric.color);card.append(el('small','',metric.label),el('strong','',metric.value+'/'+metric.max));const track=el('div','tutorial-stat-track'),fill=el('span','');fill.style.transform='scaleX('+metric.value/metric.max+')';track.append(fill);card.append(track,el('p','',metric.note));art.append(card);}art.append(el('small','tutorial-example-note','설명용 예시 수치입니다.'));}
+  else if(step.money){const card=el('div','tutorial-money-card');card.append(el('small','','재산 예시'),el('strong','','12,000원'),global.GukminStatus.traitToken(step.trait),el('p','',global.GukminPlayer.traitDefinition(step.trait).description));art.append(card);}
+  else for(const [mark,label] of step.art||[]){const item=el('span','tutorial-symbol');item.append(el('b','',mark),el('small','',label));art.append(item);}
   $('tutorialDots').replaceChildren(...guide.map((_,i)=>{const dot=el('span','');dot.classList.toggle('is-current',i===tutorialPage);return dot;}));
   $('tutorialBack').disabled=tutorialPage===0;text('tutorialNext',tutorialPage===guide.length-1?'플레이 시작 →':'다음 →');
  }
@@ -215,14 +218,6 @@ function mount(root,navigate,content=global.GukminContent){
     Number.isSafeInteger(entry.outcome?.historyFrom)&&
     entry.outcome.historyTo>=entry.outcome.historyFrom
    ).map(entry=>[entry.outcome.historyTo,entry]));
-   let continued=false;
-   function nextButton(host){
-    if(continued)return;
-    continued=true;
-    const next=el('button','continue-story','다음 이야기 보기 →');
-    next.type='button';next.addEventListener('click',safely(continueJourney));
-    host.append(next);
-   }
    for(let i=history.length-1;i>=0;i--){
     const group=outcomeByEnd.get(i);
     if(group){
@@ -257,7 +252,6 @@ function mount(root,navigate,content=global.GukminContent){
       }
       bubble.append(tray);
      }
-     if(snapshot?.reviewPending&&group===lastClosed&&group.layer==='한방 선택')nextButton(bubble);
      article.append(bubble);log.append(article);
      i=result.historyFrom;
      continue;
@@ -280,14 +274,8 @@ function mount(root,navigate,content=global.GukminContent){
         classes:'daily-result-chip impact-'+impact.tone}));
       article.append(tray);
      }
-     if(lastClosed?.layer==='한방 선택')nextButton(article);
     }
     log.append(article);
-   }
-   if(snapshot?.reviewPending&&!continued&&lastClosed?.layer!=='일상 선택'){
-    const banner=el('div','record-review-fallback');
-    banner.append(el('strong','','선택 결과를 확인했어'));
-    nextButton(banner);log.prepend(banner);
    }
    if(!snapshot?.reviewPending&&!snapshot?.choice&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||['college','employment'].includes(persona.attributes?.admissionDestination)||['high:graduation','admission:retry-graduation'].some(id=>snapshot?.runtime?.events?.[id]?.status==='completed'))){
     const complete=el('section','life-chapter-complete');
@@ -298,7 +286,6 @@ function mount(root,navigate,content=global.GukminContent){
     replay.addEventListener('click',safely(reset));complete.append(replay);log.prepend(complete);
    }
    
-  log.insertBefore(historyNext,log.children[1]||null);
   renderProgress();
  }
  function clearMajor(){presentationEpoch++;const dispose=disposeMajor;disposeMajor=null;presentedToken=null;dispose?.();}
@@ -432,7 +419,8 @@ function mount(root,navigate,content=global.GukminContent){
   dialog:$('dailyChoiceDialog'),body:$('dailyChoiceBody'),heading:$('dailyModalHeading'),
   resumeButton:$('resumeDailyChoice'),
   resolve:(token,id)=>safely(()=>engine.resolve(token,id))(),
-  proceed:()=>safely(continueJourney)()
+  proceed:()=>safely(continueJourney)(),
+  onCountdown:clock=>{dailyClock=clock;renderTiming();}
  });
  const cinematics=[],cinematic=$('lifeCinematic');
  let cinematicTimer=null,cinematicShown=false,currentCinematic=null,electionTicker=null,examBreakTimer=null;
@@ -497,8 +485,8 @@ function mount(root,navigate,content=global.GukminContent){
   if(completed&&['grade','election','admission'].includes(completed.kind))engine?.acknowledge?.();
   if(completed?.kind==='election'){dailyUI.restore(snapshot);dailyUI.openRestoredReward();}
   if(completed?.kind==='grade'&&completed.middleMid){
-   stopJourney();const toast=$('lifeNewsToast');toast.replaceChildren(el('strong','','기말고사 준비 기간'));toast.hidden=false;
-   examBreakTimer=global.setTimeout(()=>{examBreakTimer=null;toast.hidden=true;startJourney();},prefersLessMotion?350:1400);
+   stopJourney();
+   examBreakTimer=global.setTimeout(()=>{examBreakTimer=null;startJourney();},prefersLessMotion?350:1400);
    for(const button of $('log').querySelectorAll('.continue-story'))button.hidden=true;
    renderProgress();return;
   }
@@ -559,8 +547,6 @@ function mount(root,navigate,content=global.GukminContent){
   }
   render();
   if(added.length){$('log')?.firstElementChild?.classList.add('record-arrived');
-   if(journeyActive&&!cinematicShown){const news=added.filter(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
-    if(news.length)showJourneyNews(news.at(-1));}
   }
   if(s.reviewPending||choice?.layer==='일상 선택'){
    // The reward is shown in the original daily sheet; history remains permanent.
@@ -573,35 +559,6 @@ function mount(root,navigate,content=global.GukminContent){
  function stopJourney(){
   journeyActive=false;
   if(journeyTimer!==null){global.clearTimeout(journeyTimer);journeyTimer=null;}
-  if(newsTimer!==null){global.clearTimeout(newsTimer);newsTimer=null;}
-  const fill=$('choiceProgressFill');
-  if(fill){fill.style.transition='none';fill.style.transform='scaleX('+Math.max(0,Math.min(1,snapshot?.progress?.value||0))+')';}
-  const toast=$('lifeNewsToast');if(toast)toast.hidden=true;
- }
- function showJourneyNews(item){
-  const toast=$('lifeNewsToast');if(!toast)return;
-  if(newsTimer!==null)global.clearTimeout(newsTimer);
-  toast.replaceChildren(el('small','','새 소식'),el('strong','',item.title||'인생의 한 페이지'));
-  if(item.detail){
-   const detail=el('p','');global.GukminMarkup.render(detail,item.detail);
-   toast.append(detail);
-  }
-  toast.hidden=false;toast.classList.remove('is-arriving');void toast.offsetWidth;
-  toast.classList.add('is-arriving');
-  newsTimer=global.setTimeout(()=>{toast.hidden=true;newsTimer=null;},2750);
- }
- // Smooth motion belongs to the scheduled time between actual logical turns.
- // Only presentation advances here, never player state or choice settlement.
- function animateJourneyProgress(duration){
-  const p=snapshot?.progress;
-  if(!canAuto()||!journeyActive||!Number.isFinite(p?.remaining)||p.remaining<=0)return;
-  const ratio=Math.max(0,Math.min(1,p.value||0));
-  const next=ratio+(1-ratio)/Math.max(1,p.remaining);
-  const fill=$('choiceProgressFill');
-  fill.style.transition='none';fill.style.transform='scaleX('+ratio+')';
-  void fill.offsetWidth;
-  fill.style.transition='transform '+duration+'ms linear';
-  fill.style.transform='scaleX('+Math.min(1,next)+')';
  }
  function startJourney(){
   stopJourney();
@@ -621,7 +578,6 @@ function mount(root,navigate,content=global.GukminContent){
    }
    const news=now.persona.history.slice(had).some(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
    const delay=news?3000:450;
-    animateJourneyProgress(delay);
     journeyTimer=global.setTimeout(tick,delay);
   }
   tick();
@@ -661,6 +617,19 @@ function mount(root,navigate,content=global.GukminContent){
   connect(global.GukminSystemDemo.config(),true);
   engine.advance(0);
  }
+ function renderTiming(){
+  if(disposed||!snapshot)return;
+  const choice=snapshot.choice,p=snapshot.progress,clock=dailyClock;
+  const hasTarget=Number.isFinite(p?.remaining),daily=choice?.layer==='일상 선택';
+  const counting=daily&&clock?.ready&&playbackMode==='auto';
+  $('choiceTiming').hidden=verificationMode||(!choice&&!snapshot.reviewPending&&!hasTarget);
+  const value=counting?1-clock.remaining/clock.total:0;
+  $('nextChoiceProgress').value=value;
+  $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,value))+')';
+  $('choiceProgressFill').parentElement.style.visibility=counting?'visible':'hidden';
+  $('choiceTiming').classList.toggle('is-paused',userPaused||!canAuto());
+  text('nextChoiceLabel',tutorialActive?'안내를 보는 중':userPaused?'일시정지':examBreakTimer!==null?'기말고사 준비 기간':snapshot.reviewPending?'결과를 읽은 뒤 다음':choice?(counting&&clock.running?Math.ceil(clock.remaining/1000)+'초 뒤 선택 · 다음으로 바로 진행':'다음을 눌러 선택'):playbackMode==='manual'?'다음을 눌러 이야기 진행':'이야기가 이어지는 중');
+ }
  function renderProgress(){
   if(disposed)return;
   paintControls();
@@ -674,20 +643,7 @@ function mount(root,navigate,content=global.GukminContent){
   $('action').hidden=!choice;
   $('lifeSheet')?.classList.toggle('has-current-choice',!!choice||reviewing);
   text('currentTitle',reviewing?'':choice?.title||'');
-  const hasTarget=Number.isFinite(p?.remaining);
-  // This bar means time actually passing, never a fake 100% on a paused decision.
-  const advancing=journeyActive&&canAuto()&&!choice&&!reviewing&&hasTarget;
-  const showProgress=!demo&&!choice&&!reviewing&&hasTarget;
-  $('choiceTiming').hidden=!showProgress;
-  $('choiceTiming').classList.toggle('is-paused',!advancing);
-  text('nextChoiceLabel',showProgress?(userPaused?'일시정지 · ':playbackMode==='manual'?'수동 · ':'')+p.remaining+'턴 뒤 다음 선택':'');
-  const progressValue=showProgress?p.value||0:0;
-  $('nextChoiceProgress').value=progressValue;
-  if(paintedProgress!==progressValue||!advancing){
-   const fill=$('choiceProgressFill');fill.style.transition='none';
-   fill.style.transform='scaleX('+Math.max(0,Math.min(1,progressValue))+')';
-   paintedProgress=progressValue;
-  }
+  renderTiming();
   snapSheet.refresh(); // A visible progress bar changes the compact height.
   const current=$('currentChoice');
   // The major presenter owns its reopen button until the choice token changes.
@@ -724,7 +680,6 @@ function mount(root,navigate,content=global.GukminContent){
  const subscriptions=[
   [$('playbackMode'),'click',()=>{playbackMode=playbackMode==='auto'?'manual':'auto';setPlayback();}],
   [$('playbackPause'),'click',()=>{userPaused=!userPaused;setPlayback();}],
-  [$('playbackNext'),'click',nextMoment],
   [historyNext,'click',nextMoment],
   [$('playbackHelp'),'click',openTutorial],
   [$('tutorialSkip'),'click',finishTutorial],

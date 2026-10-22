@@ -42,93 +42,93 @@ function decorateSeats(body,list,choice){
  }
  room.append(list,el('small','classroom-door','복도 · 출입문 ↗'));body.append(preview,room);
 }
-const svgNS='http://www.w3.org/2000/svg';
-const ovalLanes=[
- 'M 180 35 H 277 A 59 59 0 0 1 336 94 V 146 A 59 59 0 0 1 277 205 H 83 A 59 59 0 0 1 24 146 V 94 A 59 59 0 0 1 83 35 Z',
- 'M 180 48 H 271 A 46 46 0 0 1 317 94 V 146 A 46 46 0 0 1 271 192 H 89 A 46 46 0 0 1 43 146 V 94 A 46 46 0 0 1 89 48 Z',
- 'M 180 61 H 264 A 33 33 0 0 1 297 94 V 146 A 33 33 0 0 1 264 179 H 96 A 33 33 0 0 1 63 146 V 94 A 33 33 0 0 1 96 61 Z'
-];
-function oval(number){
- const field=el('div','sports-oval');
- const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox','0 0 360 240');svg.setAttribute('role','img');svg.setAttribute('aria-label','둥근 사각형 운동장 세 트랙에서 반별 주자들이 달리고 있습니다');
- const paths=[],runners=[];
- const runnerLayer=document.createElementNS(svgNS,'g');runnerLayer.setAttribute('class','sports-runner-layer');
- for(let i=0;i<3;i++){
-  const path=document.createElementNS(svgNS,'path');path.setAttribute('d',ovalLanes[i]);path.setAttribute('class','sports-ring sports-ring-'+i);svg.append(path);paths.push(path);
-  const runner=document.createElementNS(svgNS,'g');runner.setAttribute('class','sports-avatar sports-avatar-'+i+(i===0?' is-ours':''));
-  const badge=document.createElementNS(svgNS,'circle');badge.setAttribute('r',i===0?'14':'11');runner.append(badge);
-  const label=document.createElementNS(svgNS,'text');label.textContent=(i===0?number:i===1?number%6+1:(number+1)%6+1)+'반';label.setAttribute('text-anchor','middle');label.setAttribute('dy','3.3');runner.append(label);runners.push(runner);
- }
- // SVG paints in DOM order, not via z-index. All runners go after all lanes;
- // our class is appended last so it remains above opponents in overlaps.
- runnerLayer.append(runners[1],runners[2],runners[0]);svg.append(runnerLayer);
- field.append(svg,el('strong','sports-our-lane','● 우리 '+number+'반'));return {field,paths,runners};
+function raceRanks(place){return [place,...[1,2,3].filter(rank=>rank!==place)];}
+function raceProgress(place,lane,elapsed){
+ const rank=raceRanks(place)[lane],duration={1:6100,2:6750,3:7400}[rank];
+ const u=Math.max(0,Math.min(1,elapsed/duration)),phase={1:Math.PI,2:0,3:Math.PI/2}[rank];
+ return u===1?1:Math.max(0,Math.min(1,u+.12*(Math.sin(2*Math.PI*u+phase)-Math.sin(phase))));
 }
-function placeRunners(track,progress){
- for(let i=0;i<3;i++){
-  const path=track.paths[i],length=path.getTotalLength(),point=path.getPointAtLength(length*Math.min(.9999,Math.max(0,progress[i])));
-  track.runners[i].setAttribute('transform','translate('+point.x.toFixed(2)+' '+point.y.toFixed(2)+')');
+const SVG='http://www.w3.org/2000/svg';
+function svg(tag,attributes){const node=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))node.setAttribute(key,String(value));return node;}
+function arena(number,attributes={}){
+ const view=el('section','race-arena'),board=el('div','sports-scoreboard');
+ const title=el('strong','',number+'반 · 출발선에서 준비 중'),caption=el('span','','기록과 준비가 결승선에서 결과로 이어집니다.');
+ board.append(el('small','','CLASS RELAY · 한 바퀴 계주'),title,caption);view.append(board);
+ const role=attributes.sportsRole==='cheer'?'응원 중 · 주자 '+(attributes.seatmate||'짝꿍'):'주자 · 나 / 바통 동료 '+(attributes.seatmate||'짝꿍');
+ const legend=el('div','race-our-team');legend.append(el('span','race-team-dot',''),el('strong','','우리 반 '+number+'반'),el('small','',role));view.append(legend);
+ const track=svg('svg',{viewBox:'0 0 640 360',class:'sports-track oval-track',role:'img','aria-label':number+'반과 다른 두 반이 둥근 운동장을 달리는 계주'});
+ track.append(svg('rect',{x:20,y:38,width:600,height:284,rx:142,fill:'#b3664d'}),svg('rect',{x:112,y:124,width:416,height:112,rx:56,fill:'#7a9c69'}));
+ const field=svg('text',{x:320,y:175,'text-anchor':'middle',fill:'#f4f4db',class:'race-field-label'});field.textContent=number+'반, 끝까지!';track.append(field);
+ const paths=[],markers=[],classes=[number,number%6+1,(number+1)%6+1];
+ for(let lane=0;lane<3;lane++){
+  const radius=132-lane*32,top=180-radius,bottom=180+radius;
+  const path=svg('path',{d:`M160 ${bottom}H480A${radius} ${radius} 0 0 0 480 ${top}H160A${radius} ${radius} 0 0 0 160 ${bottom}Z`,fill:'none',stroke:'#f3dfca','stroke-width':2,'stroke-dasharray':lane===2?'6 6':'none'});paths.push(path);track.append(path);
+  const runner=svg('g',{'data-team':classes[lane],class:lane===0?'oval-runner is-ours':'oval-runner'});
+  runner.append(svg('circle',{r:12,fill:['#ffe285','#a8dcf2','#d9c2f1'][lane],stroke:lane===0?'#fff':'#5a392b','stroke-width':lane===0?4:2}));
+  const bib=svg('text',{'text-anchor':'middle',y:4,fill:'#283222','font-size':12,'font-weight':800});bib.textContent=classes[lane];runner.append(bib);markers.push(runner);
  }
-}
-function raceView(number,place){
- const finished=Number.isFinite(place),view=el('section',finished?'race-finish':'sports-preview');
- const board=el('div','sports-scoreboard');
- board.append(el('small','','SPORTS DAY · 우리 '+number+'반'),el('strong','',finished?'우리 '+number+'반 · '+place+'등':number+'반 · 오늘은 운동회!'),el('span','',finished?(place===1?'🏆 우리 반 우승!':place===2?'🥈 우리 반 준우승!':'🥉 우리 반 3등 · 끝까지 잘 달렸어!'):'금색 주자가 우리 반! 세 반이 트랙 한 바퀴를 달려'));
- view.append(board);
- const track=oval(number);view.append(track.field);
- placeRunners(track,finished?(place===1?[.999,.93,.87]:place===2?[.92,.999,.84]:[.83,.999,.94]):[0,0,0]);
- if(finished){
-  view.append(el('strong','sports-victory'+(place===1?' is-winner':''),'우리 '+number+'반 · '+place+'등 '+(place===1?'🏆':place===2?'🥈':'🥉')));
-  const standings=el('div','sports-standings');standings.setAttribute('aria-label','계주 최종 순위');
-  const rivals=[number%6+1,(number+1)%6+1];
-  for(let pos=1;pos<=3;pos++){
-   const ours=pos===place;
-   const other=pos<place?rivals[pos-1]:rivals[pos-2];
-   standings.append(el('div','sports-standing'+(ours?' is-ours':''),pos+'등  ·  '+(ours?'우리 '+number+'반':other+'반')));
-  }
-  view.append(standings,el('p','sports-result-text','준비한 실력과 경기 당일의 작은 변수까지 반영된 순위야.'));
+ track.append(svg('path',{d:'M160 241V324',stroke:'#fff','stroke-width':7}),svg('path',{d:'M160 241V324',stroke:'#354234','stroke-width':7,'stroke-dasharray':'7 7'}));
+ for(const marker of markers)track.append(marker);view.append(track);
+ const live=el('div','race-live-ranking');live.setAttribute('aria-live','off');view.append(live);
+ function paint(progress){
+  progress.forEach((value,lane)=>{const length=paths[lane].getTotalLength(),point=paths[lane].getPointAtLength(length*Math.min(.99999,value));markers[lane].setAttribute('transform',`translate(${point.x} ${point.y})`);markers[lane].dataset.progress=String(value);});
+  const order=[0,1,2].sort((a,b)=>progress[b]-progress[a]||a-b);live.textContent=order.map((lane,i)=>(i+1)+'위 '+classes[lane]+'반'+(lane===0?' (우리 반)':'')).join('  ·  ');
  }
- return view;
+ return {view,title,caption,paint,classes,live};
 }
-// Presentation only. The timeline has already fixed and saved the result.
-function playRace({dialog,body,presentation,attributes,onFinish}){
- dialog.dataset.scene='sports';body.replaceChildren();
- const view=raceView(presentation.classNumber,null);view.className='sports-running';
- view.querySelector('.sports-scoreboard strong').textContent='우리 '+presentation.classNumber+'반 · 계주 진행 중';
- const status=el('p','sports-live','출발! 세 반이 첫 코너로 달려간다');
- view.append(status);body.append(view);body.scrollTop=0;
- const track={paths:[...view.querySelectorAll('.sports-ring')],runners:[...view.querySelectorAll('.sports-avatar')]};
- const rank=attributes.sportsPlace||3;
- const checkpoints=rank===1?[[0,.21,.45,.69,.999],[0,.28,.56,.79,.93],[0,.26,.46,.66,.87]]:rank===2?[[0,.23,.48,.76,.94],[0,.29,.56,.8,.999],[0,.2,.45,.68,.84]]:[[0,.29,.5,.67,.83],[0,.24,.54,.79,.999],[0,.23,.49,.72,.94]];
- const reduce=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
- const duration=reduce?900:5600;
- let raf=0,done=false,start=null,phase=-1;
- function interpolate(values,t){const i=Math.min(3,Math.floor(t*4)),f=Math.min(1,t*4-i);return values[i]+(values[i+1]-values[i])*f;}
- function frame(now){
-  if(done)return;
-  if(start===null)start=now;
-  const t=Math.min(1,(now-start)/duration),chapter=Math.min(3,Math.floor(t*4));
-  placeRunners(track,checkpoints.map(values=>interpolate(values,t)));
-  if(chapter!==phase){phase=chapter;status.textContent=['출발! 세 반이 첫 코너로 달려간다','나란히 달리다, 선두가 계속 바뀐다','마지막 코너! 격차가 좁혀진다','결승선 앞에서 끝까지 전력 질주!'][chapter];}
-  if(t>=1){done=true;onFinish();return;}
-  raf=global.requestAnimationFrame(frame);
+function raceView(number){
+ const race=arena(number);race.view.classList.add('sports-preview');
+ // Mount before measuring SVG path lengths.
+ queueMicrotask(()=>{if(race.view.isConnected)race.paint([0,0,0]);});return race.view;
+}
+function raceReplay({body,presentation,attributes,stats,traits,onReady,restored}){
+ const place=attributes.sportsPlace,number=presentation.classNumber,race=arena(number,attributes);
+ const skip=el('button','race-skip','경주 건너뛰기');skip.type='button';race.view.append(skip);body.prepend(race.view);body.classList.add('race-pending');
+ let playing=true,frame=0,last=0,elapsed=0,disposed=false;
+ function finish(){
+  if(!playing||disposed)return;playing=false;if(frame)cancelAnimationFrame(frame);frame=0;
+  race.paint([1,1,1]);race.view.classList.add('race-finish');race.title.textContent=number+'반 · '+place+'등';race.caption.textContent=place===1?'결승선을 가장 먼저 통과했다! 우승 상품권과 반 친구들의 신뢰를 얻었다.':'함께 준비한 결과가 기록에 남았다.';
+  const ordered=raceRanks(place).map((rank,lane)=>({rank,lane})).sort((a,b)=>a.rank-b.rank),ranking=el('ol','sports-ranking');
+  for(const row of ordered){const item=el('li',row.lane===0?'is-ours':'');item.append(el('b','',row.rank+'등'),el('span','',race.classes[row.lane]+'반'),el('small','',row.lane===0?'우리 반':''));ranking.append(item);}
+  race.live.replaceWith(ranking);const reason=el('p','race-result-reason',attributes.sportsRole==='cheer'?'응원 역할로 반 친구들과 함께했습니다. 주자는 짝꿍이며 내 운동능력으로 주자 기록을 계산하지 않습니다.':'운동능력 (경기 보상 포함) '+(stats?.athletics||0)+'/25'+(traits?.includes('체육')?' · 체육 특성 적용':' · 오늘 우승 기준 '+(presentation.winThreshold||9))+'. 이전 체육 활동·짝꿍 연습과 이번 출전 준비를 합산한 결과입니다.');ranking.after(reason);skip.remove();body.classList.remove('race-pending');onReady?.();
  }
- raf=global.requestAnimationFrame(frame);
- return ()=>{done=true;if(raf)global.cancelAnimationFrame(raf);};
+ function tick(now){
+  if(disposed||!playing)return;
+  if(last&&!document.hidden)elapsed+=Math.min(100,now-last);last=now;
+  const progress=[0,1,2].map(lane=>raceProgress(place,lane,elapsed));race.paint(progress);
+  race.title.textContent=elapsed<650?'탕! 계주 출발':number+'반 · 계주 진행 중';
+  race.caption.textContent=elapsed<2200?'바통을 받아 첫 코너로 들어간다.':elapsed<4800?'반마다 앞서거니 뒤서거니! 바통을 놓치지 말자.':'마지막 코너! 결승선까지 달린다.';
+  if(progress.every(p=>p===1)){finish();return;}frame=requestAnimationFrame(tick);
+ }
+ skip.addEventListener('click',finish);
+ queueMicrotask(()=>{if(disposed)return;if(restored||matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else frame=requestAnimationFrame(tick);});
+ return {get isPlaying(){return playing;},skip:finish,dispose(){disposed=true;if(frame)cancelAnimationFrame(frame);body.classList.remove('race-pending');}};
 }
-function decorate({dialog,body,list,choice}){
- const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports'].includes(kind)?kind:'';
+function studyApp(presentation,reaction){
+ const app=el('section','study-app');
+ const head=el('header','study-app-header');head.append(el('strong','',presentation.app||'열공타'),el('span','','STUDY TOGETHER'));app.append(head);
+ const profile=el('div','study-app-profile');profile.append(el('span','study-avatar',presentation.rival?.slice(-1)||'호'),el('strong','',(presentation.rival||'민호')+' · 같은 학년 라이벌'),el('small','','오늘의 순공 기록'));app.append(profile);
+ const clock=el('div','study-app-clock');clock.append(el('small','','TODAY'),el('b','','27:00:00'),el('span','','순수 공부 시간'));app.append(clock);
+ app.append(el('div','study-likes','♥ '+((presentation.likes||23)+(reaction==='like'?1:0))+'명이 좋아합니다'),el('p','study-app-caption','“기말고사까지 매일 한계를 넘는다.”'));
+ if(reaction==='comment')app.append(el('p','study-app-comment','나  ·  하루가 27시간인 멋진 청년'));
+ if(reaction==='focus')app.append(el('p','study-app-comment','알림을 끄고 내 오답 노트를 펼쳤습니다.'));
+ return app;
+}
+function decorate({dialog,body,list,choice,persona,state={}}){
+ const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){
   const situation=body.querySelector('.daily-scenario');body.prepend(raceView(choice.presentation.classNumber));
-  const intro=el('div','sports-opening');intro.append(el('small','','SPORTS DAY'),el('strong','','📣 오늘은 운동회!'),el('span','','반 대항 계주가 곧 시작됩니다'));body.prepend(intro);
+  const prep=el('div','sports-preparation');prep.append(el('strong','','나의 운동능력 '+(persona.stats.athletics||0)+'/25'),el('p','','짝꿍 연습과 체육 활동에서 쌓은 실력입니다. 선택의 준비 효과까지 합산해 오늘은 '+(choice.presentation.winThreshold||9)+' 이상이거나 체육 특성이 있으면 우승할 수 있습니다. 응원은 주자 기록을 바꾸지 않습니다.'));list.before(prep);
+  if(!state.introSeen){const intro=el('section','sports-day-intro');intro.append(el('span','','⚑  ⚑  ⚑'),el('small','','학교 운동장 · 아침'),el('h3','','오늘은 운동회!'),el('p','',choice.presentation.classNumber+'반 친구들이 반 깃발 아래 모였다. 짝꿍과 준비했던 계주가 곧 시작된다.'));const enter=el('button','','운동장으로 →');enter.type='button';intro.append(enter);const stage=el('div','sports-day-stage');stage.hidden=true;while(body.firstChild)stage.append(body.firstChild);body.append(intro,stage);enter.addEventListener('click',()=>{state.introSeen=true;intro.remove();stage.hidden=false;});}
   if(situation)situation.querySelector('.daily-scenario-kicker').textContent='작전 회의';
   list.before(el('strong','scene-choice-label','우리 반에서 맡을 역할'));
  }
+ if(kind==='study-app'){body.prepend(studyApp(choice.presentation));list.before(el('strong','scene-choice-label','이 기록을 보고 나는'));;}
 }
-function reward({dialog,body,presentation,attributes,optionId,label}){
- const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports'].includes(kind)?kind:'';
+function reward({dialog,body,presentation,attributes,stats,traits,optionId,label,onReady,restored}){
+ const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='chat'){
   const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation));
   const outgoing=Object.hasOwn(presentation.playerMessages||{},optionId)?presentation.playerMessages[optionId]:label;
@@ -137,9 +137,11 @@ function reward({dialog,body,presentation,attributes,optionId,label}){
   body.prepend(receipt);
  }
  if(kind==='seating'){
-  const receipt=el('div','seat-receipt');receipt.append(el('small','','새로운 짝꿍'),el('strong','',attributes.seatmate+' 옆자리'),el('span','',attributes.elementaryClass+'반 · 새로운 인연이 시작돼'));body.prepend(receipt);
+  const receipt=el('div','seat-receipt');receipt.append(el('small','','새로운 짝꿍'),el('strong','',attributes.seatmate+' 옆자리'),el('span','',attributes.elementaryClass+'반 · 이 친구와 이야기가 이어집니다.'));body.prepend(receipt);
  }
- if(kind==='sports')body.prepend(raceView(presentation.classNumber,attributes.sportsPlace));
+ if(kind==='study-app')body.prepend(studyApp(presentation,attributes.studyTimerReaction));
+ if(kind==='sports')return raceReplay({body,presentation,attributes,stats,traits,onReady,restored});
+ return null;
 }
-global.GukminDailyScenes=Object.freeze({decorate,reward,playRace});
+global.GukminDailyScenes=Object.freeze({decorate,reward,raceProgress});
 })(window);

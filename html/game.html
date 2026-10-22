@@ -8,15 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&family=Noto+Serif+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
   <base href="../">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icons/favicon.ico?v=exam-tradeoff-20261022" sizes="16x16 32x32 48x48">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=exam-tradeoff-20261022">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=exam-tradeoff-20261022">
+  <link rel="icon" href="assets/icons/favicon.ico?v=life-flow-20261022" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=life-flow-20261022">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=life-flow-20261022">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="국민의 부름">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="css/style.css?v=exam-tradeoff-20261022">
+  <link rel="stylesheet" href="css/style.css?v=life-flow-20261022">
 </head>
 <body data-screen="game">
 <main class="game" aria-label="국민의 부름 인게임 화면">
@@ -45,20 +45,17 @@
       <button type="button" class="sheet-grip" id="sheetToggle" aria-label="인생 기록 시트 펼치기" aria-expanded="false"><span aria-hidden="true"></span></button>
       <div class="sheet-head">
         <div class="life-heading"><strong id="lifeHeadline">1살</strong></div>
-        <button type="button" class="sheet-choice-resume" id="resumeDailyChoice" hidden>선택 진행 중 · 열기</button>
-        <button type="button" class="sheet-choice-resume" id="resumeMajorChoice" hidden>선택 진행 중 · 열기</button>
         <button id="resetGame" class="mini-reset" type="button" aria-label="새 인물 생성" title="새 인물 생성">↻</button>
         <span class="chapter-meta" hidden><span id="chapter">인물 생성</span><span class="mode-chip">생애</span></span>
       </div>
       <div class="choice-timing" id="choiceTiming">
-        <div class="timing-label"><span>다음 선택까지</span><span id="nextChoiceLabel">이야기 준비 중</span></div>
+        <div class="timing-label"><span>진행</span><span id="nextChoiceLabel">이야기 준비 중</span></div>
         <div class="choice-progress-track" aria-hidden="true"><span class="choice-progress-fill" id="choiceProgressFill"></span></div>
-        <progress id="nextChoiceProgress" max="1" value="0" aria-label="다음 선택까지 진행도"></progress>
+        <progress id="nextChoiceProgress" max="1" value="0" aria-label="선택 자동 열기까지 진행도"></progress>
       </div>
       <nav id="playbackControls" class="playback-controls" aria-label="이야기 진행 조절">
         <button id="playbackMode" type="button" class="playback-toggle" role="switch" aria-checked="false" aria-label="자동 진행" title="자동·수동 진행 전환"><span class="playback-toggle-thumb" aria-hidden="true"></span><span class="playback-manual-label" aria-hidden="true">수동</span><span class="playback-auto-label" aria-hidden="true">자동</span></button>
         <button id="playbackPause" type="button" aria-pressed="false">Ⅱ 일시정지</button>
-        <button id="playbackNext" type="button">다음 →</button>
         <button id="playbackHelp" type="button" aria-label="게임 도움말">?</button>
       </nav>
       <section id="systemTools" class="system-tools" aria-label="개발 검증 도구" hidden>
@@ -76,8 +73,9 @@
         <div class="current-line"><span>현재 선택</span><strong id="currentTitle"></strong></div>
         <div id="currentChoice" class="current-choice" aria-live="polite"></div>
       </div>
-      <div class="log" id="log" role="log" aria-live="polite"><button id="historyNext" class="history-next" type="button"><span id="historyNextLabel">다음 이야기로</span><span aria-hidden="true">→</span></button></div>
+      <div class="log" id="log" role="log" aria-live="polite"></div>
       </div>
+      <div id="historyAdvance" class="history-advance"><button id="historyNext" class="history-next" type="button"><span id="historyNextLabel">다음</span><span aria-hidden="true">→</span></button><button id="resumeDailyChoice" class="history-next" type="button" hidden>다음 →</button><button id="resumeMajorChoice" class="history-next" type="button" hidden><span>다음</span><span aria-hidden="true">→</span></button></div>
     </section>
   </div>
 </main>
@@ -88,7 +86,7 @@
 <dialog id="gameTutorial" class="game-tutorial" aria-labelledby="tutorialTitle" aria-describedby="tutorialBody">
   <header class="tutorial-top"><span>국민의 부름 · 플레이 가이드</span><button id="tutorialSkip" type="button">건너뛰기</button></header>
   <div id="tutorialArt" class="tutorial-art" aria-hidden="true"></div>
-  <div class="tutorial-copy" aria-live="polite"><small id="tutorialStep"></small><h2 id="tutorialTitle"></h2><p id="tutorialBody"></p><div id="tutorialMetrics" class="tutorial-metrics" hidden></div></div>
+  <div class="tutorial-copy" aria-live="polite"><small id="tutorialStep"></small><h2 id="tutorialTitle"></h2><p id="tutorialBody"></p></div>
   <div id="tutorialDots" class="tutorial-dots" aria-hidden="true"></div>
   <label class="tutorial-hide"><input id="hideTutorial" type="checkbox" checked> 다음부터 이 안내 보지 않기</label>
   <footer class="tutorial-actions"><button id="tutorialBack" type="button">이전</button><button id="tutorialNext" type="button">다음 →</button></footer>
@@ -125,7 +123,6 @@
   <div class="modal-body"><h2 class="modal-title" id="modalTitle"></h2><p class="modal-story" id="modalStory"></p><div class="options" id="options"></div></div>
   <div class="modal-foot"><span class="summary" id="summary">항목을 선택하세요</span><button type="button" class="confirm" id="confirm" disabled>선택 확인</button></div>
 </dialog>
-<aside id="lifeNewsToast" class="life-news-toast" role="status" aria-live="polite" hidden></aside>
 <dialog id="dailyChoiceDialog" class="daily-choice-dialog paper-choice-sheet" aria-labelledby="dailyModalHeading">
   <button type="button" class="paper-sheet-grip" id="dailyPaperGrip" aria-label="일상 기록 시트 높이 조절"><span aria-hidden="true"></span></button>
   <header class="daily-modal-head"><div><small>인생 기록 · 일상</small><h2 id="dailyModalHeading">오늘의 이야기</h2></div></header>
@@ -133,29 +130,29 @@
   <footer class="daily-paper-footer"><button id="dailyPaperConfirm" class="daily-paper-confirm" type="button" disabled>이 선택으로 기록하기</button></footer>
 </dialog>
 <dialog id="lifeDecisionDialog" class="life-choice-dialog" aria-label="시험 또는 진학 선택"></dialog>
-<script src="js/poster.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/data/base.js?v=exam-tradeoff-20261022" defer></script>
+<script src="js/poster.js?v=life-flow-20261022" defer></script>
+<script src="js/data/base.js?v=life-flow-20261022" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/schools.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/data/grades.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/playerState.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/effects.js?v=exam-tradeoff-20261022" defer></script>
+<script src="js/data/schools.js?v=life-flow-20261022" defer></script>
+<script src="js/data/grades.js?v=life-flow-20261022" defer></script>
+<script src="js/playerState.js?v=life-flow-20261022" defer></script>
+<script src="js/effects.js?v=life-flow-20261022" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/story.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/infant.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/elementary.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/classroom.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/middle.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/high.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/life/admissions.js?v=exam-tradeoff-20261022" defer></script>
+<script src="js/life/director.js?v=life-flow-20261022" defer></script>
+<script src="js/life/story.js?v=life-flow-20261022" defer></script>
+<script src="js/life/infant.js?v=life-flow-20261022" defer></script>
+<script src="js/life/elementary.js?v=life-flow-20261022" defer></script>
+<script src="js/life/classroom.js?v=life-flow-20261022" defer></script>
+<script src="js/life/middle.js?v=life-flow-20261022" defer></script>
+<script src="js/life/high.js?v=life-flow-20261022" defer></script>
+<script src="js/life/admissions.js?v=life-flow-20261022" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=exam-tradeoff-20261022" defer></script>
+<script src="js/statusView.js?v=life-flow-20261022" defer></script>
 <script src="js/sheetController.js?v=pressure-care-20261021" defer></script>
-<script src="js/dailyScenes.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/dailyChoice.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/game.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/majorView.js?v=exam-tradeoff-20261022" defer></script>
-<script src="js/boot.js?v=exam-tradeoff-20261022" defer></script>
+<script src="js/dailyScenes.js?v=life-flow-20261022" defer></script>
+<script src="js/dailyChoice.js?v=life-flow-20261022" defer></script>
+<script src="js/game.js?v=life-flow-20261022" defer></script>
+<script src="js/majorView.js?v=life-flow-20261022" defer></script>
+<script src="js/boot.js?v=life-flow-20261022" defer></script>
 </body>
 </html>

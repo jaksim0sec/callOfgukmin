@@ -1399,3 +1399,36 @@ test('classroom: preparation changes the actual finish; old completed lives get 
 test('existing class group chats use the same chat presentation in each scenario',()=>{
  const {P,c}=setup(),pack=c.GukminDirector.content(P.generate());for(const id of ['middle:group-chat','high:first-day']){const choice=pack.choices.find(c=>c.id===id);for(const script of [choice,...choice.variants]){assert.equal(script.presentation.type,'chat');assert.ok(script.presentation.messages.length>=2);}}
 });
+
+test('study timer is a mandatory middle-three slot between midterm and final, with exact tradeoffs',()=>{
+ const {P,T,c}=setup(),p=P.generate();p.phase='middle';p.age=16;p.stats.schoolScore=12;p.stats.relations=10;p.stats.stress=8;
+ const pack=c.GukminDirector.content(p),target=pack.choices.find(c=>c.id==='middle:study-timer');assert.ok(target,'study app is real life content');assert.equal(target.presentation.type,'study-app');
+ const ids=pack.events.map(e=>e.id),mid=ids.indexOf('middle:3:1학기-중간고사'),app=ids.indexOf('middle:study-timer'),final=ids.indexOf('middle:3:1학기-기말고사');assert.ok(mid<app&&app<final,'app follows midterm before final');
+ const engine=T.create({contentId:'study-check',persona:p,attributes:pack.attributes,choices:[target],events:[{id:target.id,layer:'일상 이벤트',at:0,choice:target.id}]});engine.advance(0);engine.resolve(engine.snapshot().choice.token,'comment');let s=engine.snapshot();assert.equal(s.persona.stats.stress,6);assert.equal(s.persona.stats.relations,9);assert.ok(P.hasTrait(s.persona,'풍자 감각'));
+ for(const [id,stress,relations,score] of [['like',8,11,12],['focus',9,10,14]]){const result=c.GukminEffects.apply(p,target.options.find(o=>o.id===id).result);assert.equal(result.stats.stress,stress);assert.equal(result.stats.relations,relations);assert.equal(result.stats.schoolScore,score);}
+});
+test('race progress never moves backward and crosses the finish in the saved result order',()=>{
+ const {c}=setup();vm.runInContext(readFileSync('js/dailyScenes.js','utf8'),c);assert.equal(typeof c.GukminDailyScenes.raceProgress,'function');
+ for(const place of [1,2,3]){
+  const before=[0,0,0],finished=[];let previousLeader=null,changes=0;
+  for(let ms=0;ms<=8500;ms+=50){const progress=[0,1,2].map(lane=>c.GukminDailyScenes.raceProgress(place,lane,ms));progress.forEach((v,lane)=>{assert.ok(v>=before[lane]-1e-9&&v>=0&&v<=1);if(v===1&&!finished.includes(lane))finished.push(lane);before[lane]=v;});const leader=progress.indexOf(Math.max(...progress));if(previousLeader!==null&&previousLeader!==leader)changes++;previousLeader=leader;}
+  assert.equal(finished.indexOf(0)+1,place);assert.ok(changes>0,'there is a visible lead change');
+ }
+});
+test('relay victory grants worthwhile rewards once and keeps preparation tied to ability',()=>{
+ const {engine}=classroomFixture();engine.advance(4);engine.resolve(engine.snapshot().choice.token,'practice');engine.resume();engine.advance(3);const s=engine.snapshot(),option=s.choice.options.find(o=>o.id==='sprint'),before=s.persona;
+ engine.resolve(s.choice.token,option.id);const after=engine.snapshot().persona;assert.equal(after.attributes.sportsPlace,1);assert.equal(after.stats.money-before.stats.money,10000);assert.equal(after.stats.relations-before.stats.relations,3);assert.equal(engine.resolve(s.choice.token,option.id),false);
+});
+
+test('every middle-school route reaches the study app after reviewing its midterm, including reload',()=>{
+ for(const clubPath of ['science','media','sports','none']){
+  const {P,T,c}=setup(),p=P.generate();p.phase='middle';p.age=16;p.traits=[];p.attributes={clubPath};Object.assign(p.stats,{schoolScore:12,stress:0,illness:0});
+  const pack=c.GukminDirector.content(p),s=T.create({...pack,persona:p}).snapshot(),mid='middle:3:1학기-중간고사',app='middle:study-timer',final='middle:3:1학기-기말고사';
+  for(const e of pack.events)s.runtime.events[e.id]={status:'completed',count:1,nextAt:e.at||0};
+  for(const id of [mid,app,final]){const e=pack.events.find(e=>e.id===id);s.runtime.events[id]={status:'unseen',count:0,nextAt:e.at};}
+  s.runtime.turn=61;s.persona.simulation=s.runtime;let engine=c.GukminDirector.create({persona:s.persona,persist:p=>P.save(p)});
+  engine.run();assert.equal(engine.snapshot().choice.id,mid);engine.resolve(engine.snapshot().choice.token,'effort-2');
+  engine=c.GukminDirector.create({persona:P.load()});engine.run();assert.equal(engine.snapshot().choice.id,app,clubPath+' must not skip the same-turn app after a saved midterm');
+  engine.resolve(engine.snapshot().choice.token,'like');engine.run();assert.equal(engine.snapshot().choice.id,final);assert.equal(engine.snapshot().runtime.events[app].count,1);
+ }
+});

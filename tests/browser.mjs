@@ -107,19 +107,19 @@ try{
   await page.evaluate(()=>GukminGame.session.run());
   await page.locator('#playbackMode').click(); // Enable timed choice opener for this integration scenario.
   assert.equal(await page.locator('#lifeHeadline').textContent(),'3살');
-  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no meaningless paused progress bar');
+  assert.equal(await page.locator('#choiceTiming').isVisible(),true,'one stable wait-state region');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
   assert.equal(firstLife.simulation.contentId,'life-main-v1');
   assert.equal(firstLife.simulation.events['infant:birth-registered'].status,'completed');
   assert.equal(firstLife.simulation.turn,8);
   assert.equal(await page.locator('#systemTools').isVisible(),false);
   assert.equal(await page.locator('#action').evaluate(e=>e.hidden),false,'compact decision status is mounted on all viewports');
-  assert.equal(await page.locator('#choiceTiming').isVisible(),false,'pending decisions are not disguised as 100% progress');
-  assert.equal(await page.locator('#nextChoiceProgress').evaluate(p=>p.value),0);
+  assert.equal(await page.locator('#choiceTiming').isVisible(),true,'countdown shares the main timing region');
+  assert.ok(await page.locator('#nextChoiceProgress').evaluate(p=>p.value>=0&&p.value<1));
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),false,'first daily choice waits for the player to open it');
   assert.equal(await page.locator('#resumeDailyChoice').isVisible(),true,'one intentional entry point is available');
   assert.equal(await page.locator('#resumeDailyChoice.is-auto-opening').count(),1,'one 5-second timed opener is visible');
-  assert.equal(await page.locator('#resumeDailyChoice .auto-choice-track').count(),1,'timed opener owns the only countdown gauge');
+  assert.equal(await page.locator('#choiceTiming .choice-progress-track').count(),1,'one common countdown gauge');
   assert.ok(await page.locator('#gaugesList .gauge-progress-track').count()>0,'all progress-type status gauges expose smooth fill tracks');
   assert.equal(await page.locator('#gaugesList .gauge-progress-track').count(),
    await page.locator('#gaugesList progress.ui-progress-native').count(),'every visual stat gauge retains a semantic native progress');
@@ -278,10 +278,10 @@ try{
   assert.equal(await page.locator('#lifeHeadline').textContent(),'3살');
   if(name!=='desktop'){
    const old=await page.locator('#lifeSheet').boundingBox();
-   assert.ok(old.height<viewport.height*.3,'sheet starts compact and does not cover most of the game');
+   assert.ok(old.height<viewport.height*.5,'sheet starts compact and does not cover most of the game');
    const chrome=await page.evaluate(()=>{
     const sheet=document.querySelector('#lifeSheet');
-    const parts=['#sheetToggle','.sheet-head','#choiceTiming','#playbackControls','#systemTools','#systemError'];
+    const parts=['#sheetToggle','.sheet-head','#choiceTiming','#playbackControls','#historyAdvance','#systemTools','#systemError'];
     return parts.map(sel=>sheet.querySelector(sel)).filter(Boolean)
       .reduce((sum,node)=>sum+node.getBoundingClientRect().height,0)
       +parseFloat(getComputedStyle(sheet).paddingBottom);
@@ -478,7 +478,7 @@ try{
  const firstPending=await timedPage.evaluate(()=>GukminGame.session.snapshot().choice.token);
  await timedPage.waitForTimeout(2500);
  assert.equal(await timedPage.locator('#dailyChoiceDialog').isVisible(),false,'diary waits for the full countdown');
- const midRatio=await timedPage.locator('.auto-choice-fill').evaluate(el=>{
+ const midRatio=await timedPage.locator('#choiceProgressFill').evaluate(el=>{
   const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
  });
  assert.ok(midRatio>.25&&midRatio<.85,'countdown bar advances continuously over real time');

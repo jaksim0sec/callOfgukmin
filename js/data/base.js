@@ -63,6 +63,7 @@ const REGION_PRESETS={
  '상업':{relations:1},'학군지':{relations:1}
 };
 const TRAIT_DEFS = {
+  '풍자 감각':{color:'#747985',icon:'speech',description:'과장과 허세를 짧은 말로 꼬집는다. 관련 공개 발언 상황의 압박 부담을 1 줄인다.',modifiers:[{tags:['public-speech'],stats:{stress:{add:-1}}}]},
  '흙수저':{icon:'home',tier:'soil',description:'재수학원 지원 없음 — 가계 예산 안에서 교육 계획을 함께 세운다.'},
  '동수저':{icon:'home',tier:'bronze',description:'재수학원 1회 지원 — 큰 교육비는 미리 의논하고 한 해에 집중한다.'},
  '은수저':{icon:'home',tier:'silver',description:'재수학원 2회 지원 — 준비해 둔 교육비로 두 번의 재도전 기회를 만든다.'},

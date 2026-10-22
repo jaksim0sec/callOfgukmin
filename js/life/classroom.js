@@ -18,9 +18,9 @@ function raceVariance(persona){
  return bucket<3?-1:bucket>=17?1:0;
 }
 function chat(peer,room){return {type:'chat',room,messages:[
- {sender:peer.name,text:peer.id==='doyun'?'내일 쉬는 시간에 운동장 올래? 바통 연습 같이 하자!':peer.id==='jiwoo'?'나 수학 퍼즐 하나 만들었는데 ㅋㅋ 같이 풀어볼래?':'오늘 네가 해 준 이야기 생각나서 그림 그렸어!',time:'오후 4:12'},
- {sender:peer.name,text:peer.id==='jiwoo'?'혼자 풀어도 되고 같이 풀어도 됨. 너 어떡할래?':peer.id==='doyun'?'연습할 거면 톡 줘 ㅋㅋ':'내일도 같이 그림 그릴래?',time:'오후 4:13'}
-],playerMessages:peer.id==='jiwoo'?{join:'어디서 막힘? 같이 해보자 ㅋㅋ',practice:'오케이 내가 먼저 풀어보고 보낼게',quiet:'오늘은 좀 피곤해서 낼 같이 하자'}:peer.id==='doyun'?{join:'ㅋㅋ 좋아 내일 같이 놀자',practice:'바통 연습 ㄱㄱ 내일 운동장 ㄱ?',quiet:'오늘은 좀 쉬고 낼 보자'}:{join:'나도 그 그림 좋음 ㅋㅋ',practice:'내일 서로 만든 이야기 보여주자',quiet:'오늘은 쉬고 낼 얘기하자'},responses:{join:[{sender:peer.name,text:peer.id==='jiwoo'?'ㅇㅋㅇㅋ 같이 풀자. 나도 막히던 중 ㅋㅋ':'좋아 ㅋㅋ 내일도 같이 앉자!'}],practice:[{sender:peer.name,text:peer.id==='jiwoo'?'헐 직접 풀었어? 풀이 좀 보자 ㄷㄷ':'약속! 내일 준비해서 갈게.'}],quiet:[{sender:peer.name,text:peer.id==='jiwoo'?'ㅇㅋ 낼 학교에서 보자':'ㅇㅋ 내일 봐!'}]}};}
+ {sender:peer.name,text:peer.id==='doyun'?'내일 쉬는 시간에 운동장 올래? 바통 연습 같이 하자!':peer.id==='jiwoo'?'수학 숙제 4번, 난 답이 12인데 풀이가 다른 것 같아. 네 풀이랑 비교해 볼래?':'오늘 네가 해 준 이야기 생각나서 그림 그렸어!',time:'오후 4:12'},
+ {sender:peer.name,text:'너는 뭐 하고 싶어?',time:'오후 4:13'}
+],responses:{join:[{sender:peer.name,text:'좋아 ㅋㅋ 내일도 같이 앉자!'}],practice:[{sender:peer.name,text:'약속! 내일 준비해서 갈게.'}],quiet:[{sender:'알림',text:'알림을 잠시 껐습니다.'}]}};}
 global.GukminDirector.register({id:'classroom',when:{phase:'elementary'},generate:persona=>{
  const number=classNumber(persona),room=number+'반 친구들';
  const seating=S.selection('classroom:seating',31,'오늘은 자리를 골라 앉는 날','선생님이 오늘은 자유롭게 앉아 보라고 했다. 교실을 둘러보고 함께 지내고 싶은 짝꿍 옆 빈자리를 골라 보자.',classmates.map(peer=>({
@@ -43,24 +43,33 @@ global.GukminDirector.register({id:'classroom',when:{phase:'elementary'},generat
  follow.event.when={attributes:{classroomRevision:1}};
  follow.choice.presentation=chat(classmates[0],room);
  for(const variant of follow.choice.variants)variant.presentation=chat(classmates.find(peer=>peer.id===variant.id),room);
+ const jiwoo=follow.choice.variants.find(v=>v.id==='jiwoo');
+ jiwoo.body='짝꿍 지우가 숙제 사진을 보냈다. 둘 다 답은 맞았지만 계산 순서가 다르다. 오늘 남은 시간에 어디까지 이야기할지 정하자.';
+ jiwoo.options[0].label='내가 푼 방법을 짧게 보내고 지우의 풀이도 들어 본다';
+ jiwoo.options[0].result.history.detail='지우가 왜 먼저 나눴는지 설명해 줬다. 긴 검산까지 하지는 않았지만 서로의 풀이 습관을 알게 됐다.';
+ jiwoo.options[1].label='풀이를 한 줄씩 대조하며 끝까지 검산한다';
+ jiwoo.options[1].result.history.detail='같은 답이 나오는 두 풀이를 한 줄씩 비교했다. 문제를 보는 방법은 늘었지만 다른 숙제를 시작할 시간이 늦어졌다.';
+ jiwoo.options[2].label='“오늘은 쉬고 내일 교실에서 같이 보자”라고 답한다';
+ jiwoo.presentation.playerMessages={join:'난 먼저 묶어서 풀었어. 너는 어떤 방법이었어?',practice:'사진 보면서 한 줄씩 같이 확인해 보자.',quiet:'오늘은 쉬고 내일 교실에서 같이 보자.'};
+ jiwoo.presentation.responses={join:[{sender:'지우',text:'아 먼저 이렇게 묶는 거구나. 설명 고마워!'}],practice:[{sender:'지우',text:'여기서 계산 순서만 달랐네! 둘 다 맞는지 끝까지 확인해 보자.'}],quiet:[{sender:'지우',text:'응, 내일 공책 가져갈게. 푹 쉬어!'}]};
  const raceOptions=peer=>[
-  {id:'sprint',label:'마지막 주자로 나가 전력 질주한다',tags:['sports'],risk:'연습 때문에 다른 과목 복습 시간이 줄어든다',effects:{...(peer.id==='doyun'?{}:{activate:{athletics:4}}),stats:{athletics:3,stress:2,study:-1},attributes:{sportsRole:'runner'}},detail:peer.name+'에게서 바통을 받아 마지막 코너를 돌았다. 결승선까지 시선을 놓지 않았다.'},
-  {id:'handoff',label:'중간 주자로 바통 연결을 맞춘다',tags:['team','sports'],effects:{...(peer.id==='doyun'?{}:{activate:{athletics:4}}),stats:{athletics:1,relations:1,stress:1},attributes:{sportsRole:'runner'}},detail:peer.name+'와 손을 뻗는 위치를 맞췄다. 바통은 떨어지지 않았지만 다른 반의 주자도 빠르게 따라왔다.'},
+  {id:'sprint',label:'전력 질주를 집중 연습하고 마지막 주자로 뛴다',tags:['sports'],risk:'연습 때문에 다른 과목 복습 시간이 줄어든다',effects:{...(peer.id==='doyun'?{}:{activate:{athletics:4}}),stats:{athletics:3,stress:2,study:-1},attributes:{sportsRole:'runner'}},detail:'출전 전 마지막 직선 주법을 연습했다. '+peer.name+'에게서 바통을 받아 마지막 코너를 돌았다. 결승선까지 시선을 놓지 않았다.'},
+  {id:'handoff',label:'바통 주고받기를 맞춰 중간 주자로 뛴다',tags:['team','sports'],effects:{...(peer.id==='doyun'?{}:{activate:{athletics:4}}),stats:{athletics:1,relations:1,stress:1},attributes:{sportsRole:'runner'}},detail:peer.name+'와 손을 뻗는 위치를 맞췄다. 바통은 떨어지지 않았지만 다른 반의 주자도 빠르게 따라왔다.'},
   {id:'cheer',label:'응원석에서 반 친구들을 응원한다',effects:{stats:{relations:1,stress:-1},attributes:{sportsRole:'cheer'}},detail:peer.name+'가 달릴 때 반 이름을 크게 불렀다. 주자 명단에는 없었지만 응원석에서 함께 웃었다.'}
  ];
  const prelude=S.notice('classroom:sports-prelude',37,'내일은 운동회','교문 앞에 운동회 안내장이 붙었다. 내일 반 대항 계주가 열린다. 운동장에 나갈 친구들이 방과 후 바통을 맞춰 보기 시작했다.');
  prelude.when={attributes:{classroomRevision:1}};
- const sports=S.branch(S.selection('classroom:sports',38,number+'반, 계주 출전!', '오늘은 운동회! 함성과 응원 소리가 운동장을 채운다. 세 반이 둥근 트랙을 한 바퀴씩 이어 달린다. 우리 반에서 맡을 역할을 골라 보자.',raceOptions(classmates[0])),classmates.map(peer=>({
-  id:peer.id,title:number+'반, 계주 출전!',when:{attributes:{seatmate:peer.name}},body:'오늘은 운동회! '+number+'반 깃발 아래서 함성이 터진다. '+peer.name+'가 바통을 들고 손짓한다. "우리 반 이번엔 끝까지 가 보자!"\n\n연습 뒤 운동능력 9 이상이면 우승을 노릴 수 있다. 응원석에서도 함께할 수 있다.',options:raceOptions(peer)
+ const sports=S.branch(S.selection('classroom:sports',38,number+'반, 계주 출전!', '우리 반과 다른 반이 운동장을 한 바퀴씩 이어 달린다. 실력도 중요하지만 바통을 넘기는 호흡도 필요하다.',raceOptions(classmates[0])),classmates.map(peer=>({
+  id:peer.id,title:number+'반, 계주 출전!',when:{attributes:{seatmate:peer.name}},body:'운동장에 '+number+'반 깃발이 걸렸다. '+peer.name+'가 바통을 들고 손짓한다. "우리 반 이번엔 끝까지 가 보자!"\n\n짝꿍 연습과 체육 활동으로 쌓은 운동능력, 체육 특성이 주자 실력이다. 경기 당일의 작은 변수도 있어 준비에 따라 우승을 노릴 수 있다. 주자로 뛸지, 바통 연결을 맡을지, 응원석을 지킬지 정하자.',options:raceOptions(peer)
  })));
  sports.event.when={attributes:{classroomRevision:1}};
- sports.choice.presentation={type:'sports',classNumber:number};
- const variance=raceVariance(persona);
- // Only borderline finishes change with luck. Strong preparation still wins reliably.
- const wins={all:[{attributes:{sportsRole:'runner'}},{any:[{stats:{athletics:{gte:9-variance}}},{traits:['체육']}]}]};
+ sports.choice.presentation={type:'sports',classNumber:number,finishMs:7400};
+ const variance=raceVariance(persona),threshold=9-variance;
+ sports.choice.presentation.winThreshold=threshold;
+ const wins={all:[{attributes:{sportsRole:'runner'}},{any:[{stats:{athletics:{gte:threshold}}},{traits:['체육']}]}]};
  for(const script of [sports.choice,...sports.choice.variants])for(const option of script.options){
   option.result.conditional=[
-   {when:wins,result:{effects:{attributes:{sportsPlace:1},stats:{relations:3,athletics:2}},history:{title:'반 대항 계주 · '+number+'반 1등',detail:'막판에 한 명을 추월해 우승했다! 함께 연습한 친구들과 기쁨을 나누며 반의 단합도 단단해졌다.',importance:'major'}}},
+   {when:wins,result:{effects:{attributes:{sportsPlace:1},stats:{money:10000,relations:3,athletics:2}},history:{title:'반 대항 계주 · '+number+'반 1등',detail:'준비한 호흡이 끝까지 이어졌다. 우리 반이 가장 먼저 결승선을 통과했다. 우승 상품권 1만 원과 함께 반 친구들의 신뢰가 쌓였다.',importance:'major'}}},
    {when:{all:[{not:wins},{attributes:{sportsRole:'runner'}}]},result:{effects:{attributes:{sportsPlace:3}},history:{title:'반 대항 계주 · '+number+'반 3등',detail:'마지막 코너에서 두 반에 추월당했다. 그래도 바통을 끝까지 전달했다.'}}},
    {when:{attributes:{sportsRole:'cheer'}},result:{effects:{attributes:{sportsPlace:2}},history:{title:'반 대항 계주 · '+number+'반 2등',detail:'주자들이 응원 소리에 힘을 내 막판에 한 반을 따라잡았다.'}}}
   ];

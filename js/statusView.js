@@ -271,7 +271,7 @@ function showTraits(root,s){
   const traits=root.querySelector('#traits'),rendered=traits.dataset.rendered==='true';
   const previous=new Set([...traits.children].map(token=>token.dataset.traitKey)),scrollLeft=traits.scrollLeft;
   traits.replaceChildren();traits.dataset.rendered='true';
-  function appendTrait(token,key){token.dataset.traitKey=key;if(token.classList.contains('trait-control'))token.setAttribute('aria-expanded',String(dialog?.open&&dialog.dataset.traitKey===key));traits.append(token);}
+  function appendTrait(token,key){token.dataset.traitKey=key;if(rendered&&!previous.has(key))token.classList.add('is-trait-new');if(token.classList.contains('trait-control'))token.setAttribute('aria-expanded',String(dialog?.open&&dialog.dataset.traitKey===key));traits.append(token);}
   const dialog=root.querySelector('#traitDialog'),info=root.querySelector('#traitInfo');
   if(dialog&&!dialog.dataset.bound){
    dialog.dataset.bound='true';
