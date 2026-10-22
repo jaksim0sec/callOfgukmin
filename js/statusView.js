@@ -3,6 +3,7 @@
 'use strict';
 const NS='http://www.w3.org/2000/svg';
 const ICONS=Object.freeze({
+ running:'<circle cx="15" cy="5" r="2"/><path d="m8 10 5-2 3 4 4 1M13 8l-3 6 4 3-1 4M10 14l-4 5H3"/>',
  mind:'<path d="M8 18v3h8v-3l3-3V9A7 7 0 0 0 5 9v6Z"/><path d="M9 10c2-3 4 3 6 0M10 15h4"/>',
  pin:'<path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2"/>',
  home:'<path d="m4 10 6-5a3 3 0 0 1 4 0l6 5v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 20v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6"/>',

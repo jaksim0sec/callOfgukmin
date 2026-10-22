@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/classroom','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -1316,4 +1316,25 @@ test('old age saves migrate once, retaining waiting decisions, money, history an
  const original=JSON.stringify(old),next=P.upgradeAge(old);assert.equal(JSON.stringify(old),original);assert.equal(next.age,8);assert.equal(next.stats.money,43210);assert.equal(next.history[0].age,1);assert.equal(next.history[1].age,8);assert.equal(next.simulation.turn,28);assert.equal(next.simulation.events['infant:school-entry'].count,1);assert.equal(next.simulation.choices.pending.script.title,'14세 · 1학년 시험');assert.equal(next.simulation.choices.pending.script.presentation.age,14);assert.equal(next.simulation.choices.pending.script.options[0].result.effects.attributes.age,17);assert.equal(next.simulation.choices.pending.outcome.before.age,8);assert.deepEqual(next.simulation.applied,old.simulation.applied);
  P.save(next);const restored=P.load();P.save(restored);assert.equal(P.load().age,8);assert.equal(P.load().simulation.choices.pending.status,'waiting');assert.equal(P.load().stats.money,43210);
  const ended={...old,age:30,history:[{age:30,title:'서른, 백수 엔딩'}],attributes:{retryEndReason:'백수 엔딩'}};assert.equal(P.upgradeAge(ended).age,30);assert.equal(P.upgradeAge(ended).history[0].age,30);
+});
+
+function classroomFixture(seat='doyun'){
+ const env=setup(),p=env.P.generate();p.age=8;p.phase='elementary';p.attributes={classroomRevision:1};p.stats.study=11;p.stats.relations=8;
+ const full=env.c.GukminDirector.content(p),pack={...full,contentId:'classroom-check',events:full.events.filter(e=>e.id.startsWith('classroom:')),choices:full.choices.filter(c=>c.id.startsWith('classroom:'))};
+ assert.equal(pack.choices.length,3,'seating, follow-up chat and sports are real content');
+ const engine=env.T.create({...pack,persona:p,pauseAfterChoice:true,persist:person=>env.P.save(person)});
+ engine.advance(31);assert.equal(engine.snapshot().choice.presentation.type,'seating');engine.resolve(engine.snapshot().choice.token,seat);engine.resume();return {...env,engine,pack};
+}
+test('classroom: desk choice remembers a class and friend, who returns in a chat and sports meet',()=>{
+ const {engine,P,T,pack}=classroomFixture();let s=engine.snapshot();assert.equal(s.persona.attributes.seatmate,'도윤');assert.ok(s.persona.attributes.elementaryClass>=1&&s.persona.attributes.elementaryClass<=6);assert.equal(s.persona.stats.athletics,6);
+ engine.advance(4);s=engine.snapshot();assert.equal(s.choice.presentation.type,'chat');assert.ok(s.choice.presentation.messages.some(m=>m.sender==='도윤'));const token=s.choice.token;engine.resolve(token,'practice');assert.equal(engine.resolve(token,'practice'),false);engine.resume();engine.advance(3);s=engine.snapshot();assert.equal(s.choice.presentation.type,'sports');assert.match(s.choice.body,/도윤/);
+ engine.resolve(s.choice.token,'sprint');s=engine.snapshot();assert.equal(s.persona.attributes.sportsPlace,1);assert.equal(s.persona.stats.athletics,11);assert.ok(s.persona.history.some(h=>h.title.includes('계주')&&h.detail.includes('도윤')));
+ const restored=T.create({...pack,persona:P.load(),pauseAfterChoice:true}).snapshot();assert.equal(restored.persona.attributes.seatmate,'도윤');assert.equal(restored.persona.attributes.sportsPlace,1);assert.equal(restored.runtime.turn,38);assert.equal(restored.reviewPending,true);
+});
+test('classroom: preparation changes the actual finish; old completed lives get no inserted decisions',()=>{
+ const {engine}=classroomFixture('minseo');engine.advance(4);engine.resolve(engine.snapshot().choice.token,'quiet');engine.resume();engine.advance(3);engine.resolve(engine.snapshot().choice.token,'handoff');assert.equal(engine.snapshot().persona.attributes.sportsPlace,3);
+ const {P,T,c}=setup(),p=P.generate();p.age=11;p.phase='elementary';const full=c.GukminDirector.content(p),pack={...full,contentId:'old-classroom',events:full.events.filter(e=>e.id.startsWith('classroom:')),choices:full.choices.filter(c=>c.id.startsWith('classroom:'))};const old=T.create({...pack,persona:p});old.advance(52);assert.equal(old.snapshot().choice,null);assert.equal(old.snapshot().persona.stats.athletics,undefined);
+});
+test('existing class group chats use the same chat presentation in each scenario',()=>{
+ const {P,c}=setup(),pack=c.GukminDirector.content(P.generate());for(const id of ['middle:group-chat','high:first-day']){const choice=pack.choices.find(c=>c.id===id);for(const script of [choice,...choice.variants]){assert.equal(script.presentation.type,'chat');assert.ok(script.presentation.messages.length>=2);}}
 });

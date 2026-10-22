@@ -27,7 +27,7 @@ for(const screen of screens){
  if(!html.includes('data-screen="'+screen+'"'))errors.push('Missing screen marker: '+path);
  if(!html.includes('<base href="../">'))errors.push('Missing static asset base URL: '+path);
  const matches=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(m=>m[1]);
- const expected=screen==='game'?[...gameScripts.slice(0,17),'js/sheetController.js','js/dailyChoice.js',...gameScripts.slice(17)]:screen==='result'?[...scripts.slice(0,-1),'js/resultView.js',scripts.at(-1)]:scripts;
+ const expected=screen==='game'?[...gameScripts.slice(0,17),'js/sheetController.js','js/dailyScenes.js','js/dailyChoice.js',...gameScripts.slice(17)].flatMap(path=>path==='js/life/elementary.js'?[path,'js/life/classroom.js']:path):screen==='result'?[...scripts.slice(0,-1),'js/resultView.js',scripts.at(-1)]:scripts;
  if(JSON.stringify(matches.map(s=>s.split('?')[0]))!==JSON.stringify(expected))errors.push('Script path/order incorrect: '+path);
  if(!html.includes('href="css/style.css"')&&!html.includes('href="css/style.css?'))errors.push('Missing CSS: '+path);
  for(const source of [...matches,'css/style.css']){
@@ -37,7 +37,7 @@ for(const screen of screens){
  const idsSeen=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
  for(const id of ids[screen])if(!idsSeen.has(id))errors.push('Missing DOM element '+id+' in '+path);
 }
-for(const path of [...gameScripts,'js/sheetController.js','js/dailyChoice.js','js/resultView.js']){
+for(const path of [...gameScripts,'js/sheetController.js','js/dailyChoice.js','js/dailyScenes.js','js/life/classroom.js','js/resultView.js']){
  try{new vm.Script(read(path),{filename:path});}
  catch(e){errors.push('JavaScript syntax: '+path+' '+e.message);}
 }

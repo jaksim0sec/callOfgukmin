@@ -31,13 +31,20 @@ function renderRich(target,input){
  target.replaceChildren(fragment);return target;
 }
 function rich(tag,cls,text){return renderRich(el(tag,cls),text);}
+function initialMetric(id,value){
+ const def=P.metricDefinition(id);
+ return def.label+' 시작 · '+value.toLocaleString('ko-KR')+(def.type==='currency'?'원':Number.isFinite(def.max)?'/'+def.max:'');
+}
 function differences(before,after){
  const result=[],phase=P.phaseOf(after);
  for(const [id,value] of Object.entries(after.stats||{})){
   const old=before.stats?.[id];
-  if(!Number.isFinite(old)||!Number.isFinite(value)||old===value)continue;
+  if(!Number.isFinite(value))continue;
   if(id==='study'&&(phase==='middle'||phase==='high'))continue;
-  const def=P.metricDefinition(id),delta=value-old;
+  const def=P.metricDefinition(id);
+  if(!Number.isFinite(old)){result.push({text:initialMetric(id,value),icon:def.icon||'sparkle',tone:'neutral'});continue;}
+  if(old===value)continue;
+  const delta=value-old;
   result.push({id,amount:delta,icon:def.icon||'sparkle',
    text:def.label+' '+(delta>0?'+':'−')+Math.abs(delta).toLocaleString('ko-KR')+
     (['money','allowance','income'].includes(id)?'원':''),
@@ -149,10 +156,10 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    history.slice(from,to+1):history.slice(before?.history?.length||0);
   return entries.filter(item=>item.display!=='hidden').map(item=>item.detail||'').filter(Boolean).join(' ');
  }
- function rewardModel(before,after,label,from,to){
+ function rewardModel(before,after,label,from,to,presentation,optionId){
   const route=after.attributes?.admissionResearch,score=after.stats?.schoolScore||0;
   const guidance=route&&route!==before.attributes?.admissionResearch?global.GukminStory.admissionGuide(after,route):'';
-  return {guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
+  return {presentation,optionId,attributes:after.attributes||{},guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
  }
  function renderReward(){
   if(!reward)return;
@@ -193,6 +200,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   }
   if(!ordered.length)tray.append(el('p','daily-reward-empty','수치 변화 없이 이야기에 기록됐어.'));
   section.append(tray);body.append(section);
+  global.GukminDailyScenes.reward({dialog,body,presentation:reward.presentation,attributes:reward.attributes,optionId:reward.optionId,label:reward.label});
   body.scrollTop=0;
   sync();
  }
@@ -206,7 +214,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   resumeButton.classList.toggle('is-auto-opening',autoReady&&automatic);
   if(!autoReady){autoLabel.textContent='선택 열기';autoTime.hidden=true;autoTrack.hidden=true;}
   else paintClock();
-  confirm.textContent=reward?'보상 받기':'이 선택으로 기록하기';
+  confirm.textContent=reward?(reward.presentation?.type==='chat'?'대화 마치기':reward.presentation?.type==='sports'?'기록하고 계속하기':'보상 받기'):currentChoice?.presentation?.type==='chat'?'선택 확정':currentChoice?.presentation?.type==='seating'?'이 자리에 앉기':currentChoice?.presentation?.type==='sports'?'우리 반, 출발!':'이 선택으로 기록하기';
   confirm.disabled=reward?false:!selectedId||!!pendingDecision;
  }
  function open(){
@@ -228,7 +236,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  function reset(){
   cancelClock();
   if(dialog.open)dialog.close();
-  body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward');
+  dialog.dataset.scene='';body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward');
   sync();
  }
  function cancel(event){event.preventDefault();fold();}
@@ -260,7 +268,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   review=!!reviewPending;
   if(!pendingDecision||pendingDecision.token!==choice.token)return;
   const selected=choice.options.find(item=>item.id===pendingDecision.id);
-  reward=rewardModel(before,after,selected?.label,(before.history||[]).length,(after.history||[]).length-1);
+  reward=rewardModel(before,after,selected?.label,(before.history||[]).length,(after.history||[]).length-1,choice.presentation,selected?.id);
   pendingDecision=null;
   renderReward();
  }
@@ -271,7 +279,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   const outcome=last.outcome;
   if(!outcome?.before||!outcome?.after)return false;
   token=last.token;review=true;folded=false;delta=differences(outcome.before,outcome.after);
-  reward=rewardModel(outcome.before,outcome.after,outcome.label,outcome.historyFrom,outcome.historyTo);
+  reward=rewardModel(outcome.before,outcome.after,outcome.label,outcome.historyFrom,outcome.historyTo,last.script?.presentation,last.optionId);
   return true;
  }
  function showChoice(choice,host,persona){
@@ -317,6 +325,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    const forecast=option.outlook?{...option.result,conditional:[]}:option.result;
    const projected=global.GukminEffects.apply(persona,forecast,{turn:choice.openedAt||0});
    for(const [id,next] of Object.entries(projected.stats||{})){
+    if(Number.isFinite(next)&&!Number.isFinite(persona.stats?.[id])){indicators.append(S.createToken({type:'context',label:initialMetric(id,next),icon:P.metricDefinition(id).icon||'sparkle',classes:'daily-choice-effect'}));continue;}
     const amount=Number.isFinite(next)&&Number.isFinite(persona.stats?.[id])?next-persona.stats[id]:0;
     if(!Number.isFinite(amount)||amount===0)continue;
     const def=P.metricDefinition(id),good=['stress','illness'].includes(id)?amount<0:amount>0;
@@ -365,6 +374,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
    list.append(button);
   }
   body.append(list);
+  global.GukminDailyScenes.decorate({dialog,body,list,choice});
   sync();
   startClock(); // Starts once per choice token; re-renders do not restart the countdown.
  }

@@ -24,6 +24,7 @@ const METRIC_DEFS = {
   allowance:{label:'용돈',type:'currency',icon:'coin'},
   income:{label:'수입',type:'currency',icon:'coin'},
   relations:{label:'관계',type:'progress',icon:'users',min:0,max:25},
+  athletics:{label:'운동능력',type:'progress',icon:'running',min:0,max:25},
   study:{label:'학업 역량',type:'progress',icon:'book',min:0,max:25},
   schoolScore:{label:'내신',type:'progress',icon:'school',gradeSystem:'five',min:0,max:25},
   exam:{label:'모의고사',type:'progress',icon:'chart',gradeSystem:'nine',min:0,max:25},

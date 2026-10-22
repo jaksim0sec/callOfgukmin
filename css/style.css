@@ -1440,3 +1440,85 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 .tutorial-actions button:disabled{opacity:.3}
 @media(max-width:47.5em){.playback-controls{padding:.4rem 1rem .55rem}.playback-controls button{min-height:2rem;padding:.35rem .6rem;font-size:.7rem}.playback-controls #playbackHelp{min-width:2rem}.game-tutorial{padding:1.2rem}.tutorial-art{margin:1rem 0;padding:1rem .3rem}.tutorial-copy h2{font-size:1.25rem}.tutorial-copy p{font-size:.85rem;min-height:0}}
 @media(prefers-reduced-motion:reduce){.game-tutorial,.playback-controls button{animation:none;transition:none}}
+
+/* Contextual daily scenes keep the same saved choices, modal and confirmation. */
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]){background-image:none;font-family:system-ui,'Pretendard',sans-serif;--paper-ink:#27303c;--paper-muted:#627080;--paper-accent:#44657a}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports])::before{display:none}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-head{padding:.2rem 1.2rem .6rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-body{padding:.5rem 1.2rem 1rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-paper-footer{padding:.7rem 1.2rem calc(.8rem + env(safe-area-inset-bottom))}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-choice-title{font-family:inherit;font-size:.94rem;line-height:1.55;font-weight:650;letter-spacing:-.02em}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-choice-story{font-size:.92rem;line-height:1.8;font-weight:450;letter-spacing:-.02em}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-paper-confirm{font-family:inherit;font-weight:750}
+.scene-choice-label{display:block;font-size:.75rem;color:#637184;letter-spacing:.015em;margin:.8rem 0 .5rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .inline-choices{gap:.6rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .inline-choice{padding:.85rem;border:.08rem solid #c8d1d7;border-radius:.8rem;background:#ffffffb5;gap:.65rem}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .inline-choice.is-selected{border-color:#4f7288;background:#fff;box-shadow:0 0 0 .1rem #4f72881c}
+.paper-choice-sheet:is([data-scene=chat],[data-scene=sports]) .daily-choice-effects{gap:.3rem;margin-top:.45rem}
+.paper-choice-sheet[data-scene=chat]{background:#b9cbd9;--paper-accent:#f5dc47}
+.paper-choice-sheet[data-scene=chat] .daily-modal-head{background:#b9cbd9}
+.paper-choice-sheet[data-scene=chat] .daily-modal-head h2{font-family:inherit;font-size:1.15rem;letter-spacing:-.035em}
+.paper-choice-sheet[data-scene=chat] .daily-modal-head small{color:#435b6b}
+.paper-choice-sheet[data-scene=chat] .daily-paper-footer{background:#eef3f5;border-color:#a9bdcb}
+.paper-choice-sheet[data-scene=chat] .daily-paper-confirm:not(:disabled){background:#f5dc47;color:#373015}
+.chat-thread{display:flex;flex-direction:column;gap:.85rem;padding:.2rem 0 .6rem}
+.chat-room-head{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:.15rem .65rem;font-size:.88rem;font-weight:750;color:#263e50;padding:.4rem 0 .8rem;border-bottom:.0625rem solid #617e9629}
+.chat-room-icon{grid-row:span 2;font-size:1.05rem;color:#476277}
+.chat-room-head small{grid-column:2;font-size:.65rem;font-weight:450;color:#4e667a}
+.chat-date{align-self:center;font-size:.65rem;color:#fff;padding:.3rem .8rem;border-radius:2rem;background:#647e955c}
+.chat-message{display:flex;align-items:flex-end;gap:.4rem;min-width:0;max-width:100%}
+.chat-avatar{display:flex;align-items:center;justify-content:center;align-self:flex-start;flex:none;width:2rem;height:2rem;background:#e4b88e;border-radius:.75rem;color:#634936;font-size:.85rem;font-weight:650}
+.chat-message-content{min-width:0;max-width:calc(100% - 4.3rem)}
+.chat-sender{display:block;font-size:.7rem;color:#364c5e;margin:0 0 .25rem}
+.chat-bubble{padding:.7rem .85rem;margin:0;border-radius:.2rem .9rem .9rem .9rem;background:#fff;color:#242c32;font-size:.88rem;line-height:1.65;overflow-wrap:anywhere;white-space:pre-line;box-shadow:0 .09rem .12rem #38556912}
+.chat-time{font-size:.55rem;white-space:nowrap;color:#526d82;padding-bottom:.1rem}
+.chat-message.is-mine{flex-direction:row-reverse;margin-left:1.6rem}
+.chat-message.is-mine .chat-bubble{background:#fce45c;border-radius:.9rem .2rem .9rem .9rem}
+.chat-draft-label{display:block;text-align:right;font-size:.65rem;color:#476073;margin:.3rem 0 .4rem}
+.paper-choice-sheet .chat-pinned{margin:0 0 .3rem;padding:.8rem;border-radius:.7rem;background:#e9f1f4b8;border:.0625rem solid #fff5}
+.chat-pinned .daily-scenario-title{font-size:.9rem;line-height:1.5}
+.paper-choice-sheet .chat-pinned .daily-choice-story{font-size:.8rem;margin:.35rem 0 0;color:#405463}
+.chat-replies{margin-top:.6rem;padding:.15rem 0 .4rem;border-top:.0625rem solid #718d9f36}
+.chat-replies .scene-choice-label{color:#304d63}
+.paper-choice-sheet[data-scene=chat].is-reward .daily-reward-hero{margin-top:1rem;border-top:.0625rem solid #7190a24a;padding-top:1rem}
+.paper-choice-sheet[data-scene=chat] .daily-reward-headline,.paper-choice-sheet[data-scene=chat] .daily-reward-story{font-family:inherit}
+.paper-choice-sheet[data-scene=seating]{background:#f1efe6;--paper-accent:#3f7063}
+.classroom-room{padding:.9rem .8rem .6rem;background:#e7e2d4;border:.0625rem solid #d1c8b5;border-radius:1rem}
+.classroom-blackboard{padding:.6rem .8rem;margin:0 12% .6rem;text-align:center;color:#f0f5e8;background:linear-gradient(120deg,#2c5148,#3c6254);border:.2rem solid #9d815c;border-radius:.2rem;font-size:.82rem;letter-spacing:.08em;box-shadow:0 .15rem .2rem #443e2b1a}
+.classroom-instruction{font-size:.73rem;text-align:center;line-height:1.6;color:#645f4e;margin:.5rem 0 1rem}
+.paper-choice-sheet .classroom-desks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.7rem .45rem;margin:0}
+.classmate-desk,.occupied-desk,.paper-choice-sheet .empty-desk{display:flex;align-items:center;justify-content:center;flex-direction:column;min-height:3.9rem;min-width:0;border:.08rem solid #d0ba92;border-bottom-width:.3rem;border-radius:.4rem;background:#decaa9;padding:.35rem .15rem;font-size:.7rem;color:#655b49}
+.classmate-desk{gap:.2rem;color:#3a493c;background:#e7d4b6}
+.desk-avatar{display:flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;background:#e2a980;color:#6d4530;font-size:.65rem}
+.paper-choice-sheet .empty-desk{border:.1rem dashed #789d8c;background:#f9fbf3;color:#356454;cursor:pointer;position:relative}
+.paper-choice-sheet .empty-desk .daily-choice-copy,.empty-desk .daily-choice-number,.empty-desk .daily-choice-chevron{display:none}
+.paper-choice-sheet[data-scene=seating] .empty-desk.is-selected{background:#3f7063;color:#fff;border:.1rem solid #3f7063;box-shadow:0 0 0 .15rem #3f706326}
+.desk-empty-label{font-size:.68rem;font-weight:750;word-break:keep-all}
+.classroom-door{display:block;text-align:right;font-size:.62rem;color:#81755e;margin-top:.7rem}
+.seat-preview{padding:.75rem .15rem .3rem;min-height:5rem}
+.seat-preview-empty{display:block;padding:.8rem 0;font-size:.82rem;color:#7d7b70;text-align:center}
+.seat-preview .scene-choice-label{margin:.2rem 0 .3rem}
+.seat-peer-name{font-size:1.2rem;color:#345c4f}.seat-peer-note{font-size:.8rem;color:#696b60;margin:.3rem 0 .6rem}
+.seat-preview .daily-choice-copy{display:flex;flex-direction:column;gap:.2rem}
+.seat-receipt{display:flex;flex-direction:column;align-items:center;gap:.5rem;text-align:center;padding:1.3rem;border-radius:1rem;background:#dce8d8;color:#355b4e;margin-bottom:.8rem}
+.seat-receipt small{font-size:.72rem}.seat-receipt strong{font-size:1.3rem}.seat-receipt span{font-size:.76rem;line-height:1.6}
+.paper-choice-sheet[data-scene=sports]{background:#eef3e8;--paper-accent:#3e7553}
+.sports-scoreboard{display:flex;flex-direction:column;gap:.45rem;padding:1rem 1.1rem;background:#28543e;color:#f8f7dc;border-radius:.9rem .9rem 0 0}
+.sports-scoreboard small{font-size:.6rem;letter-spacing:.16em;color:#bcd4aa}.sports-scoreboard strong{font-size:1.35rem;font-weight:850;letter-spacing:-.03em}.sports-scoreboard>span{font-size:.75rem;color:#d5e4c6;line-height:1.5}
+.sports-track{position:relative;background:repeating-linear-gradient(90deg,#a44f3d 0,#a44f3d 4rem,#a95642 4rem,#a95642 8rem);border:.35rem solid #d7dbc6;border-top:0;overflow:hidden;border-radius:0 0 .8rem .8rem;margin-bottom:1rem}
+.sports-lane{position:relative;height:3.2rem;border-bottom:.08rem solid #f7e9cfbd}
+.sports-lane:last-of-type{border-bottom:0}.lane-label{position:absolute;left:.35rem;top:.25rem;font-size:.6rem;color:#f8dcc3}
+.race-runner{position:absolute;left:var(--finish);top:1rem;width:1.35rem;height:1.35rem;border:.16rem solid #fff7;border-radius:50%;background:#f1c569;font-size:0;box-shadow:.2rem .13rem 0 #5c2b1f66}
+.sports-lane:nth-child(2) .race-runner{background:#7ac8e8}.sports-lane:nth-child(3) .race-runner{background:#d7a6ea}.sports-lane.is-ours .race-runner::after{content:'나';display:block;text-align:center;font-size:.65rem;line-height:1rem;font-weight:850;color:#67482b}
+.race-finish-line{position:absolute;right:8%;top:0;bottom:0;width:.4rem;background:repeating-linear-gradient(0deg,#fff 0,#fff .35rem,#3b302e .35rem,#3b302e .7rem);font-size:0}
+.sports-ranking{margin:0 0 1rem;padding:0;list-style:none}.sports-ranking li{display:flex;align-items:center;gap:1rem;padding:.5rem .7rem;font-size:.8rem;border-bottom:.0625rem solid #bacbb455;color:#596653}.sports-ranking li.is-ours{font-weight:750;background:#dfeacd;border-radius:.5rem;color:#36512e}.sports-ranking small{margin-left:auto;font-size:.65rem}
+.race-finish .race-runner{animation:class-relay 1.25s cubic-bezier(.2,.65,.4,1) both}
+@keyframes class-relay{from{left:10%}to{left:var(--finish)}}
+@media(max-width:47.5em){.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-body{padding:.4rem .9rem .85rem}.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-modal-head{padding:.15rem .9rem .4rem}.paper-choice-sheet:is([data-scene=chat],[data-scene=seating],[data-scene=sports]) .daily-paper-footer{padding:.6rem .9rem calc(.7rem + env(safe-area-inset-bottom))}.chat-bubble{font-size:.83rem;padding:.6rem .7rem}.classroom-room{padding:.7rem .55rem .5rem}.paper-choice-sheet .classroom-desks{gap:.6rem .3rem}.classmate-desk,.occupied-desk,.paper-choice-sheet .empty-desk{min-height:3.5rem}.sports-scoreboard strong{font-size:1.2rem}}
+@media(prefers-reduced-motion:reduce){.race-finish .race-runner{animation:none}}
+
+.paper-choice-sheet[data-scene=chat] .daily-modal-head h2{color:#263e50}
+.paper-choice-sheet[data-scene=seating] .daily-modal-head h2{color:#355b4e}
+.paper-choice-sheet[data-scene=sports] .daily-modal-head h2{color:#28543e}
+
+.metric-athletics{--gauge-color:#5f9270}

@@ -168,7 +168,9 @@ global.GukminDirector.register({
     ]
    })
   );
+  stages.events.find(e=>e.id==='elementary:middle-entry').result.conditional=[{when:{attributes:{classroomRevision:1}},result:{effects:{deactivate:['athletics']}}}];
   const friends=stages.choices.find(c=>c.id==='elementary:friends');
+  for(const script of [friends,...friends.variants])for(const option of script.options)option.result.effects.attributes={...option.result.effects.attributes,classroomRevision:1};
   const sociable=friends.variants.find(v=>v.id==='first-friend');
   sociable.options[0].label='민서에게 그림을 설명하고 먼저 대화를 이끈다';
   sociable.options[0].result.effects.stats={relations:3,stress:2};
@@ -209,6 +211,8 @@ global.GukminDirector.register({
     result:{effects:{traits:{add:['관심-'+field]}},history:{title:field+' 분야를 새로 탐색했다',detail:'이번에는 새로운 분야에 시간을 써 봤다. 아직 적성으로 단정하진 않지만 관심의 기록이 남았다.'}}
    });
   }
+  const sportInterest=stages.choices.find(c=>c.id==='elementary:interest-exploration').options[3];
+  sportInterest.result.conditional=[...(sportInterest.result.conditional||[]),{when:{attributes:{classroomRevision:1}},result:{effects:{stats:{athletics:2}}}}];
   const recovery=stages.choices.find(c=>c.id==='elementary:recover');
   recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   return {...stages,attributes:{afterschoolPath:{label:'방과 후 활동',hidden:true},friendRoute:{label:'첫 친구의 기억',hidden:true},classElection:{label:'학급 대표 선거',hidden:true}}};
