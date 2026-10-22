@@ -168,7 +168,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    const presentation=(r.script||def).presentation;
    if(presentation?.type==='election-pledges'){
     if(Object.keys(input).some(k=>k!=='pledges')||!Array.isArray(input.pledges))throw new Error('공약 선택 입력 오류');
-    result={...clone(result),electionDecision:{action:'pledges',ids:[...input.pledges]}};r.input={pledges:[...input.pledges]};
+    result={...clone(result),electionDecision:{action:result.electionDecision?.action||'pledges',ids:[...input.pledges]}};r.input={pledges:[...input.pledges]};
    }else if(Object.keys(input).length){if(presentation?.type!=='university'||Object.keys(input).some(k=>k!=='admissionField')||!['humanities','science'].includes(input.admissionField))throw new Error('선택 입력 오류');result={...clone(result),effects:{...clone(result.effects||{}),attributes:{...result.effects?.attributes,admissionField:input.admissionField}}};}
    settlement(s,`choice:${token}`,result,'choice:'+r.choiceId);
    // Preserve real settled deltas and the related log range after future turns.

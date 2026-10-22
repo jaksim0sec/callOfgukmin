@@ -173,7 +173,7 @@ try{
     assert.equal(await page.locator('#lifeDecisionDialog .life-paper-estimate').count(),0,'sealed result has no grade forecast');
     assert.equal(await page.locator('#lifeDecisionDialog .admission-big-grade').count(),0,'grade hidden until submission');
    }
-   if(category==='election-pledges'){for(const id of ['library','quiet','lost'])await page.locator('[data-pledge='+id+']').click();}
+   if(category==='election-pledges'){for(const id of ['library','quiet','lost']){const card=page.locator('[data-pledge='+id+']');if(await card.getAttribute('aria-pressed')!=='true')await card.click();}}
    else if(category!=='grade-seal'){
     const index=category==='exam'?(state.persona.stats.stress>=8?0:2):0;
     if(category==='admission-finish'){const button=page.locator('#lifeDecisionDialog [data-choice=employment]');if(await button.count())await button.click();}

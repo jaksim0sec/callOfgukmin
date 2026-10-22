@@ -133,18 +133,21 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='campaign'){
   const E=global.GukminElection,a=persona.attributes||{},section=el('section','campaign-brief');
-  section.append(el('small','campaign-eyebrow',choice.presentation.step==='bill'?'약속의 청구서':'우리 반 선거 캠프'),el('h3','',choice.presentation.step==='listen'?'목소리 뒤의 표를 찾자':choice.presentation.step==='attack'?'상대가 있어 정답이 달라진다':choice.presentation.step==='debt'?'네거티브는 외상이었다':'말에서 현실로'));
+  section.append(el('small','campaign-eyebrow',choice.presentation.step==='bill'?'약속의 청구서':'우리 반 선거 캠프'),el('h3','',choice.presentation.step==='listen'?'목소리 뒤의 표를 찾자':choice.presentation.step==='attack'?'그 약속, 어떻게 지킬 거야?':choice.presentation.step==='debt'?'네거티브는 외상이었다':'말에서 현실로'));
   const meters=el('div','campaign-vitals');meters.append(global.GukminStatus.createToken({label:'친구 지지 '+persona.stats.relations+'/25',icon:'users'}),global.GukminStatus.createToken({label:'담임 신뢰 '+(a.teacherTrust??12)+'/25',icon:'school'}));section.append(meters);
   if(choice.presentation.step==='listen')section.append(el('p','',E.groups.map(g=>g.name+' '+g.size+'명').join(' · ')+' / 집단마다 표가 나뉘며 기권도 있습니다.'));
   if(choice.presentation.step==='attack')for(const rival of E.rivals(persona)){const card=el('div','campaign-rival');card.append(el('strong','',rival.name+' · '+rival.title),el('p','',rival.pledges.map(id=>E.pledges.find(p=>p.id===id).name).join(' / ')));if(rival.copied)card.append(el('small','','내 공약을 보고 같은 약속을 내걸었다. 같은 집단의 표를 나눠 가져야 한다.'));section.append(card);}
   if(choice.presentation.step==='bill'){const bill=E.billTarget(persona,choice.presentation.slot);section.append(el('strong','campaign-bill-title',bill.name),el('p','',bill.limit),el('small','',bill.difficulty>=2?'권한 밖의 약속입니다. 원안 이행 대신 타협·파기를 선택해야 합니다.':'원안 이행: 재산 '+bill.cost.toLocaleString('ko-KR')+'원 · 준비 시간과 부담. 타협은 일부 이행, 파기는 신뢰 하락.'));}
   if(choice.presentation.step==='attack'){
+   const target=E.billTarget(persona,0),question=el('blockquote','campaign-question');
+   if(target){question.append(el('strong','','「'+target.name+'」에 대한 질문'),el('p','',target.difficulty>=2?'“학교에서 허락 안 해 주면? 반장이 혼자 정할 수 있는 일이야?”':'“준비는 언제 하고, 필요한 건 어떻게 마련할 거야? 네가 계속 맡을 수 있어?”'),el('small','','확인할 점 · '+target.limit));section.insertBefore(question,meters.nextSibling);}
    const support=global.GukminElectionView.board(persona,{compact:true});section.append(support.element);
    const preview=response=>support.update(E.chosen(persona).map(p=>p.id),response);
-   const ids=E.chosen(persona).map(p=>p.id),base=E.forecast(persona,ids).candidates[0].share;
+   const ids=E.chosen(persona).map(p=>p.id),base=E.forecast(persona,ids).pollShares[0];
    for(const [i,button] of [...list.querySelectorAll('.inline-choice')].entries()){
-    const option=choice.options[i],share=E.forecast(persona,ids,option.id).candidates[0].share,diff=share-base;
-    button.querySelector('.daily-choice-copy').append(el('span','campaign-support-shift','예상 지지 '+share+'%'+(diff?' · '+(diff>0?'+':'−')+Math.abs(diff)+'%p':'')));
+    if(choice.options[i].id==='poll')button.querySelector('.daily-choice-copy').append(el('small','campaign-poll-target','찾아갈 집단 · '+E.pollTarget(persona).name));
+    const option=choice.options[i],share=E.forecast(persona,ids,option.id).pollShares[0],diff=share-base;
+    button.querySelector('.daily-choice-copy').append(el('span','campaign-support-shift','조사 지지 '+share+'%'+(diff?' · '+(diff>0?'+':'−')+Math.abs(diff)+'%p':'')));
     button.addEventListener('click',()=>preview(option.id));
    }
    const selected=choice.options.find((o,i)=>list.querySelectorAll('.inline-choice')[i]?.getAttribute('aria-pressed')==='true');if(selected)preview(selected.id);

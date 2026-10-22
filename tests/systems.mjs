@@ -1497,3 +1497,20 @@ test('campaign forecast is numeric, responds to card swaps, preserves hidden tas
  assert.throws(()=>X.forecast(p,['missing']),/공약/);assert.throws(()=>X.forecast(p,['quiet','quiet']),/공약/);
  const honest=X.forecast(p,['library','quiet','lost'],'honest');assert.ok(honest.rows[2].shares[0]>a.rows[2].shares[0]);
 });
+
+test('revision 2 election: provisional platform, outside poll, reload and final revision precede the seeded count',()=>{
+ const {P,T,c,storage}=setup(),X=c.GukminElection,p=P.generate();p.phase='elementary';p.age=12;p.admissionSeed='new-campaign';p.traits=[];p.stats.stress=0;p.attributes={electionRevision:2,electionStage:'listen',classElection:'ran',teacherTrust:12};
+ const pack=c.GukminDirector.content(p),cfg={...pack,events:pack.events.filter(e=>e.id.startsWith('election:')),choices:pack.choices.filter(c=>c.id.startsWith('election:')),pauseAfterChoice:true,persist:q=>P.save(q)};
+ let e=T.create({...cfg,persona:p});e.advance(45);e.resolve(e.snapshot().choice.token,'quiet');e.resume();e.resolve(e.snapshot().choice.token,'submit',{pledges:['library','quiet','lost']});e.resume();
+ const draft=e.snapshot().persona,opponents=plain(X.rivals(draft)),target=X.pollTarget(draft);assert.equal(X.forecast(draft,undefined,'poll').rows.filter(r=>r.known).length,1,'hovering or previewing the poll must not reveal an unpaid survey');assert.notEqual(target.id,'quiet');assert.equal(draft.attributes.electionStage,'attack');assert.equal(draft.attributes.electionDraftPledges,104);
+ e.resolve(e.snapshot().choice.token,'poll');e.resume();assert.equal(e.snapshot().choice.id,'election:final-pledges');assert.equal(e.snapshot().runtime.events['election:count'].count,0);
+ const survey=X.forecast(e.snapshot().persona);assert.equal(survey.rows.filter(r=>r.known).length,2);assert.equal(survey.pollShares.reduce((a,b)=>a+b,0),100);assert.ok(survey.undecided>=16,'undecided voters remain after the poll');for(const row of survey.rows)assert.equal(row.pollShares.reduce((a,b)=>a+b,0),100);
+ e=T.create({...cfg,persona:P.load()});const token=e.snapshot().choice.token;e.resolve(token,'submit',{pledges:['football','recess','homework']});assert.equal(e.resolve(token,'submit',{pledges:['library','quiet','lost']}),false);e.resume();
+ const state=e.snapshot();assert.equal(state.persona.attributes.electionStage,'finished');assert.equal(state.persona.attributes.electionDraftPledges,104);assert.notEqual(state.persona.attributes.electionPledges,104);assert.deepEqual(plain(X.rivals(state.persona)),opponents,'announced rival promises do not change when our final platform changes');assert.equal(state.runtime.events['election:count'].count,1);assert.deepEqual(plain(X.report(state.persona)),plain(X.report(P.load())));assert.equal(storage.get('callOfgukmin__playable__v1'),'legacy-sentinel');
+ const actual=X.ballot({...state.persona,attributes:{...state.persona.attributes,electionStage:'count'}}),again=X.ballot(plain({...state.persona,attributes:{...state.persona.attributes,electionStage:'count'}}));assert.deepEqual(plain(actual),plain(again),'late swings remain fixed by seed');
+});
+
+
+test('old class presidents without a campaign do not receive new platform bills',()=>{
+ const {P,c,E}=setup(),p=P.generate();p.phase='elementary';p.attributes={classElection:'elected'};const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);for(const id of ['election:bill-0','election:bill-1'])assert.equal(E.matches(p,pack.events.find(e=>e.id===id).when,47),false);
+});

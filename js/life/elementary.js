@@ -4,7 +4,7 @@
 const S=global.GukminStory;
 // The class election remembers candidacy, outcome and service separately.
 function stand(label){
- return {label,tags:['initiative'],outlook:'민심을 듣고 세 가지 공약으로 두 라이벌과 겨룹니다. 당선되면 리더십과 반장 역할을 얻습니다.',risk:'선거 준비와 당선 뒤 약속 이행에 시간 필요',effects:{attributes:{classElection:'ran',electionRevision:1,electionStage:'listen',teacherTrust:12},stats:{stress:2}},detail:'출마 신청서에 이름을 적었다. 민서가 선거 준비를 돕겠다고 옆에 앉았다.'};
+ return {label,tags:['initiative'],outlook:'민심을 듣고 세 가지 공약으로 두 라이벌과 겨룹니다. 당선되면 리더십과 반장 역할을 얻습니다.',risk:'선거 준비와 당선 뒤 약속 이행에 시간 필요',effects:{attributes:{classElection:'ran',electionRevision:2,electionStage:'listen',teacherTrust:12},stats:{stress:2}},detail:'출마 신청서에 이름을 적었다. 민서가 선거 준비를 돕겠다고 옆에 앉았다.'};
 }
 function support(label){
  return {label,effects:{attributes:{classElection:'supported'},stats:{relations:2,stress:1}},

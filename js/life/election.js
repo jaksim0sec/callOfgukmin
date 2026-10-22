@@ -24,7 +24,8 @@ function chosen(p){const mask=p.attributes?.electionPledges||0;return pledges.fi
 function available(p){return pledges.filter(x=>x.id!=='chicken'||(p.history||[]).some(h=>String(h.source||'').includes('elementary:lunch')));}
 function rivals(p){
  const excluded=Math.floor(roll(p,'rivals')*3),list=rivalTypes.filter((_,i)=>i!==excluded).map(x=>({...x,pledges:[...x.pledges]}));
- if(chosen(p).length&&roll(p,'copy')<.35){const copy=chosen(p).find(x=>!list[0].pledges.includes(x.id));if(copy){list[0].pledges[0]=copy.id;list[0].copied=true;}}
+ const source=p.attributes?.electionDraftPledges??p.attributes?.electionPledges??0,copyPledges=pledges.filter((_,i)=>source&(1<<i));
+ if(copyPledges.length&&roll(p,'copy')<.35){const copy=copyPledges.find(x=>!list[0].pledges.includes(x.id));if(copy){list[0].pledges[0]=copy.id;list[0].copied=true;}}
  return list;
 }
 function preference(p,group,pledge){return pledge.scores[group]+Math.floor(roll(p,'taste:'+group+':'+pledge.id)*3)-1;}
@@ -42,15 +43,16 @@ function forecast(p,ids=chosen(p).map(x=>x.id),response=p.attributes?.electionRe
  if(!Array.isArray(ids)||ids.length>3||new Set(ids).size!==ids.length||ids.some(id=>!pledges.some(x=>x.id===id)))throw new Error('공약 예상 입력 오류');
  const responseEffects=response&&response!==p.attributes?.electionResponse?decision(p,{action:'respond',response}).effects:null;
  const projected=responseEffects?{...p,stats:{...p.stats,relations:clamp((p.stats.relations||0)+(responseEffects.stats.relations||0))},attributes:{...p.attributes,...responseEffects.attributes}}:p;
- const competitors=[{id:'player',name:p.name,pledges:ids},...rivals(p)],heard=groups.findIndex(g=>g.id===p.attributes?.electionHeard);
+ const competitors=[{id:'player',name:p.name,pledges:ids},...rivals(p)],heard=groups.findIndex(g=>g.id===p.attributes?.electionHeard),polled=groups.findIndex(g=>g.id===p.attributes?.electionPollGroup);
  const rows=groups.map((group,g)=>{
-  const known=g===heard,scores=competitors.map((candidate,c)=>candidate.pledges.reduce((n,id)=>{const x=pledges.find(x=>x.id===id);return n+(known?preference(p,g,x):x.scores[g]);},0)+(c===0?personality(projected,g,response):rivalTypes.find(r=>r.id===candidate.id).base[g]));
-  const uncertainty=competitors.map(candidate=>(known?0:candidate.pledges.length)+.4),center=wholeShares(shares(scores));
+  const known=g===heard||g===polled,scores=competitors.map((candidate,c)=>candidate.pledges.reduce((n,id)=>{const x=pledges.find(x=>x.id===id);return n+(known?preference(p,g,x):x.scores[g]);},0)+(c===0?personality(projected,g,response):rivalTypes.find(r=>r.id===candidate.id).base[g]));
+  const uncertainty=competitors.map(candidate=>(known?0:candidate.pledges.length)+((p.attributes?.electionRevision||0)>=2?2:.4)),center=wholeShares(shares(scores));
   const low=Math.floor(shares(scores.map((v,i)=>v+(i===0?-1:1)*uncertainty[i]))[0]),high=Math.ceil(shares(scores.map((v,i)=>v+(i===0?1:-1)*uncertainty[i]))[0]);
-  return {group,known,shares:center,low:Math.min(low,center[0]),high:Math.max(high,center[0])};
+  const undecided=Math.max(16,(g===heard?22:g===polled?28:38)-(response==='honest'&&g===heard?6:response==='smear'?4:0)+(response==='ignore'?2:0)),pollShares=wholeShares([...center.map(v=>v*(100-undecided)/100),undecided]);
+  return {group,known,shares:center,low:Math.min(low,center[0]),high:Math.max(high,center[0]),undecided,pollShares};
  });
- const total=wholeShares(competitors.map((_,c)=>rows.reduce((n,r)=>n+r.shares[c]*r.group.size/30,0)));
- return {candidates:competitors.map((candidate,c)=>({id:candidate.id,name:candidate.name,share:total[c]})),rows,low:Math.floor(rows.reduce((n,r)=>n+r.low*r.group.size/30,0)),high:Math.ceil(rows.reduce((n,r)=>n+r.high*r.group.size/30,0)),hard:ids.filter(id=>pledges.find(x=>x.id===id).difficulty>=2).length,cost:ids.reduce((n,id)=>n+pledges.find(x=>x.id===id).cost,0)};
+ const total=wholeShares(competitors.map((_,c)=>rows.reduce((n,r)=>n+r.shares[c]*r.group.size/30,0))),pollShares=wholeShares([0,1,2,3].map(c=>rows.reduce((n,r)=>n+r.pollShares[c]*r.group.size/30,0)));
+ return {candidates:competitors.map((candidate,c)=>({id:candidate.id,name:candidate.name,share:total[c]})),pollShares,undecided:pollShares[3],rows,low:Math.floor(rows.reduce((n,r)=>n+r.low*r.group.size/30,0)),high:Math.ceil(rows.reduce((n,r)=>n+r.high*r.group.size/30,0)),hard:ids.filter(id=>pledges.find(x=>x.id===id).difficulty>=2).length,cost:ids.reduce((n,id)=>n+pledges.find(x=>x.id===id).cost,0)};
 }
 function ballot(p){
  const competitors=[{id:'player',name:p.name,pledges:chosen(p).map(x=>x.id)},...rivals(p)],rows=[];
@@ -59,7 +61,7 @@ function ballot(p){
   const scores=competitors.map((candidate,c)=>{
    let value=candidate.pledges.reduce((sum,id)=>sum+preference(p,g,pledges.find(x=>x.id===id)),0);
    if(c===0)value+=personality(p,g);else value+=rivalTypes.find(x=>x.id===candidate.id).base[g];
-   return value+(roll(p,'noise:'+g+':'+candidate.id)-.5)*.8;
+   return value+(roll(p,'noise:'+g+':'+candidate.id)-.5)*.8+((p.attributes?.electionRevision||0)>=2?(roll(p,'late:'+g+':'+candidate.id)-.5)*3.2:0);
   });
   const weights=scores.map(n=>Math.exp(n/3.8)),sum=weights.reduce((a,b)=>a+b,0),quotas=weights.map(w=>turnout*w/sum),votes=quotas.map(Math.floor);
   const order=quotas.map((n,i)=>({i,f:n-votes[i]})).sort((a,b)=>b.f-a.f||a.i-b.i);
@@ -69,27 +71,29 @@ function ballot(p){
  const totals=competitors.map((_,i)=>rows.reduce((n,row)=>n+row.votes[i],0)),top=Math.max(...totals),tied=totals.map((n,i)=>n===top?i:-1).filter(i=>i>=0),winner=tied[Math.floor(roll(p,'tie')*tied.length)];
  return {candidates:competitors.map((c,i)=>({...c,votes:totals[i]})),rows,winner,won:winner===0,tied:tied.length>1};
 }
+function pollTarget(p){const f=forecast(p,chosen(p).map(x=>x.id),null);return [...f.rows].filter(r=>r.group.id!==p.attributes?.electionHeard).sort((a,b)=>a.shares[0]-b.shares[0])[0].group;}
 function billTarget(p,slot=0){const ordered=[...chosen(p)].sort((a,b)=>b.difficulty-a.difficulty||b.cost-a.cost);if(slot===0)return ordered[0];const rest=ordered.slice(1);return rest.length?{id:'remaining',name:rest.map(x=>x.name).join(' · '),difficulty:Math.max(...rest.map(x=>x.difficulty)),cost:rest.reduce((n,x)=>n+x.cost,0),limit:rest.map(x=>x.limit).join(' / '),compromise:rest.map(x=>x.compromise).join(' / ')}:null;}
 function decision(p,request,context={}){
- if(!request||!['listen','pledges','respond','count','bill','debt'].includes(request.action))throw new Error('선거 정산 요청 오류');
+ if(!request||!['listen','pledges','finalize','respond','count','bill','debt'].includes(request.action))throw new Error('선거 정산 요청 오류');
  const a=p.attributes||{},attributes={},stats={},traits={add:[]};let title='',detail='';
  if(request.action==='listen'){
   const index=groups.findIndex(g=>g.id===request.group);if(index<0)throw new Error('유권자 집단 오류');
   if(index===2)stats.study=-1;
-  attributes.electionHeard=request.group;attributes.electionStage='pledges';title='복도에서 들은 민심';
+  attributes.electionHeard=request.group;attributes.electionStage='pledges';title='처음 마음을 모은 지지층';
   detail=index===2?'큰 소리로 의견을 말하는 친구는 없었다. 민서와 따로 물어보고 나서야 속마음을 들었다. '+hint(p,index):hint(p,index);
   detail+=' 민서는 '+rivals(p)[0].name+'도 출마할 것 같다고 귀띔했다.';
  }
- if(request.action==='pledges'){
+ if(request.action==='pledges'||request.action==='finalize'){
   const ids=request.ids;if(!Array.isArray(ids)||ids.length!==3||new Set(ids).size!==3||ids.some(id=>!available(p).some(x=>x.id===id)))throw new Error('서로 다른 해금된 공약 세 개를 골라야 함');
-  attributes.electionPledges=ids.reduce((n,id)=>n|(1<<pledges.findIndex(x=>x.id===id)),0);attributes.electionStage='attack';title='나의 세 가지 약속';detail=ids.map(id=>pledges.find(x=>x.id===id).name).join(' · ');stats.stress=1;
+  attributes.electionPledges=ids.reduce((n,id)=>n|(1<<pledges.findIndex(x=>x.id===id)),0);attributes.electionStage=request.action==='finalize'?'count':'attack';if(request.action==='pledges')attributes.electionDraftPledges=attributes.electionPledges;title=request.action==='finalize'?'최종 공약을 확정했다':(a.electionRevision||0)>=2?'지지층을 위한 임시 공약':'나의 세 가지 약속';detail=ids.map(id=>pledges.find(x=>x.id===id).name).join(' · ');if(request.action==='pledges')stats.stress=1;
  }
  if(request.action==='respond'){
-  if(!['honest','smear','ignore'].includes(request.response))throw new Error('선거 대응 오류');
-  attributes.electionResponse=request.response;attributes.electionStage='count';title='교실에 도는 소문';
+  if(!['honest','poll','smear','ignore'].includes(request.response))throw new Error('선거 대응 오류');
+  attributes.electionResponse=request.response;attributes.electionStage=(a.electionRevision||0)>=2?'revise':'count';title='공약 검증에 답했다';
   if(request.response==='honest'){stats.stress=2;attributes.teacherTrust=clamp((a.teacherTrust??12)+1);detail='할 수 있는 일과 권한 밖의 일을 구분해 설명했다. 먼저 이야기를 들은 집단에 집중해 설득했다.';}
+  if(request.response==='poll'){const group=pollTarget(p);stats.stress=1;attributes.electionPollGroup=group.id;detail=group.name+' 친구들에게 임시 공약을 보여 주고 반응을 물었다. 조사 수치를 바탕으로 최종 공약을 고칠 수 있다.';}
   if(request.response==='smear'){stats.stress=1;stats.relations=1;attributes.teacherTrust=clamp((a.teacherTrust??12)-3);attributes.electionSmearDebt=true;detail='확인되지 않은 소문으로 맞불을 놓았다. 지금의 표에는 도움이 되겠지만, 퍼진 말은 없던 일이 되지 않는다.';}
-  if(request.response==='ignore'){stats.stress=-1;detail='소문에 답하지 않았다. 선거가 삶의 전부는 아니지만, 해명하지 못한 이야기도 교실에 남았다.';}
+  if(request.response==='ignore'){stats.stress=-1;detail='실행 방법을 묻는 질문에 답하지 않고 쉬었다. 부담은 줄었지만 공약을 설득할 기회도 놓쳤다.';}
  }
  if(request.action==='count'){
   if(chosen(p).length!==3||a.electionStage!=='count')throw new Error('아직 개표할 수 없음');
@@ -124,33 +128,37 @@ function report(p){
  const rows=groups.map((group,g)=>({group,turnout:a['electionTurnout'+g],votes:candidates.map((_,c)=>a['electionVotes'+g+'_'+c]||0),scores:candidates.map((_,c)=>a['electionScore'+g+'_'+c]||0),hint:hint(p,g)}));
  return {candidates,rows,winner:a.electionWinner,won:a.electionWinner===0,tied:a.electionTie};
 }
-const attributes={electionRevision:'선거 규칙',electionStage:'선거 진행',electionHeard:'들은 민심',electionPledges:'세 가지 공약',electionResponse:'선거 대응',teacherTrust:'담임 신뢰',electionSmearDebt:'네거티브 외상',electionDebtResolved:'과거 소문 대응',electionWinner:'당선 후보',electionTie:'동률 추첨',electionHardBill:'권한 밖 공약',electionBillCost:'다음 공약 비용',electionBill0:'첫 약속 이행',electionBill1:'두 번째 약속 이행'};
+const attributes={electionDraftPledges:'임시 공약',electionPollGroup:'추가 민심 조사',electionRevision:'선거 규칙',electionStage:'선거 진행',electionHeard:'들은 민심',electionPledges:'세 가지 공약',electionResponse:'선거 대응',teacherTrust:'담임 신뢰',electionSmearDebt:'네거티브 외상',electionDebtResolved:'과거 소문 대응',electionWinner:'당선 후보',electionTie:'동률 추첨',electionHardBill:'권한 밖 공약',electionBillCost:'다음 공약 비용',electionBill0:'첫 약속 이행',electionBill1:'두 번째 약속 이행'};
 for(let g=0;g<4;g++){attributes['electionTurnout'+g]='집단 투표수';for(let c=0;c<3;c++){attributes['electionVotes'+g+'_'+c]='집단 득표';attributes['electionScore'+g+'_'+c]='집단 호감도';}}
-global.GukminElection=Object.freeze({groups,pledges,available,chosen,rivals,hint,roll,ballot,forecast,decision,report,billTarget,canChoose});
+global.GukminElection=Object.freeze({groups,pledges,available,chosen,rivals,hint,pollTarget,roll,ballot,forecast,decision,report,billTarget,canChoose});
 global.GukminDirector.register({id:'election',when:{any:[{phase:'elementary'},{phase:'high'}]},generate:()=>{
- const listen=S.selection('election:listen',45,'민서와 복도 민심 듣기','민서는 출마하지 않고 네 곁에 남았다. "목소리가 큰 애들만 반 친구는 아니잖아. 누구 얘기부터 들어 볼래?"',groups.map(g=>({id:g.id,label:g.name+' 이야기를 듣는다',...(g.id==='quiet'?{outlook:'따로 찾아가 물어야 해서 복습 시간이 조금 줄어듭니다.'}:{}),detail:'친구들의 말을 들었다.'})),'일상 선택',{type:'campaign',step:'listen'});
- listen.event.when={phase:'elementary',attributes:{electionRevision:1,electionStage:'listen'}};listen.choice.options.forEach(o=>o.result.electionDecision={action:'listen',group:o.id});
+ const listen=S.selection('election:listen',45,'내 선거의 출발점, 핵심 지지층','민서가 물었다. "어떤 친구들의 목소리를 먼저 대변하고 싶어?" 이 집단의 바람을 듣고 임시 공약을 만든 뒤, 다른 친구들의 반응도 살펴볼 수 있다.',groups.map(g=>({id:g.id,label:g.name+' 이야기를 듣는다',...(g.id==='quiet'?{outlook:'따로 찾아가 물어야 해서 복습 시간이 조금 줄어듭니다.'}:{}),detail:'친구들의 말을 들었다.'})),'일상 선택',{type:'campaign',step:'listen'});
+ listen.event.when={phase:'elementary',attributes:{electionStage:'listen'}};listen.choice.options.forEach(o=>o.result.electionDecision={action:'listen',group:o.id});
  const promises=S.selection('election:pledges',45,'딱 세 가지, 나의 공약','모두를 만족시킬 수는 없다. 세 가지 약속으로 어떤 반장이 될지 정하자.',[{id:'submit',label:'세 가지 공약 확정',detail:'공약을 정했다.'}],'한방 선택',{type:'election-pledges'});
- promises.event.when={phase:'elementary',attributes:{electionRevision:1,electionStage:'pledges'}};promises.choice.options[0].result.electionDecision={action:'pledges'};
- const attack=S.selection('election:attack',45,'라이벌의 공약, 그리고 소문','두 후보가 공약을 붙였다. "너는 듣기 좋은 말만 한다던데?" 민서는 확인되지 않은 말까지 돌고 있다고 알려준다.',[
-  {id:'honest',label:'들은 민심을 바탕으로 가능한 일부터 설명한다',outlook:'먼저 이야기를 들은 집단에 설득을 집중합니다.',detail:'정공법을 골랐다.'},
-  {id:'smear',label:'상대도 거짓말한다는 소문으로 맞불을 놓는다',outlook:'당장의 표에는 유리하지만 담임 신뢰와 훗날의 평판을 담보로 합니다.',detail:'소문으로 맞불을 놓았다.'},
-  {id:'ignore',label:'소문을 무시하고 내 생활을 지킨다',outlook:'추가 득표 공세 없이 부담을 줄입니다.',detail:'소문에서 한발 물러났다.'}
- ],'일상 선택',{type:'campaign',step:'attack'});attack.event.when={phase:'elementary',attributes:{electionRevision:1,electionStage:'attack'}};attack.choice.options.forEach(o=>o.result.electionDecision={action:'respond',response:o.id});
- const count={id:'election:count',at:45,layer:'소식 이벤트',title:'반장 선거 개표',when:{phase:'elementary',attributes:{electionRevision:1,electionStage:'count'}},result:{electionDecision:{action:'count'}},presentation:{kind:'election'}};
+ promises.event.when={phase:'elementary',attributes:{electionStage:'pledges'}};promises.choice.options[0].result.electionDecision={action:'pledges'};
+ const attack=S.selection('election:attack',45,'공약을 정말 지킬 수 있을까?','공약 발표가 끝나자 친구들이 실행 방법을 물었다. 라이벌들도 옆에서 듣고 있다. 내 계획을 설명할지, 상대를 공격할지, 답하지 않을지 정하자.',[
+  {id:'honest',label:'누구의 도움을 받아 어떻게 실행할지 설명한다',outlook:'먼저 민심을 들은 집단에 실행 계획을 설명합니다. 담임 신뢰도 오릅니다.',detail:'정공법을 골랐다.'},
+  {id:'poll',label:'지지층 밖의 반응을 조사하고 공약을 고친다',outlook:'내 공약 지지가 가장 약한 집단에 추가로 의견을 묻습니다. 조사 뒤 최종 공약을 조정합니다.',detail:'추가 민심을 조사한다.'},
+  {id:'smear',label:'상대 후보도 어차피 약속을 안 지킬 거라고 퍼뜨린다',outlook:'당장의 표에는 유리하지만 담임 신뢰와 훗날의 평판을 담보로 합니다.',detail:'소문으로 맞불을 놓았다.'},
+  {id:'ignore',label:'설명하지 않고 선거 준비를 잠시 쉰다',outlook:'질문에 답하지 않는 대신 부담을 줄입니다.',detail:'소문에서 한발 물러났다.'}
+ ],'일상 선택',{type:'campaign',step:'attack'});attack.event.when={phase:'elementary',attributes:{electionStage:'attack'}};attack.choice.options.forEach(o=>o.result.electionDecision={action:'respond',response:o.id});
+ const final=S.selection('election:final-pledges',45,'민심을 반영한 최종 공약','임시 공약을 그대로 밀고 갈지, 지지층 밖의 표를 얻도록 바꿀지 정하자. 이 화면에서 확정한 세 공약으로 투표한다.',[{id:'submit',label:'최종 공약 확정',detail:'최종 공약을 정했다.'}],'한방 선택',{type:'election-pledges',mode:'final'});
+ final.event.when={phase:'elementary',attributes:{electionRevision:2,electionStage:'revise'}};final.choice.options[0].result.electionDecision={action:'finalize'};
+ const count={id:'election:count',at:45,layer:'소식 이벤트',title:'반장 선거 개표',when:{phase:'elementary',attributes:{electionStage:'count'}},result:{electionDecision:{action:'count'}},presentation:{kind:'election'}};
  const bills=[0,1].map(slot=>{const item=S.selection('election:bill-'+slot,46+slot,'당선 뒤 날아온 공약 청구서','표를 받을 때 한 말이 돌아왔다. 민서가 공약 포스터를 들고 교탁 앞으로 왔다.',[
   {id:'keep',label:'시간과 자원을 들여 약속대로 이행한다',when:{attributes:{electionHardBill:false}},requirement:'반장 권한 안의 공약 · 이행 재산 확보',detail:'약속을 이행한다.'},
   {id:'compromise',label:'가능한 범위를 협의하고 타협안을 공개한다',detail:'타협안을 공개한다.'},
   {id:'break',label:'이번 약속은 지키지 않고 내 일로 돌아간다',detail:'약속을 접는다.'}
- ],'일상 선택',{type:'campaign',step:'bill',slot});item.event.when={phase:'elementary',attributes:{electionRevision:1,classElection:'elected',...(slot?{electionBill0:'keep'}:{})}};
+ ],'일상 선택',{type:'campaign',step:'bill',slot});item.event.when={phase:'elementary',attributes:{classElection:'elected',...(slot?{electionBill0:'keep'}:{})}};
   // The second bill follows every first-bill outcome, not only a fulfilled one.
-  if(slot)item.event.when={phase:'elementary',all:[{attributes:{electionRevision:1,classElection:'elected'}},{any:['keep','compromise','break'].map(v=>({attributes:{electionBill0:v}}))}]};
+  if(slot)item.event.when={phase:'elementary',all:[{attributes:{classElection:'elected'}},{any:['keep','compromise','break'].map(v=>({attributes:{electionBill0:v}}))}]};
+  item.event.when={all:[item.event.when,{any:[{attributes:{electionRevision:1}},{attributes:{electionRevision:2}}]}]};
   item.choice.options.forEach(o=>o.result.electionDecision={action:'bill',slot,mode:o.id});return item;});
  const debt=S.selection('election:old-smear',70,'단톡방에 올라온 초등학교 선거 이야기','"그때 그 소문, 네가 처음 퍼뜨린 거 아니었어?" 잊었다고 생각했던 선거 이야기가 고등학교 단톡방으로 돌아왔다.',[
   {id:'admit',label:'이기고 싶어서 확인되지 않은 말을 했다고 인정한다',detail:'과거의 말을 인정한다.'},
   {id:'repeat',label:'이번에도 상대가 문제였다고 주장한다',detail:'옛 소문을 반복한다.'},
   {id:'quiet',label:'답하지 않고 대화가 지나가기를 기다린다',detail:'입을 닫는다.'}
  ],'일상 선택',{type:'campaign',step:'debt'});debt.event.when={phase:'high',turn:{eq:70},attributes:{electionSmearDebt:true}};debt.choice.options.forEach(o=>o.result.electionDecision={action:'debt',response:o.id});
- return {...S.pack(listen,promises,attack,count,...bills,debt),attributes:Object.fromEntries(Object.entries(attributes).map(([id,label])=>[id,{label,hidden:true}]))};
+ return {...S.pack(listen,promises,attack,final,count,...bills,debt),attributes:Object.fromEntries(Object.entries(attributes).map(([id,label])=>[id,{label,hidden:true}]))};
 }});
 })(window);

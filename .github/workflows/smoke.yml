@@ -48,6 +48,7 @@ jobs:
       - run: node tests/classroom.mjs
         env:
           BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser
+      - run: node tests/election.mjs
       - run: node tests/playback.mjs
         env:
           BROWSER_ARTIFACTS: ${{ runner.temp }}/callOfgukmin-browser

@@ -142,19 +142,19 @@ function presentAdmission({choice,resolve,root}){
 }
 
 function presentPledges({choice,resolve,root},person){
- const E=global.GukminElection,slots=[null,null,null];let activeSlot=0,closed=false;
+ const E=global.GukminElection,isFinal=choice.presentation.mode==='final',isDraft=!isFinal&&(person.attributes?.electionRevision||0)>=2,slots=isFinal?E.chosen(person).map(p=>p.id):[null,null,null];let activeSlot=0,closed=false;
  const sheet=make('section','life-modal-wrap election-pledge-paper'),head=make('header','life-modal-head'),foldButton=make('button','life-modal-collapse','접기 ⌄');foldButton.type='button';
  head.append(make('span','life-modal-serial','우리 반 선거관리위원회'),foldButton);
- const content=make('div','pledge-content');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title','우리 반 민심 퍼즐'));
+ const content=make('div','pledge-content');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title',isFinal?'최종 공약 조정':isDraft?'임시 공약 만들기':'공약 세 가지 선택'));
  const puzzle=make('section','pledge-puzzle'),rack=make('div','pledge-slots');rack.setAttribute('role','group');rack.setAttribute('aria-label','공약 세 칸');
  const slotButtons=slots.map((_,i)=>{const button=make('button','pledge-slot');button.type='button';button.addEventListener('click',()=>{activeSlot=i;paint();});button.addEventListener('keydown',e=>{if(['Delete','Backspace'].includes(e.key)){e.preventDefault();slots[i]=null;activeSlot=i;paint();}});rack.append(button);return button;});
  puzzle.append(rack,make('small','pledge-slot-help','카드를 눌러 끼우기 · 칸을 누르면 교체 · 고른 카드를 다시 누르면 빼기'));
- const board=global.GukminElectionView.board(person);puzzle.append(board.element);content.append(puzzle);
+ const board=global.GukminElectionView.board(person,{collapsible:true});puzzle.append(board.element);content.append(puzzle);
  const cards=make('div','pledge-cards');cards.setAttribute('role','group');cards.setAttribute('aria-label','공약 세 장 선택');
- const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit','세 가지 약속 확정');confirm.type='button';confirm.disabled=true;counter.setAttribute('aria-live','polite');const live=make('small','pledge-live-share'),counts=make('div','pledge-footer-counts');counts.append(counter,live);
+ const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit',isFinal?'최종 공약 확정':isDraft?'이 공약으로 의견 듣기':'세 가지 약속 확정');confirm.type='button';confirm.disabled=true;counter.setAttribute('aria-live','polite');const live=make('small','pledge-live-share'),counts=make('div','pledge-footer-counts');counts.append(counter,live);
  function paint(){
   const ids=slots.filter(Boolean);slotButtons.forEach((button,i)=>{button.classList.toggle('is-active',activeSlot===i);button.classList.toggle('is-filled',!!slots[i]);button.setAttribute('aria-pressed',String(activeSlot===i));button.replaceChildren(make('small','','공약 '+(i+1)),make('strong','',slots[i]?E.pledges.find(p=>p.id===slots[i]).name:'＋ 끼워 넣기'));});
-  for(const button of cards.children)button.setAttribute('aria-pressed',String(ids.includes(button.dataset.pledge)));counter.textContent=ids.length+' / 3';confirm.disabled=ids.length!==3;const forecast=board.update(ids);live.textContent='예상 지지 '+forecast.candidates[0].share+'%';
+  for(const button of cards.children)button.setAttribute('aria-pressed',String(ids.includes(button.dataset.pledge)));counter.textContent=ids.length+' / 3';confirm.disabled=ids.length!==3;const forecast=board.update(ids);live.textContent='조사 지지 '+forecast.pollShares[0]+'%';
  }
  const short=['놀이','모범','조용','운동'];
  for(const pledge of E.available(person)){
