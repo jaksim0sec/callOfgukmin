@@ -7,7 +7,7 @@ const classmates=[
  {id:'doyun',name:'도윤',note:'쉬는 시간이면 운동장으로 달려가는 친구',skill:'athletics',action:'운동장에서 함께 바통을 연습한다'},
  {id:'jiwoo',name:'지우',note:'쉬는 시간에도 퍼즐을 들고 다니는 친구',skill:'study',action:'지우의 퍼즐을 직접 풀고 풀이를 보내 준다'}
 ];
-function classNumber(persona){return 1+[...persona.name].reduce((n,ch)=>n+ch.codePointAt(0),0)%6;}
+function classNumber(persona){if(Number.isInteger(persona.attributes?.elementaryClass)&&persona.attributes.elementaryClass>=1&&persona.attributes.elementaryClass<=6)return persona.attributes.elementaryClass;return 1+[...persona.name].reduce((n,ch)=>n+ch.codePointAt(0),0)%6;}
 // Stable, limited race-day variance: roughly 15% headwind, 70% neutral, 15% tailwind.
 // The seed lives with the person; no Math.random at scene generation or settlement.
 function raceVariance(persona){
@@ -17,6 +17,8 @@ function raceVariance(persona){
  const bucket=hash%20;
  return bucket<3?-1:bucket>=17?1:0;
 }
+function fieldSeed(persona,key){let hash=2166136261;for(const c of String(persona.admissionSeed||persona.createdAt||persona.name)+'|relay-field|'+key)hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;return hash;}
+function raceField(persona){const number=classNumber(persona),others=[1,2,3,4,5,6].filter(n=>n!==number).sort((a,b)=>fieldSeed(persona,'team:'+a)-fieldSeed(persona,'team:'+b));return {teams:[number,...others.slice(0,2)],rivalOrder:fieldSeed(persona,'rival-order')%2};}
 function chat(peer,room){return {type:'chat',room,messages:[
  {sender:peer.name,text:peer.id==='doyun'?'내일 쉬는 시간에 운동장 올래? 바통 연습 같이 하자!':peer.id==='jiwoo'?'수학 숙제 4번, 난 답이 12인데 풀이가 다른 것 같아. 네 풀이랑 비교해 볼래?':'오늘 네가 해 준 이야기 생각나서 그림 그렸어!',time:'오후 4:12'},
  {sender:peer.name,text:'너는 뭐 하고 싶어?',time:'오후 4:13'}
@@ -63,15 +65,16 @@ global.GukminDirector.register({id:'classroom',when:{phase:'elementary'},generat
   id:peer.id,title:number+'반, 계주 출전!',when:{attributes:{seatmate:peer.name}},body:'운동장에 '+number+'반 깃발이 걸렸다. '+peer.name+'가 바통을 들고 손짓한다. "우리 반 이번엔 끝까지 가 보자!"\n\n짝꿍 연습과 체육 활동으로 쌓은 운동능력, 체육 특성이 주자 실력이다. 경기 당일의 작은 변수도 있어 준비에 따라 우승을 노릴 수 있다. 주자로 뛸지, 바통 연결을 맡을지, 응원석을 지킬지 정하자.',options:raceOptions(peer)
  })));
  sports.event.when={attributes:{classroomRevision:1}};
- sports.choice.presentation={type:'sports',classNumber:number,finishMs:8440};
+ const field=raceField(persona),otherWinner=field.teams[field.rivalOrder?2:1];
+ sports.choice.presentation={type:'sports',classNumber:number,finishMs:8440,...field};
  const variance=raceVariance(persona),threshold=9-variance;
  sports.choice.presentation.winThreshold=threshold;
  const wins={all:[{attributes:{sportsRole:'runner'}},{any:[{stats:{athletics:{gte:threshold}}},{traits:['체육']}]}]};
  for(const script of [sports.choice,...sports.choice.variants])for(const option of script.options){
   option.result.conditional=[
    {when:wins,result:{effects:{attributes:{sportsPlace:1},stats:{money:10000,relations:3,athletics:2}},history:{title:'반 대항 계주 · '+number+'반 1등',detail:'준비한 호흡이 끝까지 이어졌다. 우리 반이 가장 먼저 결승선을 통과했다. 우승 상품권 1만 원과 함께 반 친구들의 신뢰가 쌓였다.',importance:'major'}}},
-   {when:{all:[{not:wins},{attributes:{sportsRole:'runner'}}]},result:{effects:{attributes:{sportsPlace:3}},history:{title:'반 대항 계주 · '+number+'반 3등',detail:'마지막 코너에서 두 반에 추월당했다. 그래도 바통을 끝까지 전달했다.'}}},
-   {when:{attributes:{sportsRole:'cheer'}},result:{effects:{attributes:{sportsPlace:2}},history:{title:'반 대항 계주 · '+number+'반 2등',detail:'주자들이 응원 소리에 힘을 내 막판에 한 반을 따라잡았다.'}}}
+   {when:{all:[{not:wins},{attributes:{sportsRole:'runner'}}]},result:{effects:{attributes:{sportsPlace:3}},history:{title:'반 대항 계주 · '+number+'반 3등',detail:otherWinner+'반이 먼저 들어왔다. 우리 반은 마지막 코너에서 밀렸지만 바통을 끝까지 전달했다.'}}},
+   {when:{attributes:{sportsRole:'cheer'}},result:{effects:{attributes:{sportsPlace:2}},history:{title:'반 대항 계주 · '+number+'반 2등',detail:otherWinner+'반이 먼저 들어왔지만, 우리 반 주자들도 응원 소리에 힘을 내 막판에 한 반을 따라잡았다.'}}}
   ];
  }
  return {...S.pack(seating,follow,prelude,sports),attributes:{classroomRevision:{label:'교실 이야기 연결',hidden:true},elementaryClass:{label:'초등학교 첫 반',hidden:true},seatmate:{label:'초등학교 짝꿍'},sportsRole:{label:'운동회 역할',hidden:true},sportsPlace:{label:'반 대항 계주 순위',hidden:true}}};

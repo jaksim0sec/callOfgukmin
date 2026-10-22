@@ -42,27 +42,29 @@ function decorateSeats(body,list,choice){
  }
  room.append(list,el('small','classroom-door','복도 · 출입문 ↗'));body.append(preview,room);
 }
-function raceRanks(place){return [place,...[1,2,3].filter(rank=>rank!==place)];}
-function raceProgress(place,lane,elapsed){
- const rank=raceRanks(place)[lane],duration={1:8200,2:8320,3:8440}[rank];
+function raceRanks(place,rivalOrder=0){const others=[1,2,3].filter(rank=>rank!==place);if(rivalOrder)others.reverse();return [place,...others];}
+function raceCourse(lane){const radius=132-lane*32,distance=640+2*Math.PI*68,lapLength=640+2*Math.PI*radius;return {radius,distance,lapLength,startOffset:2*Math.PI*(radius-68)};}
+function raceProgress(place,lane,elapsed,rivalOrder=0){
+ const rank=raceRanks(place,rivalOrder)[lane],duration={1:8200,2:8320,3:8440}[rank];
  const u=Math.max(0,Math.min(1,elapsed/duration)),phase={1:Math.PI,2:0,3:Math.PI/2}[rank];
  return u===1?1:Math.max(0,Math.min(1,u+.008*(Math.sin(2*Math.PI*u+phase)-Math.sin(phase))));
 }
 const SVG='http://www.w3.org/2000/svg';
 function svg(tag,attributes){const node=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))node.setAttribute(key,String(value));return node;}
-function arena(number,attributes={}){
+function arena(number,attributes={},presentation={}){
  const view=el('section','race-arena'),board=el('div','sports-scoreboard');
- const title=el('strong','',number+'반 · 출발선에서 준비 중'),caption=el('span','','기록과 준비가 결승선에서 결과로 이어집니다.');
+ const title=el('strong','',number+'반 · 출발선에서 준비 중'),caption=el('span','','바깥 레인은 앞에서 출발해. 결승선까지 뛰는 거리는 모두 같아.');
  board.append(el('small','','CLASS RELAY · 한 바퀴 계주'),title,caption);view.append(board);
  const role=attributes.sportsRole==='cheer'?'응원 중 · 주자 '+(attributes.seatmate||'짝꿍'):'주자 · 나 / 바통 동료 '+(attributes.seatmate||'짝꿍');
  const legend=el('div','race-our-team');legend.append(el('span','race-team-dot',''),el('strong','','우리 반 '+number+'반'),el('small','',role));view.append(legend);
  const track=svg('svg',{viewBox:'0 0 640 360',class:'sports-track oval-track',role:'img','aria-label':number+'반과 다른 두 반이 둥근 운동장을 달리는 계주'});
  track.append(svg('rect',{x:20,y:38,width:600,height:284,rx:142,fill:'#b3664d'}),svg('rect',{x:112,y:124,width:416,height:112,rx:56,fill:'#7a9c69'}));
  const field=svg('text',{x:320,y:175,'text-anchor':'middle',fill:'#f4f4db',class:'race-field-label'});field.textContent=number+'반, 끝까지!';track.append(field);
- const paths=[],markers=[],classes=[number,number%6+1,(number+1)%6+1];
+ const paths=[],markers=[],starts=[],classes=presentation.teams||[number,number%6+1,(number+1)%6+1];let courses=null;
  for(let lane=0;lane<3;lane++){
-  const radius=132-lane*32,top=180-radius,bottom=180+radius;
+  const {radius}=raceCourse(lane),top=180-radius,bottom=180+radius;
   const path=svg('path',{d:`M160 ${bottom}H480A${radius} ${radius} 0 0 0 480 ${top}H160A${radius} ${radius} 0 0 0 160 ${bottom}Z`,fill:'none',stroke:'#f3dfca','stroke-width':2,'stroke-dasharray':lane===2?'6 6':'none'});paths.push(path);track.append(path);
+  const start=svg('line',{class:'race-start-mark',stroke:'#fff','stroke-width':4,'stroke-dasharray':'5 3'});starts.push(start);track.append(start);
   const runner=svg('g',{'data-team':classes[lane],class:lane===0?'oval-runner is-ours':'oval-runner'});
   runner.append(svg('circle',{r:12,fill:['#ffe285','#a8dcf2','#d9c2f1'][lane],stroke:lane===0?'#fff':'#5a392b','stroke-width':lane===0?4:2}));
   const bib=svg('text',{'text-anchor':'middle',y:4,fill:'#283222','font-size':12,'font-weight':800});bib.textContent=classes[lane];runner.append(bib);markers.push(runner);
@@ -71,33 +73,34 @@ function arena(number,attributes={}){
  for(const marker of markers)track.append(marker);view.append(track);
  const live=el('div','race-live-ranking');live.setAttribute('aria-live','off');view.append(live);
  function paint(progress){
-  progress.forEach((value,lane)=>{const length=paths[lane].getTotalLength(),point=paths[lane].getPointAtLength(length*Math.min(.99999,value));markers[lane].setAttribute('transform',`translate(${point.x} ${point.y})`);markers[lane].dataset.progress=String(value);});
-  const order=[0,1,2].sort((a,b)=>progress[b]-progress[a]||a-b);live.textContent=order.map((lane,i)=>(i+1)+'위 '+classes[lane]+'반'+(lane===0?' (우리 반)':'')).join('  ·  ');
+  if(!courses){const lengths=paths.map(p=>p.getTotalLength()),distance=Math.min(...lengths);courses=lengths.map(length=>({length,distance,offset:length-distance}));courses.forEach((course,lane)=>{const point=paths[lane].getPointAtLength(course.offset),a=paths[lane].getPointAtLength(Math.max(0,course.offset-.5)),b=paths[lane].getPointAtLength(course.offset+.5),dx=b.x-a.x,dy=b.y-a.y,n=Math.hypot(dx,dy)||1;Object.entries({x1:point.x-dy/n*13,y1:point.y+dx/n*13,x2:point.x+dy/n*13,y2:point.y-dx/n*13}).forEach(([key,value])=>starts[lane].setAttribute(key,String(value)));markers[lane].dataset.distance=String(distance);markers[lane].dataset.startOffset=String(course.offset);});}
+  progress.forEach((value,lane)=>{const course=courses[lane],distance=value===1?0:course.offset+value*course.distance,point=paths[lane].getPointAtLength(distance);markers[lane].setAttribute('transform',`translate(${point.x} ${point.y})`);markers[lane].dataset.progress=String(value);});
+  const ranks=raceRanks(attributes.sportsPlace,presentation.rivalOrder||0),order=[0,1,2].sort((a,b)=>progress[b]-progress[a]||(progress[a]===1?ranks[a]-ranks[b]:a-b));live.textContent=order.map((lane,i)=>(i+1)+'위 '+classes[lane]+'반'+(lane===0?' (우리 반)':'')).join('  ·  ');
  }
  return {view,title,caption,paint,classes,live};
 }
-function raceView(number){
- const race=arena(number);race.view.classList.add('sports-preview');
+function raceView(number,presentation){
+ const race=arena(number,{},presentation);race.view.classList.add('sports-preview');
  // Mount before measuring SVG path lengths.
  queueMicrotask(()=>{if(race.view.isConnected)race.paint([0,0,0]);});return race.view;
 }
 function raceReplay({body,presentation,attributes,stats,traits,onReady,restored}){
- const place=attributes.sportsPlace,number=presentation.classNumber,race=arena(number,attributes);
+ const place=attributes.sportsPlace,number=presentation.classNumber,rivalOrder=presentation.rivalOrder||0,race=arena(number,attributes,presentation);
  const skip=el('button','race-skip','경주 건너뛰기');skip.type='button';race.view.append(skip);body.prepend(race.view);body.classList.add('race-pending');
  let playing=true,frame=0,last=0,elapsed=0,disposed=false;
  function finish(){
   if(!playing||disposed)return;playing=false;if(frame)cancelAnimationFrame(frame);frame=0;
   race.paint([1,1,1]);race.view.classList.add('race-finish');race.title.textContent=number+'반 · '+place+'등';race.caption.textContent=place===1?'결승선을 가장 먼저 통과했다! 우승 상품권과 반 친구들의 신뢰를 얻었다.':'함께 준비한 결과가 기록에 남았다.';
-  const ordered=raceRanks(place).map((rank,lane)=>({rank,lane})).sort((a,b)=>a.rank-b.rank),ranking=el('ol','sports-ranking');
+  const ordered=raceRanks(place,rivalOrder).map((rank,lane)=>({rank,lane})).sort((a,b)=>a.rank-b.rank),ranking=el('ol','sports-ranking');
   for(const row of ordered){const item=el('li',row.lane===0?'is-ours':'');item.append(el('b','',row.rank+'등'),el('span','',race.classes[row.lane]+'반'),el('small','',row.lane===0?'우리 반':''));ranking.append(item);}
   race.live.replaceWith(ranking);const reason=el('p','race-result-reason',attributes.sportsRole==='cheer'?'응원 역할로 반 친구들과 함께했습니다. 주자는 짝꿍이며 내 운동능력으로 주자 기록을 계산하지 않습니다.':'운동능력 (경기 보상 포함) '+(stats?.athletics||0)+'/25'+(traits?.includes('체육')?' · 체육 특성 적용':' · 오늘 우승 기준 '+(presentation.winThreshold||9))+'. 이전 체육 활동·짝꿍 연습과 이번 출전 준비를 합산한 결과입니다.');ranking.after(reason);skip.remove();body.classList.remove('race-pending');onReady?.();
  }
  function tick(now){
   if(disposed||!playing)return;
   if(last&&!document.hidden)elapsed+=Math.min(100,now-last);last=now;
-  const progress=[0,1,2].map(lane=>raceProgress(place,lane,elapsed));race.paint(progress);
+  const progress=[0,1,2].map(lane=>raceProgress(place,lane,elapsed,rivalOrder));race.paint(progress);
   race.title.textContent=elapsed<650?'탕! 계주 출발':number+'반 · 계주 진행 중';
-  race.caption.textContent=elapsed<2200?'바통을 받아 첫 코너로 들어간다.':elapsed<4800?'반마다 앞서거니 뒤서거니! 바통을 놓치지 말자.':'마지막 코너! 결승선까지 달린다.';
+  race.caption.textContent=elapsed<2200?'바깥 레인은 앞에서 출발! 모두 같은 거리를 달려.':elapsed<4800?'반마다 앞서거니 뒤서거니! 바통을 놓치지 말자.':'마지막 코너! 결승선까지 달린다.';
   if(progress.every(p=>p===1)){finish();return;}frame=requestAnimationFrame(tick);
  }
  skip.addEventListener('click',finish);
@@ -157,7 +160,7 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){
-  const situation=body.querySelector('.daily-scenario');body.prepend(raceView(choice.presentation.classNumber));
+  const situation=body.querySelector('.daily-scenario');body.prepend(raceView(choice.presentation.classNumber,choice.presentation));
   const prep=el('div','sports-preparation');prep.append(el('strong','','나의 운동능력 '+(persona.stats.athletics||0)+'/25'),el('p','','짝꿍 연습과 체육 활동에서 쌓은 실력입니다. 선택의 준비 효과까지 합산해 오늘은 '+(choice.presentation.winThreshold||9)+' 이상이거나 체육 특성이 있으면 우승할 수 있습니다. 응원은 주자 기록을 바꾸지 않습니다.'));list.before(prep);
   if(!state.introSeen){const intro=el('section','sports-day-intro');intro.append(el('span','','⚑  ⚑  ⚑'),el('small','','학교 운동장 · 아침'),el('h3','','오늘은 운동회!'),el('p','',choice.presentation.classNumber+'반 친구들이 반 깃발 아래 모였다. 짝꿍과 준비했던 계주가 곧 시작된다.'));const enter=el('button','','운동장으로 →');enter.type='button';intro.append(enter);const stage=el('div','sports-day-stage');stage.hidden=true;while(body.firstChild)stage.append(body.firstChild);body.append(intro,stage);enter.addEventListener('click',()=>{state.introSeen=true;intro.remove();stage.hidden=false;});}
   if(situation)situation.querySelector('.daily-scenario-kicker').textContent='작전 회의';
@@ -188,5 +191,5 @@ function reward({dialog,body,presentation,attributes,stats,traits,portrait,optio
  if(kind==='sports')return raceReplay({body,presentation,attributes,stats,traits,onReady,restored});
  return null;
 }
-global.GukminDailyScenes=Object.freeze({decorate,reward,raceProgress});
+global.GukminDailyScenes=Object.freeze({decorate,reward,raceProgress,raceRanks,raceCourse});
 })(window);

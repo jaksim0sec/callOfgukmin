@@ -1523,3 +1523,23 @@ test('visits cost effort and reveal real wishes; skipping costs nothing and unkn
  const skip=E.apply(p,{electionDecision:{action:'listen',group:'skip'}});assert.equal(skip.stats.stress,0);assert.equal(skip.attributes.electionStage,'pledges');assert.equal(skip.attributes.electionHeard,null);assert.equal(X.forecast(skip).rows.filter(r=>r.known).length,0);
  const survey=E.apply(skip,{electionDecision:{action:'respond',response:'poll'}});assert.equal(survey.stats.stress,1);assert.equal(X.forecast(survey).rows.filter(r=>r.known).length,1);assert.equal(skip.attributes.electionPollGroup,undefined,'preview does not mutate the original');
 });
+
+test('relay rivals vary by saved seed while our class and prepared finish stay stable',()=>{
+ const {P,c}=setup(),winners=new Set();
+ for(let seed=0;seed<24;seed++){
+  const p=P.generate();p.name='같은 이름';p.admissionSeed='relay-field-'+seed;p.attributes={elementaryClass:3};const scene=c.GukminDirector.content(p).choices.find(c=>c.id==='classroom:sports').presentation;
+  assert.equal(scene.teams[0],3);assert.equal(new Set(scene.teams).size,3);assert.ok(scene.teams.every(n=>n>=1&&n<=6));assert.deepEqual(plain(scene),plain(c.GukminDirector.content(plain(p)).choices.find(c=>c.id==='classroom:sports').presentation));
+  winners.add(scene.teams[scene.rivalOrder?2:1]);
+ }assert.ok(winners.size>=3,'an opposing 4th class is not the permanent winner');
+});
+
+test('relay geometry uses staggered starts for equal running distances and both rival orders match their finish',()=>{
+ const {c}=setup();vm.runInContext(readFileSync('js/dailyScenes.js','utf8'),c);const V=c.GukminDailyScenes;
+ const courses=[0,1,2].map(lane=>V.raceCourse(lane));assert.equal(new Set(courses.map(c=>c.distance)).size,1);assert.ok(courses[0].startOffset>courses[1].startOffset&&courses[1].startOffset>courses[2].startOffset);assert.equal(courses[2].startOffset,0);
+ for(const course of courses)assert.ok(Math.abs(course.startOffset+course.distance-course.lapLength)<1e-8);
+ for(const place of [1,2,3])for(const order of [0,1]){
+  const ranks=plain(V.raceRanks(place,order)),crossed=[];assert.equal(ranks[0],place);
+  for(let t=0;t<=8500;t+=20)for(let lane=0;lane<3;lane++)if(V.raceProgress(place,lane,t,order)===1&&!crossed.includes(lane))crossed.push(lane);
+  assert.deepEqual(crossed,[0,1,2].sort((a,b)=>ranks[a]-ranks[b]));
+ }
+});
