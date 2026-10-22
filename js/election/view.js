@@ -4,6 +4,21 @@
 const make=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
 const candidateColors=['#b59ae9','#e7bb77','#76c6bb','#85a4d6','#d99cac','#a6c887'];
 const color=(i,name)=>name==='고민 중'?'#6f6b79':candidateColors[i%candidateColors.length];
+// Touch keeps native scrolling/inertia; a mouse can drag the same carousel.
+function dragSlides(slider){
+ let start=null,dragging=false;
+ const down=event=>{if(event.pointerType==='mouse'&&event.button===0)start={id:event.pointerId,x:event.clientX,y:event.clientY,left:slider.scrollLeft};};
+ const move=event=>{
+  if(!start||event.pointerId!==start.id)return;
+  const dx=event.clientX-start.x,dy=event.clientY-start.y;
+  if(!dragging){if(Math.abs(dx)<8)return;if(Math.abs(dy)>Math.abs(dx)){start=null;return;}dragging=true;slider.setPointerCapture(event.pointerId);slider.classList.add('is-dragging');}
+  event.preventDefault();slider.scrollLeft=start.left-dx;
+ };
+ const end=()=>{if(!start)return;const id=start.id;start=null;if(dragging){dragging=false;slider.classList.remove('is-dragging');if(slider.hasPointerCapture(id))slider.releasePointerCapture(id);slider.scrollTo({left:Math.round(slider.scrollLeft/slider.clientWidth)*slider.clientWidth,behavior:global.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}};
+ const leave=()=>{if(!dragging)start=null;};
+ slider.addEventListener('pointerdown',down);slider.addEventListener('pointermove',move);slider.addEventListener('pointerup',end);slider.addEventListener('pointercancel',end);slider.addEventListener('pointerleave',leave);
+ return ()=>{end();slider.removeEventListener('pointerdown',down);slider.removeEventListener('pointermove',move);slider.removeEventListener('pointerup',end);slider.removeEventListener('pointercancel',end);slider.removeEventListener('pointerleave',leave);};
+}
 function bar(values,names,cls=''){
  const element=make('div','support-track '+cls),segments=values.map((value,i)=>{const span=make('span','candidate-color-'+i);span.style.width=value+'%';element.append(span);return span;});element.setAttribute('role','img');
  const update=(values,names)=>{values.forEach((v,i)=>{segments[i].style.width=v+'%';segments[i].style.background=color(i,names[i]);});element.setAttribute('aria-label',values.map((v,i)=>names[i]+' '+Math.round(v)+'%').join(', '));};update(values,names);return {element,update};
@@ -61,8 +76,8 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
    card.append(poster,info);slider.append(card);
   });
   const syncSlides=()=>{selected=Math.max(0,Math.min(model.candidates.length-1,Math.round(slider.scrollLeft/(slider.clientWidth||1))));controls.forEach((b,i)=>b.setAttribute('aria-current',String(i===selected)));};
-  slider.addEventListener('scroll',syncSlides,{passive:true});disposeSlides=()=>slider.removeEventListener('scroll',syncSlides);
-  candidatePane.append(nav,slider,make('small','candidate-slide-hint','아래로 공약 확인 · 좌우로 후보 비교'));
+  const stopDrag=dragSlides(slider);slider.addEventListener('scroll',syncSlides,{passive:true});disposeSlides=()=>{stopDrag();slider.removeEventListener('scroll',syncSlides);};
+  candidatePane.append(nav,slider,make('small','candidate-slide-hint','← 좌우로 밀어 후보 비교 → · 아래로 공약 확인'));
   surveyPane.append(board(model).element);drawer.replaceChildren(head,tabs,candidatePane,surveyPane);syncTabs();
   slider.scrollLeft=slider.clientWidth*selected;controls.forEach((b,i)=>b.setAttribute('aria-current',String(i===selected)));
  }

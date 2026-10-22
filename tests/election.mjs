@@ -13,7 +13,7 @@ try{
  for(let i=0;i<40;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
  for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
-  const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
+  const context=await browser.newContext({viewport,reducedMotion:'reduce',hasTouch:name!=='desktop'}),page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/game.html');await page.waitForFunction(()=>!!window.GukminGame?.session);
   await page.evaluate(()=>{
    localStorage.setItem('callOfgukmin__controls__v1',JSON.stringify({mode:'manual',paused:false}));
@@ -57,7 +57,16 @@ try{
   await page.locator('.life-modal-collapse').click();
   const saved=await page.evaluate(()=>JSON.stringify(GukminGame.session.snapshot()));
   await page.locator('#electionCandidates').click();await page.locator('.election-drawer[open]').waitFor();assert.equal(await page.locator('.candidate-slide').count(),3);assert.equal(await page.locator('.candidate-name').first().isVisible(),true);
-  if(name==='desktop'){await page.locator('.candidate-slides').hover();await page.mouse.wheel(700,0);await page.waitForFunction(()=>document.querySelectorAll('.candidate-slide-nav button')[0].getAttribute('aria-current')==='false');}
+  assert.ok(await page.locator('.election-drawer').evaluate(e=>{const b=e.getBoundingClientRect();return b.top>0&&b.left>0&&b.bottom<innerHeight&&b.right<innerWidth;}),'candidate glass card floats with space on all four sides');
+  const slideBox=await page.locator('.candidate-slides').boundingBox(),startX=slideBox.x+slideBox.width*.85,endX=slideBox.x+slideBox.width*.15,gestureY=slideBox.y+Math.min(70,slideBox.height/2);
+  if(name==='desktop'){
+   await page.mouse.move(startX,gestureY);await page.mouse.down();await page.mouse.move(endX,gestureY,{steps:12});await page.mouse.up();
+  }else{
+   const touch=await context.newCDPSession(page);await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:startX,y:gestureY}]});
+   for(let step=1;step<=10;step++){await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:startX+(endX-startX)*step/10,y:gestureY}]});await page.waitForTimeout(16);}
+   await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await touch.detach();
+  }
+  await page.waitForFunction(()=>document.querySelectorAll('.candidate-slide-nav button')[0].getAttribute('aria-current')==='false');
   await page.locator('.candidate-slide-nav button').nth(1).click();await page.waitForFunction(()=>document.querySelectorAll('.candidate-slide-nav button')[1].getAttribute('aria-current')==='true');
   assert.ok(await page.locator('.candidate-slide').nth(1).evaluate(e=>{const b=e.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth+1;}));
   assert.ok(await page.locator('.candidate-slide').nth(1).evaluate(card=>{const poster=card.querySelector('.candidate-poster').getBoundingClientRect(),info=card.querySelector('.candidate-information').getBoundingClientRect();return info.left>=poster.right-1||info.top>=poster.bottom-1;}),'candidate data and poster never overlap');

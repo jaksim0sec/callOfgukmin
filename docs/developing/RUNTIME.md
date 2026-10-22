@@ -1,3 +1,7 @@
+## 2026-10-22 후보 글래스 릴리스 (현행)
+
+릴리스 `candidate-glass-20261022`. 후보 뷰어를 중앙 글래스 dialog로 바꾸고 모바일 터치 스와이프·PC 드래그를 지원한다. 반응형 화면/스크립트/오프라인 셸 버전을 함께 올리며 선거 정산과 저장 구조는 유지한다.
+
 ## 2026-10-22 선거 모듈 분리 릴리스 (현행)
 
 릴리스 `election-module-20261022`. `election/engine.js`는 `life/election.js` 이전, `election/view.js`는 statusView 다음, `election/choices.js`는 majorView 이전에 defer 로드한다. 세 파일을 모든 화면과 오프라인 셸에 포함한다. 기존 electionView.js는 전용 디렉터리로 이동했다. 검증 모드에서는 이전 자동 진행 설정이 있어도 시간을 자동 진행하지 않는다. 후보 패널은 마운트/폐기 수명주기를 따르고 저장 키/콘텐츠 ID·과거 표는 유지한다. [선거 경계](ELECTION.md).
