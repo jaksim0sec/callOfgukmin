@@ -560,7 +560,8 @@ function mount(root,navigate,content=global.GukminContent){
   if(!progressMotion)return;
   const fill=$('choiceProgressFill'),matrix=getComputedStyle(fill).transform;
   frozenProgress=matrix==='none'?0:Number(matrix.split('(')[1].split(',')[0]);
-  fill.style.transform='scaleX('+frozenProgress+')';progressMotion.cancel();progressMotion=null;
+  fill.style.transition='none';fill.style.transform='scaleX('+frozenProgress+')';
+  void fill.offsetWidth;progressMotion.cancel();progressMotion=null;fill.style.removeProperty('transition');
  }
  function animateJourneyProgress(duration){
   const p=snapshot?.progress;
