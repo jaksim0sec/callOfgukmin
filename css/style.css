@@ -1536,3 +1536,48 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 .history-next:disabled{opacity:.4;cursor:default}
 @media(max-width:47.5em){.playback-controls{gap:.3rem}.playback-controls #playbackNext{padding-inline:.5rem}.history-next{min-height:3.3rem;font-size:.93rem;padding:.9rem 1rem;margin:.65rem 0 1rem}}
 @media(prefers-reduced-motion:reduce){.playback-toggle-thumb,.history-next{transition:none}}
+
+/* 2026-10-22: one prominent choice opener on a fully collapsed record sheet. */
+.playback-controls #playbackNext[hidden],#log #historyNext[hidden]{display:none!important}
+.sheet:not(.is-minimized) .sheet-choice-resume:not([hidden]){background:#b89fcd18;border-color:#b89fcd40;color:#d5c3e2;box-shadow:none;font-weight:650}
+.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]){background:#bda5d2;color:#241a2d;border-color:#d9c4ec;box-shadow:0 0 0 .12rem #bda5d21c,0 .35rem 1.2rem #ad8ece37;font-weight:800}
+.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-label{color:#241a2d;font-weight:800}
+.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-time{color:#483459}
+.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-track{background:#30213a40}
+.sheet.is-minimized.is-awaiting-choice .sheet-choice-resume:not([hidden]) .auto-choice-fill{background:#47335b}
+.tutorial-copy p{min-height:0}
+.tutorial-metrics{display:grid;grid-template-columns:1fr;gap:.45rem;margin:.8rem 0 .1rem}
+.tutorial-metrics[hidden]{display:none}
+.tutorial-stat{display:flex;align-items:flex-start;gap:.8rem;padding:.67rem .75rem;border-radius:.65rem;border:.0625rem solid #bca6cb33;background:#b69bc313}
+.tutorial-stat strong{font-size:.78rem;color:#dec8ee;min-width:5.9rem;flex:none;line-height:1.5}
+.tutorial-stat span{font-size:.76rem;line-height:1.6;color:#d4cbdc}
+@media(max-width:47.5em){
+ .sheet.is-minimized.is-awaiting-choice .sheet-choice-resume{min-width:8rem;max-width:10rem;min-height:2.6rem}
+ .tutorial-art{padding:.65rem .35rem;margin:.65rem 0}
+ .tutorial-copy h2{margin:.35rem 0 .5rem}
+ .tutorial-stat{gap:.5rem;padding:.5rem .65rem}
+ .tutorial-stat strong{min-width:5.1rem;font-size:.73rem}
+ .tutorial-stat span{font-size:.72rem}
+}
+/* Announce the school sports day, then keep the entire race inside the existing daily sheet. */
+.paper-choice-sheet[data-scene=sports] .daily-modal-body{position:relative}
+.sports-opening{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.9rem;z-index:4;min-height:13rem;background:linear-gradient(140deg,#214b39f5,#387450f7);color:#f8fae6;opacity:0;pointer-events:none;text-align:center;border-radius:.85rem}
+.sports-opening small{font-size:.7rem;letter-spacing:.26em;color:#c4e6af}
+.sports-opening strong{font-size:clamp(1.4rem,4vw,2rem);font-weight:900;letter-spacing:-.04em}
+.sports-opening span{font-size:.82rem;color:#e5efd7}
+.paper-choice-sheet.sports-entered .sports-opening{animation:sports-intro 1.5s both}
+@keyframes sports-intro{0%{opacity:0;transform:scale(.98)}12%,76%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.02)}}
+.sports-oval{position:relative;overflow:hidden;padding:.45rem .3rem;border:.25rem solid #d7d9bc;border-radius:0 0 1rem 1rem;background:repeating-linear-gradient(35deg,#598a62,#598a62 1.5rem,#5e9467 1.5rem,#5e9467 3rem)}
+.sports-oval svg{display:block;width:100%;height:auto;max-height:17rem;overflow:visible}
+.sports-ring{fill:none;stroke:#ba6151;stroke-width:12;stroke-linecap:round}
+.sports-ring-1{stroke:#c77865}.sports-ring-2{stroke:#d18c77}
+.sports-avatar circle{fill:#f8d668;stroke:#3d633c;stroke-width:2}
+.sports-avatar-1 circle{fill:#77d1e7;stroke:#256078}.sports-avatar-2 circle{fill:#e8b0e6;stroke:#85557c}
+.sports-avatar text{font-size:8px;font-weight:800;fill:#2e3930}
+.sports-running .sports-scoreboard{border-radius:.9rem .9rem 0 0;background:#1f4637}
+.sports-live{margin:.6rem .8rem 1rem;padding:.7rem .85rem;border-radius:.65rem;background:#d9e9d5;color:#2c563c;font-size:.83rem;font-weight:750;line-height:1.5}
+.sports-victory{display:block;padding:.75rem 1rem;margin:.7rem 0;border-radius:.75rem;background:#fff2b5;border:.095rem solid #cea24a;color:#735010;font-weight:850;font-size:1.3rem;text-align:center;animation:sports-win .8s ease-out both}
+.sports-result-text{color:#537058;font-size:.8rem;margin:.35rem 0 .9rem;text-align:center}
+@keyframes sports-win{from{opacity:0;transform:translateY(.65rem) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:47.5em){.sports-oval svg{max-height:12rem}.sports-opening{min-height:10rem}.sports-live{font-size:.75rem;padding:.5rem .65rem}}
+@media(prefers-reduced-motion:reduce){.sports-opening{display:none!important}.sports-victory{animation:none!important}}

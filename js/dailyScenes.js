@@ -42,25 +42,68 @@ function decorateSeats(body,list,choice){
  }
  room.append(list,el('small','classroom-door','복도 · 출입문 ↗'));body.append(room,preview);
 }
-function raceView(number,place){
- const view=el('section',place?'race-finish':'sports-preview');
- const board=el('div','sports-scoreboard');board.append(el('small','','CLASS RELAY'),el('strong','',place?number+'반 · '+place+'등':number+'반, 준비됐지?'),el('span','',place===1?'우리 반이 가장 먼저 들어왔다!':place?'끝까지 함께 달린 우리 반':'한 사람의 질주, 한 반의 호흡.'));
- view.append(board);
- const track=el('div','sports-track');track.setAttribute('role','img');track.setAttribute('aria-label',place?number+'반 계주 '+place+'등':'세 반이 달리는 계주 운동장');
- const places=[1,2,3].filter(n=>n!==place),classes=[number,number%6+1,(number+1)%6+1];
+const svgNS='http://www.w3.org/2000/svg';
+const ovalLanes=[
+ 'M 180 35 H 277 A 59 59 0 0 1 336 94 V 146 A 59 59 0 0 1 277 205 H 83 A 59 59 0 0 1 24 146 V 94 A 59 59 0 0 1 83 35 Z',
+ 'M 180 48 H 271 A 46 46 0 0 1 317 94 V 146 A 46 46 0 0 1 271 192 H 89 A 46 46 0 0 1 43 146 V 94 A 46 46 0 0 1 89 48 Z',
+ 'M 180 61 H 264 A 33 33 0 0 1 297 94 V 146 A 33 33 0 0 1 264 179 H 96 A 33 33 0 0 1 63 146 V 94 A 33 33 0 0 1 96 61 Z'
+];
+function oval(number){
+ const field=el('div','sports-oval');
+ const svg=document.createElementNS(svgNS,'svg');svg.setAttribute('viewBox','0 0 360 240');svg.setAttribute('role','img');svg.setAttribute('aria-label','둥근 사각형 운동장 세 트랙에서 반별 주자들이 달리고 있습니다');
+ const paths=[],runners=[];
  for(let i=0;i<3;i++){
-  const rank=place?(i===0?place:places[i-1]):null,lane=el('div','sports-lane'+(i===0?' is-ours':''));
-  lane.append(el('span','lane-label',classes[i]+'반'));
-  const runner=el('span','race-runner',i===0?'우리 반':'');runner.style.setProperty('--finish',rank?({1:'90%',2:'71%',3:'57%'}[rank]):'12%');lane.append(runner);track.append(lane);
+  const path=document.createElementNS(svgNS,'path');path.setAttribute('d',ovalLanes[i]);path.setAttribute('class','sports-ring sports-ring-'+i);svg.append(path);paths.push(path);
+  const runner=document.createElementNS(svgNS,'g');runner.setAttribute('class','sports-avatar sports-avatar-'+i);
+  const badge=document.createElementNS(svgNS,'circle');badge.setAttribute('r','11');runner.append(badge);
+  const label=document.createElementNS(svgNS,'text');label.textContent=(i===0?number:i===1?number%6+1:(number+1)%6+1)+'반';label.setAttribute('text-anchor','middle');label.setAttribute('dy','3.3');runner.append(label);svg.append(runner);runners.push(runner);
  }
- track.append(el('span','race-finish-line','FINISH'));view.append(track);
- if(place){
-  const ranking=el('ol','sports-ranking');
-  const ordered=classes.map((n,i)=>({number:n,place:i===0?place:places[i-1]})).sort((a,b)=>a.place-b.place);
-  for(const row of ordered){const item=el('li',row.number===number?'is-ours':'');item.append(el('b','',row.place+'등'),el('span','',row.number+'반'),el('small','',row.number===number?'우리 반':''));ranking.append(item);}
-  view.append(ranking);
+ field.append(svg);return {field,paths,runners};
+}
+function placeRunners(track,progress){
+ for(let i=0;i<3;i++){
+  const path=track.paths[i],length=path.getTotalLength(),point=path.getPointAtLength(length*Math.min(.9999,Math.max(0,progress[i])));
+  track.runners[i].setAttribute('transform','translate('+point.x.toFixed(2)+' '+point.y.toFixed(2)+')');
+ }
+}
+function raceView(number,place){
+ const finished=Number.isFinite(place),view=el('section',finished?'race-finish':'sports-preview');
+ const board=el('div','sports-scoreboard');
+ board.append(el('small','','SPORTS DAY · CLASS RELAY'),el('strong','',finished?number+'반 · '+place+'등':'오늘은 운동회!'),el('span','',finished?(place===1?'마지막 코너에서 역전! 우리 반 우승!':'끝까지 달려 결승선을 통과했다!'):'트랙 한 바퀴, 바통을 이어 달리자'));
+ view.append(board);
+ const track=oval(number);view.append(track.field);
+ placeRunners(track,finished?(place===1?[.999,.93,.87]:place===2?[.92,.999,.84]:[.83,.999,.94]):[0,0,0]);
+ if(finished){
+  if(place===1)view.append(el('strong','sports-victory','🏆 우리 반 우승!'));
+  view.append(el('p','sports-result-text','이번 계주는 내 선택과 운동능력으로 결정됐어.'));
  }
  return view;
+}
+// Presentation only. The timeline has already fixed and saved the result.
+function playRace({dialog,body,presentation,attributes,onFinish}){
+ dialog.dataset.scene='sports';body.replaceChildren();
+ const view=raceView(presentation.classNumber,null);view.className='sports-running';
+ view.querySelector('.sports-scoreboard strong').textContent='반 대항 계주 · 경기 중';
+ const status=el('p','sports-live','출발! 세 반이 첫 코너로 달려간다');
+ view.append(status);body.append(view);body.scrollTop=0;
+ const track={paths:[...view.querySelectorAll('.sports-ring')],runners:[...view.querySelectorAll('.sports-avatar')]};
+ const rank=attributes.sportsPlace||3;
+ const checkpoints=rank===1?[[0,.21,.45,.69,.999],[0,.28,.56,.79,.93],[0,.26,.46,.66,.87]]:rank===2?[[0,.23,.48,.76,.94],[0,.29,.56,.8,.999],[0,.2,.45,.68,.84]]:[[0,.29,.5,.67,.83],[0,.24,.54,.79,.999],[0,.23,.49,.72,.94]];
+ const reduce=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const duration=reduce?900:5600;
+ let raf=0,done=false,start=null,phase=-1;
+ function interpolate(values,t){const i=Math.min(3,Math.floor(t*4)),f=Math.min(1,t*4-i);return values[i]+(values[i+1]-values[i])*f;}
+ function frame(now){
+  if(done)return;
+  if(start===null)start=now;
+  const t=Math.min(1,(now-start)/duration),chapter=Math.min(3,Math.floor(t*4));
+  placeRunners(track,checkpoints.map(values=>interpolate(values,t)));
+  if(chapter!==phase){phase=chapter;status.textContent=['출발! 세 반이 첫 코너로 달려간다','나란히 달리다, 선두가 계속 바뀐다','마지막 코너! 격차가 좁혀진다','결승선 앞에서 끝까지 전력 질주!'][chapter];}
+  if(t>=1){done=true;onFinish();return;}
+  raf=global.requestAnimationFrame(frame);
+ }
+ raf=global.requestAnimationFrame(frame);
+ return ()=>{done=true;if(raf)global.cancelAnimationFrame(raf);};
 }
 function decorate({dialog,body,list,choice}){
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports'].includes(kind)?kind:'';
@@ -68,6 +111,7 @@ function decorate({dialog,body,list,choice}){
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){
   const situation=body.querySelector('.daily-scenario');body.prepend(raceView(choice.presentation.classNumber));
+  const intro=el('div','sports-opening');intro.append(el('small','','SPORTS DAY'),el('strong','','📣 오늘은 운동회!'),el('span','','반 대항 계주가 곧 시작됩니다'));body.prepend(intro);
   if(situation)situation.querySelector('.daily-scenario-kicker').textContent='작전 회의';
   list.before(el('strong','scene-choice-label','우리 반에서 맡을 역할'));
  }
@@ -84,5 +128,5 @@ function reward({dialog,body,presentation,attributes,optionId,label}){
  }
  if(kind==='sports')body.prepend(raceView(presentation.classNumber,attributes.sportsPlace));
 }
-global.GukminDailyScenes=Object.freeze({decorate,reward});
+global.GukminDailyScenes=Object.freeze({decorate,reward,playRace});
 })(window);

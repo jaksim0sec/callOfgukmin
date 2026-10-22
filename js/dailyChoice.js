@@ -80,6 +80,7 @@ function differences(before,after){
 }
 function create({dialog,body,heading,resumeButton,resolve,proceed}){
  let token=null,folded=true,review=false,delta=[],selectedId=null,currentChoice=null,pendingDecision=null,reward=null;
+ let racePlaying=false,raceStop=null;
  const confirm=dialog.querySelector('#dailyPaperConfirm');
  const AUTO_OPEN_MS=5000;
  let automatic=true;
@@ -163,7 +164,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  }
  function renderReward(){
   if(!reward)return;
-  dialog.classList.add('is-reward');
+  racePlaying=false;raceStop?.();raceStop=null;
+  dialog.classList.remove('sports-entered');dialog.classList.add('is-reward');
   const gained=reward.changes.filter(item=>item.change==='gain');
   const visibleTraits=gained.filter(item=>item.trait&&!item.trait.startsWith('관심-'));
   const interests=gained.filter(item=>item.trait?.startsWith('관심-'));
@@ -214,13 +216,14 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   resumeButton.classList.toggle('is-auto-opening',autoReady&&automatic);
   if(!autoReady){autoLabel.textContent='선택 열기';autoTime.hidden=true;autoTrack.hidden=true;}
   else paintClock();
-  confirm.textContent=reward?(reward.presentation?.type==='chat'?'대화 마치기':reward.presentation?.type==='sports'?'기록하고 계속하기':'보상 받기'):currentChoice?.presentation?.type==='chat'?'선택 확정':currentChoice?.presentation?.type==='seating'?'이 자리에 앉기':currentChoice?.presentation?.type==='sports'?'우리 반, 출발!':'이 선택으로 기록하기';
-  confirm.disabled=reward?false:!selectedId||!!pendingDecision;
+  confirm.textContent=racePlaying?'계주 진행 중…':reward?(reward.presentation?.type==='chat'?'대화 마치기':reward.presentation?.type==='sports'?'기록하고 계속하기':'보상 받기'):currentChoice?.presentation?.type==='chat'?'선택 확정':currentChoice?.presentation?.type==='seating'?'이 자리에 앉기':currentChoice?.presentation?.type==='sports'?'우리 반, 출발!':'이 선택으로 기록하기';
+  confirm.disabled=racePlaying||(reward?false:!selectedId||!!pendingDecision);
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
   cancelClock();
   folded=false;dialog.showModal();paper.reset();sync();
+  if(currentChoice?.presentation?.type==='sports'&&!reward){dialog.classList.remove('sports-entered');void dialog.offsetWidth;dialog.classList.add('sports-entered');}
   heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});
  }
  function closeNow(){
@@ -234,9 +237,9 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
  }
  function fold(){folded=true;cancelClock();if(dialog.open)paper.dismiss();else sync();}
  function reset(){
-  cancelClock();
+  cancelClock();raceStop?.();raceStop=null;racePlaying=false;
   if(dialog.open)dialog.close();
-  dialog.dataset.scene='';body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward');
+  dialog.dataset.scene='';body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward','sports-entered');
   sync();
  }
  function cancel(event){event.preventDefault();fold();}
@@ -246,6 +249,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)fold();
  }
  function confirmSelection(){
+  if(racePlaying)return;
   if(reward){paper.dismiss();return;}
   if(!selectedId||!currentChoice||pendingDecision)return;
   const option=currentChoice.options.find(item=>item.id===selectedId);
@@ -270,7 +274,12 @@ function create({dialog,body,heading,resumeButton,resolve,proceed}){
   const selected=choice.options.find(item=>item.id===pendingDecision.id);
   reward=rewardModel(before,after,selected?.label,(before.history||[]).length,(after.history||[]).length-1,choice.presentation,selected?.id);
   pendingDecision=null;
-  renderReward();
+  if(choice.presentation?.type==='sports'){
+   racePlaying=true;
+   raceStop?.();
+   raceStop=global.GukminDailyScenes.playRace({dialog,body,presentation:reward.presentation,attributes:reward.attributes,onFinish:()=>{racePlaying=false;raceStop=null;if(reward&&token===choice.token)renderReward();}});
+   sync();
+  }else renderReward();
  }
  function restore(snapshot){
   if(!snapshot?.reviewPending)return false;

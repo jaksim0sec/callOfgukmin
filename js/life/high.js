@@ -479,13 +479,13 @@ global.GukminDirector.register({
   const sceneChat=stages.choices.find(c=>c.id==='high:first-day');
   for(const script of [sceneChat,...sceneChat.variants]){
    const science=script.id.includes('science'),foreign=script.id.includes('social');
-   script.presentation={type:'chat',room:'고등학교 · 학급 단체방',messages:[
-    {sender:science?'세아':foreign?'하린':'재호',text:science?'첫 탐구 과제, 풀이의 가정부터 서로 맞춰 볼까?':foreign?'공지랑 선생님이 말한 날짜가 달라. 뭐가 맞지?':'공지에 수행평가 마감이라고 써 있는데… 우리 아직 시작 안 했잖아?',time:'오후 8:32'},
-    {sender:'하린',text:'나도 보고 있어. 혹시 원문 확인한 사람 있어?',time:'오후 8:34'}
+   script.presentation={type:'chat',room:'고등학교 · 학급 단톡',messages:[
+    {sender:science?'세아':foreign?'하린':'재호',text:science?'야 첫 탐구 과제 가정부터 다 다르던데? ㅋㅋ 이대로 냄?':foreign?'공지에 적힌 날짜랑 쌤이 말한 날짜 다른 거 아님?':'야 수행 마감 내일임? 우리 아직 시작도 안 했는데 ㅋㅋ',time:'오후 8:32'},
+    {sender:'하린',text:'나도 그거 봄 ㅋㅋ 원문 확인한 사람 있음?',time:'오후 8:34'}
    ]};
    const sender=science?'세아':foreign?'하린':'재호';
-   const answers=science?['좋아. 서로 다른 가정부터 표시해서 나눠 보자.','그러면 내가 다음 문제 검산할게.']:foreign?['같이 확인해 줘서 고마워. 질문 모아서 다시 물어볼게.','응, 원문 기준으로 내 일정도 다시 적었어.']:['날짜를 잘못 봤네. 원문으로 다시 올릴게!','알림을 잠시 껐습니다. 필요한 공지는 달력에 남겼어요.'];
-   script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender:!science&&!foreign&&i===1?'알림':sender,text:answers[i]||'확인했어. 내일 보자!'}]]));
+   const answers=science?['ㅇㅋㅇㅋ 그럼 가정부터 맞춰 보자','좋아 내가 계산 다시 봄']:foreign?['ㅇㅋ 그럼 질문 모아서 쌤한테 물어보자','ㅇㅇ 원문 기준으로 적어둠']:['아 ㅋㅋ 날짜 잘못 봤네 ㄳ','ㅇㅋ 내일 확인하자'];
+   script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender:!science&&!foreign&&i===1?'알림':sender,text:answers[i]||'ㅇㅋ 확인함'}]]));
   }
   return {...stages,attributes:{projectStyle:{label:'수행평가 해결 방식',hidden:true},projectResult:{label:'수행평가 결과',hidden:true},projectObligation:{label:'다음 부탁',hidden:true},habitStage:{label:'쉬는 시간의 선택',hidden:true},highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }

@@ -23,13 +23,15 @@ try{
   await page.waitForTimeout(5300);assert.deepEqual(await state(),initial,'tutorial freezes state and auto-open timers');
   assert.equal(await page.locator('#dailyChoiceDialog[open]').count(),0);
   await page.screenshot({path:`${artifacts}/${name}-tutorial.png`});
+  await page.locator('#tutorialNext').click();assert.ok(await page.locator('.tutorial-stat').count()>=4,'stat tutorial explains core metrics');
   for(let i=0;i<3;i++)await page.locator('#tutorialNext').click();
   await page.locator('#hideTutorial').check();await page.locator('#tutorialNext').click();
   assert.equal(await page.locator('#gameTutorial[open]').count(),0);
   assert.equal(await page.locator('#playbackMode').getAttribute('role'),'switch');assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'true');await page.locator('#playbackMode').click();assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false');
   const manual=await state();await page.waitForTimeout(5300);assert.deepEqual(await state(),manual);assert.equal(await page.locator('#dailyChoiceDialog[open]').count(),0,'manual mode never forces a choice open');
   if(name!=='desktop'){await page.locator('#sheetToggle').click();await page.waitForFunction(()=>!document.getElementById('lifeSheet').classList.contains('is-springing'));}
-  const historyButton=page.locator('#log #historyNext');await historyButton.scrollIntoViewIfNeeded();const nextSize=await historyButton.boundingBox();assert.ok(nextSize.height>=48&&nextSize.width>=200,'history next is a large action');await historyButton.click();await page.locator('#dailyChoiceDialog[open]').waitFor();
+  assert.equal(await page.locator('#historyNext').isVisible(),false,'no duplicate history choice opener');assert.equal(await page.locator('#playbackNext').isVisible(),false,'no duplicate playback choice opener');
+  const choiceButton=page.locator('#resumeDailyChoice');assert.equal(await choiceButton.isVisible(),true,'header owns one choice opener');await choiceButton.click();await page.locator('#dailyChoiceDialog[open]').waitFor();
   await page.locator('#dailyChoiceBody .inline-choice').first().click();await page.locator('#dailyPaperConfirm').click();await page.locator('#dailyChoiceDialog.is-reward').waitFor();
   const rewarded=await state();await page.locator('#dailyPaperConfirm').click();await page.waitForFunction(turn=>GukminGame.session.snapshot().runtime.turn>turn,rewarded.runtime.turn);
   const afterManual=await state();assert.ok(afterManual.runtime.turn>rewarded.runtime.turn,'claiming reward advances to a next moment in manual mode');
@@ -44,7 +46,8 @@ try{
   await page.locator('#playbackPause').click();await page.locator('#dailyChoiceDialog[open]').waitFor({timeout:7000});assert.deepEqual(await state(),waiting,'automatic open does not choose for the player');
   await page.keyboard.press('Escape');await page.waitForTimeout(350);await page.locator('#playbackPause').click();
   await page.screenshot({path:`${artifacts}/${name}-controls.png`});
-  for(const id of ['playbackMode','playbackPause','playbackNext','playbackHelp']){const r=await page.locator('#'+id).boundingBox();assert.ok(r.x>=0&&r.x+r.width<=viewport.width+1&&r.y>=0&&r.y+r.height<=viewport.height,'controls fit visible sheet: '+id);}
+  for(const id of ['playbackMode','playbackPause','playbackHelp']){const r=await page.locator('#'+id).boundingBox();assert.ok(r.x>=0&&r.x+r.width<=viewport.width+1&&r.y>=0&&r.y+r.height<=viewport.height,'controls fit visible sheet: '+id);}
+  assert.equal(await page.locator('#playbackNext').isVisible(),false,'choice in progress hides next action');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1),false);assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__playable__v1')),'legacy-sentinel');assert.deepEqual(errors,[]);
   console.log('PASS playback '+name+': tutorial, manual/auto, pause/reload, choice integrity, viewport');await context.close();
  }

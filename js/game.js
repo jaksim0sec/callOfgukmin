@@ -119,10 +119,11 @@ function mount(root,navigate,content=global.GukminContent){
  let tutorialActive=!verificationMode&&!tutorialHidden,lifeDeferred=false,tutorialPage=0;
  const tutorial=$('gameTutorial');
  const guide=[
-  {title:'한 번의 선택이, 한 사람의 삶으로',body:'태어난 환경은 제각각. 작은 선택으로 특성을 얻고, 학교와 진로를 거쳐 더 큰 도전을 준비하세요. 지금은 학생 시절과 대학 입시까지 플레이할 수 있어요.',art:[['01','태어남'],['02','선택과 성장'],['03','더 큰 도전']]},
-  {title:'내 속도로 이야기를 넘기세요',body:'자동은 이야기를 이어 주고, 일상 선택을 5초 뒤 열어요. 수동은 다음 버튼을 누를 때만 진행합니다. 일시정지하면 시간과 자동 열기가 멈춰요. 선택은 언제나 직접 고릅니다.',art:[['▶','자동'],['→','수동'],['Ⅱ','일시정지']]},
-  {title:'특성은 강점, 압박은 부담',body:'특성 토큰을 누르면 효과를 볼 수 있어요. 관계는 기회에 영향을 주고, 압박이 25를 넘으면 정신병으로 바뀝니다. 정신병 5는 게임오버. GU 편의점은 4턴에 한 번 이용할 수 있어요.',art:[['✧','특성'],['25','압박 한계'],['GU','잠깐의 쉼']]},
-  {title:'선택은 고르고, 결과는 챙기고',body:'일상 선택은 종이 시트에서 고른 뒤 보상 받기로 이어 가세요. 시험·진학은 별도 서류로 열려요. 모든 결과는 인생 기록에 남고 자동 저장됩니다. ? 버튼으로 이 안내를 다시 볼 수 있어요.',art:[['✓','선택'],['+','결과'],['↗','인생 기록']]}
+  {title:'이 삶은 선택으로 달라져',body:'출생 배경과 학교 생활부터 대학 입시까지 이어지는 인생 시뮬레이션이야. 선택은 수치뿐 아니라 다음 사건과 조건에도 영향을 줄 수 있어.',art:[['01','출생'],['02','성장'],['03','진로']]},
+  {title:'스탯부터 읽으면 훨씬 쉬워',body:'왼쪽 막대는 쓸 수 있는 자원과 부담을 보여 줘. 선택지에 붙은 +와 − 토큰은 실제로 달라지는 양이야. 재산과 용돈은 서로 다른 수치야.',art:[['+','얻는 것'],['−','잃는 것'],['↗','다음 선택']],stats:[['재산','교육비와 진로 선택 같은 큰 지출에 쓰여.'],['용돈','학생 시절 받는 별도의 소액 자금이야.'],['관계','친구와의 신뢰, 함께할 기회에 영향을 줘.'],['내신 · 모의고사','학교 성적과 통합 시험 역량을 각각 표시해.']]},
+  {title:'압박과 정신병은 따로 관리해',body:'압박은 활동 부담이 쌓이는 막대(0~25)야. 25를 초과한 수치가 정신병으로 누적되고 정신병 5에 이르면 게임이 종료돼. 휴식과 돌봄 선택도 전략이야.',art:[['25','압박 상한'],['5','정신병 상한'],['GU','돌봄']],stats:[['압박','높아질수록 불리한 부담이야. 회복 선택으로 줄일 수 있어.'],['정신병','압박 상한을 넘어 누적되는 별도 위험 수치야.'],['GU 편의점','이용 간격은 4턴. 상품마다 회복되는 수치가 달라.']]},
+  {title:'특성은 다음 이야기의 열쇠',body:'특성 토큰을 눌러서 효과와 조건을 확인해. 학업 역량과 운동능력 등은 활동을 거쳐 열리고, 시험·동아리·경기에서 실제 차이를 만들 수 있어.',art:[['✧','특성'],['▥','역량'],['★','분기']],stats:[['학업 역량','학창 시절 쌓은 준비 정도야. 내신 자체와는 달라.'],['운동능력','체육 활동에서 열리고 운동회 결과에도 영향을 줘.'],['특성 토큰','얻은 특성과 적용 효과를 눌러 확인할 수 있어.']]},
+  {title:'진행은 편한 속도로',body:'자동은 이야기를 넘기고 일상 선택을 약 5초 후 열어. 수동은 다음 버튼으로 진행해. 선택은 자동 확정되지 않아. 결과는 자동 저장되고, ?에서 이 안내를 다시 볼 수 있어.',art:[['▶','자동'],['→','수동'],['Ⅱ','일시정지']]}
  ];
  function canAuto(){return playbackMode==='auto'&&!userPaused&&!tutorialActive&&!document.hidden;}
  function saveControls(){try{localStorage.setItem(controlsKey,JSON.stringify({mode:playbackMode,paused:userPaused}));}catch{}}
@@ -130,18 +131,21 @@ function mount(root,navigate,content=global.GukminContent){
   const auto=playbackMode==='auto';
   $('playbackMode').setAttribute('aria-checked',String(auto));
   text('playbackPause',userPaused?'▶ 재개':'Ⅱ 일시정지');$('playbackPause').setAttribute('aria-pressed',String(userPaused));
-  text('playbackNext',snapshot?.choice?'선택 열기 →':'다음 →');
+  text('playbackNext','다음 →');
+  $('playbackNext').hidden=!!snapshot?.choice||!!snapshot?.reviewPending;
   $('playbackNext').disabled=userPaused||tutorialActive||cinematicShown;
   historyNext.disabled=$('playbackNext').disabled;
-  historyNext.hidden=verificationMode||!snapshot||!(snapshot.choice||snapshot.reviewPending||Number.isFinite(snapshot.progress?.remaining));
-  historyNext.querySelector('#historyNextLabel').textContent=snapshot?.choice?'현재 선택 열기':'다음 이야기로';
+  historyNext.hidden=verificationMode||!snapshot||!!snapshot.choice||!!snapshot.reviewPending||!Number.isFinite(snapshot.progress?.remaining);
+  historyNext.querySelector('#historyNextLabel').textContent='다음 이야기로';
   $('playbackControls').dataset.paused=String(userPaused);
+  $('lifeSheet').classList.toggle('is-awaiting-choice',!!snapshot?.choice);
   dailyUI?.setAutomatic(canAuto());
  }
  function paintTutorial(){
-  const step=guide[tutorialPage];text('tutorialStep',String(tutorialPage+1).padStart(2,'0')+' / 04');
+  const step=guide[tutorialPage];text('tutorialStep',String(tutorialPage+1).padStart(2,'0')+' / '+String(guide.length).padStart(2,'0'));
   text('tutorialTitle',step.title);text('tutorialBody',step.body);
   $('tutorialArt').replaceChildren(...step.art.map(([mark,label])=>{const item=el('span','tutorial-symbol');item.append(el('b','',mark),el('small','',label));return item;}));
+  const metricCards=$('tutorialMetrics');metricCards.replaceChildren(...(step.stats||[]).map(([name,detail])=>{const card=el('div','tutorial-stat');card.append(el('strong','',name),el('span','',detail));return card;}));metricCards.hidden=!step.stats?.length;
   $('tutorialDots').replaceChildren(...guide.map((_,i)=>{const dot=el('span','');dot.classList.toggle('is-current',i===tutorialPage);return dot;}));
   $('tutorialBack').disabled=tutorialPage===0;text('tutorialNext',tutorialPage===guide.length-1?'플레이 시작 →':'다음 →');
  }

@@ -239,13 +239,15 @@ global.GukminDirector.register({
   recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   const sceneChat=stages.choices.find(c=>c.id==='middle:group-chat');
   for(const script of [sceneChat,...sceneChat.variants]){
-   const science=script.id.includes('science'),foreign=script.id.includes('foreign');
-   script.presentation={type:'chat',room:'중학교 · 학급 단체방',messages:[
-    {sender:science?'민호':foreign?'하린':'민서',text:science?'이 계산식 어디서 틀린 건지 같이 봐 줄 사람?':foreign?'공지랑 선생님이 말한 날짜가 달라. 뭐가 맞지?':'수행평가 내일까지 맞지? 어떻게 제출하는 거야?',time:'오후 8:32'},
-    {sender:'지우',text:'나도 보고 있어. 혹시 원문 확인한 사람 있어?',time:'오후 8:34'}
+   const science=script.id.includes('science'),sender=science?'민호':'민서';
+   script.presentation={type:'chat',room:'중학교 · 반 단톡',messages:[
+    {sender,text:science?'야 이 계산 왜 안 맞음? 단위 맞게 한 거 같은데;;':'얘들아 수행 제출 어케 하는 거임? ㅋㅋ',time:'오후 8:32'},
+    {sender:'지우',text:science?'이거 사진 2번째 줄부터 이상한 듯?':'읽씹 뭐냐 ㅋㅋ 아는 사람 없음?',time:'오후 8:34'}
    ]};
-   const sender=science?'민호':'민서',answers=science?['아, 단위를 잘못 바꿨네. 고마워!','제발 내일 잊지 마 ㅋㅋ 계산기 챙길게.','다른 친구가 계산식을 다시 확인하고 있습니다.']:['오 그러면 되는 거냐! 나머지는 내가 해 볼게.','그럼 지금 같이 점검할까? 친구들 부를게.','알림을 잠시 껐습니다. 내일 다시 확인할 수 있어요.'];
-   script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender:i===2?'알림':sender,text:answers[i]}]]));
+   const labels=science?['단위 계산부터 다시 봐봐. 내가 체크해줌','낼 실험실에서 같이 보자 ㄱㄱ','난 내 거 먼저 끝내고 답할게']:['정답 말고 방법 알려줄게','지금 같이 확인할 사람? ㄱㄱ','난 먼저 잠. 낼 학교에서 얘기하자'];
+   const replies=science?['아 단위 바꾼 데서 틀렸네 ㅋㅋ ㄳ','ㅇㅋㅇㅋ 계산기 챙겨감','ㅇㅋ 먼저 해']:['아 ㅇㅋ 이해함 고마워','ㅇㅋㅇㅋ 나 지금 가능','굿밤 ㅋㅋ'];
+   script.options.forEach((option,i)=>{option.label=labels[i]||option.label;});
+   script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender,text:replies[i]||'ㅇㅋ 확인함'}]]));
   }
   return {...stages,attributes:{
    schoolTrack:{label:'고교 유형',hidden:true},
