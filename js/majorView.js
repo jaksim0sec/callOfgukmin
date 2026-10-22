@@ -144,30 +144,30 @@ function presentAdmission({choice,resolve,root}){
 function presentPledges({choice,resolve,root},person){
  const E=global.GukminElection,isFinal=choice.presentation.mode==='final',isDraft=!isFinal&&(person.attributes?.electionRevision||0)>=2,slots=isFinal?E.chosen(person).map(p=>p.id):[null,null,null];let activeSlot=0,closed=false;
  const sheet=make('section','life-modal-wrap election-pledge-paper'),head=make('header','life-modal-head'),foldButton=make('button','life-modal-collapse','접기 ⌄');foldButton.type='button';
- head.append(make('span','life-modal-serial','우리 반 선거관리위원회'),foldButton);
- const content=make('div','pledge-content'),dock=make('div','pledge-dock');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title',isFinal?'최종 공약 조정':isDraft?'임시 공약 만들기':'공약 세 가지 선택'));
+ head.append(make('span','life-modal-serial','반장 선거 · 친구들과 하는 약속'),foldButton);
+ const content=make('div','pledge-content'),dock=make('div','pledge-dock');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title',isFinal?'마지막으로 약속 고르기':isDraft?'약속 세 개 골라 보기':'약속 세 개 고르기'));
  const puzzle=make('section','pledge-puzzle'),rack=make('div','pledge-slots');rack.setAttribute('role','group');rack.setAttribute('aria-label','공약 세 칸');
  const slotButtons=slots.map((_,i)=>{const button=make('button','pledge-slot');button.type='button';button.addEventListener('click',()=>{activeSlot=i;paint();});button.addEventListener('keydown',e=>{if(['Delete','Backspace'].includes(e.key)){e.preventDefault();slots[i]=null;activeSlot=i;paint();}});rack.append(button);return button;});
- puzzle.append(rack,make('small','pledge-slot-help','카드를 눌러 끼우기 · 칸을 누르면 교체 · 고른 카드를 다시 누르면 빼기'));
+ puzzle.append(rack,make('small','pledge-slot-help','카드를 눌러 세 칸을 채워 봐. 고른 카드를 다시 누르면 뺄 수 있어.'));
  const board=global.GukminElectionView.board(person,{collapsible:true});puzzle.append(board.element);content.append(puzzle);
  const cards=make('div','pledge-cards');cards.setAttribute('role','group');cards.setAttribute('aria-label','공약 세 장 선택');
- const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit',isFinal?'최종 공약 확정':isDraft?'이 공약으로 의견 듣기':'세 가지 약속 확정');confirm.type='button';confirm.disabled=true;counter.setAttribute('aria-live','polite');const live=make('small','pledge-live-share'),counts=make('div','pledge-footer-counts');counts.append(counter,live);
+ const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit',isFinal?'이 약속으로 나갈래':isDraft?'친구들 생각 들어 보기':'세 약속으로 할래');confirm.type='button';confirm.disabled=true;counter.setAttribute('aria-live','polite');const live=make('small','pledge-live-share'),counts=make('div','pledge-footer-counts');counts.append(counter,live);
  function paint(){
   const ids=slots.filter(Boolean);slotButtons.forEach((button,i)=>{button.classList.toggle('is-active',activeSlot===i);button.classList.toggle('is-filled',!!slots[i]);button.setAttribute('aria-pressed',String(activeSlot===i));button.replaceChildren(make('small','','공약 '+(i+1)),make('strong','',slots[i]?E.pledges.find(p=>p.id===slots[i]).name:'＋ 끼워 넣기'));});
-  for(const button of cards.children)button.setAttribute('aria-pressed',String(ids.includes(button.dataset.pledge)));counter.textContent=ids.length+' / 3';confirm.disabled=ids.length!==3;const forecast=board.update(ids);live.textContent='조사 지지 '+forecast.pollShares[0]+'%';
+  for(const button of cards.children)button.setAttribute('aria-pressed',String(ids.includes(button.dataset.pledge)));counter.textContent=ids.length+' / 3';confirm.disabled=ids.length!==3;const forecast=board.update(ids);live.textContent='내 편 예상 '+forecast.pollShares[0]+'%';
  }
- const short=['놀이','모범','조용','운동'];
+ const short=['놀이','공부','조용','운동'];
  for(const pledge of E.available(person)){
   const card=make('button','pledge-card');card.type='button';card.dataset.pledge=pledge.id;card.setAttribute('aria-pressed','false');
-  card.append(make('small','pledge-feasibility',pledge.difficulty>=2?'협의·타협 필요':'직접 이행 가능'),make('strong','',pledge.name));
-  const reactions=make('span','pledge-reactions');pledge.scores.forEach((n,g)=>{const reaction=make('span',n>0?'is-positive':n<0?'is-negative':'is-neutral',short[g]+' '+(n>0?'+':n<0?'−':'')+Math.abs(n));reaction.title=E.groups[g].name+' 기본 호감';reactions.append(reaction);});card.append(reactions,make('small','pledge-reality',pledge.limit));
+  card.append(make('small','pledge-feasibility',pledge.difficulty>=2?'선생님 허락이 필요해':'내가 해 볼 수 있어'),make('strong','',pledge.name));
+  const reactions=make('span','pledge-reactions');E.groups.forEach((group,g)=>{const n=E.opinion(person,group.id,pledge.id),reaction=make('span',n===null?'is-unknown':n>0?'is-positive':n<0?'is-negative':'is-neutral',short[g]+' '+(n===null?'?':(n>0?'+':n<0?'−':'')+Math.abs(n)));reaction.title=group.name+' '+group.size+'명 · '+(n===null?'아직 안 물어봤어':'직접 들어 본 생각');reactions.append(reaction);});card.append(reactions,make('small','pledge-reality',pledge.limit));
   card.addEventListener('click',()=>{
    const existing=slots.indexOf(pledge.id);if(existing>=0){slots[existing]=null;activeSlot=existing;}
    else{const index=activeSlot>=0?activeSlot:slots.indexOf(null);if(index<0){counter.textContent='바꿀 공약 칸을 먼저 눌러 주세요';return;}slots[index]=pledge.id;activeSlot=slots.indexOf(null);}
    paint();
   });cards.append(card);
  }
- const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','공약 카드'),make('small','','기본 성향 · 실제 민심은 집단마다 달라집니다'));content.append(catalogHead,cards);
+ const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','어떤 약속을 할까?'),make('small','','?는 아직 안 물어본 친구들 · +는 좋아해, −는 싫어해'));content.append(catalogHead,cards);
  footer.append(counts,confirm);sheet.append(head,dock,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
  const mobile=global.matchMedia('(max-width:47.5em)'),eyebrow=content.querySelector('.campaign-eyebrow'),title=content.querySelector('.life-modal-title'),help=puzzle.querySelector('.pledge-slot-help');
  const syncDock=()=>{if(mobile.matches)dock.append(eyebrow,title,rack,help);else{content.prepend(eyebrow,title);puzzle.prepend(rack,help);}};

@@ -1847,3 +1847,9 @@ body[data-screen=result]{background:radial-gradient(ellipse at 85% 0,#29203166,t
 /* The mobile rack occupies its own row; scrolling cards cannot paint behind it. */
 .pledge-dock{flex:none;min-width:0;background:#f5f0e6}.pledge-dock:empty{display:none}
 @media(max-width:47.5em){.is-pledges .pledge-dock{padding:.2rem .1rem .25rem;border-bottom:.0625rem solid #c8bfae}.is-pledges .pledge-content{padding-top:.2rem}.is-pledges .pledge-dock>.life-modal-title{margin-top:.15rem}.is-pledges .pledge-puzzle{padding-bottom:0}}
+
+/* Explain visits and group size without exposing wishes before a conversation. */
+.pledge-reactions .is-unknown{background:#e9e5e1;color:#81778a;border:.0625rem dashed #b4a6bc}
+.support-group-label{min-width:0;display:flex;flex-direction:column;gap:.1rem}.support-group-label>strong{font-size:.65rem;color:#c5b8d0;line-height:1.4}.support-group-size{font-size:.58rem;color:#aaa0b6}.support-group-percent{white-space:nowrap;font-size:.8rem}.support-group .support-group-wishes{font-size:.6rem;line-height:1.65;color:#d4c3e3;margin:.4rem 0 0;word-break:keep-all;overflow-wrap:anywhere}
+.campaign-howto{border-bottom:.0625rem solid #6d5b7d4d;padding:.3rem 0 .55rem;margin-bottom:.55rem}.campaign-howto>summary{font:700 .68rem/1.7 system-ui,sans-serif;color:#dfc9f2;cursor:pointer}.campaign-howto>p{font:.63rem/1.7 system-ui,sans-serif;color:#bdb0cb;margin:.4rem 0}
+.campaign-simple-steps{display:grid;gap:.3rem;margin:.7rem 0;padding-left:1.3rem;font:650 .8rem/1.6 system-ui,sans-serif;color:#66506f}.support-details[open]{max-height:26rem;overflow-y:auto;overscroll-behavior:contain}

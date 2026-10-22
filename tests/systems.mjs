@@ -1514,3 +1514,12 @@ test('revision 2 election: provisional platform, outside poll, reload and final 
 test('old class presidents without a campaign do not receive new platform bills',()=>{
  const {P,c,E}=setup(),p=P.generate();p.phase='elementary';p.attributes={classElection:'elected'};const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);for(const id of ['election:bill-0','election:bill-1'])assert.equal(E.matches(p,pack.events.find(e=>e.id===id).when,47),false);
 });
+
+test('visits cost effort and reveal real wishes; skipping costs nothing and unknown opinions stay hidden',()=>{
+ const {P,E,c}=setup(),X=c.GukminElection,p=P.generate();p.phase='elementary';p.traits=[];p.stats.stress=0;p.attributes={electionRevision:2,electionStage:'listen',teacherTrust:12};const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);
+ assert.deepEqual(plain(X.groups.map(g=>g.size)),[7,6,10,7]);assert.equal(X.groups.reduce((n,g)=>n+g.size,0),30);assert.equal(X.opinion(p,'play','library'),null);assert.equal(X.wishes(p,'play'),null);
+ const before=plain(X.ballot(p));
+ for(const group of X.groups){const q=E.apply(p,{electionDecision:{action:'listen',group:group.id}});assert.equal(q.stats.stress,1);assert.equal(q.stats.relations,p.stats.relations);assert.equal(X.knows(q,group.id),true);assert.ok(Number.isInteger(X.opinion(q,group.id,'library')));assert.equal(X.wishes(q,group.id).likes.length,2);for(const other of X.groups.filter(g=>g.id!==group.id))assert.equal(X.opinion(q,other.id,'library'),null);assert.deepEqual(plain(X.ballot(q)),before,'a conversation gives information, not guaranteed extra votes');}
+ const skip=E.apply(p,{electionDecision:{action:'listen',group:'skip'}});assert.equal(skip.stats.stress,0);assert.equal(skip.attributes.electionStage,'pledges');assert.equal(skip.attributes.electionHeard,null);assert.equal(X.forecast(skip).rows.filter(r=>r.known).length,0);
+ const survey=E.apply(skip,{electionDecision:{action:'respond',response:'poll'}});assert.equal(survey.stats.stress,1);assert.equal(X.forecast(survey).rows.filter(r=>r.known).length,1);assert.equal(skip.attributes.electionPollGroup,undefined,'preview does not mutate the original');
+});

@@ -28,6 +28,7 @@ try{
   await run();await daily(0);assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.attributes.classElection),'ran');await run();await daily(2);await run();
   await page.locator('#lifeDecisionDialog.is-pledges[open]').waitFor();assert.equal(await page.locator('.pledge-card').count(),7);
   assert.ok(await page.locator('.pledge-footer .life-submit').isDisabled());
+  assert.equal(await page.locator('.pledge-reactions .is-unknown').count(),21,'only the visited group reveals its opinion on each card');assert.deepEqual(await page.locator('.support-group-size').allTextContents(),['7명','6명','10명','7명']);
   await page.screenshot({path:'/tmp/gukmin-pledges-entry-'+name+'.png'});
   if(name!=='desktop')assert.ok(await page.locator('.pledge-card').first().evaluate(card=>{
    const bounds=card.getBoundingClientRect(),footer=document.querySelector('.pledge-footer').getBoundingClientRect(),content=document.querySelector('.pledge-content').getBoundingClientRect();
@@ -45,7 +46,7 @@ try{
   for(const id of ['library','quiet','lost'])await page.locator('[data-pledge='+id+']').click();
   await page.locator('[data-pledge=holiday]').click();assert.equal(await page.locator('.pledge-card[aria-pressed=true]').count(),3);
   const detail=page.locator('.support-details');assert.equal(await detail.evaluate(e=>e.open),name==='desktop');
-  if(name!=='desktop'){await detail.locator('summary').click();assert.equal(await page.locator('.support-group.is-heard').isVisible(),true);await detail.locator('summary').click();}
+  if(name!=='desktop'){await detail.locator(':scope > summary').click();assert.equal(await page.locator('.support-group.is-heard').isVisible(),true);await detail.locator(':scope > summary').click();}
   const draftBefore=await page.evaluate(()=>JSON.stringify(GukminGame.session.snapshot().persona)),supportBefore=await page.locator('.pledge-puzzle .support-total').textContent();
   await page.locator('.pledge-slot').nth(1).click();await page.locator('[data-pledge=football]').click();assert.equal(await page.locator('.pledge-card[aria-pressed=true]').count(),3);assert.match(await page.locator('.pledge-slot').nth(1).textContent(),/축구/);assert.notEqual(await page.locator('.pledge-puzzle .support-total').textContent(),supportBefore);
   assert.equal(await page.evaluate(()=>JSON.stringify(GukminGame.session.snapshot().persona)),draftBefore,'preview never applies stats or saves a pledge');
