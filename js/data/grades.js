@@ -22,7 +22,8 @@ function assessment(person,{metric,effort}){
  let score=base>0?Math.max(0,base-(current>=20?1:0)):base,stress=cost;
  if(effort>=3&&current<20&&held('꼼꼼함')){score+=1;applied.push({trait:'꼼꼼함',text:'집중 검산 +1'});}
  // A high score requires sustained effort; passively maintaining it slowly loses ground.
- if(effort===2&&current>=20)score=-1;
+ // Maintaining a plan must not lose the same grade as light revision while costing more pressure.
+ // effort=2 is the neutral benchmark at every existing score, including high achievers.
  const fit=schoolFit(person);
  if(cost>0&&person.phase==='high'&&!(person.attributes?.admissionAttempts>1)&&fit){
   if(fit.matched){stress=Math.max(1,stress-1);applied.push({trait:fit.trait,tone:'shield',text:'적성 방패 · 추가 부담 +2 면제'+(cost>stress?' · 기본 압박 −1':'')});}

@@ -23,7 +23,7 @@ function decorateChat(body,list,choice){
  const draft=el('div','chat-draft');draft.hidden=true;draft.setAttribute('aria-live','polite');thread.append(draft);
  const replies=el('section','chat-replies');replies.append(el('strong','scene-choice-label','어떻게 답할까?'),list);
  body.replaceChildren(thread,replies);
- function preview(button){const option=choice.options[[...list.querySelectorAll('.inline-choice')].indexOf(button)];const text=p.playerMessages?.[option?.id]||option?.label||'확인해볼게';draft.replaceChildren(el('small','chat-draft-label','보낼 답장 · 확정 전'),bubble({text},true));draft.hidden=false;}
+ function preview(button){const option=choice.options[[...list.querySelectorAll('.inline-choice')].indexOf(button)];const text=Object.hasOwn(p.playerMessages||{},option?.id)?p.playerMessages[option.id]:option?.label;draft.replaceChildren(el('small','chat-draft-label',text==null?'답장 없이 넘기기 · 확정 전':'보낼 답장 · 확정 전'));if(text!=null)draft.append(bubble({text},true));draft.hidden=false;}
  for(const button of list.querySelectorAll('.inline-choice')){button.addEventListener('click',()=>preview(button));if(button.getAttribute('aria-pressed')==='true')preview(button);}
 }
 function decorateSeats(body,list,choice){
@@ -130,7 +130,9 @@ function decorate({dialog,body,list,choice}){
 function reward({dialog,body,presentation,attributes,optionId,label}){
  const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports'].includes(kind)?kind:'';
  if(kind==='chat'){
-  const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation),bubble({text:presentation.playerMessages?.[optionId]||label},true));
+  const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation));
+  const outgoing=Object.hasOwn(presentation.playerMessages||{},optionId)?presentation.playerMessages[optionId]:label;
+  receipt.append(outgoing==null?el('small','chat-no-reply','답장하지 않고 대화를 마쳤습니다'):bubble({text:outgoing},true));
   for(const response of presentation.responses?.[optionId]||[])receipt.append(bubble(response));
   body.prepend(receipt);
  }

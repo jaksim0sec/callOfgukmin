@@ -28,7 +28,27 @@ try{
   await seed('classroom:friend-chat');assert.match(await page.locator('.chat-thread').textContent(),/도윤/);assert.equal(await page.locator('.chat-bubble').count()>=2,true);await page.locator('#dailyChoiceBody .inline-choice').nth(1).click();assert.match(await page.locator('.chat-draft').textContent(),/바통/);assert.notEqual((await page.locator('.chat-draft .chat-bubble').textContent()).trim(),(await page.locator('#dailyChoiceBody .inline-choice').nth(1).locator('.daily-choice-title').textContent()).trim(),'spoken player line differs from option description');await inside();await page.screenshot({path:`${artifacts}/${name}-chat.png`});await page.locator('#dailyPaperConfirm').click();await page.locator('.chat-receipt').waitFor();assert.match(await page.locator('.chat-receipt').textContent(),/준비해서 갈게/);const saved=await page.evaluate(()=>GukminGame.session.snapshot().persona.stats.athletics);await page.reload();await page.locator('.chat-receipt').waitFor();assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.stats.athletics),saved);
   await seed('classroom:sports');assert.equal(await page.locator('.sports-oval svg .sports-ring').count(),3);assert.match(await page.locator('.sports-scoreboard strong').textContent(),/운동회/);assert.match(await page.locator('.sports-scoreboard').textContent(),/반/);await page.locator('#dailyChoiceBody .inline-choice').first().click();await inside();await page.screenshot({path:`${artifacts}/${name}-sports.png`});await page.locator('#dailyPaperConfirm').click();await page.locator('.sports-running').waitFor();assert.match(await page.locator('.sports-running .sports-our-lane').textContent(),/우리 \d+반/);assert.equal(await page.locator('.sports-runner-layer .sports-avatar.is-ours').count(),1,'our runner is above all tracks');assert.equal(await page.locator('.race-finish').count(),0,'rank is not revealed at the starting gun');await page.locator('.race-finish').waitFor({timeout:10000});assert.match(await page.locator('.race-finish').textContent(),/우리 \d+반 · 1등/);assert.equal(await page.locator('.sports-standing.is-ours').count(),1,'our ranking is highlighted');assert.ok(await page.locator('.daily-reward-tokens .metric-relations').count()>0,'winning includes a real relations bonus');assert.equal(await page.evaluate(()=>GukminGame.session.snapshot().persona.attributes.sportsPlace),1);await page.screenshot({path:`${artifacts}/${name}-finish.png`});await page.reload();await page.locator('.race-finish').waitFor();assert.match(await page.locator('.race-finish').textContent(),/1등/);
   const beforeRead=await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));await page.goto(base+'html/waiting.html');await page.locator('#enterGame').waitFor();await page.goto(base+'html/result.html');await page.locator('#skipResultRecap').click();await page.locator('#resultFacts').waitFor();assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),beforeRead,'reading waiting/result must not rewrite classroom progress');
-  for(const id of ['middle:group-chat','high:first-day']){await seed(id);assert.equal(await page.locator('.chat-thread').count(),1);await inside();}
+  for(const id of ['middle:group-chat','high:first-day']){
+   await seed(id);
+   assert.equal(await page.locator('.chat-thread').count(),1);await inside();
+   const first=page.locator('#dailyChoiceBody .inline-choice').first();
+   await first.click();
+   const transcript=await page.evaluate(()=>{
+    const c=GukminGame.session.snapshot().choice;
+    const key=c.options[0].id;
+    return {incoming:c.presentation.messages.map(x=>x.text).join(' '),outgoing:c.presentation.playerMessages[key],caption:c.options[0].label};
+   });
+   assert.ok(transcript.outgoing&&transcript.incoming.length>10,'chat has a context-specific outgoing line');
+   assert.notEqual(transcript.caption,transcript.outgoing,'option label is not an actual message');
+   assert.equal(await page.locator('.chat-draft .chat-bubble').textContent(),transcript.outgoing);
+   await page.locator('#dailyPaperConfirm').click();await page.locator('.chat-receipt').waitFor();
+   assert.equal(await page.locator('.chat-receipt .chat-message.is-mine .chat-bubble').textContent(),transcript.outgoing);
+  }
+  await seed('middle:group-chat');
+  await page.locator('#dailyChoiceBody .inline-choice').last().click();
+  assert.equal(await page.locator('.chat-draft .chat-bubble').count(),0,'choosing rest does not invent a sent message');
+  await page.locator('#dailyPaperConfirm').click();await page.locator('.chat-receipt').waitFor();
+  assert.equal(await page.locator('.chat-receipt .chat-message.is-mine').count(),0,'silence stays silent after confirmation');
   assert.equal(await page.evaluate(()=>localStorage.getItem('callOfgukmin__playable__v1')),'classroom-legacy');assert.deepEqual(errors,[]);console.log('PASS classroom '+name+': selectable desks, recurring friend chat, stat updates, race result, frozen reward restore and existing chats');await context.close();
  }
 }finally{await browser?.close();server.kill();}

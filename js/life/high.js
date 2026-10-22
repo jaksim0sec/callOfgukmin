@@ -477,17 +477,51 @@ global.GukminDirector.register({
   const recovery=stages.choices.find(c=>c.id==='high:recover');
   recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   const sceneChat=stages.choices.find(c=>c.id==='high:first-day');
+  const chatScripts={
+   'high:first-day':{
+    messages:[{sender:'재호',text:'첫 수행 공지 누가 정리 가능? 제출 날짜 헷갈림 ㅋㅋ',time:'오후 8:32'},
+      {sender:'하린',text:'나도 날짜가 두 개로 보임. 원문 확인해야 될 듯',time:'오후 8:34'}],
+    options:[
+     {label:'시간표와 제출일을 확인해 공유한다',say:'원문이랑 시간표 대조해보고 날짜 정리해서 올릴게',reply:'ㅇㅋ 정리되면 공지에 고정할게',detail:'공지와 시간표를 대조해 날짜를 정리했다. 반 친구들에게 도움을 주었지만 다른 준비에 쓸 시간은 줄었다.'},
+     {label:'친구와 함께 공지의 차이를 확인한다',say:'내가 못 본 공지도 있을 듯. 같이 원문 확인해볼 사람?',reply:'나 지금 가능 ㅋㅋ 같이 찾아보자',detail:'하린과 공지 원문을 비교하며 적응할 친구를 찾았다.'},
+     {label:'내 일정부터 정리하고 답장은 미룬다',say:null,reply:null,detail:'단톡에는 바로 답하지 않았다. 시간표와 준비물을 정리한 뒤 친구들의 안내를 다시 읽었다.'}
+    ]
+   },
+   'first-science':{
+    messages:[{sender:'세아',text:'첫 탐구 과제 풀이들 가정이 다 다른데? 이대로 합쳐도 됨?',time:'오후 8:32'},
+      {sender:'하린',text:'기록에 빈칸도 있음;; 누가 맡아서 확인해줄래?',time:'오후 8:34'}],
+    options:[
+     {label:'세아와 풀이 가정을 비교해 역할을 나눈다',say:'가정부터 맞추자. 세아는 자료 비교, 난 차이 정리할게',reply:'ㅇㅋ 내가 풀이 모아볼게',detail:'세아와 풀이 가정을 비교하고 각자 할 일을 나눴다. 조원들에게 설명하느라 방과 후 시간이 줄었다.'},
+     {label:'공동 기록의 누락과 계산을 직접 검토한다',say:'내가 공통 기록 빈칸이랑 계산부터 체크할게. 파일 보내줘',reply:'오케이 여기 파일. 난 다음 문제 볼게',detail:'공동 기록의 빈칸과 계산 오류를 직접 검토했다. 세아는 다음 문제를 맡았다.'}
+    ]
+   },
+   'first-social':{
+    messages:[{sender:'하린',text:'첫 수행 조 편성 공지랑 제출 날짜 다르게 적힌 거 맞지?',time:'오후 8:32'},
+      {sender:'재호',text:'어 그거 나도 봄. 어떤 게 진짜 일정임?',time:'오후 8:34'}],
+    options:[
+     {label:'하린과 근거를 확인해 조원에게 설명한다',say:'둘 다 캡처해놨는데 쌤한테 확인받고 조에 알려주자',reply:'ㅇㅋ 내가 질문 정리해놓을게',detail:'하린과 교사의 안내를 확인해 조원들에게 정확한 날짜를 공유했다. 전체 조를 돕느라 복습 시간이 줄었다.'},
+     {label:'하린과 제출 기준을 확인해 내 일정을 정한다',say:'난 제출 기준이랑 날짜부터 확인해서 내 일정 정리할게',reply:'ㅇㅇ 나도 시간표 다시 체크해봄',detail:'제출 기준과 시간표를 대조해 내 계획을 세웠다. 다른 조원의 안내는 맡지 않았다.'}
+    ]
+   },
+   'first-ordinary':{
+    messages:[{sender:'재호',text:'야 첫 수행 마감 내일이라는데? 아직 시작도 안 했잖아 ㅋㅋ',time:'오후 8:32'},
+      {sender:'하린',text:'엥? 공지 원문 진짜 그 날짜임? 확인한 사람?',time:'오후 8:34'}],
+    options:[
+     {label:'재호와 공지 원문을 다시 확인한다',say:'그거 날짜 잘못 본 거 아닐까? 나 공지 원문 다시 찾아볼게',reply:'아 내가 날짜 착각했네 ㅋㅋ ㄳ',detail:'재호와 공지를 다시 확인해 잘못된 날짜를 바로잡았다. 덕분에 누락된 준비물도 찾았다.'},
+     {label:'내 시간표를 확인하고 단톡 알림을 끈다',say:null,reply:null,detail:'단톡에서는 추가 답을 하지 않고 시간표에 실제 제출일을 적었다. 재호의 메시지는 나중에 확인했다.'}
+    ]
+   }
+  };
   for(const script of [sceneChat,...sceneChat.variants]){
-   const science=script.id.includes('science'),foreign=script.id.includes('social');
-   script.presentation={type:'chat',room:'고등학교 · 학급 단톡',messages:[
-    {sender:science?'세아':foreign?'하린':'재호',text:science?'야 첫 탐구 과제 가정부터 다 다르던데? ㅋㅋ 이대로 냄?':foreign?'공지에 적힌 날짜랑 쌤이 말한 날짜 다른 거 아님?':'야 수행 마감 내일임? 우리 아직 시작도 안 했는데 ㅋㅋ',time:'오후 8:32'},
-    {sender:'하린',text:'나도 그거 봄 ㅋㅋ 원문 확인한 사람 있음?',time:'오후 8:34'}
-   ]};
-   const sender=science?'세아':foreign?'하린':'재호';
-   const answers=science?['ㅇㅋㅇㅋ 그럼 가정부터 맞춰 보자','좋아 내가 계산 다시 봄']:foreign?['ㅇㅋ 그럼 질문 모아서 쌤한테 물어보자','ㅇㅇ 원문 기준으로 적어둠']:['아 ㅋㅋ 날짜 잘못 봤네 ㄳ','ㅇㅋ 내일 확인하자'];
-   const outgoing=science?['잠깐 내가 가정부터 정리해볼게','자료 나한테 보내봐. 계산 다시 할게']:foreign?['날짜부터 쌤한테 확인하고 공지하자','원문 링크 가져왔음. 이거부터 보자']:['내가 공지 다시 확인해봄 ㅋㅋ','낼 학교에서 같이 물어보자'];
-   script.presentation.playerMessages=Object.fromEntries(script.options.map((option,i)=>[option.id,outgoing[i]||'나도 확인해볼게']));
-   script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender:!science&&!foreign&&i===1?'알림':sender,text:answers[i]||'ㅇㅋ 확인함'}]]));
+   const data=chatScripts[script.id];
+   if(!data||data.options.length!==script.options.length)throw new Error('고교 채팅 대본/선택 연결 오류: '+script.id);
+   script.presentation={type:'chat',room:'고등학교 · 학급 단톡',messages:data.messages,playerMessages:{},responses:{}};
+   script.options.forEach((option,i)=>{
+    const line=data.options[i];
+    option.label=line.label;option.result.history.detail=line.detail;
+    script.presentation.playerMessages[option.id]=line.say;
+    script.presentation.responses[option.id]=line.reply?[{sender:data.messages[0].sender,text:line.reply}]:[];
+   });
   }
   return {...stages,attributes:{projectStyle:{label:'수행평가 해결 방식',hidden:true},projectResult:{label:'수행평가 결과',hidden:true},projectObligation:{label:'다음 부탁',hidden:true},habitStage:{label:'쉬는 시간의 선택',hidden:true},highPeer:{label:'고등학교 첫 인연',hidden:true},preExamStrategy:{label:'수능 이전 준비 전략',hidden:true},electiveRoute:{label:'고교 과목 및 탐구 선택 경로',hidden:true}}};
  }

@@ -1,3 +1,11 @@
+## 2026-10-22 채팅 대사·시험 UI 릴리스 (현행)
+
+중고교 채팅 presentation은 각각 `messages`, `playerMessages[optionId]`, `responses[optionId]`로 분리된다. 값이 `null`이면 답장하지 않은 선택이고 확인/보상 창에서 사용자 발신 말풍선을 생성하지 않는다. 예전 동결 선택에서 발신 맵이 없으면 option.label을 대체 텍스트로 사용한다. 효과는 기존 `option.result`를 단 한 번 정산한다.
+
+공통 `GukminGrades.assessment`의 effort=2는 성적 20 이상에서 더 이상 -1 하락하지 않는다. 브라우저 시험지의 예상 변화는 공통 `GukminEffects.apply`로 산출되며 평가 점수·압박을 별도 엔진으로 재계산하지 않는다. 고교 원서의 유형 토큰은 `option.school.kind`를 읽는 출력 전용이다.
+
+`exam-chat-20261022`은 진입 HTML·boot 서비스 워커·PWA 검증의 동일 릴리스 태그다. 과거 저장 키나 이벤트 ID는 바꾸지 않으며 신규/동결 대본을 구별한다. 증분 검증은 `tests/smoke.mjs`, `tests/systems.mjs`, `tests/browser.mjs`, `tests/classroom.mjs` 및 기존 저장/PWA에 따른다.
+
 ## 2026-10-22 진행 타이밍·교실 경기 재현성 (현행)
 
 사용자 설정 키 `callOfgukmin__controls__v1`는 변경하지 않는다. 값이 없는 새 플레이는 manual을 사용하고, 저장된 auto/manual은 그대로 우선한다. 수동 진행은 `nextMoment`가 무소식 턴만 건너뛰고 표시 가능한 소식 또는 선택에서 멈춘다. 자동은 실제 `Timeline.step`마다 소식이면 3000ms, 일반이면 450ms 뒤 재개하고, `choiceProgressFill`을 그 대기 시간과 현재 타임라인 진행 비율 사이에서만 보간한다. 저장 턴은 보간 중 변경하지 않는다.

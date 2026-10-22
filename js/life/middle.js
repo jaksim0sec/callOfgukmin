@@ -238,18 +238,61 @@ global.GukminDirector.register({
   const recovery=stages.choices.find(c=>c.id==='middle:recover');
   recovery.options.push({id:'ignore',label:'그냥 넘기고 하던 일정을 계속한다',result:{effects:{},history:{title:'회복을 미뤘다',detail:'이번에는 일정을 바꾸지 않았다. 쌓인 부담도 그대로 남았다.'}}});
   const sceneChat=stages.choices.find(c=>c.id==='middle:group-chat');
+  // Each chat variant owns its own situation, replies, outcome and actual player words.
+  // Do not rewrite all variants from an index-based, generic canned conversation.
+  const chatScripts={
+   'middle:group-chat':{
+    room:'중학교 · 수행평가 단톡',
+    messages:[{sender:'민서',text:'수행평가 제출 어디로 하는 거임? 공지 다시 봐도 안 보이는데 ㅠ',time:'오후 8:32'},
+     {sender:'지우',text:'나도 그거 찾는 중;; 아는 사람?',time:'오후 8:34'}],
+    options:[
+     {label:'내가 확인한 제출 안내를 보내 준다',say:'내가 아까 제출했는데 공지 맨 아래 안내 있음. 캡처 보내줄게',reply:'헐 ㄳㄳ 진짜 못 봤다 ㅋㅋ',detail:'네가 보낸 공지 캡처를 보고 친구들이 제출 위치를 확인했다. 복습을 조금 늦게 시작했다.'},
+     {label:'친구들과 제출 순서를 같이 확인한다',say:'링크랑 파일 형식 같이 확인해볼 사람? 나도 한번 더 볼게',reply:'ㅇㅋ 지금 확인할게. 파일 형식부터 보자',detail:'파일 형식과 마감 시간을 같이 확인했다. 친구들을 도우느라 저녁 시간이 줄었다.'},
+     {label:'늦은 시간이라 답장하지 않고 쉰다',say:null,reply:null,detail:'그날 밤에는 답장하지 않았다. 다음날 친구들은 제출 방법을 서로 확인했다. 너는 충분히 쉬었다.'}
+    ]
+   },
+   'ordinary-chat':{
+    room:'중학교 · 수행평가 단톡',
+    messages:[{sender:'민서',text:'얘들아 수행 어디에 제출하는 거임? 링크 나만 안 보임? ㅋㅋ',time:'오후 8:32'},
+     {sender:'지우',text:'읽씹 뭐냐 ㅋㅋ 나도 모르겠는데 아는 사람?',time:'오후 8:34'}],
+    options:[
+     {label:'제출 위치와 파일 형식을 알려 준다',say:'공지 아래 제출 안내 있음. 파일 형식도 적혀 있어 내가 캡처 보낼게',reply:'아 거기였어? ㅋㅋ 고마워',detail:'제출 위치와 파일 형식을 캡처해 공유했다. 친구들이 마감 전에 제출했고, 너도 내 과제의 누락을 다시 살폈다.'},
+     {label:'친구들과 공지 내용을 다시 확인한다',say:'나도 지금 다시 볼게. 제출 링크랑 마감 시간 같이 확인할 사람?',reply:'ㅇㅋㅇㅋ 나 파일 형식 확인해봄',detail:'친구들이 공지의 제출 링크와 형식을 나눠 확인했다. 질문이 이어져 네 복습 시간은 줄었다.'},
+     {label:'지금은 답장하지 않고 쉬기로 한다',say:null,reply:null,detail:'휴대폰을 뒤집어 놓고 잠들었다. 친구들은 밤새 제출 링크를 찾았고 너는 다음날 학교에서 뒤늦게 소식을 들었다.'}
+    ]
+   },
+   'science-chat':{
+    room:'중학교 · 탐구 동아리 단톡',
+    messages:[{sender:'민호',text:'야 이 보고서 계산 왜 안 맞음? 이 표 단위 맞는 거 같은데;;',time:'오후 8:32'},
+     {sender:'지우',text:'두 번째 줄만 값이 튀는 듯? 단위 환산 다시 봐봐',time:'오후 8:34'}],
+    options:[
+     {label:'단위 환산 과정을 직접 검산해 보내 준다',say:'2번째 줄에서 단위 바뀐 거 같은데? 내가 계산 다시 해볼게',reply:'와 이거였네 ㅋㅋ 덕분에 찾음',detail:'단위 환산에서 빠진 값을 찾아 민호에게 알려 줬다. 검산하며 너도 내 보고서의 실수를 잡았다.'},
+     {label:'내일 실험실에서 같이 검산하기로 한다',say:'지금은 파일 못 열어봄 ㅠ 낼 실험실에서 같이 확인하자',reply:'ㅇㅋㅇㅋ 낼 쉬는 시간에 보자',detail:'민호와 다음날 실험실에서 단위 환산을 다시 확인하기로 했다. 그날 밤 준비는 각자 끝냈다.'},
+     {label:'내 보고서를 먼저 마무리한다',say:null,reply:null,detail:'민호의 질문에는 다른 친구가 늦게 답했다. 너는 자신의 계산을 마무리했다.'}
+    ]
+   },
+   'former-class-president':{
+    room:'중학교 · 수행평가 단톡',
+    messages:[{sender:'민서',text:'제출 기준 잘못 공유된 거 같은데? 파일 형식 다들 다르게 알고 있음',time:'오후 8:32'},
+     {sender:'지우',text:'너 예전에 반장이었잖아. 공지 정리 좀 같이 해줄 수 있음?',time:'오후 8:34'}],
+    options:[
+     {label:'제출 기준을 다시 확인하고 정리한다',say:'잠깐 원문 확인하고 기준 정리해서 올릴게. 다 같이 한번씩 봐줘',reply:'ㅇㅋ 내가 파일 형식 체크할게',detail:'친구들에게 원문을 다시 확인하도록 역할을 나눴다. 다만 질문을 받느라 네 숙제는 늦어졌다.'},
+     {label:'공식 공지만 공유하고 내 숙제를 끝낸다',say:'공식 공지 링크 여기 있음. 나는 숙제부터 끝내야 해서 각자 확인 부탁 ㅠ',reply:'ㅇㅋ 링크 고마워. 우리는 다시 볼게',detail:'원문 링크를 공유한 뒤 내 과제를 마무리했다. 일부는 더 자세한 정리를 기대했지만 이번에는 스스로 선을 정했다.'},
+     {label:'지금 학급 임원에게 공동 정리를 제안한다',say:'이번 반장한테도 물어볼게. 나랑 역할 나눠서 공지 정리하자',reply:'ㅇㅋ 반장이랑 내가 제출 형식 확인해볼게',detail:'지금 학급 임원과 제출 안내 확인을 나눠 맡았다. 예전 경험을 살리되 혼자 모든 책임을 떠안지 않았다.'}
+    ]
+   }
+  };
   for(const script of [sceneChat,...sceneChat.variants]){
-   const science=script.id.includes('science'),sender=science?'민호':'민서';
-   script.presentation={type:'chat',room:'중학교 · 반 단톡',messages:[
-    {sender,text:science?'야 이 계산 왜 안 맞음? 단위 맞게 한 거 같은데;;':'얘들아 수행 제출 어케 하는 거임? ㅋㅋ',time:'오후 8:32'},
-    {sender:'지우',text:science?'이거 사진 2번째 줄부터 이상한 듯?':'읽씹 뭐냐 ㅋㅋ 아는 사람 없음?',time:'오후 8:34'}
-   ]};
-   const labels=science?['단위 계산부터 다시 봐봐. 내가 체크해줌','낼 실험실에서 같이 보자 ㄱㄱ','난 내 거 먼저 끝내고 답할게']:['정답 말고 방법 알려줄게','지금 같이 확인할 사람? ㄱㄱ','난 먼저 잠. 낼 학교에서 얘기하자'];
-   const replies=science?['아 단위 바꾼 데서 틀렸네 ㅋㅋ ㄳ','ㅇㅋㅇㅋ 계산기 챙겨감','ㅇㅋ 먼저 해']:['아 ㅇㅋ 이해함 고마워','ㅇㅋㅇㅋ 나 지금 가능','굿밤 ㅋㅋ'];
-   script.options.forEach((option,i)=>{option.label=labels[i]||option.label;});
-   const outgoing=science?['나도 이거 계산해봤는데 단위부터 틀린 듯','지금은 바쁨 ㅠ 낼 실험실에서 같이 보자','나 내 거 먼저 마무리하고 볼게']:['그거 정답 말고 푸는 법 알려줄까?','나 지금 가능함 ㅋㅋ 같이 볼 사람?','나 자러 간다 낼 학교에서 알려줄게'];
-   script.presentation.playerMessages=Object.fromEntries(script.options.map((option,i)=>[option.id,outgoing[i]||'ㅇㅋ 확인해볼게']));
-   script.presentation.responses=Object.fromEntries(script.options.map((option,i)=>[option.id,[{sender,text:replies[i]||'ㅇㅋ 확인함'}]]));
+   const details=chatScripts[script.id];
+   if(!details||details.options.length!==script.options.length)throw new Error('중학교 채팅 대본/선택 연결 오류: '+script.id);
+   script.presentation={type:'chat',room:details.room,messages:details.messages,playerMessages:{},responses:{}};
+   script.options.forEach((option,i)=>{
+    const line=details.options[i];
+    option.label=line.label;
+    option.result.history.detail=line.detail;
+    script.presentation.playerMessages[option.id]=line.say;
+    script.presentation.responses[option.id]=line.reply?[{sender:details.messages[0].sender,text:line.reply}]:[];
+   });
   }
   return {...stages,attributes:{
    schoolTrack:{label:'고교 유형',hidden:true},

@@ -27,10 +27,33 @@ function effectList(option,person,turn){
  return span;
 }
 
+// One opposing progress surface for the actual projected exam score and pressure.
+function examBalance(option,person,metric,turn,effort,label){
+ const before=person.stats,after=global.GukminEffects.apply(person,option.result,{turn,source:'estimate'}).stats;
+ const score=(after[metric]||0)-(before[metric]||0),pressure=(after.stress||0)-(before.stress||0);
+ const magnitude=Math.abs(score)+Math.abs(pressure);
+ const split=magnitude?Math.round(Math.abs(score)/magnitude*100):50;
+ const signed=n=>(n>0?'+':'')+n.toLocaleString('ko-KR',{maximumFractionDigits:1});
+ const wrap=make('div','exam-tradeoff');
+ const head=make('div','exam-tradeoff-head');
+ head.append(make('small','exam-tradeoff-effort','노력 '+Math.max(0,effort)+' / 4'),
+  make('small','exam-tradeoff-caption','예상 성적 변화 vs 압박'));
+ const labels=make('div','exam-tradeoff-labels');
+ labels.append(make('strong',score<0?'is-loss':'is-gain',label+' '+signed(score)),
+  make('strong',pressure<0?'is-relief':'is-cost','압박 '+signed(pressure)));
+ const bar=make('div','exam-tradeoff-track');bar.setAttribute('role','img');
+ bar.setAttribute('aria-label',label+' '+signed(score)+', 압박 '+signed(pressure)+', 노력 '+effort+'단계');
+ bar.style.setProperty('--tradeoff-split',split+'%');
+ if(score<0)bar.classList.add('has-score-loss');
+ if(pressure<0)bar.classList.add('has-relief');
+ bar.append(make('span','exam-tradeoff-divider'));
+ wrap.append(head,labels,bar);
+ return wrap;
+}
 function appliedSources(person,result){
  const strip=make('div','assessment-sources');
  const calculated=result.assessment?global.GukminGrades.assessment(person,result.assessment):null;
- if(calculated?.applied.length){strip.append(make('small','','이번 평가에 적용됨'));for(const source of calculated.applied){const row=make('span','assessment-source');row.append(source.trait?global.GukminStatus.traitToken(source.trait):global.GukminStatus.createToken({label:source.label,icon:'school'}),make('span','',source.text));strip.append(row);}}
+ if(calculated?.applied.length){strip.append(make('small','','이번 평가에 적용됨'));for(const source of calculated.applied){const row=make('span','assessment-source');row.append(make('strong','assessment-source-name',source.trait||source.label),make('span','',source.text));strip.append(row);}}
  if(calculated?.limited)strip.append(make('small','','범위 제한 반영 · 실제 성적 변화 '+calculated.actual.toLocaleString('ko-KR',{maximumFractionDigits:1})));
  return strip;
 }
@@ -175,7 +198,7 @@ function present({choice,resolve,root}){
   formTop.append(banner,meta,make('p','life-paper-instruction',
    '※ 다음 상황을 읽고, 자신의 생활 여건에 맞는 준비 전략 하나를 고르시오.'));
   const fit=person.phase==='high'?global.GukminGrades.schoolFit(person):null;
-  if(fit){const note=make('div','exam-fit-note');note.append(global.GukminStatus.createToken({label:fit.matched?'적성 방패':'심화 수업 부담',icon:fit.matched?'check':'school'}),make('span','',fit.matched?fit.trait+' 특성으로 추가 압박 면제 · 기본 비용 완화':fit.trait+' 특성이 없으면 같은 성적에 압박 +2'));formTop.append(note);}
+  if(fit){const note=make('div','exam-fit-note');note.append(make('strong','',fit.matched?'적성 방패':'심화 수업 부담'),make('span','',fit.matched?fit.trait+' 특성으로 추가 압박 면제 · 기본 비용 완화':fit.trait+' 특성이 없으면 같은 성적에 압박 +2'));formTop.append(note);}
   question.append(make('b','life-paper-question-number','1.'),
    make('p','',p.annual?'한 학년 전체의 준비 강도를 선택하시오.':'이번 시험에 투자할 노력 수준을 선택하시오.'));
  }
@@ -193,7 +216,13 @@ function present({choice,resolve,root}){
    row.append(crest);
   }else row.append(letter);
   const copy=make('span','life-answer-copy');
-  copy.append(make('strong','',option.label));
+  if(isSchool){
+   const titleline=make('span','life-school-titleline');titleline.append(make('strong','',option.label));
+   const kind=option.school?.kind;
+   const kinds={science:'과학고',gifted:'영재학교',foreign:'외고',international:'국제고'};
+   if(kinds[kind])titleline.append(global.GukminStatus.createToken({type:'context',label:kinds[kind],icon:'graduation',classes:'life-school-highlight school-highlight-'+kind}));
+   copy.append(titleline);
+  }else copy.append(make('strong','',option.label));
   if(isSchool){
    copy.append(make('small','life-school-type',option.school?.typeLabel||'지역 학교 후보'));
    const school=option.school||{};
@@ -222,7 +251,8 @@ function present({choice,resolve,root}){
     copy.append(make('small','life-school-lock','지원 기준 미달'));
    }
   }
-  const outcome=make('span',isSchool?'school-option-outcome':'exam-option-outcome');outcome.append(effectList(option,person,choice.openedAt||0));copy.append(outcome);
+  if(isSchool){const outcome=make('span','school-option-outcome');outcome.append(effectList(option,person,choice.openedAt||0));copy.append(outcome);}
+  else copy.append(examBalance(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),p.category==='mock'?(String(p.term||'').includes('수능')?'수능':'모의고사'):'내신'));
   if(isSchool&&['science','gifted'].includes(option.school?.kind))copy.append(make('small','','학교 시작 효과 · 모의고사 1등급 · 이후 준비에 따라 변동'));
   if(!isSchool&&global.GukminGrades){
    const metric=p.category==='mock'?'exam':'schoolScore';
@@ -234,7 +264,7 @@ function present({choice,resolve,root}){
       {turn:candidate.simulation?.turn||0,source:'estimate'});
     const before=global.GukminGrades.report(metric,current,p.stage||'high').display;
     const after=global.GukminGrades.report(metric,projection.stats[metric],p.stage||'high').display;
-    outcome.append(make('small','life-paper-estimate',before+' → '+after+' (예상)'));
+    copy.append(make('small','life-paper-estimate',before+' → '+after+' (예상)'));
    }
   }
   if(!isSchool)copy.append(appliedSources(person,option.result));

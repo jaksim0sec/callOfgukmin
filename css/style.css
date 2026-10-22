@@ -1653,3 +1653,50 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
  .paper-choice-sheet .daily-reward-token.token-trait,
  .paper-choice-sheet .daily-paper-impact.token-trait{animation:none!important}
 }
+
+/* High-school admission: emphasize special tracks inside the existing application row. */
+.life-school-titleline{display:flex;align-items:center;flex-wrap:wrap;gap:.38rem .5rem;min-width:0}
+.life-school-titleline>strong{min-width:0}
+.life-school-highlight.token-icon-pill{flex:none;display:inline-flex;align-items:center;
+ padding:.22rem .52rem;border-radius:100rem;font-size:.66rem;font-weight:850;
+ border:.07rem solid currentColor;white-space:nowrap;letter-spacing:0}
+.life-school-highlight .token-icon{width:.83rem;height:.83rem}
+.school-highlight-science{color:#236e91!important;background:#e6f5fc!important}
+.school-highlight-foreign{color:#794c91!important;background:#f5e9fa!important}
+.school-highlight-gifted{color:#7f611a!important;background:#fff2c9!important}
+.school-highlight-international{color:#286f69!important;background:#e4f5ef!important}
+.life-answer:has(.life-school-highlight){border-left:.18rem solid #80719b}
+.life-answer:has(.school-highlight-science){border-left-color:#4087ad}
+.life-answer:has(.school-highlight-foreign){border-left-color:#9257ac}
+.life-answer:has(.school-highlight-gifted){border-left-color:#b49a49}
+.life-answer:has(.school-highlight-international){border-left-color:#469c8f}
+
+/* Exam answers: a single opposing ratio bar replaces the outcome-token list.
+   The ratio is a comparison of the two absolute, projected change magnitudes,
+   not a claimed probability or an invented grade percentage. */
+.life-exam-paper .exam-tradeoff{display:flex;flex-direction:column;gap:.28rem;margin-top:.5rem;min-width:0}
+.exam-tradeoff-head,.exam-tradeoff-labels{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.exam-tradeoff-head small{font-size:.63rem;font-weight:720;color:#665f61}
+.exam-tradeoff-effort{color:#4b4252!important}
+.exam-tradeoff-labels strong{font-size:.75rem;letter-spacing:-.015em;font-weight:830}
+.exam-tradeoff-labels strong:first-child{color:#2f7768}
+.exam-tradeoff-labels strong:last-child{color:#a65c3f;text-align:right}
+.exam-tradeoff-labels .is-loss{color:#a35153!important}
+.exam-tradeoff-labels .is-relief{color:#427f70!important}
+.exam-tradeoff-track{height:.55rem;width:100%;border-radius:100rem;position:relative;
+ background:linear-gradient(to right,#4a967b 0 var(--tradeoff-split),#bc7552 var(--tradeoff-split) 100%);
+ box-shadow:inset 0 0 0 .05rem #5149411f;overflow:hidden}
+.exam-tradeoff-track.has-score-loss{background:linear-gradient(to right,#b56968 0 var(--tradeoff-split),#bc7552 var(--tradeoff-split) 100%)}
+.exam-tradeoff-track.has-relief{background:linear-gradient(to right,#4a967b 0 var(--tradeoff-split),#7c9f86 var(--tradeoff-split) 100%)}
+.exam-tradeoff-track.has-score-loss.has-relief{background:linear-gradient(to right,#b56968 0 var(--tradeoff-split),#7c9f86 var(--tradeoff-split) 100%)}
+.exam-tradeoff-divider{position:absolute;left:var(--tradeoff-split);height:100%;width:.12rem;
+ background:#fefbf4;transform:translateX(-50%);box-shadow:0 0 .1rem #524d49}
+.life-exam-paper .assessment-source-name{font-size:.68rem;color:#6b548b;white-space:nowrap}
+.life-exam-paper .assessment-source{align-items:baseline}
+.life-exam-paper .exam-fit-note strong{font-size:.7rem;white-space:nowrap;color:#65507f}
+@media(max-width:47.5em){
+ .life-school-titleline{gap:.28rem}
+ .life-school-highlight.token-icon-pill{font-size:.61rem;padding:.2rem .4rem}
+ .exam-tradeoff-head small{font-size:.6rem}
+ .exam-tradeoff-labels strong{font-size:.7rem}
+}

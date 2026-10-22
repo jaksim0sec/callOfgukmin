@@ -536,6 +536,7 @@ try{
  await recallPage.locator('#skipFictionNotice').click();
   await recallPage.locator('#birthIntro').waitFor({state:'visible'});
  await recallPage.locator('#birthIntroSkip').evaluate(button=>button.click());
+ await recallPage.waitForFunction(()=>!!window.GukminGame?.session);
  await recallPage.evaluate(()=>GukminGame.session.run());
  await recallPage.locator('#resumeDailyChoice').waitFor({state:'visible'});
  assert.equal(await recallPage.locator('#dailyChoiceDialog').isVisible(),false);
@@ -563,8 +564,9 @@ try{
  await examPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
  await examPage.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
  assert.equal(await examPage.locator('#lifeDecisionDialog .life-answer').count(),5);
- assert.ok(await examPage.locator('#lifeDecisionDialog .life-effects .token[data-token-kind=metric]').count()>0,
- 'exam forecast uses the same semantic token DOM, not independent text badges');
+ assert.equal(await examPage.locator('#lifeDecisionDialog .exam-tradeoff-track').count(),5,'each exam option has one tradeoff progress');
+ assert.equal(await examPage.locator('#lifeDecisionDialog .exam-option-outcome .token').count(),0,'exam effects use no metric pills');
+ assert.match(await examPage.locator('#lifeDecisionDialog .exam-tradeoff-track').first().getAttribute('aria-label'),/압박/);
  await examPage.locator('#lifeDecisionDialog .life-answer').nth(2).click();
  await examPage.locator('#lifeDecisionDialog .life-submit').click();
  assert.equal(await examPage.locator('#lifeDecisionDialog[open]').count(),0);
@@ -579,6 +581,7 @@ try{
   const p=await returningPage(ctx),pageErrors=[];
   p.on('pageerror',e=>pageErrors.push(e.message));
   await p.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+  await p.evaluate(()=>GukminGame.session.run());
   let start=await p.evaluate(()=>GukminGame.session.snapshot());
   assert.equal(start.persona.age,3);
   const walk=async target=>p.evaluate(target=>{
@@ -611,6 +614,7 @@ try{
   assert.equal(examState.age,14);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
   assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),5);
+  assert.equal(await p.locator('#lifeDecisionDialog .exam-tradeoff-track').count(),5);
   assert.equal(await p.locator('#lifeDecisionDialog .life-paper-identification').count(),1);
   assert.equal(await p.locator('#lifeDecisionDialog .life-paper-question').count(),1);
   const box=await p.locator('#lifeDecisionDialog').boundingBox();
@@ -628,6 +632,7 @@ try{
   assert.equal(schoolState.age,16);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
   assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),4);
+  assert.ok(await p.locator('#lifeDecisionDialog .life-school-highlight').count()>=1,'science or specialized schools are visibly labeled');
   const schoolBounds=await p.locator('#lifeDecisionDialog').boundingBox();
   assert.ok(schoolBounds&&schoolBounds.x>=-1&&schoolBounds.x+schoolBounds.width<=viewport.width+1,'school within screen');
   await p.locator('#lifeDecisionDialog .life-answer').first().click();

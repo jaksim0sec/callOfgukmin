@@ -436,6 +436,44 @@ test('school entry inherits the last middle score once; science mock starts belo
  assert.equal(c.GukminDirector.create({persona:saved}).snapshot().persona.stats.exam,21);
  const normal=c.GukminGrades.highEntry(p,'general');assert.equal(normal.exam,16);assert.equal(normal.schoolScore,21);
 });
+test('high-score exam plans do not have a strictly dominated same-loss alternative',()=>{
+ const {c,P}=setup(),p=P.generate();p.phase='high';p.age=18;p.stats.exam=22;p.stats.stress=6;
+ const lite=c.GukminGrades.assessment(p,{metric:'exam',effort:1});
+ const steady=c.GukminGrades.assessment(p,{metric:'exam',effort:2});
+ assert.ok(lite.stats.exam<0&&lite.stats.stress<0);
+ assert.equal(steady.stats.exam,0,'maintaining an existing high score should not decline as much as light revision');
+ assert.ok(steady.stats.stress>lite.stats.stress,'less recovery costs more pressure but preserves grade');
+});
+test('all chat variations pair their situation with a deliberate outgoing reply and outcome',()=>{
+ const {c,P}=setup();
+ for(const phase of ['middle','high']){
+  const p=P.generate();p.phase=phase;p.age=phase==='middle'?15:17;
+  const pack=c.GukminDirector.content(p);
+  const choice=pack.choices.find(x=>x.id===(phase==='middle'?'middle:group-chat':'high:first-day'));
+  assert.ok(choice);
+  const scripts=[choice,...choice.variants];
+  assert.equal(scripts.length,4,'base scene plus three specific variants');
+  for(const script of scripts){
+   const pr=script.presentation;
+   assert.equal(pr.type,'chat');assert.ok(pr.messages.length>=2,script.id);
+   assert.deepEqual(Object.keys(pr.playerMessages).sort(),script.options.map(o=>o.id).sort(),script.id+' reply keys');
+   assert.deepEqual(Object.keys(pr.responses).sort(),script.options.map(o=>o.id).sort(),script.id+' response keys');
+   for(const option of script.options){
+    const line=pr.playerMessages[option.id],response=pr.responses[option.id];
+    assert.ok(line===null||typeof line==='string'&&line.length>=10,script.id+' '+option.id);
+    assert.notEqual(line,option.label,'choice rationale is never copied verbatim into a chat bubble');
+    assert.ok(Array.isArray(response),script.id+' '+option.id);
+    assert.equal(response.length===0,line===null,'silence means no outgoing bubble and no immediate reply');
+    assert.ok(option.result.history.detail.length>=15,'choice has a contextual follow-up');
+   }
+  }
+ }
+ const middle=c.GukminDirector.content(Object.assign(P.generate(),{phase:'middle',age:15})).choices.find(x=>x.id==='middle:group-chat').variants.find(x=>x.id==='ordinary-chat');
+ assert.match(middle.presentation.messages[0].text,/제출/);
+ assert.match(middle.presentation.playerMessages[middle.options[0].id],/제출/);
+ assert.match(middle.presentation.playerMessages[middle.options[1].id],/링크|마감/);
+ assert.equal(middle.presentation.playerMessages[middle.options[2].id],null,'rest is actual silence');
+});
 test('every exam strategy offers a different tangible tradeoff and academic history matters',()=>{
  const {c,P}=setup(),Story=c.GukminStory,Effects=c.GukminEffects;
  const choice=Story.exam('high',17,2,70,'학기 모의고사','mock').choice;
