@@ -1399,3 +1399,10 @@ dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){ani
 @media(prefers-reduced-motion:reduce){body,.primary-action,.secondary-action,.confirm,.life-submit,.store-buy,.inline-choice,.preview-btn,.mini-reset{transition:none}.home-lobby,.result-screen,.fiction-notice-text,dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){animation:none}html.page-leaving body{opacity:1}:is(.primary-action,.secondary-action,.confirm,.life-submit,.store-buy,.inline-choice,.preview-btn,.mini-reset):not(:disabled):active{transform:none}}
 
 .home-brand img{width:1.75rem;height:1.75rem;border-radius:.5rem}.home-masthead .text-action{flex:none}
+
+/* Lead with the game's goal and a short campaign route. */
+.home-hero{padding:2.5rem 0 2rem}.home-hero h1{font-weight:800;line-height:1.15;letter-spacing:-.06em}.home-president{color:#e4cc91}.home-hero h1 em{font-weight:700;color:#f1eaf6}.home-hero p{font-size:.85rem;color:#c0b0ca}
+.home-route{display:flex;justify-content:center;align-items:center;gap:1.5rem;flex-wrap:wrap;list-style:none;padding:0;margin:1.5rem 0 0}
+.home-route li{display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:#dacbe5}.home-route li+li::before{content:'›';color:#786480;margin-right:.6rem;font-size:1rem}.home-route li>span{display:grid;place-items:center;width:1.6rem;height:1.6rem;border:.0625rem solid #9c83b1;border-radius:50%;background:#35283f;color:#ddc8ee;font-size:.7rem;font-weight:800}.home-route .is-future{color:#d5bf8d}.home-route .is-future>span{border-color:#9d865c;background:#352e22;color:#e4cc91}.home-route small{font-size:.55rem;color:#978b78}
+.home-start-card{border-radius:.75rem;border-top:.22rem solid #bba1d2}.home-start-form .primary-action{font-size:.95rem;font-weight:850;letter-spacing:.015em}
+@media(max-width:40em){.home-hero h1{font-size:clamp(2.5rem,10vw,3.5rem)}.home-route{gap:.6rem;margin-top:1.25rem}.home-route li{font-size:.6rem;gap:.3rem}.home-route li+li::before{margin-right:.15rem}.home-route li>span{width:1.35rem;height:1.35rem;font-size:.6rem}.home-route small{font-size:.5rem}.home-start-form .primary-action{font-size:.85rem}}

@@ -126,7 +126,7 @@ function mount(root,navigate,content=global.GukminContent){
   }
   text('chapter',snapshot?.runtime.contentId===global.GukminSystemDemo.contentId
     ? '검증 · '+snapshot.runtime.turn+'턴' : lifeTitle(persona));
-  $('chapter').parentElement.hidden=$('chapter').textContent===label;
+  $('chapter').parentElement.hidden=!verificationMode;
   const host=$('playerPosterMount'),data=posterData(persona);
   if(!host.firstElementChild)host.append(global.GukminPoster.create(data));
   else global.GukminPoster.update(host.firstElementChild,data);

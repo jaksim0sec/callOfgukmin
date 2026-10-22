@@ -28,8 +28,8 @@ try{
   await page.locator('#lifeHeadline').waitFor();
   assert.equal(await page.locator('.profile #age').count(),0,'profile must not duplicate the age');
   assert.equal(await page.locator('.profile #job').count(),0,'role belongs beside the sheet headline');
-  assert.equal(await page.locator('.life-heading #lifeHeadline + #job').textContent(),'아기');
-  assert.equal(await page.locator('#lifeHeadline').textContent(),'0살');
+  assert.equal(await page.locator('.life-heading #job').count(),0,'life heading contains one useful age or school-year label');
+  assert.equal(await page.locator('#lifeHeadline').textContent(),'0살');assert.equal(await page.locator('.chapter-meta').isVisible(),false,'ordinary play has no duplicate stage metadata');
   for(const [phase,age,expected] of [['elementary',7,'초등학교 1학년'],['middle',14,'중학교 2학년'],['high',17,'고등학교 2학년']]){
    await page.evaluate(({phase,age})=>GukminGame.session.apply('entry-'+phase,{effects:{attributes:{phase,age,job:{elementary:'초등학생',middle:'중학생',high:'고등학생'}[phase]},schools:[{id:phase,kind:phase,name:'검증 학교 '+phase,status:'enrolled'}]}}),{phase,age});
    assert.equal(await page.locator('#lifeHeadline').textContent(),expected);
@@ -524,7 +524,7 @@ try{
  await recallPage.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
  recallPage.once('dialog',dialog=>dialog.accept());
  await recallPage.locator('#rerollPersona').click();
- assert.match(await recallPage.locator('#enterGame').textContent(),/첫 장 시작하기/);
+ assert.match(await recallPage.locator('#enterGame').textContent(),/새 게임 시작/);
  await recallPage.locator('#enterGame').click();
  await recallPage.locator('#skipFictionNotice').click();
   await recallPage.locator('#birthIntro').waitFor({state:'visible'});
