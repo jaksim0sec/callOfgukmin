@@ -17,7 +17,7 @@ if(entry.includes('id="app"'))errors.push('Old fetch app host still present');
 const ids={
  waiting:['fictionNotice','fictionNoticeText','fictionProgress','skipFictionNotice','personaGender','personaName','randomName','waitingName','waitingBackground','waitingPosterMount','enterGame','rerollPersona','previewResult','birthIntro','birthIntroName','birthIntroBackground','birthIntroFamily','birthIntroTrait','birthIntroSkip','birthIntroCountdown','birthIntroProgress'],
  game:['historyNext','historyNextLabel','playbackControls','playbackMode','playbackPause','historyAdvance','playbackHelp','gameTutorial','tutorialTitle','tutorialBody','tutorialArt','tutorialStep','tutorialDots','hideTutorial','tutorialNext','tutorialBack','tutorialSkip','pressureAdvice','adviceContinue','adviceStore','advicePressureProgress','adviceIllnessProgress','playerPosterMount','attributeRows','schools','gaugesList','traits','log','resetGame','previewSchool','previewParty','choiceDialog','modalTitle','options','summary','confirm','close','choiceTiming','nextChoiceProgress','currentChoice','lifeHeadline','sheetToggle','sheetContent','lifeSheet','startSystemDemo','advanceTurn','lifeDecisionDialog','dailyChoiceDialog','dailyChoiceBody','dailyModalHeading','dailyPaperGrip','dailyPaperConfirm','resumeDailyChoice'],
- result:['resultPosterMount','resultBack','resultTitle','resultSummary','resultFacts','shareResult','downloadResult']
+ result:['replayGame','resultDetails','resultPosterMount','resultBack','resultTitle','resultSummary','resultFacts','shareResult','downloadResult']
 };
 for(const screen of screens){
  const path='html/'+screen+'.html';

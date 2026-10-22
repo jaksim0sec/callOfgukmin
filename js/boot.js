@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='life-flow-20261022';
+const RELEASE='lobby-results-20261022';
 const screen=document.body.dataset.screen;
 const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let navigating=false;
@@ -41,7 +41,7 @@ function initWaiting(){
    const saved=progressed(s);
    start.textContent=saved?'이어서 플레이하기 →':'새 게임 시작 →';
    document.getElementById('homeStartTitle').textContent=saved?'이어지는 당신의 이야기.':'당신의 이름을 남기세요.';
-   reroll.textContent=saved?'새 인생 시작하기 (기록 초기화)':'출생 배경 다시 뽑기 ↻';
+   reroll.textContent=saved?'새 인생 · 기록 초기화':'배경 다시 뽑기 ↻';
    note.textContent=saved?'진행 중인 인생과 선택 기록이 저장되어 있습니다.':'현재 출생~대학 입시까지 플레이 가능 · 사회·정치 콘텐츠 준비 중';
    renderPoster(mount,s,saved?'진행 중':'출생');
  }

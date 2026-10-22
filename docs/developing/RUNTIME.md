@@ -1,3 +1,7 @@
+## 2026-10-22 홈·결과 접근성 릴리스 (현행)
+
+릴리스는 `lobby-results-20261022`이다. 결과의 `replayGame` 클릭만 초기화 확인 후 `Player.generate/save`와 대기 화면 이동을 수행한다. 결과 읽기/공유/이미지/대기 이동은 읽기 전용이고 기존 저장 키·레거시 저장·타임라인은 그대로 유지한다. 회고와 1080×1350 이미지 합성 경로는 변경하지 않는다.
+
 ## 2026-10-22 단일 진행 동작·계주 재생 (현행)
 
 historyAdvance는 기록 시트의 고정 하단 영역이다. 일반 다음/historyNext, 일상 resumeDailyChoice, 한방 resumeMajorChoice 중 현재 상태에 맞는 하나만 보이며 이름과 스타일은 같다. dailyChoice는 남은 자동 열기 시간을 onCountdown으로 보내고 game.renderTiming만 자동 선택 열기 막대를 갱신한다. 논리 턴 진행도를 같은 막대로 재사용하지 않는다. 이 콜백은 정산/렌더러 전체를 재호출하지 않는다. 기존 타이머의 정지/재개와5초 정책은 유지한다. transient lifeNewsToast와 복수의 한방 열기/결과 다음 링크는 제거했다.

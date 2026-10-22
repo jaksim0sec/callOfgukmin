@@ -8,15 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icons/favicon.ico?v=life-flow-20261022" sizes="16x16 32x32 48x48">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=life-flow-20261022">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=life-flow-20261022">
+  <link rel="icon" href="assets/icons/favicon.ico?v=lobby-results-20261022" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=lobby-results-20261022">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=lobby-results-20261022">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="국민의 부름">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="css/style.css?v=life-flow-20261022">
+  <link rel="stylesheet" href="css/style.css?v=lobby-results-20261022">
 </head>
 <body data-screen="result">
 <main class="result-screen" aria-label="게임 결과 화면">
@@ -24,6 +24,11 @@
     <span class="view-eyebrow" id="resultEyebrow">A LIFE, IN CHOICES</span>
     <h1 id="resultTitle">당신이 남긴 이야기</h1>
     <p class="result-lede" id="resultSummary"></p>
+    <section class="result-share-toolbar" aria-label="기록 공유">
+      <span>나의 기록 한 장</span><div class="result-share-actions"><button type="button" id="shareResult" class="screen-action is-secondary">공유하기 ↗</button><button type="button" id="downloadResult" class="screen-action is-secondary">이미지 저장 ↓</button></div>
+    </section>
+    <p id="shareNotice" class="view-note" role="status" aria-live="polite"></p>
+    <div class="result-overview">
     <section id="resultShareCard" class="result-share-card" aria-label="인스타그램 4:5 인생 기록 카드">
       <div class="result-card-top">
         <div class="result-visual"><div class="result-poster-mount" id="resultPosterMount" aria-label="인물 포스터"></div></div>
@@ -33,12 +38,13 @@
       <div id="resultTraits" class="result-traits" aria-label="함께한 특성"></div>
       <footer>국민의 부름 <span>THE PEOPLE CALL · 나의 선택으로 남은 삶</span></footer>
     </section>
+    <details id="resultDetails" class="result-details"><summary>상세 기록 <span aria-hidden="true">⌄</span></summary>
     <details id="resultTraitArchive" class="result-trait-archive" hidden><summary>함께한 모든 특성</summary><div id="resultAllTraits" class="result-traits"></div></details>
     <div id="resultFacts" class="result-facts"></div>
     <section class="result-memories"><h2>기억할 순간들</h2><ol id="resultHistory"></ol></section>
-    <div class="result-share-actions"><button type="button" id="shareResult" class="primary-action">기록 공유 ↗</button><button type="button" id="downloadResult" class="secondary-action">이미지 저장 ↓</button></div>
-    <p id="shareNotice" class="view-note" role="status" aria-live="polite"></p>
-    <button type="button" id="resultBack" class="primary-action">대기 화면으로 돌아가기 <span aria-hidden="true">↩</span></button>
+    </details>
+    </div>
+    <nav class="page-play-actions" aria-label="플레이 이동"><button type="button" id="replayGame" class="screen-action is-primary">다시 플레이 ↻</button><button type="button" id="resultBack" class="screen-action is-secondary">← 대기 화면</button></nav>
   </div>
 </main>
 <dialog id="resultRecap" class="result-recap" aria-label="지나온 인생 돌아보기">
@@ -46,25 +52,25 @@
   <div id="resultRecapFrame" class="recap-frame"><small id="recapAge"></small><h2 id="recapTitle"></h2><p id="recapDetail"></p></div>
   <div class="recap-footer"><span id="recapCount"></span><progress id="recapProgress" max="1" value="0" aria-label="인생 회고 진행"></progress></div>
 </dialog>
-<script src="js/poster.js?v=life-flow-20261022" defer></script>
-<script src="js/data/base.js?v=life-flow-20261022" defer></script>
+<script src="js/poster.js?v=lobby-results-20261022" defer></script>
+<script src="js/data/base.js?v=lobby-results-20261022" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/schools.js?v=life-flow-20261022" defer></script>
-<script src="js/data/grades.js?v=life-flow-20261022" defer></script>
-<script src="js/playerState.js?v=life-flow-20261022" defer></script>
-<script src="js/effects.js?v=life-flow-20261022" defer></script>
+<script src="js/data/schools.js?v=lobby-results-20261022" defer></script>
+<script src="js/data/grades.js?v=lobby-results-20261022" defer></script>
+<script src="js/playerState.js?v=lobby-results-20261022" defer></script>
+<script src="js/effects.js?v=lobby-results-20261022" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=life-flow-20261022" defer></script>
-<script src="js/life/story.js?v=life-flow-20261022" defer></script>
-<script src="js/life/infant.js?v=life-flow-20261022" defer></script>
-<script src="js/life/elementary.js?v=life-flow-20261022" defer></script>
-<script src="js/life/middle.js?v=life-flow-20261022" defer></script>
-<script src="js/life/high.js?v=life-flow-20261022" defer></script>
+<script src="js/life/director.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/story.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/infant.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/elementary.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/middle.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/high.js?v=lobby-results-20261022" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=life-flow-20261022" defer></script>
-<script src="js/game.js?v=life-flow-20261022" defer></script>
-<script src="js/majorView.js?v=life-flow-20261022" defer></script>
-<script src="js/resultView.js?v=life-flow-20261022" defer></script>
-<script src="js/boot.js?v=life-flow-20261022" defer></script>
+<script src="js/statusView.js?v=lobby-results-20261022" defer></script>
+<script src="js/game.js?v=lobby-results-20261022" defer></script>
+<script src="js/majorView.js?v=lobby-results-20261022" defer></script>
+<script src="js/resultView.js?v=lobby-results-20261022" defer></script>
+<script src="js/boot.js?v=lobby-results-20261022" defer></script>
 </body>
 </html>

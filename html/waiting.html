@@ -8,15 +8,15 @@
   <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Do+Hyeon&display=swap" rel="stylesheet">
   <base href="../">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="assets/icons/favicon.ico?v=life-flow-20261022" sizes="16x16 32x32 48x48">
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=life-flow-20261022">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=life-flow-20261022">
+  <link rel="icon" href="assets/icons/favicon.ico?v=lobby-results-20261022" sizes="16x16 32x32 48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png?v=lobby-results-20261022">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/icons/favicon-16.png?v=lobby-results-20261022">
   <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
   <meta name="apple-mobile-web-app-title" content="국민의 부름">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="stylesheet" href="css/style.css?v=life-flow-20261022">
+  <link rel="stylesheet" href="css/style.css?v=lobby-results-20261022">
 </head>
 <body data-screen="waiting">
 <main class="waiting-screen home-lobby" aria-label="게임 대기 화면">
@@ -37,11 +37,11 @@
         <p id="nameHint">1~12자 · 출생 전에 이름을 정할 수 있습니다.</p>
       </div>
       <div class="waiting-identity" aria-label="이번 인생의 출생 정보"><span class="waiting-identity-name" id="waitingName">이름을 준비하는 중</span><span class="waiting-identity-detail" id="waitingBackground"></span></div>
-      <div class="waiting-actions"><button type="button" id="enterGame" class="primary-action">새 게임 시작 →</button><button type="button" id="rerollPersona" class="secondary-action">출생 배경 다시 뽑기 ↻</button></div>
     </div>
     <div class="home-preview"><div class="waiting-poster-mount" id="waitingPosterMount" aria-label="현재 인물 포스터"></div><span>선택에 따라 달라지는 나</span></div>
   </section>
   <footer class="home-footer"><p id="waitingSaveNotice" class="view-note">현재 출생~대학 입시까지 플레이 가능 · 사회·정치 콘텐츠 준비 중</p><span>같은 출발은 없다. 어떤 선택으로 올라설 것인가.</span></footer>
+  <nav class="page-play-actions waiting-actions" aria-label="게임 시작"><button type="button" id="enterGame" class="screen-action is-primary">새 게임 시작 →</button><button type="button" id="rerollPersona" class="screen-action is-secondary">배경 다시 뽑기 ↻</button></nav>
 </main>
 <dialog id="fictionNotice" class="fiction-notice" aria-label="게임 안내" aria-describedby="fictionNoticeText">
   <div id="fictionNoticeText" class="fiction-notice-text">
@@ -74,24 +74,24 @@
     <button type="button" class="birth-intro-skip" id="birthIntroSkip">출생하기 <span aria-hidden="true">↗</span></button>
   </div>
 </section>
-<script src="js/poster.js?v=life-flow-20261022" defer></script>
-<script src="js/data/base.js?v=life-flow-20261022" defer></script>
+<script src="js/poster.js?v=lobby-results-20261022" defer></script>
+<script src="js/data/base.js?v=lobby-results-20261022" defer></script>
 <script src="js/data/regions.js?v=pressure-care-20261021" defer></script>
-<script src="js/data/schools.js?v=life-flow-20261022" defer></script>
-<script src="js/data/grades.js?v=life-flow-20261022" defer></script>
-<script src="js/playerState.js?v=life-flow-20261022" defer></script>
-<script src="js/effects.js?v=life-flow-20261022" defer></script>
+<script src="js/data/schools.js?v=lobby-results-20261022" defer></script>
+<script src="js/data/grades.js?v=lobby-results-20261022" defer></script>
+<script src="js/playerState.js?v=lobby-results-20261022" defer></script>
+<script src="js/effects.js?v=lobby-results-20261022" defer></script>
 <script src="js/timeline.js?v=pressure-care-20261021" defer></script>
-<script src="js/life/director.js?v=life-flow-20261022" defer></script>
-<script src="js/life/story.js?v=life-flow-20261022" defer></script>
-<script src="js/life/infant.js?v=life-flow-20261022" defer></script>
-<script src="js/life/elementary.js?v=life-flow-20261022" defer></script>
-<script src="js/life/middle.js?v=life-flow-20261022" defer></script>
-<script src="js/life/high.js?v=life-flow-20261022" defer></script>
+<script src="js/life/director.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/story.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/infant.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/elementary.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/middle.js?v=lobby-results-20261022" defer></script>
+<script src="js/life/high.js?v=lobby-results-20261022" defer></script>
 <script src="js/systemDemo.js?v=pressure-care-20261021" defer></script>
-<script src="js/statusView.js?v=life-flow-20261022" defer></script>
-<script src="js/game.js?v=life-flow-20261022" defer></script>
-<script src="js/majorView.js?v=life-flow-20261022" defer></script>
-<script src="js/boot.js?v=life-flow-20261022" defer></script>
+<script src="js/statusView.js?v=lobby-results-20261022" defer></script>
+<script src="js/game.js?v=lobby-results-20261022" defer></script>
+<script src="js/majorView.js?v=lobby-results-20261022" defer></script>
+<script src="js/boot.js?v=lobby-results-20261022" defer></script>
 </body>
 </html>

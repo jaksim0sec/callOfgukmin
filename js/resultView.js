@@ -1,4 +1,4 @@
-/* Read-only life recap and 4:5 result composition. Game state remains owned by the runtime. */
+/* Life recap and sharing are read-only. Only the explicit replay action starts a new save. */
 (function(global){'use strict';
 function isDeceased(persona){const a=persona.attributes||{};return !!a.lifeEndReason||a.retryEndReason==='정신병 한계';}
 function memoriesOf(history){
@@ -54,6 +54,10 @@ function mount({navigate,renderPoster}){
  const shareText=['국민의 부름',title,summary,...facts.map(([k,v])=>k+' · '+v)].join('\n');
  const link=new URL('index.html',document.baseURI).href;
  if(!saved){document.getElementById('resultShareCard').hidden=true;document.querySelector('.result-screen').classList.add('is-empty');document.getElementById('resultFacts').hidden=true;document.getElementById('resultTraits').hidden=true;document.querySelector('.result-visual').hidden=true;document.querySelector('.result-memories').hidden=true;}
+ const details=document.getElementById('resultDetails');
+ details.open=!!saved&&global.matchMedia('(min-width:48em)').matches;
+ details.hidden=!saved;
+ document.getElementById('replayGame').textContent=saved?'다시 플레이 ↻':'새 게임 시작 →';
  document.getElementById('shareResult').disabled=!saved;
  document.getElementById('downloadResult').disabled=!saved;
  document.getElementById('shareResult').addEventListener('click',async()=>{
@@ -71,6 +75,11 @@ function mount({navigate,renderPoster}){
  });
  if(saved)recap(persona,memories,title);
  document.getElementById('resultBack').addEventListener('click',()=>navigate('waiting'));
+ document.getElementById('replayGame').addEventListener('click',()=>{
+  if(saved&&!global.confirm('현재 인생의 기록을 초기화하고 다시 플레이할까요?'))return;
+  if(!P.save(P.generate())){put('shareNotice','새 인생을 저장하지 못했습니다. 다시 시도해 주세요.');return;}
+  navigate('waiting');
+ });
 }
 function recap(persona,memories,title){
  const dialog=document.getElementById('resultRecap');
@@ -88,7 +97,7 @@ function recap(persona,memories,title){
   timer=global.setTimeout(()=>{index++;if(index<frames.length)show();else finish();},reduce?700:frame.scene==='death'?2600:1900);
  };
  document.getElementById('skipResultRecap').addEventListener('click',()=>{if(frames[index]?.scene==='death'){global.clearTimeout(timer);index++;show();}else finish();});dialog.addEventListener('cancel',event=>{event.preventDefault();finish();});
- dialog.addEventListener('close',()=>{global.clearTimeout(timer);document.getElementById('downloadResult').focus({preventScroll:true});});
+ dialog.addEventListener('close',()=>{global.clearTimeout(timer);document.getElementById('replayGame').focus({preventScroll:true});});
  global.addEventListener('pagehide',()=>global.clearTimeout(timer),{once:true});dialog.showModal();show();
 }
 async function compose({persona,title,reason,offer,schools,traits}){
