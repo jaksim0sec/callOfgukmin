@@ -1364,3 +1364,38 @@ body[data-screen=waiting]{background:radial-gradient(ellipse at 75% 20%,#6150702
 @media(max-height:40em){.family-support{padding:.6rem .8rem}.family-support p{margin:.35rem 0;font-size:.72rem}}
 
 .career-deadline{display:block;padding:.65rem .8rem;margin-top:.65rem;border-left:.2rem solid #b64e5d;background:#f3dfe2;color:#8e283b!important;word-break:keep-all;overflow-wrap:anywhere;font-size:.8rem;line-height:1.7;font-weight:750}
+
+/* A single cover and a compact identity card replace the old split hero. */
+.home-lobby.waiting-screen{display:block;justify-items:normal;align-items:normal;width:min(100%,64rem);max-width:64rem;min-height:100dvh;padding:1.5rem 2rem 2rem}
+.home-masthead{width:100%;min-width:0;gap:1rem;display:flex;align-items:center;justify-content:space-between;padding:.3rem 0 1.1rem;border-bottom:.0625rem solid #c7b5db26}
+.home-brand{display:inline-flex;align-items:center;gap:.6rem;white-space:nowrap;font-size:1.15rem;letter-spacing:-.055em;font-weight:750}.home-masthead .text-action{font-size:.75rem;text-decoration:none;color:#b5a5c1}
+.home-hero{text-align:center;padding:3.5rem 0 2.5rem}.home-hero .view-eyebrow{font-size:.65rem;letter-spacing:.2em;color:#b4a1c5}
+.home-hero h1{margin:1rem 0 1.25rem;font-size:clamp(2.6rem,5.6vw,4.5rem);line-height:1.25;letter-spacing:-.065em;font-weight:600;word-break:keep-all}
+.home-hero h1 em{font-style:normal;color:#c7b5db;font-weight:500}.home-hero p{margin:0;color:#a99bb4;font-size:.85rem;line-height:1.9}
+.home-start-card{display:grid;grid-template-columns:minmax(0,1fr) 12rem;align-items:center;gap:3rem;width:min(100%,44rem);margin:0 auto;padding:2rem;border:.0625rem solid #c7b5db36;border-radius:1.4rem;background:linear-gradient(140deg,#282130,#17151d);box-shadow:0 1.5rem 4rem #0003}
+.home-start-form{min-width:0}.home-card-kicker{font-size:.65rem;color:#aa94ba;letter-spacing:.1em}.home-start-form h2{margin:.5rem 0 1.4rem;font-size:1.45rem;letter-spacing:-.045em;font-weight:650;word-break:keep-all}
+.home-start-form .waiting-name-field{margin:0}.home-start-form .waiting-name-field label{text-align:left;font-size:.7rem;color:#b9abc4;margin-bottom:.5rem}
+.home-start-form .waiting-name-field p{text-align:left;font-size:.6rem;color:#8f819a;margin:.5rem 0}
+.home-start-form .name-input-row{padding:.3rem .5rem .3rem .6rem;gap:.35rem;border-color:#b3a0c45c;border-radius:.7rem;background:#10101580}
+.home-start-form .name-input-row input{font-size:1.1rem;width:100%;min-width:0}.home-start-form .name-input-row select{font-size:.65rem;padding:.4rem .2rem;background:#302639;color:#dccde8;border:.0625rem solid #655171;border-radius:.35rem}
+.home-start-form #randomName{padding:.3rem;font-size:1.3rem;text-decoration:none;color:#c7b5db}
+.home-start-form .waiting-identity{padding:.6rem 0 .8rem;margin:.3rem 0 .6rem;border:0;background:none;display:block}
+.home-start-form .waiting-identity-detail{font-size:.65rem;color:#a99bb3;line-height:1.7}
+.home-start-form .waiting-actions{display:grid;gap:.5rem}.home-start-form .primary-action{display:flex;justify-content:center;min-height:3rem;background:#c7b5db;color:#241b2c;font-size:.85rem;box-shadow:0 .3rem 1rem #c7b5db15}
+.home-start-form .secondary-action{min-height:2.5rem;padding:.5rem;background:transparent;border-color:#c7b5db26;color:#aa9bb5;font-size:.7rem}
+.home-preview{display:flex;flex-direction:column;align-items:center;gap:.8rem;min-width:0}.home-preview .waiting-poster-mount{width:100%;max-width:none;min-height:0;height:auto;aspect-ratio:2/3;transform:rotate(3deg);border-radius:.75rem;box-shadow:0 .9rem 2rem #0006}.home-preview>span{font-size:.6rem;color:#90809d}
+.home-footer{text-align:center;padding:1.5rem 0 0}.home-footer .view-note{margin:0 auto .6rem;max-width:36rem;font-size:.65rem;color:#8f809b}.home-footer>span{font-size:.6rem;color:#65586f}
+.fiction-timing{position:absolute;left:50%;bottom:2rem;transform:translateX(-50%);width:12rem;text-align:center;color:#706b72;font-size:.6rem}.fiction-timing progress{height:.15rem;margin-top:.65rem;background:#ffffff18}.fiction-timing progress::-webkit-progress-value{background:#b6a7c2}.fiction-timing progress::-moz-progress-bar{background:#b6a7c2}
+.fiction-notice-text{animation:notice-arrive .7s ease-out}.home-lobby,.result-screen{animation:surface-arrive .38s ease-out}
+body{transition:opacity .16s ease-out}html.page-leaving body{opacity:0}
+.primary-action,.secondary-action,.confirm,.life-submit,.store-buy,.inline-choice,.preview-btn,.mini-reset{transition:background-color .18s,color .18s,border-color .18s,box-shadow .18s,transform .16s ease-out}
+:is(.primary-action,.secondary-action,.confirm,.life-submit,.store-buy,.inline-choice,.preview-btn,.mini-reset):not(:disabled):active{transform:translateY(.08rem) scale(.985)}
+dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){animation:notice-arrive .2s ease-out}
+@media(hover:hover){.home-start-form .primary-action:hover{transform:translateY(-.1rem);background:#d8c9e8;box-shadow:0 .5rem 1.5rem #c7b5db25}.home-masthead .text-action:hover{color:#f1e8f7}.home-start-form .secondary-action:hover{border-color:#b8a3c8;color:#ede0f6}}
+@media(max-width:40em){.home-lobby.waiting-screen{padding:1.1rem 1rem 1.5rem}.home-hero{padding:2.5rem 0 2rem}.home-hero h1{font-size:clamp(2rem,7.6vw,3.2rem)}.home-hero p{font-size:.75rem}.home-start-card{grid-template-columns:minmax(0,1fr) 6.5rem;gap:1.2rem;padding:1.2rem;border-radius:1rem}.home-start-form h2{font-size:1.15rem;margin-bottom:1rem}.home-preview>span{display:none}.home-start-form .name-input-row{flex-wrap:wrap}.home-start-form .name-input-row input{flex:1 1 4rem}.home-start-form .name-input-row select{max-width:4rem}.home-start-form .primary-action{font-size:.75rem;padding:.65rem .5rem;min-height:2.8rem}.home-start-form .waiting-name-field p{line-height:1.6}.fiction-timing{bottom:5rem}}
+@media(max-width:23em){.home-start-card{grid-template-columns:minmax(0,1fr);gap:1rem}.home-preview{display:none}.home-hero h1{font-size:2rem}}
+@keyframes notice-arrive{from{opacity:0}to{opacity:1}}
+@keyframes surface-arrive{from{opacity:0;translate:0 .5rem}to{opacity:1;translate:0 0}}
+@media(prefers-reduced-motion:reduce){body,.primary-action,.secondary-action,.confirm,.life-submit,.store-buy,.inline-choice,.preview-btn,.mini-reset{transition:none}.home-lobby,.result-screen,.fiction-notice-text,dialog[open]:not(.paper-choice-sheet):not(.school-dialog):not(.result-recap){animation:none}html.page-leaving body{opacity:1}:is(.primary-action,.secondary-action,.confirm,.life-submit,.store-buy,.inline-choice,.preview-btn,.mini-reset):not(:disabled):active{transform:none}}
+
+.home-brand img{width:1.75rem;height:1.75rem;border-radius:.5rem}.home-masthead .text-action{flex:none}

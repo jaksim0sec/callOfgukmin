@@ -524,7 +524,7 @@ try{
  await recallPage.goto(base+'html/waiting.html',{waitUntil:'domcontentloaded'});
  recallPage.once('dialog',dialog=>dialog.accept());
  await recallPage.locator('#rerollPersona').click();
- assert.match(await recallPage.locator('#enterGame').textContent(),/인생 시작하기/);
+ assert.match(await recallPage.locator('#enterGame').textContent(),/첫 장 시작하기/);
  await recallPage.locator('#enterGame').click();
  await recallPage.locator('#skipFictionNotice').click();
   await recallPage.locator('#birthIntro').waitFor({state:'visible'});

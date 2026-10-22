@@ -4,13 +4,19 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='family-retake-20261022';
+const RELEASE='lobby-motion-20261022';
 const screen=document.body.dataset.screen;
+const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
+let navigating=false;
+global.addEventListener('pageshow',event=>{if(!event.persisted)return;navigating=false;document.documentElement.classList.remove('page-leaving');});
 function navigate(name){
  if(!PAGES.has(name))throw new Error('Unknown page: '+name);
  const url=new URL('html/'+name+'.html',document.baseURI);
  url.searchParams.set('v',RELEASE);
- global.location.assign(url.href);
+ if(navigating)return;
+ navigating=true;
+ if(reduceMotion)global.location.assign(url.href);
+ else{document.documentElement.classList.add('page-leaving');global.setTimeout(()=>global.location.assign(url.href),160);}
 }
 function renderPoster(target,persona,stage,phrase){
  const data=global.GukminGame.posterData(persona);
@@ -33,9 +39,10 @@ function initWaiting(){
    hint.textContent=progressed(s)?'진행 중인 인생의 이름은 유지됩니다.':'1~12자 · 출생 전에 이름을 정할 수 있습니다.';
    background.textContent=s.birthplace+' · '+s.family;
    const saved=progressed(s);
-   start.textContent=saved?'이어서 플레이하기 →':'인생 시작하기 →';
-   reroll.textContent=saved?'새 인생 시작하기 (기록 초기화)':'새 출생 배경 뽑기';
-   note.textContent=saved?'기존 선택 기록을 이어서 플레이 중. 새 스토리를 처음부터 경험하려면 새 인생을 시작해.':'현재 출생~대학 입시까지 플레이 가능 · 사회·정치 콘텐츠 준비 중';
+   start.textContent=saved?'이어서 플레이하기 →':'나의 첫 장 시작하기 →';
+   document.getElementById('homeStartTitle').textContent=saved?'이어지는 당신의 이야기.':'당신의 이름으로.';
+   reroll.textContent=saved?'새 인생 시작하기 (기록 초기화)':'출생 배경 다시 뽑기 ↻';
+   note.textContent=saved?'진행 중인 인생과 선택 기록이 저장되어 있습니다.':'현재 출생~대학 입시까지 플레이 가능 · 사회·정치 콘텐츠 준비 중';
    renderPoster(mount,s,saved?'진행 중':'출생');
  }
  // Intro is a view-only transition. It does not advance turns or reroll the persona.
@@ -49,7 +56,7 @@ function initWaiting(){
  const skip=document.getElementById('birthIntroSkip');
  const introTrait=document.getElementById('birthIntroTrait');
  const fiction=document.getElementById('fictionNotice'),fictionSkip=document.getElementById('skipFictionNotice');
- let fictionTimer=null;
+ let fictionTimer=null,fictionTick=null,fictionClosing=false;
  let introActive=false,introTimer=null,introTick=null;
  function finishIntro(){
    if(!introActive)return;
@@ -70,13 +77,18 @@ function initWaiting(){
    const persona=player.ensure();
    if(progressed(persona)){navigate('game');return;}
    document.querySelector('.waiting-screen').inert=true;
-   fiction.showModal();fictionSkip.focus({preventScroll:true});
-   fictionTimer=global.setTimeout(continueToBirth,8000);
+   fictionClosing=false;fiction.showModal();fictionSkip.focus({preventScroll:true});
+   const duration=7000,start=global.performance.now(),progress=document.getElementById('fictionProgress');
+   progress.value=0;
+   fictionTick=global.setInterval(()=>{progress.value=Math.min(1,(global.performance.now()-start)/duration);},100);
+   fictionTimer=global.setTimeout(continueToBirth,duration);
  }
- function continueToBirth(){
+ async function continueToBirth(){
+   if(!fiction.open||fictionClosing)return;
+   fictionClosing=true;global.clearTimeout(fictionTimer);global.clearInterval(fictionTick);document.getElementById('fictionProgress').value=1;
+   if(!reduceMotion)await fiction.animate([{opacity:1},{opacity:0}],{duration:240,easing:'ease-in'}).finished.catch(()=>{});
    if(!fiction.open)return;
-   global.clearTimeout(fictionTimer);fiction.close();
-   showBirth(player.ensure());
+   fiction.close();fictionClosing=false;showBirth(player.ensure());
  }
  function showBirth(persona){
    introName.textContent=persona.name;
@@ -110,7 +122,8 @@ function initWaiting(){
  skip.addEventListener('click',finishIntro);
  fictionSkip.addEventListener('click',continueToBirth);
  fiction.addEventListener('cancel',event=>{event.preventDefault();continueToBirth();});
- global.addEventListener('pagehide',()=>{global.clearTimeout(fictionTimer);global.clearTimeout(introTimer);global.clearInterval(introTick);},{once:true});
+ global.addEventListener('pagehide',()=>{global.clearTimeout(fictionTimer);global.clearInterval(fictionTick);global.clearTimeout(introTimer);global.clearInterval(introTick);});
+ global.addEventListener('pageshow',event=>{if(!event.persisted)return;fictionClosing=false;introActive=false;if(fiction.open)fiction.close();intro.hidden=true;intro.classList.remove('is-playing');document.querySelector('.home-lobby').inert=false;show();});
  document.addEventListener('keydown',event=>{
    if(introActive&&event.key==='Escape'){event.preventDefault();finishIntro();}
  });
