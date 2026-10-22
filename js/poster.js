@@ -113,7 +113,8 @@ function identity(ctx,data,p){
  const value=hasNumber?String(data.number):String(Number.isFinite(+data.age)?data.age:0);
  const leftX=63,rightX=349,baseline=1408;
  ctx.textBaseline='alphabetic';fit(ctx,hasNumber?'기호':'나이',leftX,1203,225,27,{color:p.accent,fontFamily:plain});
-  ctx.fillStyle=rgb(p.ink,.16);ctx.fillRect(317,1209,2,214);
+ fit(ctx,(data.stage||'').trim(),rightX,1213,570,56,{color:p.accent,fontFamily:plain});
+ ctx.fillStyle=rgb(p.ink,.16);ctx.fillRect(317,1209,2,214);
  fit(ctx,value,leftX,baseline,230,value.length>1?216:270,{color:p.accent});
  const name=String(data.name||'이름 미정'),nameSize=fit(ctx,name,rightX,baseline,data.deceased?480:570,166,{color:p.ink});
  if(data.deceased){const end=rightX+ctx.measureText(name).width+12;fit(ctx,'故',end,baseline,80,nameSize*.5,{color:p.ink,fontFamily:plain});}
