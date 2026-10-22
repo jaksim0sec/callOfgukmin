@@ -19,7 +19,7 @@ function assessment(person,{metric,effort}){
  if(!['schoolScore','exam'].includes(metric)||!Number.isInteger(effort)||!plans[effort])throw new Error('시험 준비 정의 오류');
  const held=name=>person.traits.some(t=>(typeof t==='string'?t:t.name)===name);
  const [base,cost]=plans[effort],current=person.stats[metric]||0,applied=[];
- let score=base>0?Math.max(0,base-(current>=20?1:0)):base,stress=cost;
+ let score=base,stress=cost; // Distinct effort outcomes remain ordered until the actual 25-point cap.
  if(effort>=3&&current<20&&held('꼼꼼함')){score+=1;applied.push({trait:'꼼꼼함',text:'집중 검산 +1'});}
  // A high score requires sustained effort; passively maintaining it slowly loses ground.
  // Maintaining a plan must not lose the same grade as light revision while costing more pressure.

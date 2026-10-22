@@ -437,12 +437,15 @@ test('school entry inherits the last middle score once; science mock starts belo
  const normal=c.GukminGrades.highEntry(p,'general');assert.equal(normal.exam,16);assert.equal(normal.schoolScore,21);
 });
 test('high-score exam plans do not have a strictly dominated same-loss alternative',()=>{
- const {c,P}=setup(),p=P.generate();p.phase='high';p.age=18;p.stats.exam=22;p.stats.stress=6;
+ const {c,P}=setup(),p=P.generate();p.phase='high';p.age=18;p.stats.exam=22;p.stats.stress=6;p.traits=[];p.attributes={schoolTrack:'general'};
  const lite=c.GukminGrades.assessment(p,{metric:'exam',effort:1});
  const steady=c.GukminGrades.assessment(p,{metric:'exam',effort:2});
  assert.ok(lite.stats.exam<0&&lite.stats.stress<0);
  assert.equal(steady.stats.exam,0,'maintaining an existing high score should not decline as much as light revision');
  assert.ok(steady.stats.stress>lite.stats.stress,'less recovery costs more pressure but preserves grade');
+ const plans=[0,1,2,3,4].map(effort=>c.GukminGrades.assessment(p,{metric:'exam',effort}));
+ assert.equal(JSON.stringify(plans.map(x=>x.stats.exam)),JSON.stringify([-2,-1,0,1,2]),'each stronger effort increases the projected score until the actual cap');
+ assert.equal(JSON.stringify(plans.map(x=>x.stats.stress)),JSON.stringify([-2,-1,1,2,4]),'the preparation cost grows as intensity grows');
 });
 test('all chat variations pair their situation with a deliberate outgoing reply and outcome',()=>{
  const {c,P}=setup();
