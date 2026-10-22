@@ -9,13 +9,13 @@ const make=(tag,cls,text)=>{
  if(text!==undefined)element.textContent=global.GukminMarkup.text(text);
  return element;
 };
-function effectList(option,person,turn){
+function effectList(option,person,turn,labels={}){
  const projected=global.GukminEffects.apply(person,option.result,{turn});
  const span=make('span','life-effects');
  for(const [id,next] of Object.entries(projected.stats)){
   const n=Number.isFinite(next)&&Number.isFinite(person.stats[id])?next-person.stats[id]:0;
   if(!n)continue;
-  span.append(global.GukminStatus.createToken({type:'metric',id,amount:n,classes:'life-delta'}));
+  span.append(labels[id]?global.GukminStatus.createToken({label:labels[id]+' '+(n>0?'+':'−')+Math.abs(n),icon:global.GukminPlayer.metricDefinition(id).icon||'graduation',classes:'metric-impact metric-'+id+' life-delta'}):global.GukminStatus.createToken({type:'metric',id,amount:n,classes:'life-delta'}));
  }
  for(const entry of projected.traits||[]){
   const name=typeof entry==='string'?entry:entry.name;
@@ -27,28 +27,13 @@ function effectList(option,person,turn){
  return span;
 }
 
-// One opposing progress surface for the actual projected exam score and pressure.
-function examBalance(option,person,metric,turn,effort,label){
- const before=person.stats,after=global.GukminEffects.apply(person,option.result,{turn,source:'estimate'}).stats;
- const score=(after[metric]||0)-(before[metric]||0),riskMetric=(before.illness||0)>0||(after.illness||0)>0?'illness':'stress',riskLabel=riskMetric==='illness'?'정신병':'압박',pressure=(after[riskMetric]||0)-(before[riskMetric]||0);
- const magnitude=Math.abs(score)+Math.abs(pressure);
- const split=magnitude?Math.round(Math.abs(score)/magnitude*100):50;
- const signed=n=>(n>0?'+':'')+n.toLocaleString('ko-KR',{maximumFractionDigits:1});
- const wrap=make('div','exam-tradeoff'+(riskMetric==='illness'?' is-illness-risk':''));
- const head=make('div','exam-tradeoff-head');
- head.append(make('small','exam-tradeoff-effort','노력 '+Math.max(0,effort)+' / 4'),
-  make('small','exam-tradeoff-caption','역량 변화 · '+riskLabel+' 비용'));
- const labels=make('div','exam-tradeoff-labels');
- labels.append(make('strong',score<0?'is-loss':'is-gain',label+' '+signed(score)),
-  make('strong',pressure<0?'is-relief':'is-cost',riskLabel+' '+signed(pressure)));
- const bar=make('div','exam-tradeoff-track');bar.setAttribute('role','img');
- bar.setAttribute('aria-label',label+' '+signed(score)+', '+riskLabel+' '+signed(pressure)+', 노력 '+effort+'단계');
- bar.style.setProperty('--tradeoff-split',split+'%');
- if(score<0)bar.classList.add('has-score-loss');
- if(pressure<0)bar.classList.add('has-relief');
- bar.append(make('span','exam-tradeoff-divider'));
- wrap.append(head,labels,bar);
- return wrap;
+// Show the exact settlement as separate tokens; grades stay in the forecast below.
+function examOutcomes(option,person,metric,turn,effort,label){
+ const wrap=make('div','exam-outcomes');
+ wrap.append(make('small','exam-effort-label','노력 '+effort+' / 4'));
+ const tokens=effectList(option,person,turn,{[metric]:label});tokens.classList.add('exam-effect-tokens');
+ if(!tokens.childElementCount)tokens.append(global.GukminStatus.createToken({label:'현재 역량 유지',icon:'check'}));
+ wrap.append(tokens);return wrap;
 }
 function appliedSources(person,result){
  const strip=make('div','assessment-sources');
@@ -252,7 +237,7 @@ function present({choice,resolve,root}){
    }
   }
   if(isSchool){const outcome=make('span','school-option-outcome');outcome.append(effectList(option,person,choice.openedAt||0));copy.append(outcome);}
-  else copy.append(examBalance(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),p.category==='mock'?'시험 역량':'교과 성취'));
+  else copy.append(examOutcomes(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),p.category==='mock'?'시험 역량':'교과 성취'));
   if(isSchool&&['science','gifted'].includes(option.school?.kind))copy.append(make('small','','학교 시작 효과 · 모의고사 1등급 · 이후 준비에 따라 변동'));
   if(!isSchool&&global.GukminGrades){
    const metric=p.category==='mock'?'exam':'schoolScore';

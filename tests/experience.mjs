@@ -83,12 +83,12 @@ try{
    const projected=GukminEffects.apply(snap.persona,option.result,{turn:snap.runtime.turn});
    return projected.stats.schoolScore-snap.persona.stats.schoolScore;
   });
-  const effect=page.locator('#lifeDecisionDialog .life-answer[data-choice=effort-3] .exam-tradeoff');
+  const effect=page.locator('#lifeDecisionDialog .life-answer[data-choice=effort-3] .exam-outcomes');
   const projectedText=(realPreview>0?'+':'')+realPreview.toLocaleString('ko-KR',{maximumFractionDigits:1});
-  assert.equal(await effect.locator('.exam-tradeoff-labels strong').first().textContent(),'교과 성취 '+projectedText,
-   'exam tradeoff bar uses the same settled score projection including trait modifiers');
-  assert.equal(await effect.locator('.exam-tradeoff-track').count(),1,'exam option shows exactly one opposing bar');
-  assert.match(await effect.locator('.exam-tradeoff-track').getAttribute('aria-label'),/교과 성취.*압박/,'tradeoff bar labels both opposing metrics accessibly');
+  assert.equal(await effect.locator('.metric-schoolScore').textContent(),'교과 성취 '+projectedText,
+   'exam tokens use the same settled score projection including trait modifiers');
+  assert.equal(await effect.locator('.exam-effect-tokens').count(),1,'exam costs share one token row');
+  assert.match(await effect.textContent(),/교과 성취.*압박/,'exam shows both benefit and risk');
   await page.screenshot({path:`${artifacts}/${name}-exam.png`});
   await page.locator('#lifeDecisionDialog .life-submit').click();
   assert.ok(await page.locator('#lifeCinematicDismiss').isVisible(),'result remains until acknowledged');

@@ -63,7 +63,7 @@ global.GukminDirector.register({id:'classroom',when:{phase:'elementary'},generat
   id:peer.id,title:number+'반, 계주 출전!',when:{attributes:{seatmate:peer.name}},body:'운동장에 '+number+'반 깃발이 걸렸다. '+peer.name+'가 바통을 들고 손짓한다. "우리 반 이번엔 끝까지 가 보자!"\n\n짝꿍 연습과 체육 활동으로 쌓은 운동능력, 체육 특성이 주자 실력이다. 경기 당일의 작은 변수도 있어 준비에 따라 우승을 노릴 수 있다. 주자로 뛸지, 바통 연결을 맡을지, 응원석을 지킬지 정하자.',options:raceOptions(peer)
  })));
  sports.event.when={attributes:{classroomRevision:1}};
- sports.choice.presentation={type:'sports',classNumber:number,finishMs:7400};
+ sports.choice.presentation={type:'sports',classNumber:number,finishMs:8440};
  const variance=raceVariance(persona),threshold=9-variance;
  sports.choice.presentation.winThreshold=threshold;
  const wins={all:[{attributes:{sportsRole:'runner'}},{any:[{stats:{athletics:{gte:threshold}}},{traits:['체육']}]}]};

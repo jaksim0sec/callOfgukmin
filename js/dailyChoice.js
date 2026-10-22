@@ -143,7 +143,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
  function rewardModel(before,after,label,from,to,presentation,optionId){
   const route=after.attributes?.admissionResearch,score=after.stats?.schoolScore||0;
   const guidance=route&&route!==before.attributes?.admissionResearch?global.GukminStory.admissionGuide(after,route):'';
-  return {presentation,optionId,attributes:after.attributes||{},stats:after.stats,traits:after.traits,guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
+  return {presentation,optionId,portrait:global.GukminGame.posterData(after),attributes:after.attributes||{},stats:after.stats,traits:after.traits,guidance,label:label||'',changes:differences(before,after),story:rewardStory(before,after,from,to)};
  }
  function renderReward(){
   if(!reward)return;
@@ -185,9 +185,10 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   }
   if(!ordered.length)tray.append(el('p','daily-reward-empty','수치 변화 없이 이야기에 기록됐어.'));
   section.append(tray);body.append(section);
-  sceneHandle=global.GukminDailyScenes.reward({dialog,body,presentation:reward.presentation,attributes:reward.attributes,stats:reward.stats,traits:reward.traits,optionId:reward.optionId,label:reward.label,restored:reward.restored,onReady:sync});
+  sceneHandle=global.GukminDailyScenes.reward({dialog,body,presentation:reward.presentation,attributes:reward.attributes,stats:reward.stats,traits:reward.traits,portrait:reward.portrait,optionId:reward.optionId,label:reward.label,restored:reward.restored,onReady:sync});
   if(reward.presentation?.type==='seating')body.insertBefore(section,hero);
   body.scrollTop=0;
+  if(!global.matchMedia('(prefers-reduced-motion: reduce)').matches)body.animate([{opacity:.55,transform:'translateY(.25rem)'},{opacity:1,transform:'none'}],{duration:220,easing:'cubic-bezier(.22,.7,.25,1)'});
   sync();
  }
  function openRestoredReward(){
@@ -202,6 +203,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   confirm.textContent=reward?(reward.presentation?.type==='chat'?'대화 마치기':reward.presentation?.type==='sports'?'기록하고 계속하기':'보상 받기'):currentChoice?.presentation?.type==='chat'?'선택 확정':currentChoice?.presentation?.type==='seating'?'이 자리에 앉기':currentChoice?.presentation?.type==='sports'?'우리 반, 출발!':'이 선택으로 기록하기';
   confirm.disabled=!!sceneHandle?.isPlaying||(reward?false:!selectedId||!!pendingDecision);
   if(sceneHandle?.isPlaying)confirm.textContent='계주 진행 중…';
+  if(!reward&&currentChoice?.presentation?.type==='study-app')confirm.textContent=selectedId==='comment'?'댓글 게시하기':selectedId==='like'?'좋아요 남기기':selectedId==='focus'?'내 공부 하러 가기':'내 반응 선택하기';
  }
  function open(){
   if((token===null&&!review)||dialog.open)return;
@@ -286,6 +288,13 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   body.append(situation);
   const list=el('div','inline-choices');
   list.setAttribute('role','group');list.setAttribute('aria-label','일상 선택지');
+  function selectOption(id){
+   selectedId=id;
+   for(const [index,candidate] of [...list.querySelectorAll('.inline-choice')].entries()){
+    const pressed=choice.options[index].id===id;candidate.classList.toggle('is-selected',pressed);candidate.setAttribute('aria-pressed',String(pressed));
+   }
+   sync();
+  }
   for(const [index,option] of choice.options.entries()){
    const button=el('button','inline-choice');button.type='button';button.disabled=!option.available;
    const number=el('span','daily-choice-number','');number.setAttribute('aria-hidden','true');
@@ -341,25 +350,21 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
      icon:def.icon||'sparkle',classes:'daily-choice-effect '+(def.negative?'is-positive':'is-negative')}));
    }
    for(const name of persona.traits.filter(t=>typeof t==='string'&&t.startsWith('관심-'))){if(!P.hasTrait(projected,name)&&P.hasTrait(projected,name.slice(3))){const transition=el('span','interest-transition');transition.append(S.createToken({type:'interest',name:name.slice(3)}),el('span','','→'),S.traitToken(name.slice(3)));text.append(transition);}}
-   if(indicators.childElementCount)text.append(indicators);
+   const candidacy=choice.presentation?.type==='election'&&option.result?.effects?.attributes?.classElection==='ran';
+   if(candidacy){
+    const promise=el('div','election-choice-promise');promise.append(el('small','','당선되면'),S.traitToken('리더십'),S.createToken({label:'역할 · 반장',icon:'flag'}));text.append(promise);
+    const cost=el('div','election-choice-cost');cost.append(el('small','','출마 준비'),indicators);text.append(cost);
+   }else if(indicators.childElementCount)text.append(indicators);
 
    if(option.outlook)text.append(rich('small','daily-choice-outlook',option.outlook));
    if(option.risk)text.append(rich('small','daily-choice-risk','부담 · '+option.risk));
    }
    button.append(number,text,el('span','daily-choice-chevron','›'));
-   button.addEventListener('click',()=>{
-    selectedId=option.id;
-    for(const candidate of list.querySelectorAll('.inline-choice')){
-     const pressed=candidate===button;
-     candidate.classList.toggle('is-selected',pressed);
-     candidate.setAttribute('aria-pressed',String(pressed));
-    }
-    sync();
-   });
+   button.addEventListener('click',()=>selectOption(option.id));
    list.append(button);
   }
   body.append(list);
-  global.GukminDailyScenes.decorate({dialog,body,list,choice,persona,state:sceneState});
+  global.GukminDailyScenes.decorate({dialog,body,list,choice,persona,state:sceneState,onSelect:selectOption});
   sync();
   startClock(); // Starts once per choice token; re-renders do not restart the countdown.
  }

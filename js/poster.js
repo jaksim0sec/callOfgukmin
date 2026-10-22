@@ -153,6 +153,11 @@ async function ready(el){
  const jobs=[atlas.decode(),document.fonts?.ready];const custom=customImages.get(el?._posterData?.imageSrc);if(custom)jobs.push(custom.decode());
  await Promise.allSettled(jobs);paint(el);return el.querySelector('canvas');
 }
-global.GukminPoster=Object.freeze({create,update,download,ready});
+function portrait(data={}){
+ const canvas=document.createElement('canvas');canvas.width=230;canvas.height=310;canvas.setAttribute('aria-hidden','true');
+ const draw=()=>{const stage=ageKeys.includes(data.portraitStage)?data.portraitStage:'high',index=(data.portraitVariant==='female'?5:0)+ageKeys.indexOf(stage),im=imageOf(data.imageSrc)||portraitImage(index);if(im){const ctx=canvas.getContext('2d');ctx.clearRect(0,0,230,310);ctx.drawImage(im,0,0,230,310);}};
+ draw();if(!atlas.complete)atlas.decode().then(draw).catch(()=>{});return canvas;
+}
+global.GukminPoster=Object.freeze({create,update,download,ready,portrait});
 if(document.fonts?.ready)document.fonts.ready.then(()=>posters.forEach(paint));
 })(window);

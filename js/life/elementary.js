@@ -5,7 +5,7 @@ const S=global.GukminStory;
 // The class election remembers candidacy, outcome and service separately.
 const winner={any:[{stats:{relations:{gte:15}}},{all:[{traits:['리더십']},{stats:{relations:{gte:14}}}]}]};
 function stand(label){
- return {label,tags:['initiative'],outlook:'당선 시 반장·리더십을 얻는다. 친구들의 지지는 개표로 확인한다.',risk:'선거 준비와 학급 일을 맡을 시간 필요',effects:{attributes:{classElection:'ran'},stats:{stress:2}},
+ return {label,tags:['initiative'],outlook:'친구들의 지지는 투표와 개표로 확인합니다. 출마만으로 당선이 확정되지는 않습니다.',risk:'선거 준비와 학급 일을 맡을 시간 필요',effects:{attributes:{classElection:'ran'},stats:{stress:2}},
   detail:'출마 신청서에 이름을 적었다. 개표 결과는 잠시 뒤 나온다.',
   conditional:[
    {when:winner,result:{effects:{attributes:{classElection:'elected',roles:['반장']},traits:{add:['리더십']}},history:{title:'반장에 뽑혔다',detail:'점심시간까지 이어진 투표에서 과반을 얻었다. 이제 학급 공지를 책임질 차례다.'}}},

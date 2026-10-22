@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='lobby-results-20261022';
+const RELEASE='story-rhythm-20261022';
 const screen=document.body.dataset.screen;
 const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let navigating=false;
@@ -80,12 +80,13 @@ function initWaiting(){
    fictionClosing=false;fiction.showModal();fictionSkip.focus({preventScroll:true});
    const duration=7000,start=global.performance.now(),progress=document.getElementById('fictionProgress');
    progress.value=0;
-   fictionTick=global.setInterval(()=>{progress.value=Math.min(1,(global.performance.now()-start)/duration);},100);
+   const tick=now=>{progress.value=Math.min(1,(now-start)/duration);if(progress.value<1)fictionTick=global.requestAnimationFrame(tick);};
+   fictionTick=global.requestAnimationFrame(tick);
    fictionTimer=global.setTimeout(continueToBirth,duration);
  }
  async function continueToBirth(){
    if(!fiction.open||fictionClosing)return;
-   fictionClosing=true;global.clearTimeout(fictionTimer);global.clearInterval(fictionTick);document.getElementById('fictionProgress').value=1;
+   fictionClosing=true;global.clearTimeout(fictionTimer);global.cancelAnimationFrame(fictionTick);document.getElementById('fictionProgress').value=1;
    if(!reduceMotion)await fiction.animate([{opacity:1},{opacity:0}],{duration:240,easing:'ease-in'}).finished.catch(()=>{});
    if(!fiction.open)return;
    fiction.close();fictionClosing=false;showBirth(player.ensure());
@@ -122,7 +123,7 @@ function initWaiting(){
  skip.addEventListener('click',finishIntro);
  fictionSkip.addEventListener('click',continueToBirth);
  fiction.addEventListener('cancel',event=>{event.preventDefault();continueToBirth();});
- global.addEventListener('pagehide',()=>{global.clearTimeout(fictionTimer);global.clearInterval(fictionTick);global.clearTimeout(introTimer);global.clearInterval(introTick);});
+ global.addEventListener('pagehide',()=>{global.clearTimeout(fictionTimer);global.cancelAnimationFrame(fictionTick);global.clearTimeout(introTimer);global.clearInterval(introTick);});
  global.addEventListener('pageshow',event=>{if(!event.persisted)return;fictionClosing=false;introActive=false;if(fiction.open)fiction.close();intro.hidden=true;intro.classList.remove('is-playing');document.querySelector('.home-lobby').inert=false;show();});
  document.addEventListener('keydown',event=>{
    if(introActive&&event.key==='Escape'){event.preventDefault();finishIntro();}
@@ -153,6 +154,23 @@ try{
  notice.append(link);
  document.body.replaceChildren(notice);
 }
+function easeDialogs(){
+ if(reduceMotion||!global.ResizeObserver)return;
+ const sizes=new WeakMap(),running=new Map();
+ const dialogs=[...document.querySelectorAll('dialog:not(.paper-choice-sheet):not(.result-recap)')];
+ const observer=new ResizeObserver(entries=>{for(const {target} of entries){
+  if(!target.open){sizes.delete(target);continue;}
+  if(running.has(target))continue;
+  const height=target.getBoundingClientRect().height,previous=sizes.get(target);sizes.set(target,height);
+  if(!previous||Math.abs(height-previous)<2)continue;
+  const motion=target.animate([{height:previous+'px'},{height:height+'px'}],{duration:240,easing:'cubic-bezier(.22,.7,.25,1)'});
+  running.set(target,motion);motion.finished.catch(()=>{}).then(()=>{if(running.get(target)===motion)running.delete(target);});
+ }});
+ const observe=()=>dialogs.forEach(dialog=>observer.observe(dialog));observe();
+ global.addEventListener('pagehide',()=>{observer.disconnect();running.forEach(a=>a.cancel());running.clear();});
+ global.addEventListener('pageshow',event=>{if(event.persisted)observe();});
+}
+easeDialogs();
 function registerOffline(){
  if(!('serviceWorker' in navigator))return;
  const worker=new URL('sw.js',document.baseURI);worker.searchParams.set('v',RELEASE);

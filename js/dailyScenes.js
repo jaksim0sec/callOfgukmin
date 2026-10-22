@@ -44,9 +44,9 @@ function decorateSeats(body,list,choice){
 }
 function raceRanks(place){return [place,...[1,2,3].filter(rank=>rank!==place)];}
 function raceProgress(place,lane,elapsed){
- const rank=raceRanks(place)[lane],duration={1:6100,2:6750,3:7400}[rank];
+ const rank=raceRanks(place)[lane],duration={1:8200,2:8320,3:8440}[rank];
  const u=Math.max(0,Math.min(1,elapsed/duration)),phase={1:Math.PI,2:0,3:Math.PI/2}[rank];
- return u===1?1:Math.max(0,Math.min(1,u+.12*(Math.sin(2*Math.PI*u+phase)-Math.sin(phase))));
+ return u===1?1:Math.max(0,Math.min(1,u+.008*(Math.sin(2*Math.PI*u+phase)-Math.sin(phase))));
 }
 const SVG='http://www.w3.org/2000/svg';
 function svg(tag,attributes){const node=document.createElementNS(SVG,tag);for(const [key,value] of Object.entries(attributes))node.setAttribute(key,String(value));return node;}
@@ -104,17 +104,32 @@ function raceReplay({body,presentation,attributes,stats,traits,onReady,restored}
  queueMicrotask(()=>{if(disposed)return;if(restored||matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else frame=requestAnimationFrame(tick);});
  return {get isPlaying(){return playing;},skip:finish,dispose(){disposed=true;if(frame)cancelAnimationFrame(frame);body.classList.remove('race-pending');}};
 }
-function studyApp(presentation,reaction){
+function studyApp(presentation,reaction,portrait={}){
  const app=el('section','study-app');
- const head=el('header','study-app-header');head.append(el('strong','',presentation.app||'열공타'),el('span','','STUDY TOGETHER'));app.append(head);
- const profile=el('div','study-app-profile');profile.append(el('span','study-avatar',presentation.rival?.slice(-1)||'호'),el('strong','',(presentation.rival||'민호')+' · 같은 학년 라이벌'),el('small','','오늘의 순공 기록'));app.append(profile);
- const clock=el('div','study-app-clock');clock.append(el('small','','TODAY'),el('b','','27:00:00'),el('span','','순수 공부 시간'));app.append(clock);
- app.append(el('div','study-likes','♥ '+((presentation.likes||23)+(reaction==='like'?1:0))+'명이 좋아합니다'),el('p','study-app-caption','“기말고사까지 매일 한계를 넘는다.”'));
- if(reaction==='comment')app.append(el('p','study-app-comment','나  ·  하루가 27시간인 멋진 청년'));
- if(reaction==='focus')app.append(el('p','study-app-comment','알림을 끄고 내 오답 노트를 펼쳤습니다.'));
- return app;
+ const avatar=()=>{const node=el('span','study-avatar');node.append(global.GukminPoster.portrait(portrait));return node;};
+ const head=el('header','study-app-header');head.append(el('strong','',presentation.app||'열공타'),el('span','','공부방 · 오늘의 기록'));app.append(head);
+ const profile=el('div','study-app-profile');profile.append(avatar(),el('strong','',(presentation.rival||'민호')+' · 같은 학년 라이벌'),el('small','','기말고사 준비 중 · 오늘 누적'));app.append(profile);
+ const clock=el('div','study-app-clock');clock.append(el('small','','FOCUS TIME'),el('b','',(presentation.hours||27)+'시간 '+(presentation.minutes??9)+'분'),el('span','','오늘의 순공 시간'));app.append(clock);
+ app.append(el('p','study-app-caption','“기말고사까지 매일 한계를 넘는다.”'));
+ const likes=el('div','study-likes'),controls=el('div','study-feed-controls');
+ const like=el('button','study-like'),comment=el('button','study-comment-toggle','댓글 2');like.type=comment.type='button';comment.setAttribute('aria-expanded','false');controls.append(like,comment);app.append(controls,likes);
+ const comments=el('div','study-comments');comments.append(el('p','','지우  ·  오늘도 열심히 했네'),el('p','','민서  ·  잠은 언제 자는 거야 ㅋㅋ'));app.append(comments);
+ const composer=el('div','study-comment-composer');composer.inert=true;
+ const inner=el('div','study-comment-inner'),who=el('div','study-comment-author');who.append(avatar(),el('strong','',portrait.name||'나'));
+ const draft=el('textarea','study-comment-draft');draft.value='하루가 27시간인 멋진 청년';draft.readOnly=true;draft.rows=2;draft.setAttribute('aria-label','이번 선택으로 게시할 댓글');
+ const send=el('button','study-comment-send','이 댓글로 답하기');send.type='button';inner.append(who,draft,send);composer.append(inner);app.append(composer);
+ const pending=el('small','study-action-status');app.append(pending);
+ function sync(selected,preview=false){
+  const liked=selected==='like';like.textContent=(liked?'♥':'♡')+' 좋아요';like.setAttribute('aria-pressed',String(liked));
+  likes.textContent='♥ '+((presentation.likes??23)+(liked?1:0))+'명이 좋아합니다';
+  pending.textContent=preview&&selected?'아래에서 선택을 확정하면 기록에 반영됩니다.':reaction?'내 반응이 기록되었습니다.':'';
+ }
+ app.syncReaction=sync;app.openComposer=()=>{const open=composer.classList.toggle('is-open');composer.inert=!open;comment.setAttribute('aria-expanded',String(open));};
+ app.likeButton=like;app.commentButton=comment;app.sendButton=send;
+ if(reaction){like.disabled=comment.disabled=true;if(reaction==='comment'){const own=el('div','study-own-comment');own.append(avatar(),el('p','',(portrait.name||'나')+'  ·  하루가 27시간인 멋진 청년'));comments.append(own);comment.textContent='댓글 3';}if(reaction==='focus')comments.append(el('p','study-app-comment','알림을 끄고 내 공부를 시작했습니다.'));}
+ sync(reaction);return app;
 }
-function decorate({dialog,body,list,choice,persona,state={}}){
+function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
@@ -125,9 +140,16 @@ function decorate({dialog,body,list,choice,persona,state={}}){
   if(situation)situation.querySelector('.daily-scenario-kicker').textContent='작전 회의';
   list.before(el('strong','scene-choice-label','우리 반에서 맡을 역할'));
  }
- if(kind==='study-app'){body.prepend(studyApp(choice.presentation));list.before(el('strong','scene-choice-label','이 기록을 보고 나는'));;}
+ if(kind==='study-app'){
+  const app=studyApp(choice.presentation,null,global.GukminGame.posterData(persona));body.prepend(app);list.before(el('strong','scene-choice-label','이 기록을 보고 나는'));
+  const buttons=[...list.querySelectorAll('.inline-choice')],select=id=>buttons[choice.options.findIndex(o=>o.id===id)]?.click();
+  const sync=()=>{const index=buttons.findIndex(b=>b.getAttribute('aria-pressed')==='true');app.syncReaction(choice.options[index]?.id,true);};
+  app.likeButton.addEventListener('click',()=>{if(app.likeButton.getAttribute('aria-pressed')==='true')onSelect?.(null);else select('like');sync();});
+  app.commentButton.addEventListener('click',()=>app.openComposer());app.sendButton.addEventListener('click',()=>select('comment'));
+  buttons.forEach(button=>button.addEventListener('click',sync));sync();
+ }
 }
-function reward({dialog,body,presentation,attributes,stats,traits,optionId,label,onReady,restored}){
+function reward({dialog,body,presentation,attributes,stats,traits,portrait,optionId,label,onReady,restored}){
  const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='chat'){
   const receipt=el('section','chat-thread chat-receipt');receipt.append(chatHeader(presentation));
@@ -139,7 +161,7 @@ function reward({dialog,body,presentation,attributes,stats,traits,optionId,label
  if(kind==='seating'){
   const receipt=el('div','seat-receipt');receipt.append(el('small','','새로운 짝꿍'),el('strong','',attributes.seatmate+' 옆자리'),el('span','',attributes.elementaryClass+'반 · 이 친구와 이야기가 이어집니다.'));body.prepend(receipt);
  }
- if(kind==='study-app')body.prepend(studyApp(presentation,attributes.studyTimerReaction));
+ if(kind==='study-app')body.prepend(studyApp(presentation,attributes.studyTimerReaction,portrait));
  if(kind==='sports')return raceReplay({body,presentation,attributes,stats,traits,onReady,restored});
  return null;
 }

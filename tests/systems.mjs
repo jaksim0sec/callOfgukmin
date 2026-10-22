@@ -1432,3 +1432,11 @@ test('every middle-school route reaches the study app after reviewing its midter
   engine.resolve(engine.snapshot().choice.token,'like');engine.run();assert.equal(engine.snapshot().choice.id,final);assert.equal(engine.snapshot().runtime.events[app].count,1);
  }
 });
+
+test('relay speeds remain close and change gradually without reversing or changing the saved winner',()=>{
+ const {c}=setup();vm.runInContext(readFileSync('js/dailyScenes.js','utf8'),c);
+ for(const place of [1,2,3])for(const lane of [0,1,2]){
+  const speeds=[];for(let t=100;t<8000;t+=40)speeds.push((c.GukminDailyScenes.raceProgress(place,lane,t+16)-c.GukminDailyScenes.raceProgress(place,lane,t))/16);
+  assert.ok(Math.min(...speeds)>0);assert.ok(Math.max(...speeds)/Math.min(...speeds)<1.15,'speed variation is subtle rather than a sudden sprint or crawl');
+ }
+});

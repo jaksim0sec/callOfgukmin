@@ -109,7 +109,7 @@ function mount(root,navigate,content=global.GukminContent){
  let snapshot=null,presentedToken=null,disposeMajor=null,presentationEpoch=0;
  let dailyUI=null;
  let renderedHistory=null;
- let journeyTimer=null,journeyActive=false;
+ let journeyTimer=null,journeyActive=false,progressMotion=null,frozenProgress=null;
  let adviceToStore=false,resultRouted=false;
  const prefersLessMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
  const verificationMode=new URLSearchParams(global.location.search).has('systems');
@@ -556,8 +556,21 @@ function mount(root,navigate,content=global.GukminContent){
    if(choice?.layer==='일상 선택')dailyUI.highlight(root);
   }
  }
+ function stopProgressMotion(){
+  if(!progressMotion)return;
+  const fill=$('choiceProgressFill'),matrix=getComputedStyle(fill).transform;
+  frozenProgress=matrix==='none'?0:Number(matrix.split('(')[1].split(',')[0]);
+  fill.style.transform='scaleX('+frozenProgress+')';progressMotion.cancel();progressMotion=null;
+ }
+ function animateJourneyProgress(duration){
+  const p=snapshot?.progress;
+  if(prefersLessMotion||!canAuto()||!Number.isFinite(p?.remaining)||p.remaining<=0)return;
+  stopProgressMotion();
+  const from=.8*(p.value||0),to=.8*Math.min(1,(p.value||0)+(1-(p.value||0))/p.remaining);
+  progressMotion=$('choiceProgressFill').animate([{transform:'scaleX('+from+')'},{transform:'scaleX('+to+')'}],{duration,easing:'linear',fill:'forwards'});
+ }
  function stopJourney(){
-  journeyActive=false;
+  stopProgressMotion();journeyActive=false;
   if(journeyTimer!==null){global.clearTimeout(journeyTimer);journeyTimer=null;}
  }
  function startJourney(){
@@ -578,6 +591,7 @@ function mount(root,navigate,content=global.GukminContent){
    }
    const news=now.persona.history.slice(had).some(item=>item.display!=='hidden'&&!String(item.source||'').startsWith('choice:'));
    const delay=news?3000:450;
+    animateJourneyProgress(delay);
     journeyTimer=global.setTimeout(tick,delay);
   }
   tick();
@@ -606,11 +620,11 @@ function mount(root,navigate,content=global.GukminContent){
    if(last?.script?.presentation?.type==='election'&&!last.presentationAcknowledged&&['elected','lost'].includes(persona.attributes?.classElection)){queueCinematic({kind:'election',title:'반장선거',won:persona.attributes?.classElection==='elected'});}
    else if(['exam','grade-seal'].includes(last?.script?.presentation?.type)&&!last.presentationAcknowledged){const p=last.script.presentation,key=p.category==='mock'?'exam':'schoolScore',a=last.outcome?.after||persona,b=last.outcome?.before||persona;queueCinematic({kind:'grade',title:p.term,after:global.GukminGrades.report(key,a.stats[key],p.stage||'high').display,before:p.type==='exam'?global.GukminGrades.report(key,b.stats[key],p.stage||'high').display:null});}
    else if(restoredDailyReward)dailyUI.openRestoredReward();
-   else if(last?.layer==='일상 선택'&&canAuto())engine.run(); // Old outcome without a recoverable before/after.
+   else if(last?.layer==='일상 선택'&&canAuto())startJourney(); // Old outcome without a recoverable before/after.
    else lifeSheet.revealResults();
   }else if(snapshot.choice)renderProgress();
   else if(playbackMode==='manual'||userPaused)renderProgress();
-  else engine.run();
+  else startJourney();
  }
  function startDemo(){
   stopJourney();dailyUI.reset();clearCinematics();clearMajor();
@@ -622,11 +636,14 @@ function mount(root,navigate,content=global.GukminContent){
   const choice=snapshot.choice,p=snapshot.progress,clock=dailyClock;
   const hasTarget=Number.isFinite(p?.remaining),daily=choice?.layer==='일상 선택';
   const counting=daily&&clock?.ready&&playbackMode==='auto';
-  $('choiceTiming').hidden=verificationMode||(!choice&&!snapshot.reviewPending&&!hasTarget);
-  const value=counting?1-clock.remaining/clock.total:0;
+  $('choiceTiming').hidden=verificationMode||(!choice&&!snapshot.reviewPending&&!hasTarget&&!snapshot.runtime.cinematic&&!cinematicShown);
+  if(choice||snapshot.reviewPending)stopProgressMotion();
+  let value=snapshot.reviewPending||snapshot.runtime.cinematic?1:choice?(daily&&playbackMode==='auto'&&!$('dailyChoiceDialog').open? .8:1):.8*(p?.value||0);
+  if(counting)value=.8+.2*(1-clock.remaining/clock.total);
+  if((userPaused||tutorialActive)&&frozenProgress!==null)value=frozenProgress;
   $('nextChoiceProgress').value=value;
-  $('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,value))+')';
-  $('choiceProgressFill').parentElement.style.visibility=counting?'visible':'hidden';
+  if(!progressMotion)$('choiceProgressFill').style.transform='scaleX('+Math.max(0,Math.min(1,value))+')';
+  $('choiceProgressFill').parentElement.style.visibility='visible';
   $('choiceTiming').classList.toggle('is-paused',userPaused||!canAuto());
   text('nextChoiceLabel',tutorialActive?'안내를 보는 중':userPaused?'일시정지':examBreakTimer!==null?'기말고사 준비 기간':snapshot.reviewPending?'결과를 읽은 뒤 다음':choice?(counting&&clock.running?Math.ceil(clock.remaining/1000)+'초 뒤 선택 · 다음으로 바로 진행':'다음을 눌러 선택'):playbackMode==='manual'?'다음을 눌러 이야기 진행':'이야기가 이어지는 중');
  }

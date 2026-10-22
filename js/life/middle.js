@@ -138,11 +138,11 @@ global.GukminDirector.register({
    S.selection('middle:high-application',63,'고등학교 진학 원서','출신 지역과 현재 학업 성적을 바탕으로 지원 학교를 고른다.',
      proposals,'한방 선택',{type:'school',region:global.GukminSchools.regionOf(persona),year:'중학교 3학년'})
   );
-  const timer=S.selection('middle:study-timer',61,'하루가 27시간인 라이벌','중간고사가 끝나고 기말 준비를 시작했다. 순공 기록 앱 열공타를 열자 같은 학년 라이벌의 오늘 기록이 27시간이다. 친구들은 이미 좋아요를 누르고 있다.',[
+  const timer=S.selection('middle:study-timer',61,'하루가 27시간인 라이벌','중간고사가 끝나고 기말 준비를 시작했다. 순공 기록 앱 열공타를 열자 같은 학년 라이벌의 오늘 기록이 27시간 9분이다. 친구들은 이미 좋아요를 누르고 있다.',[
    {id:'comment',label:'“하루가 27시간인 멋진 청년”이라 댓글 달기',effects:{stats:{stress:-2,relations:-1},traits:{add:['풍자 감각']},attributes:{studyTimerReaction:'comment'}},detail:'웃음을 참지 못하고 댓글을 달았다. 몇 명은 피식 웃었지만 기록을 올린 친구는 답장이 없었다. 남과 비교하던 마음은 조금 가벼워졌다.'},
    {id:'like',label:'다른 친구들처럼 조용히 좋아요 누르기',effects:{stats:{relations:1},attributes:{studyTimerReaction:'like'}},detail:'좋아요 목록에 내 이름도 올라갔다. 공부 시간의 진위는 따지지 않고 친구들과 무난하게 어울렸다.'},
    {id:'focus',label:'폰을 끄고 내 공부 하기',effects:{stats:{schoolScore:2,stress:1},attributes:{studyTimerReaction:'focus'}},detail:'휴대폰을 뒤집고 기말 범위의 오답을 다시 풀었다. 비교 대신 내 학업 성취가 올랐지만 집중한 만큼 부담도 남았다.'}
-  ],'일상 선택',{type:'study-app',app:'열공타',rival:'민호',hours:27,likes:23});
+  ],'일상 선택',{type:'study-app',app:'열공타',rival:'민호',hours:27,minutes:9,likes:23});
   timer.event.when={turn:{eq:61}};
   const mid=stages.events.findIndex(e=>e.id==='middle:3:1학기-중간고사');
   stages.events.splice(mid+1,0,timer.event);stages.choices.push(timer.choice);

@@ -481,7 +481,7 @@ try{
  const midRatio=await timedPage.locator('#choiceProgressFill').evaluate(el=>{
   const m=getComputedStyle(el).transform;return m==='none'?0:Number(m.split('(')[1].split(',')[0]);
  });
- assert.ok(midRatio>.25&&midRatio<.85,'countdown bar advances continuously over real time');
+ assert.ok(midRatio>.83&&midRatio<.98,'countdown bar advances continuously over real time');
  await timedPage.locator('#dailyChoiceDialog[open]').waitFor({timeout:4500});
  assert.equal(await timedPage.evaluate(()=>GukminGame.session.snapshot().choice?.token),firstPending,
   'the timer only opens the diary and never commits a choice');
@@ -564,9 +564,9 @@ try{
  await examPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
  await examPage.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
  assert.equal(await examPage.locator('#lifeDecisionDialog .life-answer').count(),5);
- assert.equal(await examPage.locator('#lifeDecisionDialog .exam-tradeoff-track').count(),5,'each exam option has one tradeoff progress');
- assert.equal(await examPage.locator('#lifeDecisionDialog .exam-option-outcome .token').count(),0,'exam effects use no metric pills');
- assert.match(await examPage.locator('#lifeDecisionDialog .exam-tradeoff-track').first().getAttribute('aria-label'),/압박/);
+ assert.equal(await examPage.locator('#lifeDecisionDialog .exam-effect-tokens').count(),5,'each exam option has one settled token group');
+ assert.ok(await examPage.locator('#lifeDecisionDialog .exam-effect-tokens .token').count()>0,'exam effects use shared tokens');
+ assert.match(await examPage.locator('#lifeDecisionDialog .exam-effect-tokens').first().textContent(),/압박/);
  await examPage.locator('#lifeDecisionDialog .life-answer').nth(2).click();
  await examPage.locator('#lifeDecisionDialog .life-submit').click();
  assert.equal(await examPage.locator('#lifeDecisionDialog[open]').count(),0);
@@ -614,7 +614,7 @@ try{
   assert.equal(examState.age,14);
   await p.locator('#lifeDecisionDialog[open] .life-answer').first().waitFor();
   assert.equal(await p.locator('#lifeDecisionDialog .life-answer').count(),5);
-  assert.equal(await p.locator('#lifeDecisionDialog .exam-tradeoff-track').count(),5);
+  assert.equal(await p.locator('#lifeDecisionDialog .exam-effect-tokens').count(),5);
   assert.equal(await p.locator('#lifeDecisionDialog .life-paper-identification').count(),1);
   assert.equal(await p.locator('#lifeDecisionDialog .life-paper-question').count(),1);
   const box=await p.locator('#lifeDecisionDialog').boundingBox();
