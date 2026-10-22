@@ -67,7 +67,7 @@ function drawPortrait(ctx,data,p){
  const tmp=document.createElement('canvas');tmp.width=W;tmp.height=1190;
  const t=tmp.getContext('2d');t.drawImage(im,dx,dy,dw,dh);
  const fade=t.createLinearGradient(0,690,0,1150);fade.addColorStop(0,'#000');fade.addColorStop(.6,'#000');fade.addColorStop(1,'#0000');t.globalCompositeOperation='destination-in';t.fillStyle=fade;t.fillRect(0,0,W,1190);
- ctx.save();ctx.globalAlpha=.96;ctx.drawImage(tmp,0,0);ctx.restore();
+ ctx.save();ctx.globalAlpha=1;ctx.filter='contrast(1.35) brightness(.82)';ctx.drawImage(tmp,0,0);ctx.restore();
  const veil=ctx.createLinearGradient(255,0,620,0);veil.addColorStop(0,rgb(p.a,0));veil.addColorStop(.55,rgb(p.a,.18));veil.addColorStop(1,rgb(p.a,0));ctx.fillStyle=veil;ctx.fillRect(255,90,365,1030);
 }
 function emblem(ctx,label,p){
@@ -86,7 +86,7 @@ function emblem(ctx,label,p){
 }
 function header(ctx,data,p){
  const party=(data.partyName||'무소속').trim();const political=party!=='무소속';
- const label=political?party:(data.stage||'').trim();
+ const label=party;
  if(political){emblem(ctx,party,p);fit(ctx,label,162,115,710,53,{color:p.ink,fontFamily:plain});}
  else{ctx.fillStyle=p.accent;ctx.fillRect(57,66,66,6);fit(ctx,label||'인생 기록',57,139,710,58,{color:p.ink,fontFamily:plain});}
 }
@@ -113,8 +113,7 @@ function identity(ctx,data,p){
  const value=hasNumber?String(data.number):String(Number.isFinite(+data.age)?data.age:0);
  const leftX=63,rightX=349,baseline=1408;
  ctx.textBaseline='alphabetic';fit(ctx,hasNumber?'기호':'나이',leftX,1203,225,27,{color:p.accent,fontFamily:plain});
- fit(ctx,(data.stage||'').trim(),rightX,1203,570,30,{color:p.accent,fontFamily:plain});
- ctx.fillStyle=rgb(p.ink,.16);ctx.fillRect(317,1209,2,214);
+  ctx.fillStyle=rgb(p.ink,.16);ctx.fillRect(317,1209,2,214);
  fit(ctx,value,leftX,baseline,230,value.length>1?216:270,{color:p.accent});
  const name=String(data.name||'이름 미정'),nameSize=fit(ctx,name,rightX,baseline,data.deceased?480:570,166,{color:p.ink});
  if(data.deceased){const end=rightX+ctx.measureText(name).width+12;fit(ctx,'故',end,baseline,80,nameSize*.5,{color:p.ink,fontFamily:plain});}
