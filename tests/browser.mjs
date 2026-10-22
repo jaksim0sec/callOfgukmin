@@ -103,6 +103,9 @@ try{
   await page.locator('#birthIntroSkip').click();
   await page.locator('#playerPosterMount .gk-poster').waitFor();
   assert.equal(await page.locator('#age').count(),0);
+  assert.equal(await page.locator('#playbackMode').getAttribute('aria-checked'),'false','new game defaults to manual');
+  await page.evaluate(()=>GukminGame.session.run());
+  await page.locator('#playbackMode').click(); // Enable timed choice opener for this integration scenario.
   assert.equal(await page.locator('#lifeHeadline').textContent(),'3살');
   assert.equal(await page.locator('#choiceTiming').isVisible(),false,'no meaningless paused progress bar');
   const firstLife=await page.evaluate(()=>JSON.parse(localStorage.getItem('callOfgukmin__ui__v1')));
@@ -469,6 +472,8 @@ try{
  timedPage.on('pageerror',e=>timerErrors.push(e.message));
  await timedPage.route('https://fonts.googleapis.com/**',route=>route.abort());
  await timedPage.goto(base+'html/game.html',{waitUntil:'domcontentloaded'});
+ await timedPage.evaluate(()=>GukminGame.session.run());
+ await timedPage.locator('#playbackMode').click();
  await timedPage.locator('#resumeDailyChoice.is-auto-opening').waitFor();
  const firstPending=await timedPage.evaluate(()=>GukminGame.session.snapshot().choice.token);
  await timedPage.waitForTimeout(2500);
@@ -530,6 +535,7 @@ try{
  await recallPage.locator('#skipFictionNotice').click();
   await recallPage.locator('#birthIntro').waitFor({state:'visible'});
  await recallPage.locator('#birthIntroSkip').evaluate(button=>button.click());
+ await recallPage.evaluate(()=>GukminGame.session.run());
  await recallPage.locator('#resumeDailyChoice').waitFor({state:'visible'});
  assert.equal(await recallPage.locator('#dailyChoiceDialog').isVisible(),false);
  assert.equal(await recallPage.locator('#resumeDailyChoice').isVisible(),true);
