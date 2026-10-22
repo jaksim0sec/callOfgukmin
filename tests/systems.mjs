@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/election','life/classroom','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','election/engine','life/election','life/classroom','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -684,7 +684,7 @@ test('class election keeps original event ID and separates candidacy, victory an
  assert.equal(after.persona.roles.includes('반장'),false);
  assert.equal(after.reviewPending,true);
  assert.equal(engine.resolve(token,s.choice.options[0].id),false);
- engine.run();assert.equal(engine.snapshot().choice.id,'election:listen');
+ engine.run();assert.equal(engine.snapshot().choice.id,'election:survey-first');
 });
 test('high school first contact drives recurring character and different conflict',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
@@ -1542,4 +1542,35 @@ test('relay geometry uses staggered starts for equal running distances and both 
   for(let t=0;t<=8500;t+=20)for(let lane=0;lane<3;lane++)if(V.raceProgress(place,lane,t,order)===1&&!crossed.includes(lane))crossed.push(lane);
   assert.deepEqual(crossed,[0,1,2].sort((a,b)=>ranks[a]-ranks[b]));
  }
+});
+
+test('parameter-only elections accept different candidates, electorate sizes and story support without DOM or player globals',()=>{
+ const c=vm.createContext({});c.window=c;vm.runInContext(readFileSync('js/election/engine.js','utf8'),c);
+ const config={id:'district',seed:'independent-election',playerId:'b',groups:[{id:'north',name:'북부',size:19,known:true,undecided:20},{id:'south',name:'남부',size:53,known:false}],
+  pledges:[{id:'park',name:'공원',scores:{north:2,south:-1}},{id:'bus',name:'교통',scores:{north:-1,south:3}}],
+  candidates:['a','b','c','d'].map((id,i)=>({id,name:id,pledges:[i%2?'bus':'park'],support:{north:i/2,south:0}})),rules:{maxPledges:1}};
+ const before=JSON.stringify(config),engine=c.GukminElectionEngine.create(config),f=engine.forecast(),r=engine.count();
+ assert.equal(JSON.stringify(config),before);assert.equal(r.candidates.length,4);assert.equal(f.pollShares.length,5);assert.equal(f.pollShares.reduce((a,b)=>a+b,0),100);
+ for(const row of r.rows)assert.equal(row.votes.reduce((a,b)=>a+b,0),row.turnout);
+ assert.deepEqual(plain(r),plain(c.GukminElectionEngine.create(plain(config)).count()));
+ assert.equal(f.rows[0].known,true);assert.equal(f.rows[1].known,false);assert.equal(engine.survey('south').group.size,53);assert.equal(Object.keys(engine.survey('south').opinions).length,2);
+ assert.throws(()=>engine.survey('missing'),/집단/);assert.throws(()=>engine.forecast(['bus','park']),/공약/);assert.throws(()=>engine.forecast(['missing']),/공약/);
+ const boosted=plain(config);boosted.candidates[1].support.south=10;assert.ok(c.GukminElectionEngine.create(boosted).forecast().candidates[1].share>f.candidates[1].share);
+});
+
+test('revision 3 surveys use the same dedicated choice, cost only on visit, survive reload and reject repeat groups atomically',()=>{
+ const {P,T,c}=setup(),X=c.GukminElection,p=P.generate();p.phase='elementary';p.age=12;p.traits=[];p.stats.stress=0;p.stats.illness=0;p.stats.study=12;p.attributes={electionRevision:3,electionStage:'listen',classElection:'ran',teacherTrust:12};
+ const pack=c.GukminDirector.content(p),cfg={...pack,events:pack.events.filter(e=>e.id.startsWith('election:')),choices:pack.choices.filter(c=>c.id.startsWith('election:')),pauseAfterChoice:true,persist:q=>P.save(q)};
+ let e=T.create({...cfg,persona:p});e.advance(45);assert.equal(e.snapshot().choice.presentation.type,'election-survey');e.resolve(e.snapshot().choice.token,'quiet');e.resume();
+ e.resolve(e.snapshot().choice.token,'submit',{pledges:['library','quiet','lost']});e.resume();assert.equal(e.snapshot().choice.options[0].id,'boast');const before=e.snapshot().persona.stats.stress;e.resolve(e.snapshot().choice.token,'poll');e.resume();
+ assert.equal(e.snapshot().choice.id,'election:survey-more');assert.equal(e.snapshot().choice.presentation.type,'election-survey');assert.equal(e.snapshot().persona.stats.stress,before,'asking to survey does not charge a visit or choose a target');assert.equal(e.snapshot().persona.attributes.electionPollGroup,undefined);
+ e=T.create({...cfg,persona:P.load()});const pending=plain(e.snapshot());assert.equal(pending.choice.options.find(o=>o.id==='quiet').available,false);assert.throws(()=>e.resolve(pending.choice.token,'quiet'));assert.deepEqual(plain(e.snapshot()),pending);
+ e.resolve(pending.choice.token,'play');assert.equal(e.resolve(pending.choice.token,'play'),false);e.resume();assert.equal(e.snapshot().persona.stats.stress,before+1);assert.equal(e.snapshot().persona.attributes.electionPollGroup,'play');assert.equal(e.snapshot().choice.id,'election:final-pledges');assert.equal(X.forecast(e.snapshot().persona).rows.filter(r=>r.known).length,2);
+});
+
+test('large campaign promise trades pressure for shamelessness without granting impossible fulfillment or teacher trust',()=>{
+ const {P,E,c}=setup(),p=P.generate();p.phase='elementary';p.traits=[];p.stats.stress=0;p.attributes={electionRevision:3,electionStage:'attack',electionPledges:138,teacherTrust:12};const pack=c.GukminDirector.content(p);
+ for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);for(const [id,d] of Object.entries(pack.traits))P.registerTrait(id,d);
+ const result=E.apply(p,{electionDecision:{action:'respond',response:'boast'},tags:['public-speech']});assert.equal(result.stats.stress,4);assert.equal(P.hasTrait(result,'뻔뻔함'),true);assert.equal(result.attributes.teacherTrust,12);assert.equal(result.attributes.electionStage,'revise');assert.equal(c.GukminElection.canChoose(result,{action:'bill',slot:0,mode:'keep'}),false);
+ const speech=E.apply(result,{tags:['public-speech'],effects:{stats:{stress:2}}});assert.equal(speech.stats.stress,result.stats.stress+1);
 });

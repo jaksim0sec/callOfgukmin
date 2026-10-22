@@ -135,27 +135,17 @@ function studyApp(presentation,reaction,portrait={}){
 function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='campaign'){
-  const E=global.GukminElection,a=persona.attributes||{},section=el('section','campaign-brief');
-  section.append(el('small','campaign-eyebrow',choice.presentation.step==='bill'?'반장이 할 일':'반장 선거'),el('h3','',choice.presentation.step==='listen'?'우리 반 친구들은 뭘 원할까?':choice.presentation.step==='attack'?'친구들 얘기를 더 들어 볼까?':choice.presentation.step==='debt'?'그때 했던 말이 돌아왔다':'이제 약속을 지킬 차례'));
-  const meters=el('div','campaign-vitals');meters.append(global.GukminStatus.createToken({label:'친구 사이 '+persona.stats.relations+'/25',icon:'users'}),global.GukminStatus.createToken({label:'선생님 믿음 '+(a.teacherTrust??12)+'/25',icon:'school'}));section.append(meters);
-  if(choice.presentation.step==='listen'){const guide=el('ol','campaign-simple-steps');for(const line of ['친구들 만나서 원하는 것 듣기','마음에 들 약속 세 개 골라 보기','다른 친구들 말도 듣고 마지막으로 고치기'])guide.append(el('li','',line));section.append(el('p','','우리 반은 모두 '+E.groups.reduce((n,g)=>n+g.size,0)+'명. 아래 네 모임으로 나눠 봤어.'),guide,el('p','','찾아가면 '+(persona.stats.illness>0?'정신병':'압박')+' 1이 들어. 대신 뭘 좋아하는지 알 수 있어. 안 물어보고 그냥 골라도 돼!'));}
-  if(choice.presentation.step==='attack')for(const rival of E.rivals(persona)){const card=el('div','campaign-rival');card.append(el('strong','',rival.name+' · '+rival.title),el('p','',rival.pledges.map(id=>E.pledges.find(p=>p.id===id).name).join(' / ')));if(rival.copied)card.append(el('small','','내 약속을 따라 했네! 같은 친구들에게 표를 부탁하고 있어.'));section.append(card);}
-  if(choice.presentation.step==='bill'){const bill=E.billTarget(persona,choice.presentation.slot);section.append(el('strong','campaign-bill-title',bill.name),el('p','',bill.limit),el('small','',bill.difficulty>=2?'나 혼자 정할 수 없는 일이야. 선생님께 부탁해 보거나 친구들에게 못 하겠다고 말해야 해.':'그대로 하려면 '+bill.cost.toLocaleString('ko-KR')+'원과 준비할 시간이 필요해. 조금만 해 볼 수도 있지만 포기하면 친구들이 실망해.'));}
-  if(choice.presentation.step==='attack'){
+  const E=global.GukminElection,step=choice.presentation.step;
+  const entry=el('button','election-info-link','후보 · 민심 보기 ↗');entry.type='button';entry.addEventListener('click',()=>document.querySelector('#electionCandidates')?.click());if(global.GukminElection.model(persona).active)body.prepend(entry);
+  // Narrative context only. Candidates and electorate data live in the election drawer.
+  if(step==='attack'){
    const target=E.billTarget(persona,0),question=el('blockquote','campaign-question');
-   if(target){question.append(el('strong','','「'+target.name+'」에 대한 질문'),el('p','',target.difficulty>=2?'“학교에서 허락 안 해 주면? 반장이 혼자 정할 수 있는 일이야?”':'“준비는 언제 할 건데? 돈은 있어? 네가 계속 맡을 거야?”'),el('small','','확인할 점 · '+target.limit));section.insertBefore(question,meters.nextSibling);}
-   const support=global.GukminElectionView.board(persona,{compact:true});section.append(support.element);
-   const preview=response=>support.update(E.chosen(persona).map(p=>p.id),response);
-   const ids=E.chosen(persona).map(p=>p.id),base=E.forecast(persona,ids).pollShares[0];
-   for(const [i,button] of [...list.querySelectorAll('.inline-choice')].entries()){
-    if(choice.options[i].id==='poll')button.querySelector('.daily-choice-copy').append(el('small','campaign-poll-target','만나러 갈 친구들 · '+E.pollTarget(persona).name+' '+E.pollTarget(persona).size+'명'));
-    const option=choice.options[i],share=E.forecast(persona,ids,option.id).pollShares[0],diff=share-base;
-    button.querySelector('.daily-choice-copy').append(el('span','campaign-support-shift','내 편 예상 '+share+'%'+(diff?' · '+(diff>0?'+':'−')+Math.abs(diff)+'%p':'')));
-    button.addEventListener('click',()=>preview(option.id));
-   }
-   const selected=choice.options.find((o,i)=>list.querySelectorAll('.inline-choice')[i]?.getAttribute('aria-pressed')==='true');if(selected)preview(selected.id);
+   if(target){question.append(el('strong','','「'+target.name+'」 정말 할 수 있어?'),el('p','',target.difficulty>=2?'“그건 반장이 혼자 못 정하잖아. 허락을 안 해 주면 어떡해?”':'“준비는 언제 할 거야? 네가 계속 맡을 수 있어?”'),el('small','',target.limit));body.prepend(question);}
   }
-  body.prepend(section);
+  if(step==='bill'){
+   const bill=E.billTarget(persona,choice.presentation.slot),section=el('section','campaign-bill');
+   section.append(el('strong','campaign-bill-title',bill.name),el('p','',bill.limit),el('small','',bill.difficulty>=2?'선생님께 부탁해서 일부만 해 보거나, 못 지킨다고 솔직히 말할 수 있어.':'직접 하려면 '+bill.cost.toLocaleString('ko-KR')+'원과 준비할 시간이 필요해.'));body.prepend(section);
+  }
  }
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);

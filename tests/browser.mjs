@@ -553,11 +553,11 @@ try{
   window.GukminContent={
    contentId:'exam-view-check',events:[{id:'exam-view',layer:'한방 이벤트',at:0,choice:'exam-view'}],
    choices:[{id:'exam-view',layer:'한방 선택',title:'중간고사',presentation:{type:'exam',grade:1,term:'1학기 중간고사',category:'school'},options:[
-    {id:'0',label:'쉰다',result:{effects:{stats:{stress:-1}}}},
-    {id:'1',label:'조금',result:{effects:{stats:{study:1}}}},
-    {id:'2',label:'꾸준히',result:{effects:{stats:{study:1}}}},
-    {id:'3',label:'집중',result:{effects:{stats:{study:2}}}},
-    {id:'4',label:'매우 집중',result:{effects:{stats:{stress:1}}}}
+    {id:'effort-0',label:'쉰다',result:{effects:{stats:{stress:-1}}}},
+    {id:'effort-1',label:'조금',result:{effects:{stats:{study:1}}}},
+    {id:'effort-2',label:'꾸준히',result:{effects:{stats:{study:1}}}},
+    {id:'effort-3',label:'집중',result:{effects:{stats:{study:2}}}},
+    {id:'effort-4',label:'매우 집중',result:{effects:{stats:{stress:1}}}}
    ]}]
   };
  });

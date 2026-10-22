@@ -11,6 +11,7 @@
 | [VISION.md](VISION.md) | 장기 목표 **(구현 명세 아님)** |
 | [developing/SEO.md](developing/SEO.md) | 검색 대표 주소·메타데이터·사이트맵·Search Console 등록 |
 | [developing/RUNTIME.md](developing/RUNTIME.md) | 독립 페이지·로드 순서·화면/복원 흐름 |
+| [developing/ELECTION.md](developing/ELECTION.md) | 선거 엔진·전용 UI·스토리 경계와 파라미터 |
 | [developing/SYSTEMS.md](developing/SYSTEMS.md) | 이벤트 3종·선택 2종·정산·조건·턴·복구 |
 | [developing/LIFE.md](developing/LIFE.md) | 출생/생애·학생 플레이·대입/재도전 |
 | [developing/STORY.md](developing/STORY.md) | 인과·기회비용·조건 분기·현재 사건 |

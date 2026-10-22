@@ -1,0 +1,67 @@
+/* Election-only choices use the host's major dialog and timeline resolution callback. */
+(function(global){
+'use strict';
+const make=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e;};
+function presentPledges({choice,resolve,root,model}){
+ const dialog=root.querySelector('#lifeDecisionDialog');
+ const E=model,isFinal=choice.presentation.mode==='final',isDraft=!isFinal&&E.revision>=2,slots=isFinal?E.chosen.map(p=>p.id):[null,null,null];let activeSlot=0,closed=false;
+ const sheet=make('section','life-modal-wrap election-pledge-paper'),head=make('header','life-modal-head'),foldButton=make('button','life-modal-collapse','접기 ⌄');foldButton.type='button';
+ const candidates=make('button','election-info-link','후보 보기 ↗');candidates.type='button';candidates.addEventListener('click',()=>root.querySelector('#electionCandidates')?.click());head.append(make('span','life-modal-serial',model.title+' · 공약'),candidates,foldButton);
+ const content=make('div','pledge-content'),dock=make('div','pledge-dock');content.append(make('small','campaign-eyebrow',E.groups.reduce((n,g)=>n+g.size,0)+'명의 마음을 움직일 세 약속'),make('h2','life-modal-title',isFinal?'마지막으로 약속 고르기':isDraft?'약속 세 개 골라 보기':'약속 세 개 고르기'));
+ const puzzle=make('section','pledge-puzzle'),rack=make('div','pledge-slots');rack.setAttribute('role','group');rack.setAttribute('aria-label','공약 세 칸');
+ const slotButtons=slots.map((_,i)=>{const button=make('button','pledge-slot');button.type='button';button.addEventListener('click',()=>{activeSlot=i;paint();});button.addEventListener('keydown',e=>{if(['Delete','Backspace'].includes(e.key)){e.preventDefault();slots[i]=null;activeSlot=i;paint();}});rack.append(button);return button;});
+ puzzle.append(rack,make('small','pledge-slot-help','카드를 눌러 세 칸을 채워 봐. 고른 카드를 다시 누르면 뺄 수 있어.'));
+ const board=global.GukminElectionView.board(model,{collapsible:true});puzzle.append(board.element);content.append(puzzle);
+ const cards=make('div','pledge-cards');cards.setAttribute('role','group');cards.setAttribute('aria-label','공약 세 장 선택');
+ const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit',isFinal?'이 약속으로 나갈래':isDraft?'친구들 생각 들어 보기':'세 약속으로 할래');confirm.type='button';confirm.disabled=true;counter.setAttribute('aria-live','polite');const live=make('small','pledge-live-share'),counts=make('div','pledge-footer-counts');counts.append(counter,live);
+ function paint(){
+  const ids=slots.filter(Boolean);slotButtons.forEach((button,i)=>{button.classList.toggle('is-active',activeSlot===i);button.classList.toggle('is-filled',!!slots[i]);button.setAttribute('aria-pressed',String(activeSlot===i));button.replaceChildren(make('small','','공약 '+(i+1)),make('strong','',slots[i]?E.pledges.find(p=>p.id===slots[i]).name:'＋ 끼워 넣기'));});
+  for(const button of cards.children)button.setAttribute('aria-pressed',String(ids.includes(button.dataset.pledge)));counter.textContent=ids.length+' / 3';confirm.disabled=ids.length!==3;const forecast=board.update(ids);live.textContent='내 편 예상 '+forecast.pollShares[Math.max(0,forecast.candidates.findIndex(c=>c.id===E.playerId))]+'%';
+ }
+  for(const pledge of E.available){
+  const card=make('button','pledge-card');card.type='button';card.dataset.pledge=pledge.id;card.setAttribute('aria-pressed','false');
+  card.append(make('small','pledge-feasibility',pledge.feasibilityLabel||(pledge.difficulty>=2?'권한·협의가 필요한 약속':'직접 실행할 수 있는 약속')),make('strong','',pledge.name));
+  const reactions=make('span','pledge-reactions');E.groups.forEach((group,g)=>{const n=E.opinion(group.id,pledge.id),reaction=make('span',n===null?'is-unknown':n>0?'is-positive':n<0?'is-negative':'is-neutral',(group.shortName||group.name)+' '+(n===null?'?':(n>0?'+':n<0?'−':'')+Math.abs(n)));reaction.title=group.name+' '+group.size+'명 · '+(n===null?'아직 안 물어봤어':'직접 들어 본 생각');reactions.append(reaction);});card.append(reactions,make('small','pledge-reality',pledge.limit));
+  card.addEventListener('click',()=>{
+   const existing=slots.indexOf(pledge.id);if(existing>=0){slots[existing]=null;activeSlot=existing;}
+   else{const index=activeSlot>=0?activeSlot:slots.indexOf(null);if(index<0){counter.textContent='바꿀 공약 칸을 먼저 눌러 주세요';return;}slots[index]=pledge.id;activeSlot=slots.indexOf(null);}
+   paint();
+  });cards.append(card);
+ }
+ const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','어떤 약속을 할까?'),make('small','','?는 아직 안 물어본 친구들 · +는 좋아해, −는 싫어해'));content.append(catalogHead,cards);
+ footer.append(counts,confirm);sheet.append(head,dock,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
+ const mobile=global.matchMedia('(max-width:47.5em)'),eyebrow=content.querySelector('.campaign-eyebrow'),title=content.querySelector('.life-modal-title'),help=puzzle.querySelector('.pledge-slot-help');
+ const syncDock=()=>{if(mobile.matches)dock.append(eyebrow,title,rack,help);else{content.prepend(eyebrow,title);puzzle.prepend(rack,help);}};
+ mobile.addEventListener('change',syncDock);syncDock();
+ const reopen=root.querySelector('#resumeMajorChoice');
+ const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},fold=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();fold();};
+ reopen.addEventListener('click',open);foldButton.addEventListener('click',fold);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);
+ confirm.addEventListener('click',()=>{const ids=slots.filter(Boolean);if(closed||ids.length!==3)return;dialog.close();resolve('submit',{pledges:ids});});open();
+ return ()=>{closed=true;mobile.removeEventListener('change',syncDock);reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-pledges');sync();};
+}
+
+function presentSurvey({choice,resolve,root,model}){
+ const dialog=root.querySelector('#lifeDecisionDialog'),reopen=root.querySelector('#resumeMajorChoice');let selected=null,closed=false;
+ const sheet=make('section','life-modal-wrap election-survey-paper'),header=make('header','life-modal-head'),fold=make('button','life-modal-collapse','접기 ⌄');fold.type='button';
+ header.append(make('span','life-modal-serial',model.title+' · 민심 조사'),fold);
+ const content=make('div','election-survey-content');content.append(make('small','campaign-eyebrow',choice.presentation.first?'01 · 처음 만나는 민심':'03 · 내 편 밖으로'),make('h2','life-modal-title',choice.title),make('p','election-survey-intro','모임 하나를 골라 직접 찾아가자. 표를 사는 게 아니라, 무엇을 원하는지 알아보는 거야.'));
+ const cost=make('div','survey-cost');cost.append(make('strong','',model.riskLabel+' +1'),make('span','','방문 비용 · 아는 만큼 공약을 고치기 쉬워져'));content.append(cost);
+ const list=make('div','survey-groups');list.setAttribute('role','group');list.setAttribute('aria-label','만나러 갈 모임');
+ const footer=make('footer','life-modal-foot survey-footer'),status=make('span','survey-selection','만나러 갈 모임을 골라 줘'),confirm=make('button','life-submit','이 친구들 만나러 가기');confirm.type='button';confirm.disabled=true;status.setAttribute('aria-live','polite');
+ for(const group of model.groups){
+  const option=choice.options.find(o=>o.id===group.id),known=model.known(group.id),button=make('button','survey-group');button.type='button';button.dataset.group=group.id;button.disabled=!option?.available||known;button.setAttribute('aria-pressed','false');
+  const heading=make('span','survey-group-heading');heading.append(make('strong','',group.name),make('b','',group.size+'명'));
+  const dots=make('span','survey-people');dots.setAttribute('aria-hidden','true');for(let n=0;n<group.size;n++)dots.append(make('i',''));
+  button.append(heading,dots,make('small','',known?'이미 이야기를 들었어':group.id==='quiet'&&choice.presentation.first?'찾아다니는 시간이 더 필요해 · 학업역량 −1':'좋아하는 약속과 싫어하는 약속 확인'));
+  button.addEventListener('click',()=>{selected=group.id;for(const node of list.children)node.setAttribute('aria-pressed',String(node===button));status.textContent=group.name+' · '+group.size+'명';confirm.disabled=false;});list.append(button);
+ }
+ content.append(list);footer.append(status,confirm);
+ if(choice.presentation.first){const skip=make('button','survey-skip','방문하지 않고 공약 고르기 →');skip.type='button';skip.addEventListener('click',()=>commit('skip'));content.append(skip);}
+ sheet.append(header,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-survey');
+ const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},collapse=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();collapse();};
+ function commit(id){if(closed)return;dialog.close();resolve(id);}
+ confirm.addEventListener('click',()=>{if(selected)commit(selected);});fold.addEventListener('click',collapse);reopen.addEventListener('click',open);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);open();
+ return ()=>{closed=true;reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-election-survey');sync();};
+}
+global.GukminElectionChoices=Object.freeze({present:options=>options.choice.presentation.type==='election-survey'?presentSurvey(options):presentPledges(options)});
+})(window);

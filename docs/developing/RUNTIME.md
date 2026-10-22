@@ -1,3 +1,7 @@
+## 2026-10-22 선거 모듈 분리 릴리스 (현행)
+
+릴리스 `election-module-20261022`. `election/engine.js`는 `life/election.js` 이전, `election/view.js`는 statusView 다음, `election/choices.js`는 majorView 이전에 defer 로드한다. 세 파일을 모든 화면과 오프라인 셸에 포함한다. 기존 electionView.js는 전용 디렉터리로 이동했다. 검증 모드에서는 이전 자동 진행 설정이 있어도 시간을 자동 진행하지 않는다. 후보 패널은 마운트/폐기 수명주기를 따르고 저장 키/콘텐츠 ID·과거 표는 유지한다. [선거 경계](ELECTION.md).
+
 ## 2026-10-22 검색 노출 릴리스 (현행)
 
 릴리스 `search-ready-20261022`. 루트 진입/시작/플레이/결과의 정적 메타데이터를 추가한다. 대표 색인 주소는 실제 시작 화면이며 쿼리 없는 canonical로 통일한다. 게임과 결과는 noindex/follow다. sitemap.xml도 같은 정적 배포와 오프라인 셸에 포함한다. 기존 리다이렉트·화면 구조·게임 저장은 유지한다. 소유자 계정의 Search Console 인증/사이트맵 제출 절차는 SEO.md를 따른다.

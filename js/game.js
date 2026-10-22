@@ -126,13 +126,14 @@ function mount(root,navigate,content=global.GukminContent){
   {title:'재산은 돈, 특성은 행동을 바꾸는 힘',body:'용돈은 학생 시기에 받는 금액이고, 재산은 실제로 쓸 수 있는 돈입니다. 특성은 별도의 버프·디버프로, 관련 사건이나 시험의 결과에 영향을 줍니다. 토큰을 누르면 효과를 읽을 수 있어요. 재학·졸업 같은 학교 이력도 별도로 보존됩니다.',money:true,trait:'꼼꼼함'},
   {title:'진행은 언제나 같은 다음 버튼으로',body:'기록 아래의 다음 버튼 하나로 이야기를 넘기거나 대기 중인 선택을 엽니다. 자동은 이야기를 이어 주고 준비된 일상 선택을 5초 뒤 열어요. 수동은 누를 때만 진행하고, 일시정지는 시간을 멈춥니다. 선택은 직접 고르며 결과는 자동 저장됩니다.',art:[['→','다음'],['Ⅱ','일시정지'],['?','다시 도움말']]}
  ];
- function canAuto(){return playbackMode==='auto'&&!userPaused&&!tutorialActive&&!document.hidden;}
+ const electionHub=global.GukminElectionView.mount({root,host:$('playbackControls'),onOpen:()=>{stopJourney();paintControls();},onClose:()=>{if(!disposed){renderProgress();if(canAuto()&&!snapshot?.choice&&!snapshot?.reviewPending&&!cinematicShown)startJourney();}}});
+ function canAuto(){return !verificationMode&&!electionHub.isOpen()&&playbackMode==='auto'&&!userPaused&&!tutorialActive&&!document.hidden;}
  function saveControls(){try{localStorage.setItem(controlsKey,JSON.stringify({mode:playbackMode,paused:userPaused}));}catch{}}
  function paintControls(){
   const auto=playbackMode==='auto';
   $('playbackMode').setAttribute('aria-checked',String(auto));
   text('playbackPause',userPaused?'▶ 재개':'Ⅱ 일시정지');$('playbackPause').setAttribute('aria-pressed',String(userPaused));
-  const disabled=userPaused||tutorialActive||cinematicShown;
+  const disabled=userPaused||tutorialActive||cinematicShown||electionHub.isOpen();
   for(const id of ['historyNext','resumeDailyChoice','resumeMajorChoice'])$(id).disabled=disabled;
   const available=!!snapshot&&(snapshot.choice||snapshot.reviewPending||Number.isFinite(snapshot.progress?.remaining));
   historyAdvance.hidden=(verificationMode&&snapshot?.runtime.contentId!==global.GukminSystemDemo.contentId)||!available;
@@ -191,6 +192,7 @@ function mount(root,navigate,content=global.GukminContent){
  function render(){
   if(!verificationMode&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason)){if(!resultRouted){resultRouted=true;stopJourney();clearCinematics();clearMajor();dailyUI?.reset();navigate('result');}return;}
   global.GukminStatus.render(root,persona);
+  electionHub.update(global.GukminElection.model(persona));
   renderStore();
   const headline=$('lifeHeadline'),label=headlineFor(persona);
   if(headline.textContent!==label){
@@ -683,7 +685,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(presentedToken!==choice?.token)clearMajor();
   if(tutorialActive)return;
   if(dailyUI.isRewardVisible()||reviewing)return;
-  if($('convenienceStore').open||maybeShowAdvice())return;
+  if(electionHub.isOpen()||$('convenienceStore').open||maybeShowAdvice())return;
   if(!choice){dailyUI.reset();return;}
   if(cinematicShown)return;
   if(choice.layer==='한방 선택'){
@@ -734,7 +736,7 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;electionHub.dispose();if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id,input)=>requireEngine().resolve(token,id,input),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose
