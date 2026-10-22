@@ -69,7 +69,7 @@ function placeRunners(track,progress){
 function raceView(number,place){
  const finished=Number.isFinite(place),view=el('section',finished?'race-finish':'sports-preview');
  const board=el('div','sports-scoreboard');
- board.append(el('small','','SPORTS DAY · CLASS RELAY'),el('strong','',finished?number+'반 · '+place+'등':'오늘은 운동회!'),el('span','',finished?(place===1?'마지막 코너에서 역전! 우리 반 우승!':'끝까지 달려 결승선을 통과했다!'):'트랙 한 바퀴, 바통을 이어 달리자'));
+ board.append(el('small','','SPORTS DAY · CLASS RELAY'),el('strong','',finished?number+'반 · '+place+'등':number+'반 · 오늘은 운동회!'),el('span','',finished?(place===1?'마지막 코너에서 역전! 우리 반 우승!':'끝까지 달려 결승선을 통과했다!'):'트랙 한 바퀴, 바통을 이어 달리자'));
  view.append(board);
  const track=oval(number);view.append(track.field);
  placeRunners(track,finished?(place===1?[.999,.93,.87]:place===2?[.92,.999,.84]:[.83,.999,.94]):[0,0,0]);
