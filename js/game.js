@@ -24,7 +24,7 @@ function el(tag,cls,value){
  return element;
 }
 function lifeTitle(persona){
- if(persona.attributes?.admissionAttempts>1)return (persona.attributes.admissionAttempts===2?'재수':persona.attributes.admissionAttempts===3?'삼수':'N수생')+' · 입시'+persona.attributes.admissionAttempts+'회차';
+ if(!persona.attributes?.societyActive&&persona.attributes?.admissionAttempts>1)return (persona.attributes.admissionAttempts===2?'재수':persona.attributes.admissionAttempts===3?'삼수':'N수생')+' · 입시'+persona.attributes.admissionAttempts+'회차';
  const age=persona.age,phase=global.GukminPlayer.phaseOf(persona);
  if(phase==='elementary')return '초등학교 '+Math.max(1,age-schoolAges.elementary+1)+'학년';
  if(phase==='middle')return '중학교 '+Math.max(1,age-schoolAges.middle+1)+'학년';
@@ -32,7 +32,8 @@ function lifeTitle(persona){
  return global.GukminPlayer.phaseDefinition(phase).label;
 }
 function headlineFor(persona){
- if(persona.attributes?.admissionAttempts>1)return lifeTitle(persona);
+ if(persona.attributes?.societyActive)return persona.age+'살 · '+(persona.job||'사회생활');
+ if(!persona.attributes?.societyActive&&persona.attributes?.admissionAttempts>1)return lifeTitle(persona);
  const phase=global.GukminPlayer.phaseOf(persona);
  const school=global.GukminPlayer.schoolsOf(persona).find(record=>
   record.kind===phase&&['enrolled','active','attending'].includes(record.status));
@@ -50,7 +51,8 @@ function posterData(persona){
   high:['고등학생','내 인생은\n어디로?','high']
  };
  let [stage,phrase,portraitStage]=phases[phase]||['인생 기록','나의 길을\n걷다','adult'];
- if(a.admissionDestination==='college') [stage,phrase,portraitStage]=['대학 예정','새로운 문이\n열렸다','adult'];
+ if(a.societyActive&&!a.lifeEndReason&&!a.retryEndReason){[stage,phrase,portraitStage]=[persona.job||'사회생활',a.politicalEntryReady?'이제는 내가\n말할 차례':'사회에서\n나의 다음 장','adult'];}
+ else if(a.admissionDestination==='college') [stage,phrase,portraitStage]=['대학 예정','새로운 문이\n열렸다','adult'];
  else if(a.admissionDestination==='employment') [stage,phrase,portraitStage]=['사회 준비','이제부터\n진짜 실전','adult'];
  else if(a.admissionDestination==='finished'||a.lifeEndReason){
    [stage,phrase,portraitStage]=['기록 종료','이번 도전은\n여기까지',phase==='high'?'high':'adult'];
@@ -190,7 +192,7 @@ function mount(root,navigate,content=global.GukminContent){
  $('playbackControls').hidden=verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
-  if(!verificationMode&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason)){if(!resultRouted){resultRouted=true;stopJourney();clearCinematics();clearMajor();dailyUI?.reset();navigate('result');}return;}
+  if(!verificationMode&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||persona.attributes?.societyComplete)){if(!resultRouted){resultRouted=true;stopJourney();clearCinematics();clearMajor();dailyUI?.reset();navigate('result');}return;}
   global.GukminStatus.render(root,persona);
   electionHub.update(global.GukminElection.model(persona));
   renderStore();
@@ -279,7 +281,7 @@ function mount(root,navigate,content=global.GukminContent){
     }
     log.append(article);
    }
-   if(!snapshot?.reviewPending&&!snapshot?.choice&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||['college','employment'].includes(persona.attributes?.admissionDestination)||['high:graduation','admission:retry-graduation'].some(id=>snapshot?.runtime?.events?.[id]?.status==='completed'))){
+   if(!snapshot?.reviewPending&&!snapshot?.choice&&(!persona.attributes?.societyActive||persona.attributes?.societyComplete||persona.attributes?.lifeEndReason)&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||['college','employment'].includes(persona.attributes?.admissionDestination)||['high:graduation','admission:retry-graduation'].some(id=>snapshot?.runtime?.events?.[id]?.status==='completed'))){
     const complete=el('section','life-chapter-complete');
     complete.append(el('small','','학생 시절 · 기록 완료'),el('h2','',persona.attributes?.lifeEndReason?'이번 삶은 여기까지':'다음 장을 기다리는 삶'),
      el('p','',(persona.attributes?.lifeEndReason?persona.attributes.lifeEndReason+'에 도달해 삶이 끝났습니다. ':persona.attributes?.retryEndReason?persona.attributes.retryEndReason+'으로 N수 준비를 마쳤습니다. ':'')+(persona.attributes?.lifeEndReason?'선택 기록은 그대로 보관됩니다. 새로운 인물로 다시 시작할 수 있습니다.':'현재 공개된 이야기는 여기까지입니다. 선택 기록은 그대로 보관됩니다. 다른 선택으로 새로운 삶을 시작할 수도 있습니다.')));

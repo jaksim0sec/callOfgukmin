@@ -2,7 +2,7 @@
 
 **현행 동작은 실제 소스가 기준**입니다. `developing/`은 현행 계약과 날짜별 구현 기록이 함께 있으므로 각 문서의 **맨 앞 현행 설명이 아래 과거 기록보다 우선**합니다. `notes/`는 이전 논의·미확정 구상이며 `archive/`는 과거 판본입니다.
 
-현재 구현 범위: **출생~20세, 고교 졸업·수시/정시·수능 제출/결과·대학/사회 진로 선택·2회차 입시**. 대학 캠퍼스 생활·성인·정치·완결 엔딩은 미구현입니다.
+현재 구현 범위: **출생~학생기·대입/N수·사회 허브·대학·병역·취업·정치 입문 준비**. 본격적인 정당 활동·선거·대통령 경로는 미구현입니다.
 
 | 문서 | 책임 |
 |---|---|
@@ -13,6 +13,7 @@
 | [developing/RUNTIME.md](developing/RUNTIME.md) | 독립 페이지·로드 순서·화면/복원 흐름 |
 | [developing/ELECTION.md](developing/ELECTION.md) | 선거 엔진·전용 UI·스토리 경계와 파라미터 |
 | [developing/SYSTEMS.md](developing/SYSTEMS.md) | 이벤트 3종·선택 2종·정산·조건·턴·복구 |
+| [developing/SOCIETY.md](developing/SOCIETY.md) | 사회 허브·대학·병역·직업·정치 입문 경계와 개월/저장 |
 | [developing/LIFE.md](developing/LIFE.md) | 출생/생애·학생 플레이·대입/재도전 |
 | [developing/STORY.md](developing/STORY.md) | 인과·기회비용·조건 분기·현재 사건 |
 | [developing/UI.md](developing/UI.md) | 종이 일상 선택/보상·시험/원서·포스터 |

@@ -146,6 +146,7 @@ function present({choice,resolve,root}){
  let selected=null,closed=false;
  const person=global.GukminGame.session?.snapshot().persona||global.GukminPlayer.load();
  const p=choice.presentation||{};
+ if(p.type==='society')return global.GukminSocietyView.present({choice,resolve,root});
  if(['election-pledges','election-survey'].includes(p.type))return global.GukminElectionChoices.present({choice,resolve,root,model:global.GukminElection.model(person)});
  if(['admission-route','grade-seal','university','admission-finish'].includes(p.type))
   return presentAdmission({choice,resolve,root});

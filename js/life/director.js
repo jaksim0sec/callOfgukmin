@@ -43,19 +43,13 @@ function create({persona,persist,onChange}){
   if(raw.runtime.cinematic)return {...raw,progress:{value:0,remaining:null,waiting:true,title:'입시 결과 확인'}};
   if(raw.persona.attributes?.admissionDestination==='finished')return {...raw,choice:null,progress:{value:0,remaining:null,waiting:false,title:''}};
   if(raw.choice)return {...raw,progress:{value:1,remaining:0,waiting:true,title:raw.choice.title}};
-  const eligible=definitions.events.filter(event=>{
-   const runtime=raw.runtime.events[event.id];
-   const c=choices.get(event.choice);
-   return c&&c.blocksTime!==false&&c.progress!==false&&
-     runtime?.status!=='completed'&&event.every===undefined&&
-     (event.at??0)>=raw.runtime.turn&&
-     global.GukminEffects.matches(raw.persona,event.when,event.at);
-  }).sort((a,b)=>(a.at??0)-(b.at??0))[0];
+  const eligible=scheduled(raw).filter(item=>choices.has(item.event.choice)&&choices.get(item.event.choice).blocksTime!==false&&choices.get(item.event.choice).progress!==false).sort((a,b)=>a.at-b.at)[0];
   if(!eligible)return {...raw,progress:{value:0,remaining:null,waiting:false,title:''}};
-  const at=eligible.at??0,remain=Math.max(0,at-raw.runtime.turn);
+  const at=Math.max(raw.runtime.turn,eligible.at),remain=Math.max(0,at-raw.runtime.turn);
   const elapsed=Math.max(0,raw.runtime.turn-(raw.runtime.progressStart||0));
-  return {...raw,progress:{value:remain===0?1:elapsed/Math.max(1,elapsed+remain),remaining:remain,waiting:false,title:eligible.title}};
+  return {...raw,progress:{value:remain===0?1:elapsed/Math.max(1,elapsed+remain),remaining:remain,waiting:false,title:eligible.event.title}};
  }
+ function scheduled(s){return definitions.events.flatMap(event=>{const r=s.runtime.events[event.id],at=r?.nextAt??event.at??0;return (r?.status!=='completed'||event.every!==undefined)&&global.GukminEffects.matches(s.persona,event.when,Math.max(s.runtime.turn,at))?[{event,at}]:[];});}
  const tier=global.GukminData.wealthTiers.find(t=>t.id===persona.familyTier);
  const onTurn=(person,turn)=>{
   const phase=global.GukminPlayer.phaseOf(person);
@@ -72,9 +66,10 @@ function create({persona,persist,onChange}){
   const s=timeline.snapshot();
   if(s.persona.attributes?.lifeEndReason)return false;
   if((s.reviewPending||s.runtime.cinematic)&&(s.persona.stats.illness||0)<5)return false;
-  if((s.persona.stats.illness||0)>=5&&(s.persona.attributes?.admissionAttempts||1)<2){
+  if((s.persona.stats.illness||0)>=5&&((s.persona.attributes?.admissionAttempts||1)<2||s.persona.attributes?.societyActive)){
    timeline.cancelPending('life-limit',{effects:{attributes:{lifeEndReason:'정신병 한계',admissionDestination:'finished',job:'생애 종료'}},history:{title:'삶의 끝 · 정신병 한계',detail:'감당할 수 있는 한계를 넘어 이번 삶이 끝났다.',importance:'major'}});return true;
   }
+  if(s.persona.attributes?.societyActive)return false;
   if(s.persona.attributes?.admissionAttempts<2||!s.persona.attributes?.admissionAttempts||s.persona.attributes?.admissionDestination==='finished')return false;
   const reason=global.GukminAdmissions.retryReason(s.persona);
   if(!reason)return false;
@@ -102,12 +97,7 @@ function create({persona,persist,onChange}){
      const s=timeline.snapshot();
      if(s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished')break;
      if(Object.values(s.runtime.choices).some(item=>item.status==='waiting'))break;
-     const targets=definitions.events.filter(event=>{
-       const runtime=s.runtime.events[event.id];
-       return event.every===undefined&&runtime?.status!=='completed'&&
-         (event.at??0)>s.runtime.turn&&
-         global.GukminEffects.matches(s.persona,event.when,event.at);
-     }).map(event=>event.at);
+     const targets=scheduled(s).filter(item=>item.at>s.runtime.turn).map(item=>item.at);
      if(!targets.length)break;
      const turns=Math.min(...targets)-s.runtime.turn;
      timeline.advance(Math.min(10000,turns));
@@ -121,14 +111,12 @@ function create({persona,persist,onChange}){
    if(timeline.snapshot().runtime.cinematic)return false;
    if(timeline.snapshot().reviewPending)timeline.resume();
    if(limit()||timeline.snapshot().runtime.cinematic||timeline.snapshot().persona.attributes?.admissionDestination==='finished')return false;
+   const pending=timeline.snapshot();
+   if(pending.choice)return decorate(pending);
+   timeline.advance(0);
    const before=timeline.snapshot();
-   if(before.choice)return decorate(before);
-   const future=definitions.events.some(event=>{
-    const r=before.runtime.events[event.id];
-    return event.every===undefined&&r?.status!=='completed'&&
-      (event.at??0)>before.runtime.turn&&
-      global.GukminEffects.matches(before.persona,event.when,event.at);
-   });
+   if(before.choice||before.runtime.cinematic||before.persona.history.length!==pending.persona.history.length)return decorate(before);
+   const future=scheduled(before).some(item=>item.at>before.runtime.turn);
    if(!future)return false;
    timeline.advance(1);
    if(limit())return false;

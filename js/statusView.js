@@ -162,7 +162,7 @@ function showAttributes(root,s){
       const active=['enrolled','active','attending'].includes(record.status);
       const completed=record.status==='graduated';
       const token=createToken({type:'school',label:record.name,state:active?'active':completed?'complete':'ended'});
-      const label=active?'재학 중':completed?'졸업':record.status==='dropout'?'중퇴':'기록';
+      const label=active?'재학 중':completed?'졸업':record.status==='dropout'?'중퇴':record.status==='leave'?'휴학':'기록';
       token.title=record.name+' · '+label;
       token.setAttribute('aria-label',record.name+' '+label);
       tokens.append(token);

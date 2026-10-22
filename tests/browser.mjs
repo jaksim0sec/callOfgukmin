@@ -125,7 +125,7 @@ try{
    await page.locator('#gaugesList progress.ui-progress-native').count(),'every visual stat gauge retains a semantic native progress');
   await page.locator('#resumeDailyChoice').click();
   assert.equal(await page.locator('#dailyChoiceDialog').isVisible(),true);
-  assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title').textContent(),await page.locator('#currentTitle').textContent());
+  assert.equal(await page.locator('#dailyChoiceBody .daily-scenario-title, #dailyChoiceBody .daily-illustration figcaption > strong').textContent(),await page.locator('#currentTitle').textContent());
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').count(),0,'redundant prompt removed from paper');
   assert.equal(await page.locator('#dailyChoiceBody .inline-choices').evaluate(e=>getComputedStyle(e).flexDirection),'column');
   const escapedMarkup=await page.evaluate(()=>{
@@ -149,9 +149,8 @@ try{
   assert.match(await page.locator('#dailyChoiceDialog').evaluate(el=>getComputedStyle(el).backgroundImage),/linear-gradient/,'paper grid is rendered');
   assert.equal(await page.locator('#dailyModalCollapse').count(),0,'no redundant paper close text');
   assert.equal(await page.locator('#dailyChoiceBody .daily-choice-prompt').count(),0,'no oversized question heading');
-  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-story').evaluate(el=>
-    parseFloat(getComputedStyle(el).fontSize)>parseFloat(getComputedStyle(document.querySelector('#dailyModalHeading')).fontSize)),
-    'story text visually leads event title');
+  assert.ok(await page.locator('#dailyChoiceBody .daily-choice-story').evaluate(el=>{const photo=el.closest('.daily-illustration');return photo?parseFloat(getComputedStyle(photo.querySelector('figcaption > strong')).fontSize)>parseFloat(getComputedStyle(el).fontSize):parseFloat(getComputedStyle(el).fontSize)>parseFloat(getComputedStyle(document.querySelector('#dailyModalHeading')).fontSize);}),
+    'photo titles lead their description while plain notebook stories lead the small header');
   const semanticPill=await page.evaluate(()=>{
    const chip=GukminStatus.metricImpact('relations',2);
    document.body.append(chip);
@@ -638,13 +637,12 @@ try{
   await p.locator('#lifeDecisionDialog .life-answer').first().click();
   assert.ok((await p.locator('#lifeDecisionDialog .life-school-source').getAttribute('href')).startsWith('https://'));
   await p.locator('#lifeDecisionDialog .life-submit').click();
-  const ended=await walk('nothing');
-  assert.equal(ended.age,20);assert.equal(ended.turn,88);
-  assert.equal(await p.locator('#choiceTiming').isVisible(),false,'completed chapter has no meaningless progress bar');
-  assert.equal(await p.locator('.life-chapter-complete button').count(),2,'completed chapter offers result and replay actions');
-  assert.equal(await p.getByRole('button',{name:'새 인물로 다시 시작',exact:true}).count(),1);
-  assert.match(await p.locator('.metric-schoolScore .gauge-value').textContent(),/[1-5]등급/);
-  assert.match(await p.locator('.metric-exam .gauge-value').textContent(),/[1-9]등급/);
+  const ended=await walk('society');
+  assert.equal(ended.age,20);assert.ok(ended.turn>=87&&ended.turn<=88);
+  assert.equal(await p.locator('#lifeDecisionDialog.is-society[open]').count(),1,'admissions now connects into a real society choice');
+  assert.equal(await p.locator('.life-chapter-complete button').count(),0,'the old student-end placeholder is absent during society');
+  assert.equal(await p.getByRole('button',{name:'새 인물로 다시 시작',exact:true}).count(),0);
+  assert.ok(await p.evaluate(()=>['schoolScore','exam'].every(id=>GukminGame.session.snapshot().persona.metricHistory.some(h=>h.id===id&&Number.isFinite(h.value)))),'student grades are archived rather than lost on adult entry');
   assert.equal(await p.locator('.gauge-group-academics .gauge-progress-track').count(),0,'grades have no misleading completion bars');
   assert.equal(await p.locator('.metric-stress .gauge-name').textContent(),'압박','approved metric name is preserved');
   const metricOverflow=await p.locator('.status>.gauges').evaluate(card=>{
@@ -659,7 +657,7 @@ try{
   assert.equal(schoolHistory.status,'graduated');
   await p.screenshot({path:`${artifacts}/${name}-life-graduate.png`,fullPage:true});
   assert.deepEqual(pageErrors,[]);
-  const savedRecord=await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));await p.getByRole('button',{name:'내 인생 결과 보기 ↗',exact:true}).click();await p.locator('#resultTitle').waitFor();assert.equal(await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),savedRecord,'result navigation preserves the complete life');
+  const savedRecord=await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1'));await p.goto(base+'html/result.html',{waitUntil:'domcontentloaded'});await p.locator('#resultTitle').waitFor();assert.equal(await p.evaluate(()=>localStorage.getItem('callOfgukmin__ui__v1')),savedRecord,'result navigation preserves the complete life');
   console.log('PASS real life '+name+': exam UI, school application, reload, age20 graduation, result navigation');
   await ctx.close();
  }

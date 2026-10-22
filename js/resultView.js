@@ -14,16 +14,17 @@ function mount({navigate,renderPoster}){
  const P=global.GukminPlayer,saved=P.load(),persona=saved||P.generate(),a=persona.attributes||{};
  const reason=a.lifeEndReason||a.retryEndReason;
  const destination=a.admissionDestination;
- const finished=!!reason||['college','employment','finished'].includes(destination);
- const title=!saved?'아직 쓰이지 않은 이야기':reason==='백수 엔딩'?'서른, 백수 엔딩':reason?'잠시 멈춘, 하나의 삶':destination==='college'?'더 넓은 세상으로':destination==='employment'?'교문 밖, 나의 길로':finished?'이번 삶의 마지막 장':'아직, 쓰는 중입니다';
+ const finished=!!reason||(a.societyActive?!!a.societyComplete:['college','employment','finished'].includes(destination));
+ const title=!saved?'아직 쓰이지 않은 이야기':reason==='백수 엔딩'?'서른, 백수 엔딩':reason?'잠시 멈춘, 하나의 삶':a.politicalEntryReady?'세상에 나의 목소리를':a.societyActive?'사회에서 쓰는 나의 이야기':destination==='college'?'더 넓은 세상으로':destination==='employment'?'교문 밖, 나의 길로':finished?'이번 삶의 마지막 장':'아직, 쓰는 중입니다';
  const schools=P.schoolsOf(persona),school=schools.at(-1);
- const summary=!saved?'대기 화면에서 당신의 첫 인생을 시작해 보세요.':reason?persona.name+' · '+persona.age+'살 · '+reason:persona.name+' · '+persona.age+'살 · '+(finished?'학생 시절의 기록을 남깁니다. 다음 생애 콘텐츠는 준비 중입니다.':'현재까지의 선택을 모았습니다. 이야기는 계속됩니다.');
+ const summary=!saved?'대기 화면에서 당신의 첫 인생을 시작해 보세요.':reason?persona.name+' · '+persona.age+'살 · '+reason:persona.name+' · '+persona.age+'살 · '+(a.societyActive?(a.politicalEntryReady?(a.politicalPathLabel+' · 정치 입문을 준비합니다.'):'학업과 병역, 일하며 남긴 선택을 모았습니다.'):(finished?'학생 시절의 기록을 남깁니다. 다음 생애 콘텐츠는 준비 중입니다.':'현재까지의 선택을 모았습니다. 이야기는 계속됩니다.'));
  const put=(id,value)=>document.getElementById(id).textContent=value;
  const node=(tag,text)=>{const el=document.createElement(tag);el.textContent=text;return el;};
  put('resultCardName',persona.name);if(isDeceased(persona)){const mark=node('small','故');mark.className='deceased-mark';document.getElementById('resultCardName').append(mark);}put('resultCardStage',persona.age+'살 · '+(reason||persona.job||'성장 중'));
  put('resultTitle',title);put('resultSummary',summary);put('resultEyebrow',finished?'LIFE RECORD · 한 장의 마침표':'LIFE RECORD · 지금까지의 나');
  renderPoster(document.getElementById('resultPosterMount'),persona,finished?'기록 완료':'진행 중',reason?'여기까지,\n나의 이야기':destination==='college'?'새로운 문 앞에\n서 있는 나':destination==='employment'?'교문 밖에서\n시작하는 내일':undefined);
  const facts=[['나이',persona.age+'살'],['마지막 학교',school?.name||'입학 전'],['남은 재산',persona.stats.money.toLocaleString('ko-KR')+'원'],['나의 선택',Object.values(persona.simulation?.choices||{}).filter(c=>c.status==='closed').length+'번']];
+ if(a.societyActive){facts.push(['병역',a.militaryStatus+' · '+a.militaryReason],['경력',(a.careerCurrent||'첫 일 준비')+' · '+(a.careerMonths||0)+'개월']);if(a.studentDebt)facts.push(['학자금 원금',a.studentDebt.toLocaleString('ko-KR')+'원']);if(a.politicalPathLabel)facts.push(['정치 입문 준비',a.politicalPathLabel]);}
  const offer=a.earlyStatus==='accepted'?a.earlyOffer:a.regularOffer;
  if(destination==='college'&&offer)facts.push(['다음 목적지',offer]);
  else if(destination==='employment')facts.push(['다음 목적지','사회 진출 준비']);
@@ -31,10 +32,11 @@ function mount({navigate,renderPoster}){
  facts.push(['압박',persona.stats.stress+'/25'],['정신병',(persona.stats.illness||0)+'/5'],['관계',persona.stats.relations+'/25']);
  for(const [id,label,submitted] of [['schoolScore','최종 내신',a.highFinalSubmitted],['exam','수능',a.csatSubmitted]])if(Number.isFinite(persona.stats[id]))facts.push([label,submitted?global.GukminGrades.report(id,persona.stats[id],'high').display:'아직 확정되지 않음']);
  const career=document.getElementById('resultCareer');
- for(const entry of schools.slice(-3)){const line=node('div','');line.className='result-career-entry';line.append(global.GukminStatus.createToken({type:'school',label:(entry.status==='graduated'?'졸업 · ':entry.status==='dropout'?'지난 학교 · ':'재학 · ')+entry.name}));career.append(line);}
+ for(const entry of schools.slice(-3)){const line=node('div','');line.className='result-career-entry';line.append(global.GukminStatus.createToken({type:'school',label:(entry.status==='graduated'?'졸업 · ':entry.status==='dropout'?'지난 학교 · ':entry.status==='leave'?'휴학 · ':'재학 · ')+entry.name}));career.append(line);}
  if(destination==='college'&&offer)career.append(global.GukminStatus.createToken({label:'진학 · '+offer,icon:'graduation'}));
  for(const role of (persona.roles||[]).slice(-2))career.append(global.GukminStatus.createToken({label:typeof role==='string'?role:role.label||role.name,icon:'flag'}));
  if(!career.childElementCount)career.append(global.GukminStatus.createToken({label:'아직 입학 전',icon:'sparkle'}));
+ if(a.societyActive){if(a.careerCurrent)career.append(global.GukminStatus.createToken({label:a.careerCurrent+' · '+(a.careerMonths||0)+'개월',icon:'flag'}));career.append(global.GukminStatus.createToken({label:a.militaryStatus,icon:'flag'}));if(a.politicalPathLabel)career.append(global.GukminStatus.createToken({label:a.politicalPathLabel,icon:'speech'}));}
  const cardStats=document.getElementById('resultCardStats');
  for(const [label,icon] of [[persona.stats.money.toLocaleString('ko-KR')+'원','savings'],['관계 '+persona.stats.relations+'/25','users'],[(persona.stats.illness?'정신병 '+persona.stats.illness+'/5':'압박 '+persona.stats.stress+'/25'),'pulse']])cardStats.append(global.GukminStatus.createToken({label,icon}));
  for(const [key,value] of facts){const item=node('div','');item.append(node('small',key),node('strong',value));document.getElementById('resultFacts').append(item);}

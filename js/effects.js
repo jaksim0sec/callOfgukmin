@@ -36,8 +36,9 @@ function matches(persona,condition={},turn=0){
  return true;
 }
 function apply(persona,result={},context={}){
- keys(result,['effects','history','tags','conditional','assessment','highEntry','retryYear','admissionDecision','electionDecision'],'결과');
+ keys(result,['effects','history','tags','conditional','assessment','highEntry','retryYear','admissionDecision','electionDecision','societyDecision'],'결과');
  let prepared=clone(result);
+ if(result.societyDecision)prepared={...prepared,...global.GukminSociety.decision(persona,result.societyDecision,context)};
  if(result.electionDecision)prepared={...prepared,...global.GukminElection.decision(persona,result.electionDecision,context)};
  if(result.admissionDecision)prepared={...prepared,...global.GukminAdmissions.decision(persona,result.admissionDecision)};
  if(result.retryYear)prepared=global.GukminAdmissions.retry(persona,prepared);
@@ -107,7 +108,7 @@ function apply(persona,result={},context={}){
      ?s.schoolHistory.filter(r=>r.kind===raw.kind&&r.status==='enrolled'):[];
    if(!raw.id&&!raw.name&&eligible.length!==1)throw new Error('졸업 학교가 모호함');
    const record=eligible.length?{...eligible[0],status:'graduated'}:raw;
-   if(!record.id||!record.name||!P.schoolKinds.some(k=>k.id===record.kind)||!['enrolled','graduated','dropout'].includes(record.status))throw new Error('학교 기록 오류');
+   if(!record.id||!record.name||!P.schoolKinds.some(k=>k.id===record.kind)||!['enrolled','graduated','dropout','leave'].includes(record.status))throw new Error('학교 기록 오류');
    const legacy=s.schoolHistory.filter(r=>!r.id&&r.kind===record.kind&&r.name===record.name);
    if(legacy.length>1)throw new Error('학교 이력이 모호함: '+record.name);
    const old=s.schoolHistory.find(r=>r.id===record.id)||legacy[0];

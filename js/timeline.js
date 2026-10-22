@@ -72,7 +72,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   if(!E.matches(s.persona,e.completeWhen,s.runtime.turn))return;
   settlement(s,`event:${eventId}:${r.count}:complete`,e.completion||{},eventId);
   r.status='completed';r.completedAt=s.runtime.turn;
-  if(e.every!==undefined)r.nextAt+=e.every;
+  if(e.every!==undefined)r.nextAt=(e.repeatFrom==='start'?r.startedAt:r.nextAt)+e.every;
  }
  function pump(s){
   if(s.runtime.awaitingContinuation||blocking(s))return;
@@ -93,7 +93,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
     // intentionally continues to use its legacy, unbranched options.
     const variant=selectScenario(c,s.persona,s.runtime.turn);
     s.runtime.choices[token]={token,eventId:id,choiceId:c.id,layer:c.layer,status:'waiting',
-      openedAt:s.runtime.turn,script:scriptOf(c,variant),...(variant?{scenarioId:variant.id}:{})};
+      openedAt:s.runtime.turn,script:c.presentation?.type==='society'?{...global.GukminSociety.choice(s.persona),revision:2}:scriptOf(c,variant),...(variant?{scenarioId:variant.id}:{})};
     // Later events at this same turn open only after the player's decision.
     if(c.blocksTime!==false)break;
    }else {finish(s,id);if(e.presentation&&pauseAfterChoice){const h=s.persona.history.at(-1);s.runtime.cinematic={...clone(e.presentation),eventId:id,title:h.title,detail:h.detail};break;}}

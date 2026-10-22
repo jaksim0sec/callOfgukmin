@@ -1,7 +1,7 @@
 /* Static app shell only. Player saves remain exclusively in localStorage. */
 'use strict';
 const ROOT=new URL('./',self.location.href);
-const VERSION=new URL(self.location.href).searchParams.get('v')||'daily-illustrations-20261022';
+const VERSION=new URL(self.location.href).searchParams.get('v')||'society-20261022';
 const PREFIX='gukmin-shell-';
 const CACHE=PREFIX+VERSION;
 const SHELL=[
@@ -25,6 +25,8 @@ const SHELL=[
  "js/effects.js",
  "js/game.js",
  "js/life/admissions.js",
+ "js/life/society.js",
+ "js/societyView.js",
  "js/life/director.js",
  "js/life/elementary.js",
  "js/life/high.js",
