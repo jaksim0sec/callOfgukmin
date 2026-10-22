@@ -29,16 +29,36 @@ function rivals(p){
 }
 function preference(p,group,pledge){return pledge.scores[group]+Math.floor(roll(p,'taste:'+group+':'+pledge.id)*3)-1;}
 function hint(p,index){const ordered=pledges.map(x=>({x,n:preference(p,index,x)})).sort((a,b)=>b.n-a.n);return groups[index].name+'에서는 「'+ordered[0].x.name+'」와 「'+ordered[1].x.name+'」에 눈빛이 달라졌다. 「'+ordered.at(-1).x.name+'」에는 반응이 차갑다.';}
+// Preview uses public catalog tastes; only the group we heard reveals its seeded variation.
+function personality(p,g,response=p.attributes?.electionResponse){
+ const a=p.attributes||{};let value=(p.stats.relations||0)/6-1.5+(a.teacherTrust??12)/12-.5;
+ if(has(p,'리더십'))value+=.8;if(g===1&&has(p,'꼼꼼함'))value+=.7;if(g===3&&has(p,'체육'))value+=.7;
+ if(response==='honest')value+=g===groups.findIndex(x=>x.id===a.electionHeard)?2.5:.3;
+ if(response==='smear')value+=1.2;return value;
+}
+function shares(scores){const weights=scores.map(n=>Math.exp(n/3.8)),sum=weights.reduce((a,b)=>a+b,0);return weights.map(n=>n/sum*100);}
+function wholeShares(values){const rounded=values.map(Math.floor),order=values.map((v,i)=>({i,f:v-rounded[i]})).sort((a,b)=>b.f-a.f||a.i-b.i);for(let n=100-rounded.reduce((a,b)=>a+b,0),i=0;i<n;i++)rounded[order[i].i]++;return rounded;}
+function forecast(p,ids=chosen(p).map(x=>x.id),response=p.attributes?.electionResponse){
+ if(!Array.isArray(ids)||ids.length>3||new Set(ids).size!==ids.length||ids.some(id=>!pledges.some(x=>x.id===id)))throw new Error('공약 예상 입력 오류');
+ const responseEffects=response&&response!==p.attributes?.electionResponse?decision(p,{action:'respond',response}).effects:null;
+ const projected=responseEffects?{...p,stats:{...p.stats,relations:clamp((p.stats.relations||0)+(responseEffects.stats.relations||0))},attributes:{...p.attributes,...responseEffects.attributes}}:p;
+ const competitors=[{id:'player',name:p.name,pledges:ids},...rivals(p)],heard=groups.findIndex(g=>g.id===p.attributes?.electionHeard);
+ const rows=groups.map((group,g)=>{
+  const known=g===heard,scores=competitors.map((candidate,c)=>candidate.pledges.reduce((n,id)=>{const x=pledges.find(x=>x.id===id);return n+(known?preference(p,g,x):x.scores[g]);},0)+(c===0?personality(projected,g,response):rivalTypes.find(r=>r.id===candidate.id).base[g]));
+  const uncertainty=competitors.map(candidate=>(known?0:candidate.pledges.length)+.4),center=wholeShares(shares(scores));
+  const low=Math.floor(shares(scores.map((v,i)=>v+(i===0?-1:1)*uncertainty[i]))[0]),high=Math.ceil(shares(scores.map((v,i)=>v+(i===0?1:-1)*uncertainty[i]))[0]);
+  return {group,known,shares:center,low:Math.min(low,center[0]),high:Math.max(high,center[0])};
+ });
+ const total=wholeShares(competitors.map((_,c)=>rows.reduce((n,r)=>n+r.shares[c]*r.group.size/30,0)));
+ return {candidates:competitors.map((candidate,c)=>({id:candidate.id,name:candidate.name,share:total[c]})),rows,low:Math.floor(rows.reduce((n,r)=>n+r.low*r.group.size/30,0)),high:Math.ceil(rows.reduce((n,r)=>n+r.high*r.group.size/30,0)),hard:ids.filter(id=>pledges.find(x=>x.id===id).difficulty>=2).length,cost:ids.reduce((n,id)=>n+pledges.find(x=>x.id===id).cost,0)};
+}
 function ballot(p){
- const attrs=p.attributes||{},competitors=[{id:'player',name:p.name,pledges:chosen(p).map(x=>x.id)},...rivals(p)],rows=[];
+ const competitors=[{id:'player',name:p.name,pledges:chosen(p).map(x=>x.id)},...rivals(p)],rows=[];
  for(let g=0;g<groups.length;g++){
   const electorate=groups[g].size,turnout=Math.max(1,electorate-Number(roll(p,'turnout:'+g)<.35));
   const scores=competitors.map((candidate,c)=>{
    let value=candidate.pledges.reduce((sum,id)=>sum+preference(p,g,pledges.find(x=>x.id===id)),0);
-   if(c===0){value+=(p.stats.relations||0)/6-1.5+(attrs.teacherTrust??12)/12-.5;if(has(p,'리더십'))value+=.8;if(g===1&&has(p,'꼼꼼함'))value+=.7;if(g===3&&has(p,'체육'))value+=.7;
-    if(attrs.electionResponse==='honest')value+=g===groups.findIndex(x=>x.id===attrs.electionHeard)?2.5:.3;
-    if(attrs.electionResponse==='smear')value+=1.2;
-   }else value+=rivalTypes.find(x=>x.id===candidate.id).base[g];
+   if(c===0)value+=personality(p,g);else value+=rivalTypes.find(x=>x.id===candidate.id).base[g];
    return value+(roll(p,'noise:'+g+':'+candidate.id)-.5)*.8;
   });
   const weights=scores.map(n=>Math.exp(n/3.8)),sum=weights.reduce((a,b)=>a+b,0),quotas=weights.map(w=>turnout*w/sum),votes=quotas.map(Math.floor);
@@ -106,7 +126,7 @@ function report(p){
 }
 const attributes={electionRevision:'선거 규칙',electionStage:'선거 진행',electionHeard:'들은 민심',electionPledges:'세 가지 공약',electionResponse:'선거 대응',teacherTrust:'담임 신뢰',electionSmearDebt:'네거티브 외상',electionDebtResolved:'과거 소문 대응',electionWinner:'당선 후보',electionTie:'동률 추첨',electionHardBill:'권한 밖 공약',electionBillCost:'다음 공약 비용',electionBill0:'첫 약속 이행',electionBill1:'두 번째 약속 이행'};
 for(let g=0;g<4;g++){attributes['electionTurnout'+g]='집단 투표수';for(let c=0;c<3;c++){attributes['electionVotes'+g+'_'+c]='집단 득표';attributes['electionScore'+g+'_'+c]='집단 호감도';}}
-global.GukminElection=Object.freeze({groups,pledges,available,chosen,rivals,hint,roll,ballot,decision,report,billTarget,canChoose});
+global.GukminElection=Object.freeze({groups,pledges,available,chosen,rivals,hint,roll,ballot,forecast,decision,report,billTarget,canChoose});
 global.GukminDirector.register({id:'election',when:{any:[{phase:'elementary'},{phase:'high'}]},generate:()=>{
  const listen=S.selection('election:listen',45,'민서와 복도 민심 듣기','민서는 출마하지 않고 네 곁에 남았다. "목소리가 큰 애들만 반 친구는 아니잖아. 누구 얘기부터 들어 볼래?"',groups.map(g=>({id:g.id,label:g.name+' 이야기를 듣는다',...(g.id==='quiet'?{outlook:'따로 찾아가 물어야 해서 복습 시간이 조금 줄어듭니다.'}:{}),detail:'친구들의 말을 들었다.'})),'일상 선택',{type:'campaign',step:'listen'});
  listen.event.when={phase:'elementary',attributes:{electionRevision:1,electionStage:'listen'}};listen.choice.options.forEach(o=>o.result.electionDecision={action:'listen',group:o.id});

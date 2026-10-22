@@ -462,6 +462,7 @@ function mount(root,navigate,content=global.GukminContent){
    if(report){
     analysis.append(el('h3','','표가 갈린 자리'),el('p','election-analysis-note','같은 집단을 노린 후보끼리는 표를 나눠 가집니다. 내 인물 득표와 공약 호감이 함께 반영됐습니다.'));
     for(const row of report.rows){const group=el('article','election-group-result');group.append(el('strong','',row.group.name+' · '+row.turnout+'/'+row.group.size+'명 투표'));
+     const total=row.votes.reduce((n,v)=>n+v,0),shares=row.votes.map(v=>v/total*100);group.append(global.GukminElectionView.bar(shares,report.candidates.map(c=>c.name)).element);
      const split=el('div','election-vote-split');report.candidates.forEach((candidate,i)=>{const token=el('span',i===0?'is-player':'',candidate.name+' '+row.votes[i]+'표');split.append(token);});group.append(split,el('p','',row.hint));analysis.append(group);}
     if(report.tied)analysis.append(el('p','election-analysis-note','최고 득표 동률은 저장된 추첨 순서로 결정했습니다. 새로고침해도 바뀌지 않습니다.'));
    }else analysis.append(el('p','','이전 저장의 선거입니다. 세부 득표는 기록되지 않았습니다.'));

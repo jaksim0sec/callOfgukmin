@@ -1,3 +1,7 @@
+## 2026-10-22 민심 퍼즐 릴리스 (현행)
+
+릴리스 `class-puzzle-20261022`. 공통 읽기 전용 `electionView.js`를 statusView 다음, dailyScenes/game/majorView 전에 로드하고 서비스워커 셸에 포함한다. 저장 키·선거 단계·득표 판정은 유지한다. 카드 초안과 지지율 업데이트는 실제 효과/저장을 변경하지 않는다. 확정된 기존 공약과 투표 기록도 그대로 복구한다.
+
 ## 2026-10-22 공약 캠페인 릴리스 (현행)
 
 릴리스 `class-politics-20261022`. `life/election.js`는 elementary 이후 director 콘텐츠를 추가하고 고교의 소문 후속까지 담당한다. 모든 화면에서 elementary 다음에 로드하고 서비스워커 셸에 포함한다. 저장 키/콘텐츠 ID는 변경하지 않는다. 새 출마에 electionRevision=1을 붙이며 옛 동결 선택·진행 기록은 소급 재판정하지 않는다. 일상/한방/소식 대기와 review·cinematic 확인 경로를 재사용한다. 공약 한방 입력만 pledges 배열을 추가 허용하며 대학 지원 입력 계약은 유지한다.

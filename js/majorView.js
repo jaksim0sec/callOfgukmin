@@ -142,26 +142,37 @@ function presentAdmission({choice,resolve,root}){
 }
 
 function presentPledges({choice,resolve,root},person){
- const E=global.GukminElection,selected=new Set();let closed=false;
+ const E=global.GukminElection,slots=[null,null,null];let activeSlot=0,closed=false;
  const sheet=make('section','life-modal-wrap election-pledge-paper'),head=make('header','life-modal-head'),foldButton=make('button','life-modal-collapse','접기 ⌄');foldButton.type='button';
  head.append(make('span','life-modal-serial','우리 반 선거관리위원회'),foldButton);
- const content=make('div','pledge-content');content.append(make('small','campaign-eyebrow','내 말이, 나중에 청구서가 됩니다.'),make('h2','life-modal-title','딱 세 가지 약속'),make('p','pledge-intro','인기만 좇을까, 빈틈을 노릴까. 공약은 세 장만 고를 수 있습니다.'));
- const heard=E.groups.findIndex(g=>g.id===person.attributes.electionHeard);
- if(heard>=0)content.append(make('p','campaign-note',E.hint(person,heard)));
- content.append(make('p','campaign-rumor','민서의 귀띔 · '+E.rivals(person).map(r=>r.name+' — '+r.title).join(' / ')));
+ const content=make('div','pledge-content');content.append(make('small','campaign-eyebrow','세 칸으로 움직이는, 서른 명의 마음'),make('h2','life-modal-title','우리 반 민심 퍼즐'));
+ const puzzle=make('section','pledge-puzzle'),rack=make('div','pledge-slots');rack.setAttribute('role','group');rack.setAttribute('aria-label','공약 세 칸');
+ const slotButtons=slots.map((_,i)=>{const button=make('button','pledge-slot');button.type='button';button.addEventListener('click',()=>{activeSlot=i;paint();});button.addEventListener('keydown',e=>{if(['Delete','Backspace'].includes(e.key)){e.preventDefault();slots[i]=null;activeSlot=i;paint();}});rack.append(button);return button;});
+ puzzle.append(rack,make('small','pledge-slot-help','카드를 눌러 끼우기 · 칸을 누르면 교체 · 고른 카드를 다시 누르면 빼기'));
+ const board=global.GukminElectionView.board(person);puzzle.append(board.element);content.append(puzzle);
  const cards=make('div','pledge-cards');cards.setAttribute('role','group');cards.setAttribute('aria-label','공약 세 장 선택');
- const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit','세 가지 약속 확정');confirm.type='button';confirm.disabled=true;
+ const footer=make('footer','life-modal-foot pledge-footer'),counter=make('strong','pledge-counter','0 / 3'),confirm=make('button','life-submit','세 가지 약속 확정');confirm.type='button';confirm.disabled=true;counter.setAttribute('aria-live','polite');const live=make('small','pledge-live-share'),counts=make('div','pledge-footer-counts');counts.append(counter,live);
+ function paint(){
+  const ids=slots.filter(Boolean);slotButtons.forEach((button,i)=>{button.classList.toggle('is-active',activeSlot===i);button.classList.toggle('is-filled',!!slots[i]);button.setAttribute('aria-pressed',String(activeSlot===i));button.replaceChildren(make('small','','공약 '+(i+1)),make('strong','',slots[i]?E.pledges.find(p=>p.id===slots[i]).name:'＋ 끼워 넣기'));});
+  for(const button of cards.children)button.setAttribute('aria-pressed',String(ids.includes(button.dataset.pledge)));counter.textContent=ids.length+' / 3';confirm.disabled=ids.length!==3;const forecast=board.update(ids);live.textContent='예상 지지 '+forecast.candidates[0].share+'%';
+ }
+ const short=['놀이','모범','조용','운동'];
  for(const pledge of E.available(person)){
   const card=make('button','pledge-card');card.type='button';card.dataset.pledge=pledge.id;card.setAttribute('aria-pressed','false');
-  card.append(make('small','pledge-feasibility',pledge.difficulty>=2?'협의·타협 필요':'직접 이행 가능'),make('strong','',pledge.name),make('span','',pledge.copy),make('small','pledge-reality',pledge.limit));
-  card.addEventListener('click',()=>{if(selected.has(pledge.id))selected.delete(pledge.id);else if(selected.size<3)selected.add(pledge.id);else{counter.textContent='한 장을 빼면 다른 공약을 고를 수 있어요';return;}for(const button of cards.children)button.setAttribute('aria-pressed',String(selected.has(button.dataset.pledge)));counter.textContent=selected.size+' / 3';confirm.disabled=selected.size!==3;});cards.append(card);
+  card.append(make('small','pledge-feasibility',pledge.difficulty>=2?'협의·타협 필요':'직접 이행 가능'),make('strong','',pledge.name));
+  const reactions=make('span','pledge-reactions');pledge.scores.forEach((n,g)=>{const reaction=make('span',n>0?'is-positive':n<0?'is-negative':'is-neutral',short[g]+' '+(n>0?'+':n<0?'−':'')+Math.abs(n));reaction.title=E.groups[g].name+' 기본 호감';reactions.append(reaction);});card.append(reactions,make('small','pledge-reality',pledge.limit));
+  card.addEventListener('click',()=>{
+   const existing=slots.indexOf(pledge.id);if(existing>=0){slots[existing]=null;activeSlot=existing;}
+   else{const index=activeSlot>=0?activeSlot:slots.indexOf(null);if(index<0){counter.textContent='바꿀 공약 칸을 먼저 눌러 주세요';return;}slots[index]=pledge.id;activeSlot=slots.indexOf(null);}
+   paint();
+  });cards.append(card);
  }
- content.append(cards,make('p','pledge-note','공약의 정확한 반응은 모두 공개되지 않습니다. 당선되면 세 약속의 이행 여부를 직접 결정합니다.'));
- footer.append(counter,confirm);sheet.append(head,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');
+ const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','공약 카드'),make('small','','기본 성향 · 실제 민심은 집단마다 달라집니다'));content.append(catalogHead,cards);
+ footer.append(counts,confirm);sheet.append(head,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
  const reopen=root.querySelector('#resumeMajorChoice');
  const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},fold=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();fold();};
  reopen.addEventListener('click',open);foldButton.addEventListener('click',fold);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);
- confirm.addEventListener('click',()=>{if(closed||selected.size!==3)return;dialog.close();resolve('submit',{pledges:[...selected]});});open();
+ confirm.addEventListener('click',()=>{const ids=slots.filter(Boolean);if(closed||ids.length!==3)return;dialog.close();resolve('submit',{pledges:ids});});open();
  return ()=>{closed=true;reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-pledges');sync();};
 }
 

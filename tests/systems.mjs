@@ -1483,3 +1483,17 @@ test('campaign bills reject impossible promises and insufficient funds; negative
  const debt=pack.events.find(e=>e.id==='election:old-smear');assert.ok(E.matches(q,debt.when,70));assert.equal(E.matches(q,debt.when,69),false);const paid=E.apply(q,{electionDecision:{action:'debt',response:'admit'}});assert.equal(paid.attributes.electionDebtResolved,true);assert.equal(paid.stats.relations,q.stats.relations-1);
  assert.equal(X.billTarget(p,1).name.split(' · ').length,2,'the second bill accounts for both remaining pledges');
 });
+
+test('campaign forecast is numeric, responds to card swaps, preserves hidden tastes and never changes saved state',()=>{
+ const {P,c}=setup(),X=c.GukminElection,p=P.generate();p.traits=[];p.admissionSeed='forecast-alpha';p.attributes={electionHeard:'quiet',teacherTrust:12};const before=JSON.stringify(p);
+ const a=X.forecast(p,['library','quiet','lost']),b=X.forecast(p,['football','holiday','homework']);
+ assert.equal(JSON.stringify(p),before);assert.equal(a.candidates.reduce((n,c)=>n+c.share,0),100);
+ for(const row of a.rows){assert.equal(row.shares.reduce((n,v)=>n+v,0),100);assert.ok(row.low<=row.shares[0]&&row.high>=row.shares[0]);assert.ok(row.low>=0&&row.high<=100);}
+ assert.ok(a.rows[2].shares[0]>b.rows[2].shares[0]);assert.ok(a.rows[3].shares[0]<b.rows[3].shares[0]);assert.equal(a.hard,0);assert.equal(a.cost,7000);assert.equal(b.hard,2);
+ assert.ok(a.rows[2].high-a.rows[2].low<a.rows[0].high-a.rows[0].low,'listening narrows the uncertainty');
+ p.admissionSeed='forecast-beta';const other=X.forecast(p,['library','quiet','lost']);
+ // Unknown groups use catalog opinions, never their hidden seed taste or final ballot noise.
+ for(let g=0;g<4;g++)if(g!==2&&a.candidates.map(c=>c.id).join()===other.candidates.map(c=>c.id).join())assert.deepEqual(plain(a.rows[g]),plain(other.rows[g]));
+ assert.throws(()=>X.forecast(p,['missing']),/공약/);assert.throws(()=>X.forecast(p,['quiet','quiet']),/공약/);
+ const honest=X.forecast(p,['library','quiet','lost'],'honest');assert.ok(honest.rows[2].shares[0]>a.rows[2].shares[0]);
+});

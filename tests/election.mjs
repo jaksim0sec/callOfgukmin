@@ -12,7 +12,7 @@ const server=spawn('python3',['-m','http.server',String(port),'--bind','127.0.0.
 try{
  for(let i=0;i<40;i++){try{if((await fetch(base)).ok)break;}catch{}await new Promise(r=>setTimeout(r,100));}
  browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH||chromium.executablePath(),args:['--no-sandbox','--disable-dev-shm-usage']});
- for(const [name,viewport] of [['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
+ for(const [name,viewport] of [['short',{width:320,height:568}],['mobile',{width:390,height:844}],['desktop',{width:1365,height:900}]]){
   const context=await browser.newContext({viewport,reducedMotion:'reduce'}),page=await returningPage(context),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.route('https://fonts.googleapis.com/**',r=>r.abort());
   await page.goto(base+'html/game.html');await page.waitForFunction(()=>!!window.GukminGame?.session);
   await page.evaluate(()=>{
@@ -30,6 +30,13 @@ try{
   assert.ok(await page.locator('.pledge-footer .life-submit').isDisabled());
   for(const id of ['library','quiet','lost'])await page.locator('[data-pledge='+id+']').click();
   await page.locator('[data-pledge=holiday]').click();assert.equal(await page.locator('.pledge-card[aria-pressed=true]').count(),3);
+  const draftBefore=await page.evaluate(()=>JSON.stringify(GukminGame.session.snapshot().persona)),supportBefore=await page.locator('.pledge-puzzle .support-total').textContent();
+  await page.locator('.pledge-slot').nth(1).click();await page.locator('[data-pledge=football]').click();assert.equal(await page.locator('.pledge-card[aria-pressed=true]').count(),3);assert.match(await page.locator('.pledge-slot').nth(1).textContent(),/축구/);assert.notEqual(await page.locator('.pledge-puzzle .support-total').textContent(),supportBefore);
+  assert.equal(await page.evaluate(()=>JSON.stringify(GukminGame.session.snapshot().persona)),draftBefore,'preview never applies stats or saves a pledge');
+  await page.locator('.pledge-slot').nth(1).click();await page.locator('[data-pledge=quiet]').click();
+  assert.equal(await page.locator('.support-group').count(),4);assert.equal(await page.locator('.support-group.is-heard').count(),1);assert.equal(await page.locator('.pledge-slot').count(),3);
+
+  await page.screenshot({path:'/tmp/gukmin-puzzle-'+name+'.png'});
   await page.locator('.life-modal-collapse').click();await page.locator('#resumeMajorChoice').click();assert.equal(await page.locator('.pledge-card[aria-pressed=true]').count(),3);
   assert.ok(await page.locator('.pledge-footer .life-submit').evaluate(e=>{const b=e.getBoundingClientRect();return b.top>=0&&b.bottom<=innerHeight;}),'confirmation is reachable');
   assert.equal(await page.locator('#lifeDecisionDialog').evaluate(e=>e.scrollWidth>e.clientWidth+1),false);

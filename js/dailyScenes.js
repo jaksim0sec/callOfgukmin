@@ -138,6 +138,17 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
   if(choice.presentation.step==='listen')section.append(el('p','',E.groups.map(g=>g.name+' '+g.size+'명').join(' · ')+' / 집단마다 표가 나뉘며 기권도 있습니다.'));
   if(choice.presentation.step==='attack')for(const rival of E.rivals(persona)){const card=el('div','campaign-rival');card.append(el('strong','',rival.name+' · '+rival.title),el('p','',rival.pledges.map(id=>E.pledges.find(p=>p.id===id).name).join(' / ')));if(rival.copied)card.append(el('small','','내 공약을 보고 같은 약속을 내걸었다. 같은 집단의 표를 나눠 가져야 한다.'));section.append(card);}
   if(choice.presentation.step==='bill'){const bill=E.billTarget(persona,choice.presentation.slot);section.append(el('strong','campaign-bill-title',bill.name),el('p','',bill.limit),el('small','',bill.difficulty>=2?'권한 밖의 약속입니다. 원안 이행 대신 타협·파기를 선택해야 합니다.':'원안 이행: 재산 '+bill.cost.toLocaleString('ko-KR')+'원 · 준비 시간과 부담. 타협은 일부 이행, 파기는 신뢰 하락.'));}
+  if(choice.presentation.step==='attack'){
+   const support=global.GukminElectionView.board(persona,{compact:true});section.append(support.element);
+   const preview=response=>support.update(E.chosen(persona).map(p=>p.id),response);
+   const ids=E.chosen(persona).map(p=>p.id),base=E.forecast(persona,ids).candidates[0].share;
+   for(const [i,button] of [...list.querySelectorAll('.inline-choice')].entries()){
+    const option=choice.options[i],share=E.forecast(persona,ids,option.id).candidates[0].share,diff=share-base;
+    button.querySelector('.daily-choice-copy').append(el('span','campaign-support-shift','예상 지지 '+share+'%'+(diff?' · '+(diff>0?'+':'−')+Math.abs(diff)+'%p':'')));
+    button.addEventListener('click',()=>preview(option.id));
+   }
+   const selected=choice.options.find((o,i)=>list.querySelectorAll('.inline-choice')[i]?.getAttribute('aria-pressed')==='true');if(selected)preview(selected.id);
+  }
   body.prepend(section);
  }
  if(kind==='chat')decorateChat(body,list,choice);
