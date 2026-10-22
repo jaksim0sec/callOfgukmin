@@ -36,8 +36,9 @@ function matches(persona,condition={},turn=0){
  return true;
 }
 function apply(persona,result={},context={}){
- keys(result,['effects','history','tags','conditional','assessment','highEntry','retryYear','admissionDecision'],'결과');
+ keys(result,['effects','history','tags','conditional','assessment','highEntry','retryYear','admissionDecision','electionDecision'],'결과');
  let prepared=clone(result);
+ if(result.electionDecision)prepared={...prepared,...global.GukminElection.decision(persona,result.electionDecision,context)};
  if(result.admissionDecision)prepared={...prepared,...global.GukminAdmissions.decision(persona,result.admissionDecision)};
  if(result.retryYear)prepared=global.GukminAdmissions.retry(persona,prepared);
  if(result.highEntry){

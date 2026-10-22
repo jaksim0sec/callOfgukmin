@@ -1772,3 +1772,27 @@ body[data-screen=result]{background:radial-gradient(ellipse at 85% 0,#29203166,t
 .study-comment-send{margin-top:.5rem;padding:.55rem .75rem;border:0;border-radius:.5rem;background:#e29b5a;color:#2e1d14;font-size:.75rem;font-weight:750}
 .study-own-comment p{font-size:.75rem;line-height:1.6;margin:0}.study-action-status{display:block;padding:0 1rem .7rem;color:#b29ac4;font-size:.65rem}.study-action-status:empty{display:none}
 @media(prefers-reduced-motion:reduce){.choice-progress-fill,.paper-choice-sheet,.study-comment-composer{transition:none!important}}
+
+/* First politics: a short campaign, three promises and a readable post-election audit. */
+.school-highlight-science{background:#087cba!important;color:#fff!important}.school-highlight-gifted{background:#946500!important;color:#fff!important}.school-highlight-foreign{background:#8b38ac!important;color:#fff!important}.school-highlight-international{background:#007d70!important;color:#fff!important}
+.life-school-highlight.token-icon-pill{font-size:.74rem;font-weight:850;border:.1rem solid #ffffff85;padding:.3rem .65rem;box-shadow:0 .15rem .4rem #21172a22}
+.life-school-highlight .token-name,.life-school-highlight .token-icon{color:#fff!important}
+.election-pledge-paper{background:#f5f0e6;color:#302b33;overflow:hidden}
+.election-pledge-paper>.life-modal-head,.election-pledge-paper>.life-modal-foot{flex:none}.pledge-content{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:.8rem .1rem}
+.campaign-eyebrow{display:block;color:#8c6c38;font:750 .65rem/1.5 system-ui,sans-serif;letter-spacing:.06em}
+.pledge-intro,.pledge-note{font-size:.8rem;line-height:1.7;color:#7b6f72}.campaign-note{padding:.8rem;border-left:.2rem solid #8d6aab;background:#e9e0f1;color:#665071;font-size:.8rem;line-height:1.7}.campaign-rumor{font-size:.75rem;line-height:1.7;color:#8c735b}
+.pledge-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.6rem}
+.pledge-card{display:flex;flex-direction:column;gap:.4rem;text-align:left;min-width:0;padding:.9rem;border:.08rem solid #d3c4b5;border-radius:.8rem;background:#fffdf9;color:#332a36;transition:background .15s,border-color .15s;position:relative}
+.pledge-card>strong{font-size:.95rem;line-height:1.5}.pledge-card>span{font-size:.75rem;color:#847478;line-height:1.6}.pledge-card .pledge-reality{font-size:.67rem;line-height:1.6;color:#a17b59}.pledge-feasibility{font-size:.65rem;color:#7c688d;font-weight:750}
+.pledge-card[aria-pressed=true]{border:.12rem solid #8a62a9;background:#ece1f4;box-shadow:inset .2rem 0 #9163ae}.pledge-card[aria-pressed=true]::after{content:'✓';position:absolute;right:.55rem;top:.4rem;color:#805298;font-size:1rem;font-weight:900}
+.pledge-counter{font-size:.85rem;color:#785a8b}.pledge-footer{gap:.7rem}.pledge-footer .life-submit{margin-left:auto;min-height:3rem}
+.campaign-brief{margin:.3rem 0 1rem;padding:1rem;border:.08rem solid #c5b298;border-radius:.75rem;background:linear-gradient(145deg,#f1e5ce,#f8f3e9);font-family:system-ui,sans-serif}
+.campaign-brief h3{font-size:1.2rem;line-height:1.5;margin:.4rem 0 .7rem;color:#503c4e}.campaign-brief>p,.campaign-brief>small{font-size:.75rem;line-height:1.7;color:#8b746a}.campaign-vitals{display:flex;flex-wrap:wrap;gap:.35rem;margin:.5rem 0}.campaign-vitals .token{font-size:.73rem}
+.campaign-rival{border-top:.0625rem solid #c9b99a;padding:.7rem 0 .2rem}.campaign-rival strong{font-size:.8rem;color:#684f57;line-height:1.6}.campaign-rival p{font-size:.75rem;color:#8c746d;line-height:1.65}.campaign-rival small{font-size:.7rem;color:#a7663f}.campaign-bill-title{display:block;font-size:1.05rem;color:#735245;line-height:1.6}
+.election-analysis{margin:1rem 0 0;text-align:left;padding-top:.8rem;border-top:.1rem solid #d7d2a548}.election-analysis h3{font-size:1.1rem;margin:.4rem 0}.election-analysis-note{font-size:.75rem;color:#c9cfba;line-height:1.7}
+.election-group-result{padding:.7rem .75rem;border:.0625rem solid #a8c2a644;background:#12382e55;border-radius:.65rem;margin:.6rem 0}.election-group-result>strong{font-size:.85rem;color:#e9edce}.election-group-result>p{font-size:.72rem;line-height:1.7;color:#bdcbb7;margin:.5rem 0 0}
+.election-vote-split{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.45rem}.election-vote-split>span{padding:.25rem .5rem;background:#ffffff12;border-radius:100rem;font-size:.74rem;color:#c1d0bf}.election-vote-split .is-player{background:#f3da8e;color:#403618;font-weight:800}
+@media(max-width:47.5em){.pledge-cards{grid-template-columns:1fr}.pledge-content .life-modal-title{font-size:1.6rem}.pledge-card{padding:.8rem}.election-analysis{margin-top:.7rem}.campaign-brief{padding:.8rem}.pledge-footer .life-submit{font-size:.8rem}}
+@media(prefers-reduced-motion:reduce){.pledge-card{transition:none}}
+
+.life-cinematic[data-scene=election] .life-cinematic-body{max-height:calc(100dvh - 8rem);min-height:0;overflow-y:auto;overscroll-behavior:contain;flex:0 1 auto}

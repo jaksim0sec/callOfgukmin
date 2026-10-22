@@ -452,13 +452,23 @@ function mount(root,navigate,content=global.GukminContent){
   }
   if(scene.kind==='election'){
    card.classList.add('is-election');
-   const names=global.GukminData.names.filter(n=>n!==persona.name),candidates=[persona.name,...new Set(names)].slice(0,3),votes=scene.won?[16,8,4]:[8,16,4];
+   const report=global.GukminElection?.report(persona);
+   if(report)scene.won=report.won;
+   const candidates=report?report.candidates.map(c=>c.name):[persona.name,'당시 경쟁 후보','다른 후보'],votes=report?report.candidates.map(c=>c.votes):[null,null,null];
    const box=el('div','election-ballot-box','투표함'),rows=[];card.append(box);
    candidates.forEach((name,i)=>{const row=el('div','election-candidate'+(i===0?' is-player':''));const tally=el('strong','election-tally');row.append(el('span','',name),tally);card.append(row);rows.push(tally);});
    const result=el('p','election-result');card.append(result);
+   const analysis=el('section','election-analysis');analysis.hidden=true;
+   if(report){
+    analysis.append(el('h3','','표가 갈린 자리'),el('p','election-analysis-note','같은 집단을 노린 후보끼리는 표를 나눠 가집니다. 내 인물 득표와 공약 호감이 함께 반영됐습니다.'));
+    for(const row of report.rows){const group=el('article','election-group-result');group.append(el('strong','',row.group.name+' · '+row.turnout+'/'+row.group.size+'명 투표'));
+     const split=el('div','election-vote-split');report.candidates.forEach((candidate,i)=>{const token=el('span',i===0?'is-player':'',candidate.name+' '+row.votes[i]+'표');split.append(token);});group.append(split,el('p','',row.hint));analysis.append(group);}
+    if(report.tied)analysis.append(el('p','election-analysis-note','최고 득표 동률은 저장된 추첨 순서로 결정했습니다. 새로고침해도 바뀌지 않습니다.'));
+   }else analysis.append(el('p','','이전 저장의 선거입니다. 세부 득표는 기록되지 않았습니다.'));
+   card.append(analysis);
    const start=performance.now();
-   scene.finish=()=>{scene.finished=true;rows.forEach((node,i)=>node.textContent='正'.repeat(Math.floor(votes[i]/5))+(votes[i]%5?'一丨三四'[votes[i]%5-1]:'')+ ' · '+votes[i]+'표');result.replaceChildren(el('small','',scene.won?'친구들이 내 이름을 불렀다.':'마지막 표까지 세었다.'),el('strong','',scene.won?'내가 뽑혔다.':candidates[1]+' 당선'),el('span','',scene.won?'우리 반의 반장이 되었다.':'이번에는 아쉽지만, 도전은 남았다.'));card.classList.add('is-counted');if(scene.won)card.classList.add('is-elected');$('lifeCinematicDismiss').textContent='결과 확인';if(electionTicker)global.clearInterval(electionTicker);electionTicker=null;};
-   electionTicker=global.setInterval(()=>{const elapsed=performance.now()-start;const fraction=Math.min(1,Math.max(0,(elapsed-600)/4000));rows.forEach((node,i)=>{const count=Math.floor(votes[i]*fraction);node.textContent='正'.repeat(Math.floor(count/5))+(count%5?'一丨三四'[count%5-1]:'')+' · '+count+'표';});if(elapsed>=6000)scene.finish();},100);
+   scene.finish=()=>{scene.finished=true;rows.forEach((node,i)=>node.textContent=votes[i]===null?'세부 득표 미기록':'正'.repeat(Math.floor(votes[i]/5))+(votes[i]%5?'一丨三四'[votes[i]%5-1]:'')+ ' · '+votes[i]+'표');analysis.hidden=false;result.replaceChildren(el('small','',scene.won?'친구들이 내 이름을 불렀다.':'마지막 표까지 세었다.'),el('strong','',scene.won?'내가 뽑혔다.':candidates[report?.winner??1]+' 당선'),el('span','',scene.won?'우리 반의 반장이 되었다.':'이번에는 아쉽지만, 도전은 남았다.'));card.classList.add('is-counted');if(scene.won)card.classList.add('is-elected');$('lifeCinematicDismiss').textContent='결과 확인';if(electionTicker)global.clearInterval(electionTicker);electionTicker=null;};
+   electionTicker=global.setInterval(()=>{const elapsed=performance.now()-start;const fraction=Math.min(1,Math.max(0,(elapsed-600)/4000));rows.forEach((node,i)=>{if(votes[i]===null){node.textContent='기록 확인 중';return;}const count=Math.floor(votes[i]*fraction);node.textContent='正'.repeat(Math.floor(count/5))+(count%5?'一丨三四'[count%5-1]:'')+' · '+count+'표';});if(elapsed>=6000)scene.finish();},100);
    if(reduceMotion)scene.finish();
   }
   if(scene.kind==='admission'){
@@ -491,7 +501,7 @@ function mount(root,navigate,content=global.GukminContent){
    renderProgress();return;
   }
   nextCinematic();renderProgress();
-  if(completed&&['grade','transition','admission'].includes(completed.kind)&&!dailyUI.isRewardVisible())startJourney();
+  if(completed&&['grade','transition','admission','election'].includes(completed.kind)&&!dailyUI.isRewardVisible())startJourney();
  }
  function clearCinematics(){
   if(examBreakTimer!==null){global.clearTimeout(examBreakTimer);examBreakTimer=null;}
@@ -726,7 +736,7 @@ function mount(root,navigate,content=global.GukminContent){
  function dispose(){if(disposed)return;disposed=true;if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
   snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
-  resolve:(token,id)=>requireEngine().resolve(token,id),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose
+  resolve:(token,id,input)=>requireEngine().resolve(token,id,input),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose
  });
  render();
  return dispose;

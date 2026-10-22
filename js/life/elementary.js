@@ -3,14 +3,8 @@
 'use strict';
 const S=global.GukminStory;
 // The class election remembers candidacy, outcome and service separately.
-const winner={any:[{stats:{relations:{gte:15}}},{all:[{traits:['리더십']},{stats:{relations:{gte:14}}}]}]};
 function stand(label){
- return {label,tags:['initiative'],outlook:'친구들의 지지는 투표와 개표로 확인합니다. 출마만으로 당선이 확정되지는 않습니다.',risk:'선거 준비와 학급 일을 맡을 시간 필요',effects:{attributes:{classElection:'ran'},stats:{stress:2}},
-  detail:'출마 신청서에 이름을 적었다. 개표 결과는 잠시 뒤 나온다.',
-  conditional:[
-   {when:winner,result:{effects:{attributes:{classElection:'elected',roles:['반장']},traits:{add:['리더십']}},history:{title:'반장에 뽑혔다',detail:'점심시간까지 이어진 투표에서 과반을 얻었다. 이제 학급 공지를 책임질 차례다.'}}},
-   {when:{not:winner},result:{effects:{attributes:{classElection:'lost'}},history:{title:'반장 선거에서 떨어졌다',detail:'표가 모자랐다. 친구 몇 명은 뒤에서 엄지를 들어 보였다.'}}}
-  ]};
+ return {label,tags:['initiative'],outlook:'민심을 듣고 세 가지 공약으로 두 라이벌과 겨룹니다. 당선되면 리더십과 반장 역할을 얻습니다.',risk:'선거 준비와 당선 뒤 약속 이행에 시간 필요',effects:{attributes:{classElection:'ran',electionRevision:1,electionStage:'listen',teacherTrust:12},stats:{stress:2}},detail:'출마 신청서에 이름을 적었다. 민서가 선거 준비를 돕겠다고 옆에 앉았다.'};
 }
 function support(label){
  return {label,effects:{attributes:{classElection:'supported'},stats:{relations:2,stress:1}},

@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='story-rhythm-20261022b';
+const RELEASE='class-politics-20261022';
 const screen=document.body.dataset.screen;
 const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let navigating=false;

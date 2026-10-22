@@ -1,7 +1,7 @@
 /* Static app shell only. Player saves remain exclusively in localStorage. */
 'use strict';
 const ROOT=new URL('./',self.location.href);
-const VERSION=new URL(self.location.href).searchParams.get('v')||'story-rhythm-20261022b';
+const VERSION=new URL(self.location.href).searchParams.get('v')||'class-politics-20261022';
 const PREFIX='gukmin-shell-';
 const CACHE=PREFIX+VERSION;
 const SHELL=[
@@ -15,6 +15,7 @@ const SHELL=[
  "js/dailyChoice.js",
  "js/dailyScenes.js",
  "js/life/classroom.js",
+ "js/life/election.js",
  "js/data/base.js",
  "js/data/grades.js",
  "js/data/regions.js",

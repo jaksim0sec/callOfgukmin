@@ -135,7 +135,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   if(current){
    const def=choiceDefs.get(current.choiceId);
    const presented=current.script||scriptOf(def,(def.variants||[]).find(v=>v.id===current.scenarioId));
-   choice={...presented,...clone(current),options:presented.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)}))};
+   choice={...presented,...clone(current),options:presented.options.map(o=>({...clone(o),available:E.matches(s.persona,o.when,s.runtime.turn)&&(!o.result?.electionDecision||global.GukminElection.canChoose(s.persona,o.result.electionDecision))}))};
   }
   return {...clone(s),choice,progress:progress(s),reviewPending:!!s.runtime.awaitingContinuation};
  }
@@ -158,14 +158,18 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    const selected=(def.variants||[]).find(v=>v.id===r.scenarioId);
    const option=(r.script?.options||selected?.options||def.options).find(o=>o.id===optionId);
    if(!option)throw new Error('등록되지 않은 선택지: '+optionId);
-   if(!E.matches(s.persona,option.when,s.runtime.turn))throw new Error('선택 조건을 충족하지 않음');
+   if(!E.matches(s.persona,option.when,s.runtime.turn)||option.result?.electionDecision&&!global.GukminElection.canChoose(s.persona,option.result.electionDecision))throw new Error('선택 조건을 충족하지 않음');
    r.status='confirmed';r.optionId=optionId;
    // Only one review can be pending. Save its before-state until explicit resume
    // so reload can show the real applied differences rather than guessed badges.
    const reviewBefore=pauseAfterChoice?outcomeState(s.persona):null;
    const before=outcomeState(s.persona),historyFrom=s.persona.history.length;
    let result=option.result||{};
-   if(Object.keys(input).length){if((r.script||def).presentation?.type!=='university'||Object.keys(input).some(k=>k!=='admissionField')||!['humanities','science'].includes(input.admissionField))throw new Error('선택 입력 오류');result={...clone(result),effects:{...clone(result.effects||{}),attributes:{...result.effects?.attributes,admissionField:input.admissionField}}};}
+   const presentation=(r.script||def).presentation;
+   if(presentation?.type==='election-pledges'){
+    if(Object.keys(input).some(k=>k!=='pledges')||!Array.isArray(input.pledges))throw new Error('공약 선택 입력 오류');
+    result={...clone(result),electionDecision:{action:'pledges',ids:[...input.pledges]}};r.input={pledges:[...input.pledges]};
+   }else if(Object.keys(input).length){if(presentation?.type!=='university'||Object.keys(input).some(k=>k!=='admissionField')||!['humanities','science'].includes(input.admissionField))throw new Error('선택 입력 오류');result={...clone(result),effects:{...clone(result.effects||{}),attributes:{...result.effects?.attributes,admissionField:input.admissionField}}};}
    settlement(s,`choice:${token}`,result,'choice:'+r.choiceId);
    // Preserve real settled deltas and the related log range after future turns.
    r.outcome={label:option.label,historyFrom,historyTo:s.persona.history.length-1,

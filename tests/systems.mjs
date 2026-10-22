@@ -5,7 +5,7 @@ import vm from 'node:vm';
 function setup(){
  const storage=new Map([['callOfgukmin__playable__v1','legacy-sentinel']]);
  const c=vm.createContext({console,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)}});c.window=c;
- for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/classroom','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
+ for(const file of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/election','life/classroom','life/middle','life/high','life/admissions','systemDemo'])if(existsSync(`js/${file}.js`))vm.runInContext(readFileSync(`js/${file}.js`,'utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline,storage};
 }
 const plain=x=>JSON.parse(JSON.stringify(x));
@@ -145,7 +145,8 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
  let engine=D.create({persona:original,persist:p=>P.save(p)});
  engine.run();
  let decisions=0,exams=0,applications=0,lastTurn=0;
- while(engine.snapshot().choice&&decisions<70){
+ while((engine.snapshot().choice||engine.snapshot().runtime.cinematic)&&decisions<70){
+  if(engine.snapshot().runtime.cinematic){engine.run();continue;}
   const s=engine.snapshot(),choice=s.choice;
   assert.ok(s.runtime.turn>=lastTurn,'non-decreasing clock');
   lastTurn=s.runtime.turn;
@@ -161,7 +162,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
   }
   const option=choice.options.find(o=>o.id===(s.persona.stats.stress>=12?'effort-0':'effort-2')&&o.available)||choice.options.find(o=>o.id==='employment'&&o.available)||choice.options.find(o=>o.available);
   assert.ok(option,'at least one available option');
-  engine.resolve(choice.token,option.id);
+  engine.resolve(choice.token,option.id,choice.presentation?.type==='election-pledges'?{pledges:['library','quiet','lost']}:undefined);
   assert.equal(engine.snapshot().reviewPending,true,'result stays until continuing');
   assert.equal(engine.snapshot().choice,null,'no immediate next decision');
   decisions++;
@@ -496,7 +497,7 @@ test('story traits remain obtainable from sustained actions and modify the next 
  assert.ok(candidate.result.effects.traits.add.includes('꼼꼼함'));
  const elected=content.choices.find(x=>x.id==='elementary:graduation').variants.find(x=>x.id==='representative-followup').options[0];
  assert.equal(elected.result.effects.traits,undefined,'graduation does not grant leadership again');
- assert.ok(content.choices.find(c=>c.id==='elementary:representative').variants[0].options[0].result.conditional[0].result.effects.traits.add.includes('리더십'));
+ assert.equal(content.choices.find(c=>c.id==='elementary:representative').variants[0].options[0].result.effects.attributes.classElection,'ran');
  const person=P.generate();person.stats.study=16;person.stats.exam=14;person.traits.push('꼼꼼함');
  const exam=Story.exam('high',16,1,65,'3월 모의고사','mock').choice.options[3];
  const modified=Effects.apply(person,exam.result).stats.exam;
@@ -678,18 +679,12 @@ test('class election keeps original event ID and separates candidacy, victory an
  assert.ok(s.choice.scenarioId);
  const token=s.choice.token;
  assert.equal(engine.resolve(token,s.choice.options[0].id),true);
- let after=engine.snapshot();
- assert.equal(after.persona.attributes.classElection,'elected');
- assert.ok(after.persona.roles.includes('반장'));
+ const after=engine.snapshot();
+ assert.equal(after.persona.attributes.classElection,'ran');
+ assert.equal(after.persona.roles.includes('반장'),false);
  assert.equal(after.reviewPending,true);
  assert.equal(engine.resolve(token,s.choice.options[0].id),false);
- engine.run();
- while(engine.snapshot().choice&&engine.snapshot().choice.id!=='middle:friends'&&guard++<40){
-  const next=engine.snapshot().choice;
-  engine.resolve(next.token,next.options.find(o=>o.available)?.id);engine.run();
- }
- assert.equal(engine.snapshot().persona.attributes.classElection,'elected');
- assert.equal(engine.snapshot().persona.roles.includes('반장'),false,'role ends upon entering middle school');
+ engine.run();assert.equal(engine.snapshot().choice.id,'election:listen');
 });
 test('high school first contact drives recurring character and different conflict',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
@@ -1095,8 +1090,18 @@ test('smoking pre-state thresholds and patience grace are exact and research sch
  for(const schoolTrack of ['science','gifted'])for(const id of ['high:tobacco-offer','high:break-routine','high:smoking-reconsider']){p.phase='high';p.attributes={schoolTrack,habitStage:id.endsWith('reconsider')?'grace':'first'};assert.equal(env.E.matches(p,pack.events.find(e=>e.id===id).when,74),id==='high:tobacco-offer');}
 });
 test('election grants role and leadership only on victory; graduation preserves the trait once',()=>{
- const env=setup();for(const relations of [12,20]){const p=env.P.generate();p.phase='elementary';p.age=11;p.stats.relations=relations;p.traits=[];const e=openLifeScene(env,'elementary:representative',p);e.resolve(e.snapshot().choice.token,e.snapshot().choice.options[0].id);const s=e.snapshot().persona;assert.equal(env.P.hasTrait(s,'리더십'),relations===20);assert.equal(s.roles.includes('반장'),relations===20);const g=openLifeScene(env,'elementary:graduation',s);g.resolve(g.snapshot().choice.token,g.snapshot().choice.options[0].id);assert.equal(g.snapshot().persona.traits.filter(t=>t==='리더십').length,relations===20?1:0);}
+ const env=setup(),X=env.c.GukminElection;let wins=0,losses=0;
+ for(let seed=0;seed<30;seed++){
+  const p=env.P.generate();p.phase='elementary';p.age=11;p.admissionSeed='election-'+seed;p.stats.relations=12;p.traits=[];p.attributes={electionPledges:88,electionStage:'count',electionResponse:'honest',electionHeard:'quiet',teacherTrust:12};
+  const pack=env.c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);
+  const expected=X.ballot(p).won,s=env.E.apply(p,{electionDecision:{action:'count'}});expected?wins++:losses++;
+  assert.equal(env.P.hasTrait(s,'리더십'),expected);assert.equal(s.roles.includes('반장'),expected);
+  const g=openLifeScene(env,'elementary:graduation',s);g.resolve(g.snapshot().choice.token,g.snapshot().choice.options[0].id);
+  assert.equal(g.snapshot().persona.traits.filter(t=>t==='리더십').length,expected?1:0);const middle=env.c.GukminDirector.content(s).events.find(e=>e.id==='elementary:middle-entry');assert.equal(env.E.apply(g.snapshot().persona,middle.result).roles.includes('반장'),false);
+ }
+ assert.ok(wins&&losses,'same relation score and pledges can win or lose against different rivals');
 });
+
 test('admission draw is stable, varies by seed, obeys prerequisites and uses real strategy bonuses',()=>{
  const env=setup(),p=env.P.generate(),pack=env.c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);p.phase='high';p.stats.schoolScore=23;p.stats.exam=23;p.attributes={admissionAttempts:1,admissionRoute:'early'};p.admissionSeed='fixed-seed';
  const choice=pack.choices.find(c=>c.id==='admission:first:early-application'),o=choice.variants[0].options[1];p.attributes.earlyChoice=o.id;const request={admissionDecision:{cycle:'admission:first',type:'early'}};
@@ -1190,7 +1195,7 @@ test('plain choices have neither identical payouts nor an unconditionally worse 
  for(const familyTier of ['bronze','gold']){
   const p=P.generate();p.familyTier=familyTier;const pack=c.GukminDirector.content(p);
   for(const choice of pack.choices.filter(c=>c.layer==='일상 선택'))for(const script of choice.variants?.length?choice.variants:[choice]){
-   const options=script.options.filter(o=>!o.result.conditional?.length&&!o.result.assessment);
+   const options=script.options.filter(o=>!o.result.conditional?.length&&!o.result.assessment&&!o.result.electionDecision);
    for(let a=0;a<options.length;a++)for(let b=a+1;b<options.length;b++){
     const x=options[a].result.effects||{},y=options[b].result.effects||{};
     // Different actual traits or a deferred route need their own result tests below.
@@ -1287,10 +1292,10 @@ test('corrected after-school choices settle exact tradeoffs and enforce parent t
  }
 });
 test('candidacy costs two pressure and only victory grants leadership and the class-president role',()=>{
- for(const [relations,outcome] of [[10,'lost'],[16,'elected']]){
+ for(const relations of [10,16]){
   const env=setup(),p=env.P.generate();p.phase='elementary';p.age=11;p.traits=[];Object.assign(p.stats,{relations,stress:0});p.attributes={friendRoute:'shared'};
   const e=openLifeScene(env,'elementary:representative',p),s=e.snapshot();assert.match(s.choice.title,/반장 선거/);assert.equal(s.choice.options.length,3);e.resolve(s.choice.token,s.choice.options[0].id);const q=e.snapshot().persona;
-  assert.equal(q.stats.stress,2);assert.equal(q.attributes.classElection,outcome);assert.equal(env.P.hasTrait(q,'리더십'),outcome==='elected');assert.equal(q.roles.includes('반장'),outcome==='elected');assert.equal(q.traits.includes('열정'),false);
+  assert.equal(q.stats.stress,2);assert.equal(q.attributes.classElection,'ran');assert.equal(env.P.hasTrait(q,'리더십'),false);assert.equal(q.roles.includes('반장'),false);assert.equal(q.traits.includes('열정'),false);
  }
 });
 
@@ -1439,4 +1444,42 @@ test('relay speeds remain close and change gradually without reversing or changi
   const speeds=[];for(let t=100;t<8000;t+=40)speeds.push((c.GukminDailyScenes.raceProgress(place,lane,t+16)-c.GukminDailyScenes.raceProgress(place,lane,t))/16);
   assert.ok(Math.min(...speeds)>0);assert.ok(Math.max(...speeds)/Math.min(...speeds)<1.15,'speed variation is subtle rather than a sudden sprint or crawl');
  }
+});
+
+test('campaign: staged choices, exactly three unlocked pledges, reload, tally and two bills share one atomic timeline',()=>{
+ const env=setup(),{P,T,c}=env,X=c.GukminElection,p=P.generate();p.phase='elementary';p.age=12;p.admissionSeed='campaign-integration';p.traits=[];Object.assign(p.stats,{money:100000,stress:0,relations:20});p.attributes={classElection:'ran',electionRevision:1,electionStage:'listen',teacherTrust:12};
+ const pack=c.GukminDirector.content(p),cfg={...pack,events:pack.events.filter(e=>e.id.startsWith('election:')),choices:pack.choices.filter(c=>c.id.startsWith('election:')),pauseAfterChoice:true,persist:q=>P.save(q)};
+ let engine=T.create({...cfg,persona:p});engine.advance(45);
+ let choice=engine.snapshot().choice;assert.equal(choice.id,'election:listen');engine.resolve(choice.token,'quiet');engine.resume();choice=engine.snapshot().choice;assert.equal(choice.id,'election:pledges');
+ const frozen=plain(engine.snapshot());
+ for(const input of [{},{pledges:['quiet','quiet','library']},{pledges:['chicken','quiet','library']},{pledges:['quiet','lost']},{pledges:['quiet','lost','library'],extra:true}]){assert.throws(()=>engine.resolve(choice.token,'submit',input));assert.deepEqual(plain(engine.snapshot()),frozen);}
+ engine=T.create({...cfg,persona:P.load()});assert.equal(engine.snapshot().choice.token,choice.token);
+ engine.resolve(choice.token,'submit',{pledges:['library','quiet','lost']});assert.equal(engine.resolve(choice.token,'submit',{pledges:['library','quiet','lost']}),false);engine.resume();choice=engine.snapshot().choice;assert.equal(choice.id,'election:attack');
+ const prediction=X.ballot({...engine.snapshot().persona,attributes:{...engine.snapshot().persona.attributes,electionResponse:'honest'}});
+ engine.resolve(choice.token,'honest');engine.resume();let state=engine.snapshot();assert.equal(state.runtime.events['election:count'].count,1);assert.equal(state.runtime.cinematic.kind,'election');
+ const report=X.report(state.persona);assert.equal(report.won,prediction.won);for(const row of report.rows)assert.equal(row.votes.reduce((a,b)=>a+b,0),row.turnout);assert.equal(report.candidates.reduce((n,c)=>n+c.votes,0),report.rows.reduce((n,r)=>n+r.turnout,0));
+ engine=T.create({...cfg,persona:P.load()});assert.deepEqual(plain(X.report(engine.snapshot().persona)),plain(report));engine.acknowledge();engine.advance(1);
+ if(report.won){for(let slot=0;slot<2;slot++){const s=engine.snapshot();assert.equal(s.choice.id,'election:bill-'+slot);engine.resolve(s.choice.token,'keep');engine.resume();if(slot===0)engine.advance(1);}assert.equal(engine.snapshot().persona.stats.money,93000);assert.equal(engine.snapshot().persona.attributes.teacherTrust,17);}
+ assert.equal(engine.snapshot().runtime.events['election:count'].count,1);
+});
+
+test('positioning: fixed seeds conserve zero-sum votes, change best pledges, and never guarantee victory from relations alone',()=>{
+ const {P,c}=setup(),X=c.GukminElection,p=P.generate();p.traits=[];p.stats.relations=25;p.attributes={teacherTrust:12,electionResponse:'honest',electionHeard:'quiet'};const best=new Set();let lost=false;
+ for(let seed=0;seed<16;seed++){
+  p.admissionSeed='position-'+seed;let top=-1,mask=0;
+  for(let a=1;a<6;a++)for(let b=a+1;b<7;b++)for(let d=b+1;d<8;d++){
+   p.attributes.electionPledges=(1<<a)|(1<<b)|(1<<d);const r=X.ballot(p);assert.deepEqual(plain(r),plain(X.ballot(plain(p))));
+   if(!r.won)lost=true;if(r.candidates[0].votes>top){top=r.candidates[0].votes;mask=p.attributes.electionPledges;}
+  }best.add(mask);
+ }
+ assert.ok(best.size>1,'opponents and hidden tastes change the optimal position');assert.ok(lost,'high relations cannot rescue every pledge combination');
+});
+
+test('campaign bills reject impossible promises and insufficient funds; negative campaigning creates a high-school debt',()=>{
+ const env=setup(),{P,E,c}=env,X=c.GukminElection,p=P.generate();p.phase='elementary';p.age=12;p.traits=[];p.stats.money=0;p.attributes={electionPledges:138,teacherTrust:12};const pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);
+ const request={action:'bill',slot:0,mode:'keep'};assert.equal(X.canChoose(p,request),false);assert.throws(()=>E.apply(p,{electionDecision:request}),/権限|권한/);
+ p.attributes.electionPledges=88;assert.equal(X.canChoose(p,request),false);assert.throws(()=>E.apply(p,{electionDecision:request}),/재산/);p.stats.money=7000;assert.equal(X.canChoose(p,request),true);
+ let q=E.apply(p,{electionDecision:{action:'respond',response:'smear'}});assert.equal(q.attributes.teacherTrust,9);assert.equal(q.attributes.electionSmearDebt,true);q.phase='high';q.age=18;
+ const debt=pack.events.find(e=>e.id==='election:old-smear');assert.ok(E.matches(q,debt.when,70));assert.equal(E.matches(q,debt.when,69),false);const paid=E.apply(q,{electionDecision:{action:'debt',response:'admit'}});assert.equal(paid.attributes.electionDebtResolved,true);assert.equal(paid.stats.relations,q.stats.relations-1);
+ assert.equal(X.billTarget(p,1).name.split(' · ').length,2,'the second bill accounts for both remaining pledges');
 });

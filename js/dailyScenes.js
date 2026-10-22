@@ -131,6 +131,15 @@ function studyApp(presentation,reaction,portrait={}){
 }
 function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
+ if(kind==='campaign'){
+  const E=global.GukminElection,a=persona.attributes||{},section=el('section','campaign-brief');
+  section.append(el('small','campaign-eyebrow',choice.presentation.step==='bill'?'약속의 청구서':'우리 반 선거 캠프'),el('h3','',choice.presentation.step==='listen'?'목소리 뒤의 표를 찾자':choice.presentation.step==='attack'?'상대가 있어 정답이 달라진다':choice.presentation.step==='debt'?'네거티브는 외상이었다':'말에서 현실로'));
+  const meters=el('div','campaign-vitals');meters.append(global.GukminStatus.createToken({label:'친구 지지 '+persona.stats.relations+'/25',icon:'users'}),global.GukminStatus.createToken({label:'담임 신뢰 '+(a.teacherTrust??12)+'/25',icon:'school'}));section.append(meters);
+  if(choice.presentation.step==='listen')section.append(el('p','',E.groups.map(g=>g.name+' '+g.size+'명').join(' · ')+' / 집단마다 표가 나뉘며 기권도 있습니다.'));
+  if(choice.presentation.step==='attack')for(const rival of E.rivals(persona)){const card=el('div','campaign-rival');card.append(el('strong','',rival.name+' · '+rival.title),el('p','',rival.pledges.map(id=>E.pledges.find(p=>p.id===id).name).join(' / ')));if(rival.copied)card.append(el('small','','내 공약을 보고 같은 약속을 내걸었다. 같은 집단의 표를 나눠 가져야 한다.'));section.append(card);}
+  if(choice.presentation.step==='bill'){const bill=E.billTarget(persona,choice.presentation.slot);section.append(el('strong','campaign-bill-title',bill.name),el('p','',bill.limit),el('small','',bill.difficulty>=2?'권한 밖의 약속입니다. 원안 이행 대신 타협·파기를 선택해야 합니다.':'원안 이행: 재산 '+bill.cost.toLocaleString('ko-KR')+'원 · 준비 시간과 부담. 타협은 일부 이행, 파기는 신뢰 하락.'));}
+  body.prepend(section);
+ }
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){
