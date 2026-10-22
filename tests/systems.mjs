@@ -456,8 +456,8 @@ test('all chat variations pair their situation with a deliberate outgoing reply 
   for(const script of scripts){
    const pr=script.presentation;
    assert.equal(pr.type,'chat');assert.ok(pr.messages.length>=2,script.id);
-   assert.deepEqual(Object.keys(pr.playerMessages).sort(),script.options.map(o=>o.id).sort(),script.id+' reply keys');
-   assert.deepEqual(Object.keys(pr.responses).sort(),script.options.map(o=>o.id).sort(),script.id+' response keys');
+   assert.equal(JSON.stringify(Object.keys(pr.playerMessages).sort()),JSON.stringify(Array.from(script.options,o=>o.id).sort()),script.id+' reply keys');
+   assert.equal(JSON.stringify(Object.keys(pr.responses).sort()),JSON.stringify(Array.from(script.options,o=>o.id).sort()),script.id+' response keys');
    for(const option of script.options){
     const line=pr.playerMessages[option.id],response=pr.responses[option.id];
     assert.ok(line===null||typeof line==='string'&&line.length>=10,script.id+' '+option.id);
@@ -1074,7 +1074,7 @@ test('assessment maintenance, diminishing returns and integer trait costs share 
  a=c.GukminGrades.assessment(p,{metric:'schoolScore',effort:0});assert.equal(a.stats.stress,-2);assert.equal(a.stats.schoolScore,-2);assert.equal(a.applied.length,0);
  p.stats.exam=21;let recovered=E.apply(E.apply(p,{assessment:{metric:'exam',effort:0}}),{assessment:{metric:'exam',effort:0}});assert.equal(recovered.stats.exam,17);
  p.stats.schoolScore=25;const capped=c.GukminGrades.assessment(p,{metric:'schoolScore',effort:4});assert.equal(capped.actual,0);assert.equal(capped.limited,true);
- assert.equal(c.GukminGrades.assessment(p,{metric:'schoolScore',effort:2}).stats.schoolScore,-1,'maintaining a top score now requires active preparation');
+ assert.equal(c.GukminGrades.assessment(p,{metric:'schoolScore',effort:2}).stats.schoolScore,0,'maintaining a high score avoids the dominated same-loss option');
 });
 test('high-school counseling is consumed once and admission requires actual preparation',()=>{
  const env=setup(),p=env.P.generate();p.phase='middle';p.age=15;p.stats.schoolScore=22;p.stats.stress=5;const pack=env.c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))env.P.registerAttribute(id,d);
@@ -1169,7 +1169,7 @@ test('25-point migration preserves currency, old review history and frozen choic
 test('all standard state metrics use whole numbers capped at 25 while currency stays unbounded',()=>{
  const {P,E,c}=setup(),p=P.generate();for(const id of ['stress','relations','study','schoolScore','exam','support','awareness']){assert.equal(P.metricDefinition(id).max,25);const s=E.apply(p,{effects:{stats:{[id]:99}}});assert.equal(s.stats[id],25);}
  assert.equal(E.apply(p,{effects:{stats:{money:1000000}}}).stats.money,1000000);
- const careful=plain(p);careful.stats.schoolScore=25;careful.traits=['꼼꼼함'];assert.equal(c.GukminGrades.assessment(careful,{metric:'schoolScore',effort:2}).stats.schoolScore,-1);
+ const careful=plain(p);careful.stats.schoolScore=25;careful.traits=['꼼꼼함'];assert.equal(c.GukminGrades.assessment(careful,{metric:'schoolScore',effort:2}).stats.schoolScore,0);
 });
 test('the first tobacco encounter is available for every school, trait and relationship state',()=>{
  const {P,E,c}=setup(),p=P.generate(),pack=c.GukminDirector.content(p);for(const [id,d] of Object.entries(pack.attributes))P.registerAttribute(id,d);
