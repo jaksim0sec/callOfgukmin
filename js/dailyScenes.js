@@ -177,6 +177,7 @@ function studyApp(presentation,reaction,portrait={},state={}){
  if(!reaction)app.openComposer(!!state.studyComposerOpen);sync(reaction);return app;
 }
 function decorate({dialog,body,list,choice,persona,state={},onSelect,onCommit}){
+ global.GukminAdultScenes.skin(dialog,choice.presentation);
  const art=artworkFor(choice);dialog.classList.toggle('is-illustrated',!!art);if(art){const figure=illustration(art,{title:choice.title}),situation=body.querySelector('.daily-scenario'),story=situation?.querySelector('.daily-choice-story');if(story)figure.querySelector('figcaption').append(story);situation?.remove();body.prepend(figure);}
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='campaign'){
@@ -196,6 +197,7 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect,onCommit}){
   const guide=global.GukminSociety.guidance(persona,choice.presentation.stage),tools=el('div','society-line-tools'),copy=el('div','society-line-route');copy.append(el('strong','',guide.location),el('small','',guide.education?.label||guide.next));
   const back=el('button','society-line-menu','메뉴 · 사회로 ↗');back.type='button';back.addEventListener('click',()=>global.GukminGame.session?.returnToSociety());tools.append(copy,back);body.prepend(tools);
  }
+ if(kind==='society-line')global.GukminAdultScenes.decorate({dialog,body,list,choice,persona});
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){
@@ -217,6 +219,8 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect,onCommit}){
  }
 }
 function reward({dialog,body,presentation,attributes,stats,traits,portrait,optionId,label,onReady,restored,artwork}){
+ global.GukminAdultScenes.skin(dialog,presentation);
+ if(presentation?.type==='society-line')global.GukminAdultScenes.reward({dialog,body,presentation,label,attributes,stats,portrait});
  dialog.classList.toggle('is-illustrated',!!artwork);if(artwork)body.prepend(illustration(artwork,{compact:true}));
  const kind=presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='chat'){

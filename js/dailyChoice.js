@@ -201,6 +201,8 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   resumeButton.classList.toggle('is-auto-opening',autoReady&&automatic);
   paintClock();
   confirm.textContent=reward?(reward.presentation?.type==='chat'?'대화 마치기':reward.presentation?.type==='sports'?'기록하고 계속하기':'보상 받기'):currentChoice?.presentation?.type==='chat'?'선택 확정':currentChoice?.presentation?.type==='seating'?'이 자리에 앉기':currentChoice?.presentation?.type==='sports'?'우리 반, 출발!':'이 선택으로 기록하기';
+  if(currentChoice?.presentation?.type==='society-line'&&!reward)confirm.textContent=confirm.dataset.adultLabel||'선택 확정하기';
+  if(reward?.presentation?.type==='society-line')confirm.textContent='확인하고 계속하기';
   confirm.disabled=!!sceneHandle?.isPlaying||(reward?false:!selectedId||!!pendingDecision);
   if(sceneHandle?.isPlaying)confirm.textContent='계주 진행 중…';
   if(!reward&&currentChoice?.presentation?.type==='study-app')confirm.textContent=selectedId==='comment'?'댓글 게시하기':selectedId==='like'?'좋아요 남기기':selectedId==='focus'?'내 공부 하러 가기':'내 반응 선택하기';
@@ -226,7 +228,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
   sceneHandle?.dispose();sceneHandle=null;sceneState={};
   cancelClock();
   if(dialog.open)dialog.close();
-  dialog.dataset.scene='';body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward','is-illustrated');
+  dialog.dataset.scene='';delete dialog.dataset.adultSurface;delete dialog.dataset.adultMode;body.replaceChildren();token=null;folded=true;review=false;delta=[];selectedId=null;currentChoice=null;pendingDecision=null;reward=null;dialog.classList.remove('is-reward','is-illustrated');
   sync();
  }
  function cancel(event){event.preventDefault();fold();}

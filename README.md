@@ -30,7 +30,7 @@ python3 -m http.server 8000
 # 브라우저에서 http://localhost:8000/ 접속
 ```
 
-최근 개정: 사회 허브와 메인 경로 플레이 분리, 진행을 보존하는 사회 복귀 메뉴, 작은 별도 벼락치기 팝업과 실제 시험명 표시. 압박 한계는 졸업 전25·졸업 후50입니다. 자산 버전 `society-routes-20261023`.
+최근 개정: 사회 허브와 메인 경로 플레이 분리, 진행을 보존하는 사회 복귀 메뉴, 작은 별도 벼락치기 팝업과 실제 시험명 표시. 압박 한계는 졸업 전25·졸업 후50입니다. 성인 경로에는 등록금·병역·채용 서류와 대학·직장·가게 웹 UI를 제공합니다. 자산 버전 `adult-surfaces-20261023`.
 
 ## PWA·오프라인
 
@@ -48,6 +48,7 @@ node tests/browser.mjs
 node tests/experience.mjs
 node tests/cram-popup.mjs
 node tests/society-browser.mjs
+node tests/adult-surfaces.mjs
 node tests/pwa.mjs
 ```
 
