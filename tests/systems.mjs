@@ -1609,3 +1609,25 @@ test('surveying everyone initially leaves no empty follow-up survey option',()=>
  const pack=c.GukminDirector.content(p),e=T.create({...pack,events:pack.events.filter(e=>e.id.startsWith('election:')),choices:pack.choices.filter(c=>c.id.startsWith('election:')),persona:p,pauseAfterChoice:true});
  e.advance(45);e.resolve(e.snapshot().choice.token,'play',{groups:['play','study','quiet','sports']});e.resume();e.resolve(e.snapshot().choice.token,'submit',{pledges:['library','quiet','lost']});e.resume();assert.equal(e.snapshot().choice.options.find(o=>o.id==='poll').available,false);
 });
+
+test('pledge fulfillment settles three independent methods once, atomically, and survives reload',()=>{
+ const {P,T,c}=setup(),p=P.generate();p.phase='elementary';p.age=12;p.traits=[];Object.assign(p.stats,{money:100000,stress:5,illness:0,relations:15,study:10});p.attributes={classElection:'elected',electionRevision:3,electionStage:'finished',electionPledges:138,electionFulfillmentVersion:1,electionFulfilled:false,teacherTrust:12};
+ const pack=c.GukminDirector.content(p),state=T.create({...pack,persona:p}).snapshot();
+ for(const event of pack.events)state.runtime.events[event.id]={status:'completed',count:1,nextAt:event.at||0};
+ state.runtime.events['election:fulfillment']={status:'unseen',count:0,nextAt:46};state.runtime.turn=46;state.persona.simulation=state.runtime;
+ let engine=c.GukminDirector.create({persona:state.persona,persist:p=>P.save(p)});engine.run();let s=engine.snapshot();assert.equal(s.choice.id,'election:fulfillment');assert.equal(s.choice.layer,'한방 선택');
+ const token=s.choice.token,before=plain(s),plans=[{pledgeId:'homework',mode:'compromise'},{pledgeId:'library',mode:'keep'},{pledgeId:'holiday',mode:'break'}];
+ for(const invalid of [plans.slice(0,2),[plans[0],plans[0],plans[2]],[{pledgeId:'homework',mode:'keep'},plans[1],plans[2]],[...plans.slice(0,2),{pledgeId:'missing',mode:'break'}]]){assert.throws(()=>engine.resolve(token,'submit',{plans:invalid}));assert.deepEqual(plain(engine.snapshot()),before);}
+ const preview=c.GukminElection.model(s.persona).previewFulfillment(plans);assert.equal(engine.resolve(token,'submit',{plans}),true);assert.equal(engine.resolve(token,'submit',{plans}),false);s=engine.snapshot();assert.equal(s.persona.stats.money,95000);assert.equal(s.persona.stats.stress,6);assert.equal(s.persona.stats.relations,13);assert.equal(s.persona.attributes.teacherTrust,13);assert.equal(s.persona.attributes.electionFulfillment_library,'keep');assert.equal(s.persona.attributes.electionFulfilled,true);assert.equal(s.persona.history.length-before.persona.history.length,4);
+ for(const [id,delta] of Object.entries(preview.stats))assert.equal(s.persona.stats[id]-before.persona.stats[id],delta);
+ engine=c.GukminDirector.create({persona:P.load()});s=engine.snapshot();assert.equal(s.reviewPending,true);assert.deepEqual(plain(Object.values(s.runtime.choices).at(-1).input.plans),plans);assert.equal(engine.resolve(token,'submit',{plans}),false);
+});
+test('pledge fulfillment checks total funds, keeps old bills, and converts mental risk through common effects',()=>{
+ const {P,c,E}=setup(),p=P.generate();p.phase='elementary';p.age=12;p.traits=['뻔뻔함'];p.attributes={classElection:'elected',electionRevision:3,electionStage:'finished',electionPledges:88,electionFulfillmentVersion:1,electionFulfilled:false,teacherTrust:24};Object.assign(p.stats,{money:6000,stress:25,illness:2,study:10,relations:10});
+ // Register the operator's custom attributes/trait without touching any save.
+ c.GukminTimeline.create({...c.GukminDirector.content(p),persona:p});const plans=[{pledgeId:'library',mode:'keep'},{pledgeId:'football',mode:'compromise'},{pledgeId:'lost',mode:'keep'}];assert.throws(()=>c.GukminElection.decision(p,{action:'fulfill',plans}),/재산 부족/);
+ p.stats.money=10000;const out=E.apply(p,{electionDecision:{action:'fulfill',plans}});assert.equal(out.stats.money,3000);assert.equal(out.stats.illness,4);assert.equal(out.stats.stress,25);assert.equal(out.attributes.teacherTrust,25);assert.equal(c.GukminElection.model(p).previewFulfillment(plans).stats.illness,2);
+ assert.throws(()=>E.apply(out,{electionDecision:{action:'fulfill',plans}}),/정산할 수 없는/);
+ const pack=c.GukminDirector.content(p);for(const e of pack.events.filter(e=>/^election:bill-/.test(e.id)))assert.equal(E.matches(p,e.when,46),false);
+ delete p.attributes.electionFulfillmentVersion;assert.equal(E.matches(p,pack.events.find(e=>e.id==='election:bill-0').when,46),true);assert.equal(E.matches(p,pack.events.find(e=>e.id==='election:fulfillment').when,46),false);
+});

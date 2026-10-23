@@ -169,6 +169,9 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    if(presentation?.type==='election-pledges'){
     if(Object.keys(input).some(k=>k!=='pledges')||!Array.isArray(input.pledges))throw new Error('공약 선택 입력 오류');
     result={...clone(result),electionDecision:{action:result.electionDecision?.action||'pledges',ids:[...input.pledges]}};r.input={pledges:[...input.pledges]};
+   }else if(presentation?.type==='election-fulfillment'){
+    if(Object.keys(input).some(k=>k!=='plans')||!Array.isArray(input.plans))throw new Error('공약 이행 입력 오류');
+    result={...clone(result),electionDecision:{action:'fulfill',plans:clone(input.plans)}};r.input={plans:clone(input.plans)};
    }else if(presentation?.type==='election-survey'&&Object.keys(input).length){
     if(Object.keys(input).some(k=>k!=='groups')||!Array.isArray(input.groups)||!input.groups.length||input.groups[0]!==optionId||optionId==='skip')throw new Error('민심 조사 입력 오류');
     result={...clone(result),electionDecision:{...result.electionDecision,groups:[...input.groups]}};r.input={groups:[...input.groups]};

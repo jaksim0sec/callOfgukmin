@@ -1,7 +1,7 @@
 /* Static app shell only. Player saves remain exclusively in localStorage. */
 'use strict';
 const ROOT=new URL('./',self.location.href);
-const VERSION=new URL(self.location.href).searchParams.get('v')||'society-20261022';
+const VERSION=new URL(self.location.href).searchParams.get('v')||'election-fulfillment-20261023';
 const PREFIX='gukmin-shell-';
 const CACHE=PREFIX+VERSION;
 const SHELL=[

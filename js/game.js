@@ -82,7 +82,7 @@ function mount(root,navigate,content=global.GukminContent){
  const $=id=>root.querySelector('#'+id);
  const sheet=$('lifeSheet');
  const historyNext=$('historyNext'),historyAdvance=$('historyAdvance');
- let dailyClock=null;
+ let dailyClock=null,fulfillmentResultKey=null,disposeFulfillmentResult=null;
  const mobileSheet=global.matchMedia('(max-width: 47.5em)');
 
  // The compact snap fits its controls rather than a fixed fraction of the viewport.
@@ -686,6 +686,11 @@ function mount(root,navigate,content=global.GukminContent){
   if($('action'))$('action').scrollTop=0;
   if(presentedToken!==choice?.token)clearMajor();
   if(tutorialActive)return;
+  const lastFulfillment=reviewing?Object.values(snapshot.runtime.choices||{}).filter(item=>item.status==='closed').at(-1):null;
+  if(lastFulfillment?.script?.presentation?.type==='election-fulfillment'&&lastFulfillment.outcome){
+   if(fulfillmentResultKey!==lastFulfillment.choiceId+'@'+lastFulfillment.closedAt){disposeFulfillmentResult?.();fulfillmentResultKey=lastFulfillment.choiceId+'@'+lastFulfillment.closedAt;disposeFulfillmentResult=global.GukminElectionChoices.presentResult({entry:lastFulfillment,root,onContinue:()=>{disposeFulfillmentResult?.();disposeFulfillmentResult=null;fulfillmentResultKey=null;engine.step?.();renderProgress();if(canAuto())startJourney();}});}return;
+  }
+  if(disposeFulfillmentResult){disposeFulfillmentResult();disposeFulfillmentResult=null;fulfillmentResultKey=null;}
   if(dailyUI.isRewardVisible()||reviewing)return;
   if(electionHub.isOpen()||$('convenienceStore').open||maybeShowAdvice())return;
   if(!choice){dailyUI.reset();return;}
@@ -738,9 +743,9 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;electionHub.dispose();if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;disposeFulfillmentResult?.();disposeFulfillmentResult=null;electionHub.dispose();if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
-  snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
+  openElection:tab=>electionHub.open(tab),snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id,input)=>requireEngine().resolve(token,id,input),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose
  });
  render();

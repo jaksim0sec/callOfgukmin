@@ -81,6 +81,12 @@ function board(model,{compact=false,collapsible=false}={}){
  }
  update(E.chosen.map(p=>p.id));return {element,update};
 }
+// The same two direct entries stay inside each election surface.
+function navigation(){
+ const nav=make('nav','election-context-tools');nav.setAttribute('aria-label','선거 정보 바로 보기');
+ for(const [tab,label] of [['candidates','후보 비교'],['survey','조사 결과']]){const button=make('button','election-info-link',label+' ↗');button.type='button';button.dataset.electionTab=tab;button.addEventListener('click',()=>global.GukminGame.session?.openElection(tab));nav.append(button);}
+ return nav;
+}
 // One seasonal entry, with candidate slides and electorate data on separate tabs.
 function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
  const trigger=make('button','election-season-button','후보 · 민심 ↗');trigger.id='electionCandidates';trigger.type='button';trigger.hidden=true;host.append(trigger);
@@ -133,12 +139,12 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
   slider.scrollLeft=slider.clientWidth*selected;controls.forEach((b,i)=>b.setAttribute('aria-current',String(i===selected)));
   fitSlides();
  }
- function open(){if(!model?.active||drawer.open)return;render();drawer.showModal();fitSlides();const slider=drawer.querySelector('.candidate-slides');slider.scrollLeft=slider.clientWidth*selected;onOpen();}
+ function open(requestedTab){if(!model?.active||drawer.open)return;if(['candidates','survey'].includes(requestedTab))tab=requestedTab;render();drawer.showModal();fitSlides();const slider=drawer.querySelector('.candidate-slides');slider.scrollLeft=slider.clientWidth*selected;onOpen();}
  const cancel=event=>{event.preventDefault();close();},backdrop=event=>{if(event.target===drawer){const b=drawer.getBoundingClientRect();if(event.clientX<b.left||event.clientX>b.right||event.clientY<b.top||event.clientY>b.bottom)close();}};
  const handleClose=()=>{disposeSlides();drawer.replaceChildren();onClose();};
  trigger.addEventListener('click',open);drawer.addEventListener('cancel',cancel);drawer.addEventListener('click',backdrop);drawer.addEventListener('close',handleClose);
- return {update(next){model=next;trigger.hidden=!next?.active;if(!next?.active)close();else{const key=JSON.stringify([next.candidates,next.groups,next.chosen,next.forecast()]);if(key!==signature&&drawer.open)render();signature=key;}},isOpen:()=>drawer.open,
+ return {open,update(next){model=next;trigger.hidden=!next?.active;if(!next?.active)close();else{const key=JSON.stringify([next.candidates,next.groups,next.chosen,next.forecast()]);if(key!==signature&&drawer.open)render();signature=key;}},isOpen:()=>drawer.open,
   dispose(){disposeSlides();trigger.removeEventListener('click',open);drawer.removeEventListener('cancel',cancel);drawer.removeEventListener('click',backdrop);drawer.removeEventListener('close',handleClose);close();drawer.remove();trigger.remove();}};
 }
-global.GukminElectionView=Object.freeze({board,bar,mount,population,runoffSummary,countScene});
+global.GukminElectionView=Object.freeze({board,bar,mount,navigation,population,runoffSummary,countScene});
 })(window);

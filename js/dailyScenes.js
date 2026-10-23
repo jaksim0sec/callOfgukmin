@@ -181,7 +181,6 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='campaign'){
   const E=global.GukminElection,step=choice.presentation.step;
-  const entry=el('button','election-info-link','후보 · 민심 보기 ↗');entry.type='button';entry.addEventListener('click',()=>document.querySelector('#electionCandidates')?.click());if(global.GukminElection.model(persona).active)body.prepend(entry);
   // Narrative context only. Candidates and electorate data live in the election drawer.
   if(step==='attack'){
    const target=E.billTarget(persona,0),question=el('blockquote','campaign-question');
@@ -192,6 +191,7 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
    section.append(el('strong','campaign-bill-title',bill.name),el('p','',bill.limit),el('small','',bill.difficulty>=2?'선생님께 부탁해서 일부만 해 보거나, 못 지킨다고 솔직히 말할 수 있어.':'직접 하려면 '+bill.cost.toLocaleString('ko-KR')+'원과 준비할 시간이 필요해.'));body.prepend(section);
   }
  }
+ if(kind==='campaign'&&global.GukminElection.model(persona).active)body.prepend(global.GukminElectionView.navigation());
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){

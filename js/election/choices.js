@@ -6,7 +6,7 @@ function presentPledges({choice,resolve,root,model}){
  const dialog=root.querySelector('#lifeDecisionDialog');
  const E=model,isFinal=choice.presentation.mode==='final',isDraft=!isFinal&&E.revision>=2,slots=isFinal?E.chosen.map(p=>p.id):[null,null,null];let activeSlot=0,closed=false;
  const sheet=make('section','life-modal-wrap election-pledge-paper'),head=make('header','life-modal-head'),foldButton=make('button','life-modal-collapse','접기 ⌄');foldButton.type='button';
- const candidates=make('button','election-info-link','후보 보기 ↗');candidates.type='button';candidates.addEventListener('click',()=>root.querySelector('#electionCandidates')?.click());head.append(make('span','life-modal-serial',model.title+' · 공약'),candidates,foldButton);
+ head.append(make('span','life-modal-serial',model.title+' · 공약'),foldButton);
  const content=make('div','pledge-content'),dock=make('div','pledge-dock');content.append(make('small','campaign-eyebrow',E.groups.reduce((n,g)=>n+g.size,0)+'명의 마음을 움직일 세 약속'),make('h2','life-modal-title',isFinal?'마지막으로 약속 고르기':isDraft?'약속 세 개 골라 보기':'약속 세 개 고르기'));
  const puzzle=make('section','pledge-puzzle'),rack=make('div','pledge-slots');rack.setAttribute('role','group');rack.setAttribute('aria-label','공약 세 칸');
  const slotButtons=slots.map((_,i)=>{const button=make('button','pledge-slot');button.type='button';button.addEventListener('click',()=>{activeSlot=i;paint();});button.addEventListener('keydown',e=>{if(['Delete','Backspace'].includes(e.key)){e.preventDefault();slots[i]=null;activeSlot=i;paint();}});rack.append(button);return button;});
@@ -29,7 +29,7 @@ function presentPledges({choice,resolve,root,model}){
   });cards.append(card);
  }
  const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','어떤 약속을 할까?'),make('small','','?는 아직 안 물어본 친구들 · +는 좋아해, −는 싫어해'));content.append(catalogHead,cards);
- footer.append(counts,confirm);sheet.append(head,dock,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
+ footer.append(counts,confirm);head.insertBefore(global.GukminElectionView.navigation(),foldButton);sheet.append(head,dock,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
  const mobile=global.matchMedia('(max-width:47.5em)'),eyebrow=content.querySelector('.campaign-eyebrow'),title=content.querySelector('.life-modal-title'),help=puzzle.querySelector('.pledge-slot-help');
  const syncDock=()=>{if(mobile.matches)dock.append(eyebrow,title,rack,help);else{content.prepend(eyebrow,title);puzzle.prepend(rack,help);}};
  mobile.addEventListener('change',syncDock);syncDock();
@@ -69,11 +69,47 @@ function presentSurvey({choice,resolve,root,model}){
  }
  content.append(list);
  if(choice.presentation.first){const skip=make('button','survey-skip','방문하지 않고 공약 고르기 →');skip.type='button';skip.addEventListener('click',()=>commit('skip'));content.append(skip);}
- sheet.append(header,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-survey');paint();
+ header.insertBefore(global.GukminElectionView.navigation(),fold);sheet.append(header,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-survey');paint();
  const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},collapse=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();collapse();};
  function commit(id,input={}){if(closed)return;dialog.close();resolve(id,input);}
  confirm.addEventListener('click',()=>{const ids=[...selected];if(ids.length)commit(ids[0],{groups:ids});});fold.addEventListener('click',collapse);reopen.addEventListener('click',open);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);open();
  return ()=>{closed=true;reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-election-survey');sync();};
 }
-global.GukminElectionChoices=Object.freeze({present:options=>options.choice.presentation.type==='election-survey'?presentSurvey(options):presentPledges(options)});
+function effectTokens(stats,trust){
+ const row=make('div','fulfillment-effects');
+ for(const [id,amount] of Object.entries(stats))if(amount)row.append(global.GukminStatus.createToken({type:'metric',id,amount}));
+ if(trust)row.append(global.GukminStatus.createToken({label:'선생님 믿음 '+(trust>0?'+':'−')+Math.abs(trust),icon:'home'}));
+ return row;
+}
+function presentFulfillment({choice,resolve,root,model}){
+ const dialog=root.querySelector('#lifeDecisionDialog'),reopen=root.querySelector('#resumeMajorChoice'),plans=new Map();let closed=false;
+ const sheet=make('section','life-modal-wrap election-fulfillment-paper'),head=make('header','life-modal-head'),fold=make('button','life-modal-collapse','접기 ⌄');fold.type='button';head.append(make('span','life-modal-serial',model.title+' · 당선 후'),fold);
+ const content=make('div','fulfillment-content'),intro=make('div','fulfillment-intro');intro.append(make('small','campaign-eyebrow','약속은 세 개, 방법은 각각'),make('h2','life-modal-title','이제 약속을 지킬 차례'),make('p','','각 약속을 어떻게 할지 골라 줘. 세 가지를 한 번에 정산해요.'));content.append(intro);
+ const footer=make('footer','life-modal-foot fulfillment-footer'),summary=make('div','fulfillment-summary'),counter=make('strong'),totals=make('div'),error=make('p','fulfillment-error'),confirm=make('button','life-submit','이행 방식 확정하기');error.setAttribute('role','status');confirm.type='button';summary.setAttribute('aria-live','polite');summary.append(counter,totals,error);footer.append(summary,confirm);
+ function paint(){
+  counter.textContent=plans.size+' / '+model.fulfillment.length+'개 결정';totals.replaceChildren();error.textContent='';confirm.disabled=plans.size!==model.fulfillment.length;
+  if(!confirm.disabled)try{const preview=model.previewFulfillment([...plans].map(([pledgeId,mode])=>({pledgeId,mode})));totals.append(effectTokens(preview.stats,preview.trust));}catch(e){error.textContent=e.message;confirm.disabled=true;}
+  for(const button of content.querySelectorAll('[data-mode]'))button.setAttribute('aria-pressed',String(plans.get(button.dataset.pledge)===button.dataset.mode));
+ }
+ model.fulfillment.forEach((pledge,i)=>{
+  const card=make('section','fulfillment-pledge'),heading=make('div','fulfillment-pledge-heading');heading.append(make('span','',String(i+1).padStart(2,'0')),make('h3','',pledge.name));card.append(heading,make('p','fulfillment-limit',pledge.limit));
+  const modes=make('div','fulfillment-modes');modes.setAttribute('role','group');modes.setAttribute('aria-label',pledge.name+' 이행 방식');
+  for(const mode of pledge.modes){const button=make('button','fulfillment-mode');button.type='button';button.dataset.pledge=pledge.id;button.dataset.mode=mode.id;button.disabled=!mode.available;button.setAttribute('aria-pressed','false');button.append(make('strong','',mode.label),make('small','',mode.detail));if(mode.available){const stats={...mode.stats,...(mode.cost?{money:-mode.cost}:{})};if(model.riskMetric==='illness'){stats.illness=stats.stress;delete stats.stress;}button.append(effectTokens(stats,mode.trust));}button.addEventListener('click',()=>{plans.set(pledge.id,mode.id);paint();});modes.append(button);}
+  card.append(modes);content.append(card);
+ });
+ head.insertBefore(global.GukminElectionView.navigation(),fold);sheet.append(head,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-fulfillment');paint();
+ const sync=()=>{reopen.hidden=closed||dialog.open;},open=()=>{if(!closed&&!dialog.open){dialog.showModal();sync();}},collapse=()=>{dialog.close();sync();reopen.focus({preventScroll:true});},cancel=e=>{e.preventDefault();collapse();};
+ confirm.addEventListener('click',()=>{if(closed||confirm.disabled)return;const input={plans:[...plans].map(([pledgeId,mode])=>({pledgeId,mode}))};if(resolve('submit',input)===false){error.textContent='정산하지 못했어요. 선택과 재산을 확인해 주세요.';}});
+ fold.addEventListener('click',collapse);reopen.addEventListener('click',open);dialog.addEventListener('cancel',cancel);dialog.addEventListener('close',sync);open();
+ return ()=>{closed=true;reopen.removeEventListener('click',open);dialog.removeEventListener('cancel',cancel);dialog.removeEventListener('close',sync);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-election-fulfillment');sync();};
+}
+function presentResult({entry,root,onContinue}){
+ const dialog=root.querySelector('#lifeDecisionDialog'),sheet=make('section','life-modal-wrap election-fulfillment-paper'),head=make('header','life-modal-head');head.append(make('span','life-modal-serial','우리 반 반장 선거 · 이행 결산'),global.GukminStatus.createToken({label:'정산 완료',icon:'check'}));
+ const content=make('div','fulfillment-content'),before=entry.outcome.before,after=entry.outcome.after,stats=Object.fromEntries(['money','stress','illness','study','relations'].map(id=>[id,(after.stats[id]||0)-(before.stats[id]||0)]));
+ content.append(make('h2','life-modal-title','약속의 결과가 돌아왔어요'),make('p','fulfillment-result-note','고른 방법과 실제 변화입니다. 이 결과는 인생 기록에도 남아요.'),effectTokens(stats,(after.attributes.teacherTrust??12)-(before.attributes.teacherTrust??12)));
+ for(const plan of entry.input.plans){const pledge=global.GukminElection.pledges.find(p=>p.id===plan.pledgeId),card=make('section','fulfillment-result-card');card.append(global.GukminStatus.createToken({label:{keep:'이행',compromise:'조정',break:'철회'}[plan.mode],icon:plan.mode==='break'?'speech':'check'}),make('h3','',pledge.name),make('p','',plan.mode==='compromise'?pledge.compromise:plan.mode==='keep'?'시간을 들여 약속한 일을 직접 맡았어요.':'지키기 어렵다고 설명하고 친구들에게 사과했어요.'));content.append(card);}
+ const footer=make('footer','life-modal-foot'),next=make('button','life-submit','결과를 확인했어 →');next.type='button';next.addEventListener('click',onContinue);footer.append(next);sheet.append(head,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-election-fulfillment','is-fulfillment-result');const cancel=e=>{e.preventDefault();onContinue();};dialog.addEventListener('cancel',cancel);if(!dialog.open)dialog.showModal();
+ return ()=>{dialog.removeEventListener('cancel',cancel);if(dialog.open)dialog.close();dialog.replaceChildren();dialog.classList.remove('is-election-fulfillment','is-fulfillment-result');};
+}
+global.GukminElectionChoices=Object.freeze({presentResult,present:options=>options.choice.presentation.type==='election-fulfillment'?presentFulfillment(options):options.choice.presentation.type==='election-survey'?presentSurvey(options):presentPledges(options)});
 })(window);
