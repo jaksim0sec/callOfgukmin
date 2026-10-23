@@ -6,7 +6,8 @@ const won=n=>Math.round(n||0).toLocaleString('ko-KR')+'원';
 function model(stage,p){
  const a=p.attributes||{},year=(a.collegeCompleted||0)+1,school=a.collegeName||'대학교',period=Math.min(3,(a.careerChapterPeriods||0)+1)+'/3회차';
  const surfaces={
-  'college-program':{surface:'course',mode:'web',brand:school,section:'입학지원 · 학사 안내',title:'나에게 맞는 과정 찾기',lead:'먼저 과정의 길이를 정합니다. 등록과 학업은 그다음입니다.',fields:[['신입생',p.name],['입학 상태',a.collegeStatus||'입학 예정']],list:'교육과정 선택',submit:'이 과정으로 시작하기'},
+  'region-map':{surface:'regions',mode:'web',brand:'LOCAL · 전국 활동',section:'대한민국 활동 거점',title:'어디에서 사람들을 만날까',lead:'열린 거점에서 활동할 수 있습니다.',fields:[['현재 활동 지역',g.GukminAdultStories.active(p).name],['새 지역 이동 준비','1개월 · 100,000원']],list:'지역 선택',submit:'이 지역에서 활동하기'},
+   'college-program':{surface:'course',mode:'web',brand:school,section:'입학지원 · 학사 안내',title:'나에게 맞는 과정 찾기',lead:'먼저 과정의 길이를 정합니다. 등록과 학업은 그다음입니다.',fields:[['신입생',p.name],['입학 상태',a.collegeStatus||'입학 예정']],list:'교육과정 선택',submit:'이 과정으로 시작하기'},
   'college-funding':{surface:'tuition',mode:'document',brand:school+' · 재무팀',section:'등록 업무',title:'등록금 납부 안내',lead:'가족 지원과 장학금을 제외한 본인 부담액을 확인하세요.',fields:[['학생',p.name],['등록 학년',year+'학년 / '+a.collegeYears+'년제']],list:'등록 방법',submit:'등록 방법 확정하기'},
   'college-year':{surface:'campus',mode:'web',brand:'CAMPUS',section:school+' · 학생 포털',title:year+'학년, 올해의 캠퍼스',lead:'수업 밖의 시간도 내 이력이 됩니다. 올해 가장 집중할 활동을 정하세요.',fields:[['학적',a.collegeStatus||'재학'],['학업 진행',(a.collegeCompleted||0)+' / '+a.collegeYears+'년 이수']],list:'나의 연간 활동 계획',submit:'올해 활동 계획 확정하기'},
   military:{surface:'notice',mode:'document',brand:'병역 안내',section:'판정 · 복무 일정',title:a.militaryAssessed?'입영 경로 선택 안내':'병역판정 안내문',lead:'현재의 학업과 일정을 함께 살펴보고 다음 절차를 정하세요.',fields:[['대상자',p.name],['병역 상태',a.militaryStatus||'판정 전'],['판정 이력',a.militaryAssessed?'판정 완료':'미판정'],['학적',a.collegeStatus||'해당 없음']],list:'진행할 절차',submit:'선택한 절차 진행하기'},
@@ -35,9 +36,28 @@ function decorate({dialog,body,list,choice,persona}){
  const mast=el('div','adult-masthead'),identity=el('div','adult-identity');
  identity.append(g.GukminStatus.createToken({label:m.mode==='document'?'서류':'온라인',icon:m.mode==='document'?'flag':'home',classes:'adult-medium'}),el('strong','',m.brand));
  mast.append(identity,el('small','adult-section',m.section));
- const hero=el('div','adult-hero');hero.append(el('small','adult-eyebrow',m.mode==='document'?'확인 후 처리해 주세요':'나의 현재 활동'),el('h3','',m.title),el('p','',m.lead));
+ const hero=el('div','adult-hero');hero.append(el('small','adult-eyebrow',m.mode==='document'?'확인 후 처리해 주세요':'나의 현재 활동'),el('h3','',choice.title||m.title),el('p','',m.lead));
  if(m.status){const status=el('span','adult-result-status',m.status);status.dataset.accepted=String(!!persona.attributes.jobAccepted);hero.prepend(status);}
- shell.append(mast,hero,fields(m.fields));
+ const storyText=body.querySelector('.daily-scenario');
+  if(storyText){hero.querySelector('p')?.remove();storyText.classList.add('adult-main-story');hero.append(storyText);}
+  shell.append(mast,hero,fields(m.fields));
+  if(stage==='region-map'){
+    const map=el('section','adult-region-map');map.setAttribute('aria-label','대한민국 활동 거점 지도');
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 260 360');svg.setAttribute('aria-hidden','true');svg.classList.add('adult-korea-outline');
+    const land=document.createElementNS('http://www.w3.org/2000/svg','path');
+    land.setAttribute('d','M91 43 L111 32 136 40 152 34 169 46 179 67 199 71 203 91 191 107 204 130 217 145 216 165 230 185 216 201 215 229 201 245 211 263 195 279 175 274 161 286 140 268 126 281 108 272 94 256 77 254 68 238 52 220 56 197 44 181 56 158 51 136 64 120 57 104 72 94 70 75 84 66 Z');
+    const island=document.createElementNS('http://www.w3.org/2000/svg','ellipse');island.setAttribute('cx','113');island.setAttribute('cy','324');island.setAttribute('rx','25');island.setAttribute('ry','9');svg.append(land,island);map.append(svg);
+    for(const r of g.GukminAdultStories.regions){
+      const pin=el('button','adult-region-pin',r.name.split(' ').at(-1));pin.type='button';pin.style.left=r.x+'%';pin.style.top=r.y+'%';
+      pin.disabled=choice.options.find(o=>o.id==='visit:'+r.id)?.available===false;
+      pin.title=pin.disabled?'아직 활동 기회가 열리지 않았습니다.':r.issue;
+      if(r.id===g.GukminAdultStories.active(persona).id)pin.classList.add('is-current');
+      pin.addEventListener('click',()=>{const option=[...list.querySelectorAll('.inline-choice')].find(node=>node.dataset.action==='visit:'+r.id);
+        if(option){option.click();for(const node of map.querySelectorAll('.adult-region-pin'))node.classList.remove('is-selected');pin.classList.add('is-selected');}
+      });map.append(pin);
+    }
+    map.append(el('p','adult-map-caption','활동 지역 개략도 · 실제 선거구 경계가 아닙니다.'));shell.append(map);
+  }
  if(stage==='college-funding'){
   const t=g.GukminSociety.tuition(persona),bill=el('section','adult-tuition');bill.setAttribute('aria-label','등록금 내역');
   bill.append(fields([['연간 등록금',won(t.gross)],['가족 지원','−'+won(t.aid)],['장학 지원','−'+won(t.scholarship)]],'adult-bill-lines'));
@@ -46,7 +66,7 @@ function decorate({dialog,body,list,choice,persona}){
  if(stage==='college-year'){
   const a=persona.attributes,degree=el('div','adult-degree'),bar=el('progress','');bar.max=a.collegeYears;bar.value=a.collegeCompleted||0;bar.setAttribute('aria-label','졸업까지 '+bar.value+'/'+bar.max+'년 이수');degree.append(bar,el('small','','졸업까지 '+Math.max(0,a.collegeYears-(a.collegeCompleted||0))+'년 남음'));shell.append(degree);
  }
- const situation=body.querySelector('.daily-scenario');if(situation){const details=el('details','adult-brief');details.append(el('summary','','상황과 조건 자세히 보기'),situation);shell.append(details);}
+ // The story has moved into the primary hero.
  const group=el('section','adult-options');group.append(el('h4','adult-options-heading',m.list));
  const buttons=[...list.querySelectorAll('.inline-choice')];
  for(const [index,button] of buttons.entries()){
@@ -70,7 +90,8 @@ function reward({dialog,body,presentation,label,attributes,stats,portrait}){
  const m=model(presentation.stage,{attributes,stats,name:portrait?.name||'',job:attributes.job});if(!m)return;
  dialog.dataset.adultMode=m.mode;
  const receipt=el('header','adult-receipt');receipt.append(el('span','adult-receipt-check','✓'),el('div',''));
- receipt.lastChild.append(el('small','',m.brand+' · 처리 결과'),el('strong','','선택이 기록되었습니다'),el('span','',label));body.prepend(receipt);
+ const milestone=presentation.stage==='college-year'&&attributes.collegeStatus==='졸업'?'대학 졸업 완료':presentation.stage==='job-offer'&&label==='제안을 받아들인다'?'첫 출근 확정':presentation.stage==='community'&&attributes.adultCommunityIssueStage===3?'지역 문제 회신 완료':null;
+  receipt.lastChild.append(el('small','',m.brand+' · 처리 결과'),el('strong','',milestone||'선택이 기록되었습니다'),el('span','',label));body.prepend(receipt);
 }
 g.GukminAdultScenes=Object.freeze({skin,decorate,reward});
 })(window);

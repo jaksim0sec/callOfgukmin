@@ -21,6 +21,8 @@
 
 실제 학교·대학 이름을 예시로 사용하더라도 **게임 난도·등급 환산·합격 판정·비용은 실제 입학 기준이나 공식 성적이 아닙니다.** 지원 학교·진로도 현실 제도 전체를 재현하지 않습니다.
 
+성인기 개편: 캠퍼스·직장·자영업·지역사회에서 사건과 후속 선택이 이어지며, 사회 허브의 대한민국 활동 지도로 열린 지역 거점을 선택할 수 있습니다. 지도는 공식 국회의원 선거구가 아닌 게임 활동 지역 개략도입니다.
+
 ## 실행
 
 별도 빌드나 백엔드가 없는 정적 HTML/CSS/JavaScript 프로젝트입니다. GitHub Pages는 루트 `index.html`을 통해 `html/waiting.html`로 진입합니다.
@@ -42,6 +44,7 @@ python3 -m http.server 8000
 node tests/smoke.mjs
 node --test tests/systems.mjs
 node tests/society-routes.mjs
+node tests/adult-events.mjs
 node tests/life-refinements.mjs
 # Playwright와 Chromium이 설치된 환경에서
 node tests/browser.mjs

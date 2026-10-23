@@ -39,7 +39,8 @@ function choice(p){
   if(a.studentDebt>0)add('repay','학자금 빚 일부 갚기','여유 자금으로 최대 100만 원을 상환한다. 취업·학업은 진행되지 않는다.',{requiredMoney:1,reason:'상환할 재산이 필요합니다.',icon:'savings'});
   if(college)add('leave',a.collegeStatus==='휴학'?'대학 중퇴하기':'휴학하기',a.collegeStatus==='휴학'?'이수한 기간과 중퇴 이력은 남는다.':'학업 진행을 멈추고 사회에서 다른 경험을 한다.',{icon:'school'});
  }
- if(stage==='college-program'){
+ if(stage==='region-map'){title='지역 지도';body='활동할 지역을 고르는 중이다.';add('map-back','사회로 돌아가기','현재 지역을 유지한다.',{icon:'home'});}
+  if(stage==='college-program'){
   title='실무 과정의 길이';body='합격한 실무계열의 시연 과정이다. 실제 대학의 학과별 학제·등록금과는 다르다. 짧은 과정은 빨리 사회에 나가고, 긴 과정은 실무 경험을 더 쌓는다.';
   add('program-2','2년제 실무과정','2년 뒤 전문학사 과정을 마친다.',{icon:'graduation'});add('program-3','3년제 실무과정','한 해의 시간·등록금을 더 쓰고 취업 준비 경험을 쌓는다.',{icon:'graduation'});
  }
@@ -146,7 +147,7 @@ function decision(p,{action,flow},context={}){
  const pauseCollege=()=>{const school=currentCollege(p);if(school&&a.collegeStatus==='재학'){schools.push({...school,status:'leave'});attrs.collegeStatus='휴학';if(a.societyStep==='college-year')attrs.collegeFundedYear=(a.collegeCompleted||0)+1;}};
  if(action==='start'){
   if(a.societyActive||!['college','employment'].includes(a.admissionDestination))throw new Error('사회 진입 조건 오류');
-  Object.assign(attrs,{societyActive:true,societyComplete:false,societyStep:'hub',societyMonths:0,societyAgeBase:Math.max(20,p.age),age:Math.max(20,p.age),militaryStatus:P.genderOf(p)==='female'?'의무복무 비대상':'판정 전',militaryReason:P.genderOf(p)==='female'?'여성 · 자원 가능':'아직 판정받지 않음',militaryServed:false,employmentStatus:'구직',careerMonths:0});
+  Object.assign(attrs,{adultRegionFlags:3|(g.GukminAdultStories?.regions.find(r=>String(p.birthplaceId||'').startsWith(r.home))?.bit||0),adultActivityRegionId:g.GukminAdultStories?.regions.find(r=>String(p.birthplaceId||'').startsWith(r.home))?.id||'mapo',societyActive:true,societyComplete:false,societyStep:'hub',societyMonths:0,societyAgeBase:Math.max(20,p.age),age:Math.max(20,p.age),militaryStatus:P.genderOf(p)==='female'?'의무복무 비대상':'판정 전',militaryReason:P.genderOf(p)==='female'?'여성 · 자원 가능':'아직 판정받지 않음',militaryServed:false,employmentStatus:'구직',careerMonths:0});
   for(const school of P.schoolsOf(p).filter(s=>s.kind==='high'&&s.status==='enrolled'))schools.push({...school,status:'graduated'});
   if(a.admissionDestination==='college'){
    const name=a.earlyStatus==='accepted'?a.earlyOffer:a.regularStatus==='accepted'?a.regularOffer:a.earlyOffer||a.regularOffer;if(!name)throw new Error('진학할 합격 대학이 없습니다');
@@ -234,7 +235,7 @@ g.GukminSociety=Object.freeze({choice,lineChoice,decision,tuition,chance,legalAg
 g.GukminDirector.register({id:'society',generate:()=>({attributes:Object.fromEntries(Object.entries(labels).map(([key,label])=>[key,{label,hidden:!['collegeStatus','militaryStatus','militaryReason','employmentStatus','politicalPathLabel'].includes(key),icon:key.startsWith('military')?'flag':'school'}])),choices:[{id,layer:'한방 선택',title:'사회',presentation:{type:'society'},options:[{id:'back',label:'사회로',result:{}}]},{id:lineId,layer:'일상 선택',title:'사회 경로',presentation:{type:'society-line'},options:[{id:'back',label:'사회로',result:{}}]}],events:[
  {id:'society:entry',at:0,layer:'소식 이벤트',title:'교문 밖, 사회로',presentation:{kind:'graduation',when:{age:{lte:19}}},when:{all:[{any:[{attributes:{admissionDestination:'college'}},{attributes:{admissionDestination:'employment'}}]},{not:{attributes:{societyActive:true}}}]},result:{societyDecision:{action:'start'}}},
  {id:'society:narrative',at:0,every:1,repeatFrom:'start',layer:'소식 이벤트',title:'사회 · 이어지는 생활',when:{attributes:{societyActive:true,societyComplete:false,societyNarrativePending:true}},result:{societyDecision:{action:'narrate'}}},
- {id:'society:line',at:0,every:1,repeatFrom:'start',layer:'일상 이벤트',title:'사회 · 이어지는 생활',choice:lineId,when:{all:[{attributes:{societyActive:true,societyComplete:false}},{any:['college-program','college-funding','college-year','military','military-service','career-search','job-offer','work','business','politics','community','recovery'].map(societyStep=>({attributes:{societyStep}}))}]}},
+ {id:'society:line',at:0,every:1,repeatFrom:'start',layer:'일상 이벤트',title:'사회 · 이어지는 생활',choice:lineId,when:{all:[{attributes:{societyActive:true,societyComplete:false}},{any:['college-program','college-funding','college-year','military','military-service','career-search','job-offer','work','business','politics','community','recovery','region-map'].map(societyStep=>({attributes:{societyStep}}))}]}},
  {id:'society:activity',at:0,every:1,repeatFrom:'start',layer:'한방 이벤트',title:'사회 · 다음 행선지',choice:id,when:{all:[{attributes:{societyActive:true,societyComplete:false}},{not:{attributes:{admissionDestination:'finished'}}},{any:[{attributes:{societyStep:'hub'}},{attributes:{societyStep:'ready'}}]}]}}
 ]})});
 })(window);
