@@ -122,8 +122,8 @@ function mount(root,navigate,content=global.GukminContent){
  let tutorialActive=!verificationMode&&!tutorialHidden,lifeDeferred=false,tutorialPage=0;
  const tutorial=$('gameTutorial');
  const guide=[
-  {title:'스탯은 선택의 방향을 보여 줍니다',body:'수치는 보통 0~25입니다. 관계가 오르면 친구들의 지지를 얻기 쉽지만, 압박이 오르면 위험이 커집니다. 같은 ▲라도 모두 보상은 아니에요. 선택 아래 토큰에서 얻는 것과 잃는 것을 함께 읽어 보세요.',stats:[{label:'압박',value:8,max:25,color:'#d65b62',note:'높을수록 부담'},{label:'관계',value:12,max:25,color:'#8769d8',note:'친구와 주변의 지지'}]},
-  {title:'압박 25를 넘으면 정신병으로 바뀝니다',body:'압박 24에서 +3이면 초과한 2가 정신병이 됩니다. 그때부터 선택의 부담·회복도 정신병부터 적용됩니다. 정신병 5는 게임오버예요. GU는 4턴에 한 번 이용할 수 있고, 압박만 줄이는 상품과 정신병도 낮추는 상품이 다릅니다. 자동으로 쉬어 주지는 않아요.',stats:[{label:'압박 한계',value:25,max:25,color:'#d65b62',note:'초과한 만큼 다음 단계'},{label:'정신병',value:2,max:5,color:'#9556bf',note:'5에 도달하면 생애 종료'}]},
+  {title:'스탯은 선택의 방향을 보여 줍니다',body:'압박은 0~50, 관계와 학업 역량은 0~25입니다. 관계가 오르면 친구들의 지지를 얻기 쉽지만, 압박이 오르면 위험이 커집니다. 같은 ▲라도 모두 보상은 아니에요. 선택 아래 토큰에서 얻는 것과 잃는 것을 함께 읽어 보세요.',stats:[{label:'압박',value:16,max:50,color:'#d65b62',note:'높을수록 부담'},{label:'관계',value:12,max:25,color:'#8769d8',note:'친구와 주변의 지지'}]},
+  {title:'압박 50을 넘으면 정신병으로 바뀝니다',body:'압박 49에서 +3이면 초과한 2가 정신병이 됩니다. 그때부터 선택의 부담·회복도 정신병부터 적용됩니다. 정신병 5는 게임오버예요. GU는 4턴에 한 번 이용할 수 있고, 압박만 줄이는 상품과 정신병도 낮추는 상품이 다릅니다. 자동으로 쉬어 주지는 않아요.',stats:[{label:'압박 한계',value:50,max:50,color:'#d65b62',note:'초과한 만큼 다음 단계'},{label:'정신병',value:2,max:5,color:'#9556bf',note:'5에 도달하면 생애 종료'}]},
   {title:'공부한 능력과 시험 등급은 다릅니다',body:'학업 역량은 초등 시기의 공부 기반이고 운동능력은 계주에 쓰입니다. 중학교 교과 성취는 A~E, 고교 내신은 1~5등급, 모의고사·수능은 1~9등급이에요. 등급 숫자는 작을수록 좋습니다. 시험에서는 노력의 비용과 예상 성적을 함께 비교하세요.',stats:[{label:'학업 역량',value:15,max:25,color:'#6f82ba',note:'초등 시기의 공부 기반'},{label:'운동능력',value:8,max:25,color:'#5f9270',note:'연습으로 키워 계주에 활용'}]},
   {title:'재산은 돈, 특성은 행동을 바꾸는 힘',body:'용돈은 학생 시기에 받는 금액이고, 재산은 실제로 쓸 수 있는 돈입니다. 특성은 별도의 버프·디버프로, 관련 사건이나 시험의 결과에 영향을 줍니다. 토큰을 누르면 효과를 읽을 수 있어요. 재학·졸업 같은 학교 이력도 별도로 보존됩니다.',money:true,trait:'꼼꼼함'},
   {title:'진행은 언제나 같은 다음 버튼으로',body:'기록 아래의 다음 버튼 하나로 이야기를 넘기거나 대기 중인 선택을 엽니다. 자동은 이야기를 이어 주고 준비된 일상 선택을 5초 뒤 열어요. 수동은 누를 때만 진행하고, 일시정지는 시간을 멈춥니다. 선택은 직접 고르며 결과는 자동 저장됩니다.',art:[['→','다음'],['Ⅱ','일시정지'],['?','다시 도움말']]}
@@ -360,15 +360,15 @@ function mount(root,navigate,content=global.GukminContent){
   const dialog=$('pressureAdvice');if(dialog.open)return true;
   if(verificationMode||snapshot?.runtime.contentId!==global.GukminDirector.contentId||persona.age<schoolAges.elementary||snapshot.reviewPending||cinematicShown||persona.attributes?.admissionDestination==='finished'||(persona.stats.illness||0)>=5)return false;
   if(root.querySelector('dialog[open]'))return false;
-  const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=13;
+  const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=Math.ceil(global.GukminPlayer.metricDefinition('stress').max/2);
   const critical=persona.stats.illness===4&&!persona.attributes?.pressureCriticalSeen;
   if(!guide&&!critical)return false;
   const pressure=persona.stats.stress||0,illness=persona.stats.illness||0;
   text('pressureAdviceTitle',critical?'정신병 4 · 한계까지 1 남았습니다':'압박이 절반에 닿았습니다');
   text('pressureAdviceLead',critical?'정신병이 5가 되면 이번 인생이 끝납니다. 다음 선택 전에 회복할 수 있는지 확인해 보세요.':'부담이 쌓이면 압박이 오릅니다. 두 수치의 차이와 회복 방법을 한 번만 알려드릴게요.');
-  text('advicePressureValue',pressure+'/25');text('adviceIllnessValue',illness+'/5');
-  $('advicePressureProgress').value=pressure;$('adviceIllnessProgress').value=illness;
-  $('advicePressureFill').style.transform='scaleX('+pressure/25+')';
+  text('advicePressureValue',pressure+'/'+global.GukminPlayer.metricDefinition('stress').max);text('adviceIllnessValue',illness+'/5');
+  $('advicePressureProgress').max=global.GukminPlayer.metricDefinition('stress').max;$('advicePressureProgress').value=pressure;$('adviceIllnessProgress').value=illness;
+  $('advicePressureFill').style.transform='scaleX('+pressure/global.GukminPlayer.metricDefinition('stress').max+')';
   $('adviceIllnessFill').style.transform='scaleX('+illness/5+')';
   const status=engine.storeStatus();text('adviceStoreNote',status.remaining?'다음 편의점 이용까지 '+status.remaining+'턴 남았습니다.':'편의점은 4턴에 한 번 이용할 수 있습니다. 한계에 닿기 전에 틈틈이 쉬어 가세요.');
   dialog.dataset.guide=String(guide);dialog.dataset.critical=String(critical);dailyUI.suspend();$('choiceTiming').hidden=true;dialog.showModal();return true;
@@ -385,14 +385,14 @@ function mount(root,navigate,content=global.GukminContent){
   if(status)open.textContent=status.remaining?'편의점 · '+status.remaining+'턴 후 이용 ↗':'편의점 ↗';
   if(!dialog.open)return;
   text('storeBalance','사용 가능한 재산 '+persona.stats.money.toLocaleString('ko-KR')+'원');
-  const vitals=$('storeVitals');vitals.replaceChildren(global.GukminStatus.createToken({label:'압박 '+stress+'/25',icon:'pulse',classes:'metric-impact metric-stress'}));
+  const vitals=$('storeVitals');vitals.replaceChildren(global.GukminStatus.createToken({label:'압박 '+stress+'/'+global.GukminPlayer.metricDefinition('stress').max,icon:'pulse',classes:'metric-impact metric-stress'}));
   if(illness)vitals.append(global.GukminStatus.createToken({label:'정신병 '+illness+'/5',icon:'mind',classes:'metric-impact metric-illness'}));
   const availability=$('storeAvailability');availability.dataset.waiting=String(status.remaining>0);
-  text('storeAvailabilityTitle',status.remaining?'다음 이용까지 '+status.remaining+'턴':status.blocked?'잠시 이용할 수 없습니다':'지금 이용할 수 있어요');
+  text('storeAvailabilityTitle',status.remaining?'다음 이용까지 '+status.remaining+'턴':status.blocked?'이용 안내':status.items.some(item=>item.available)?'지금 이용할 수 있어요':'회복이 필요한 상품을 골라 주세요');
   const steps=$('storeCooldownSteps');steps.hidden=!status.remaining;steps.replaceChildren();
   for(let i=0;i<4;i++){const step=el('span',i<4-status.remaining?'is-complete':'');step.setAttribute('aria-hidden','true');steps.append(step);}
   steps.setAttribute('aria-label',status.remaining+'턴 후 이용 가능');
-  text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?(stress===0&&!illness?'지금은 충분히 쉬었습니다.':snapshot?.reviewPending?'선택 결과를 확인한 뒤 이용해 주세요.':'현재는 이용할 수 없습니다.'):'한 번에 하나 · 구매 후 4턴 간격 · 회복은 직접 선택합니다.');
+  text('storeNotice',status.remaining?'다시 이용하려면 '+status.remaining+'턴이 필요합니다.':status.blocked?status.blockedReason:'한 번에 하나 · 구매 후 4턴 간격 · 회복은 직접 선택합니다.');
   const list=$('storeItems');list.replaceChildren();
   for(const item of status.items){
    const card=el('article','store-item');card.dataset.available=String(item.available);
@@ -405,7 +405,7 @@ function mount(root,navigate,content=global.GukminContent){
    const relief=Math.min(stress,item.relief),recovery=Math.min(illness,item.recovery||0);
    info.append(el('span','store-relief','압박 −'+relief+(item.recovery?' · 정신병 −'+recovery:'')));
    const checkout=el('div','store-product-checkout');checkout.append(el('b','store-price',item.price.toLocaleString('ko-KR')+'원'),button);
-   const reason=item.available?'구매하기 ↗':status.remaining?'다음 이용까지 '+status.remaining+'턴':status.blocked?'지금은 이용 불가':persona.stats.money<item.price?'재산 부족':!item.recovery&&stress===0?'압박이 없습니다':'정신병 발생 후 이용';
+   const reason=item.available?'구매하기 ↗':item.reason;
    button.textContent=reason;button.setAttribute('aria-label',item.name+' · '+reason+' · '+item.price.toLocaleString('ko-KR')+'원');card.append(art,info,checkout);
    button.addEventListener('click',safely(()=>{if(engine.buy(item.id)){text('storeNotice',item.name+' 구매 완료 · 압박 '+relief+' 감소'+(recovery?' · 정신병 '+recovery+' 감소':'')+' · 다음 이용까지 4턴.');$('convenienceStore').querySelector('.close').focus({preventScroll:true});}}));list.append(card);
   }
@@ -440,7 +440,7 @@ function mount(root,navigate,content=global.GukminContent){
   const card=el('section','life-cinematic-card'+(scene.kind==='grade'?' is-grade':''));
   const folio=el('div','cinematic-folio');folio.append(el('span','',persona.name),el('span','',headlineFor(persona)));card.append(folio);
   card.classList.toggle('is-sealed',!!scene.sealed);
-  card.append(el('span','life-cinematic-kicker',scene.kind==='grade'?'학교 성적 통지표':scene.kind==='election'?'교실 개표 현황':scene.kind==='admission'?'입학 전형 결과':'인생의 전환점'));
+  card.append(el('span','life-cinematic-kicker',scene.kind==='grade'?'학교 성적 통지표':scene.kind==='election'?'교실 개표 현황':scene.kind==='admission'?'입학 전형 결과':scene.kind==='graduation'?'GRADUATION / 다음 장':'인생의 전환점'));
   card.append(el('h2','life-cinematic-title',scene.title));
   if(scene.kind==='election')card.append(el('p','election-caption','우리 반의 한 표, 한 표가 모였다.'));
   if(scene.detail&&scene.kind!=='election')card.append(el('p','life-cinematic-description',scene.detail));
@@ -451,7 +451,7 @@ function mount(root,navigate,content=global.GukminContent){
    const grade=el('strong','',scene.after);grade.style.color=global.GukminGrades.color(scene.grade||scene.after);row.append(grade);
    card.append(row);
    if(scene.changes)card.append(el('p','life-cinematic-changes',scene.changes));
-   if(scene.assessment){const applied=global.GukminGrades.assessment(scene.person,scene.assessment);if(applied.applied.length){card.append(el('small','','이번 평가에 적용됨'));for(const source of applied.applied){const line=el('div','assessment-source');line.append(global.GukminStatus.traitToken(source.trait),el('span','',source.text));card.append(line);}}}
+   if(scene.assessment){const applied=global.GukminGrades.assessment(scene.person,scene.assessment,{source:'choice:'+scene.choiceId});if(applied.applied.length){card.append(el('small','','이번 평가에 적용됨'));for(const source of applied.applied){const line=el('div','assessment-source');line.append(source.trait?global.GukminStatus.traitToken(source.trait):global.GukminStatus.createToken({label:source.label||'이번 평가',icon:'book'}),el('span','',source.text));card.append(line);}}}
    card.append(el('small','life-cinematic-disclaimer','성적표'));
   }
   if(scene.kind==='election'){
@@ -485,19 +485,26 @@ function mount(root,navigate,content=global.GukminContent){
    card.insertBefore(el('p','admission-verdict',verdict),title);card.append(el('span','cinematic-stamp',verdict));
    const image=el('img','school-placeholder');image.src='assets/svg/school-placeholder.svg';image.alt='';card.prepend(image);
   }
+  if(scene.kind==='graduation'){
+   card.classList.add('is-graduation');
+   const seal=el('div','graduation-seal');seal.append(global.GukminStatus.createToken({label:'졸업',icon:'graduation'}));card.insertBefore(seal,card.querySelector('.life-cinematic-kicker'));
+   const school=global.GukminPlayer.schoolsOf(persona).find(item=>item.kind==='high'),diploma=el('div','graduation-diploma');diploma.append(el('small','','고등학교의 마지막 페이지'),el('strong','',school?.name||'고등학교'),el('span','',persona.name+' · 졸업'));card.append(diploma);
+   const changes=el('div','graduation-changes');
+   for(const [before,after,note] of [['관계','인맥','쌓아 온 관계 수치는 그대로 이어집니다.'],['압박 한계','50','50을 넘긴 부담은 정신병으로 바뀝니다. 정신병 5는 생애 종료입니다.'],['학교 시간표','내가 고르는 사회생활','대학·병역·일을 오가며 정치 입문을 직접 선택합니다.']]){const row=el('div');row.append(el('small','',before+' →'),el('strong','',after),el('p','',note));changes.append(row);}card.append(changes);
+  }
   if(scene.kind==='transition'){card.classList.add('is-chapter');card.prepend(el('span','chapter-orbit',''));card.append(el('span','chapter-footer','새로운 장이 시작됩니다.'));}
   body.append(card);cinematic.hidden=false;document.body.classList.add('cinematic-open');
   $('lifeCinematicDismiss').textContent=scene.kind==='election'&&!scene.finished?'건너뛰기':scene.kind==='transition'?(playbackMode==='manual'?'다음 이야기 →':'시간이 흐른다…'):'결과 확인하고 계속하기 →';
   $('lifeCinematicDismiss').focus({preventScroll:true});
   if(scene.kind==='transition'&&canAuto())cinematicTimer=global.setTimeout(()=>{if(canAuto())hideCinematic();},reduceMotion?0:1200);
-  else if(!['grade','election','admission'].includes(scene.kind)&&canAuto())cinematicTimer=global.setTimeout(()=>{if(canAuto())hideCinematic();},reduceMotion?850:2200);
+  else if(!['grade','election','admission','graduation'].includes(scene.kind)&&canAuto())cinematicTimer=global.setTimeout(()=>{if(canAuto())hideCinematic();},reduceMotion?850:2200);
  }
  function hideCinematic(){
   if(currentCinematic?.kind==='election'&&!currentCinematic.finished){currentCinematic.finish();return;}
   if(cinematicTimer!==null){global.clearTimeout(cinematicTimer);cinematicTimer=null;}
   const completed=currentCinematic;
   currentCinematic=null;cinematic.hidden=true;cinematicShown=false;document.body.classList.remove('cinematic-open');
-  if(completed&&['grade','election','admission'].includes(completed.kind))engine?.acknowledge?.();
+  if(completed&&['grade','election','admission','graduation'].includes(completed.kind))engine?.acknowledge?.();
   if(completed?.kind==='election'){dailyUI.restore(snapshot);dailyUI.openRestoredReward();}
   if(completed?.kind==='grade'&&completed.middleMid){
    stopJourney();
@@ -506,7 +513,7 @@ function mount(root,navigate,content=global.GukminContent){
    renderProgress();return;
   }
   nextCinematic();renderProgress();
-  if(completed&&['grade','transition','admission','election'].includes(completed.kind)&&!dailyUI.isRewardVisible())startJourney();
+  if(completed&&['grade','transition','admission','election','graduation'].includes(completed.kind)&&!dailyUI.isRewardVisible())startJourney();
  }
  function clearCinematics(){
   if(examBreakTimer!==null){global.clearTimeout(examBreakTimer);examBreakTimer=null;}
@@ -521,6 +528,7 @@ function mount(root,navigate,content=global.GukminContent){
   const before=snapshot?.persona||persona,choice=snapshot?.choice;
   const added=s.persona.history.slice(before.history?.length||0);
   dailyUI.capture(before,s.persona,choice,s.reviewPending);
+  if(choice?.layer==='한방 선택'&&s.choice?.token===choice.token&&JSON.stringify(before.stats)!==JSON.stringify(s.persona.stats))clearMajor();
   snapshot=s;persona=s.persona;
   if(wasReview&&!s.reviewPending&&dailyUI.isRewardVisible())dailyUI.reset();
   // Establish the visible scene before rendering a newly opened native dialog.
@@ -536,7 +544,7 @@ function mount(root,navigate,content=global.GukminContent){
     }).filter(Boolean).join(' · ');
     queueCinematic({kind:'grade',title:choice.presentation.term||choice.title,
      detail:choice.presentation.category==='mock'?'모의고사 결과':'내신 평가 결과',
-     before:old+' ('+before.stats[id]+')',after:next+' ('+s.persona.stats[id]+')',grade:next,changes,assessment:choice.options.find(o=>o.id===s.runtime.choices[choice.token]?.optionId)?.result.assessment,person:before,middleMid:choice.presentation.stage==='middle'&&choice.presentation.term.includes('중간')});
+     before:old+' ('+before.stats[id]+')',after:next+' ('+s.persona.stats[id]+')',grade:next,changes,assessment:choice.options.find(o=>o.id===s.runtime.choices[choice.token]?.optionId)?.result.assessment,choiceId:choice.id,person:before,middleMid:choice.presentation.stage==='middle'&&choice.presentation.term.includes('중간')});
    }
    if(choice?.presentation?.type==='grade-seal'&&s.reviewPending){
     const key=choice.presentation.category==='mock'?'exam':'schoolScore';
@@ -557,10 +565,12 @@ function mount(root,navigate,content=global.GukminContent){
     'admission:repeat-year':'고등학교 졸업 · 재수 시작',
     'admission:retry-graduation':'입시 재도전 마무리'
    };
-   for(const item of added)if(events[item.source])
-    {const kind={'infant:school-entry':'elementary','elementary:middle-entry':'middle','high:graduation':'high'}[item.source],school=kind&&global.GukminPlayer.schoolsOf(s.persona).find(x=>x.kind===kind);queueCinematic({title:school?school.name+(item.source==='high:graduation'?' 졸업':' 입학'):events[item.source],detail:item.detail});}
+   for(const item of added)if(events[item.source]&&item.source!==s.runtime.cinematic?.eventId)
+    {const kind={'infant:school-entry':'elementary','elementary:middle-entry':'middle','high:graduation':'high'}[item.source],school=kind&&global.GukminPlayer.schoolsOf(s.persona).find(x=>x.kind===kind);queueCinematic({kind:kind==='high'||['admission:repeat-year','admission:retry-graduation'].includes(item.source)?'graduation':undefined,title:school?school.name+(item.source==='high:graduation'?' 졸업':' 입학'):events[item.source],detail:item.detail});}
   }
   render();
+  const societyAction=choice?.presentation?.type==='society'&&s.runtime.choices?.[choice.token]?.optionId;
+  if(s.reviewPending&&['college','career','military','politics','back','search-again','program-2','program-3'].includes(societyAction))global.queueMicrotask(()=>{if(!disposed&&snapshot===s&&!snapshot.runtime.cinematic)engine.step();});
   if(added.length){$('log')?.firstElementChild?.classList.add('record-arrived');
   }
   if(s.reviewPending||choice?.layer==='일상 선택'){

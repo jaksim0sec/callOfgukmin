@@ -329,6 +329,7 @@ global.GukminDirector.register({
    legacy
   );
   // First-attempt graduation is skipped while preparing for a second admission year.
+   stages.events.find(event=>event.id==='high:graduation').presentation={kind:'graduation'};
    stages.events.find(event=>event.id==='high:graduation').when={
     all:[{attributes:{admissionAttempts:1}},{not:{attributes:{admissionDestination:'retry'}}}]
    };

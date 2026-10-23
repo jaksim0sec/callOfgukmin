@@ -40,7 +40,7 @@ function create({persona,persist,onChange}){
  const choices=new Map(definitions.choices.map(c=>[c.id,c]));
  function decorate(raw){
   if(raw.reviewPending)return {...raw,progress:{value:0,remaining:null,waiting:false,title:'선택 결과 확인'}};
-  if(raw.runtime.cinematic)return {...raw,progress:{value:0,remaining:null,waiting:true,title:'입시 결과 확인'}};
+  if(raw.runtime.cinematic)return {...raw,progress:{value:0,remaining:null,waiting:true,title:raw.runtime.cinematic.kind==='graduation'?'졸업과 다음 장':'입시 결과 확인'}};
   if(raw.persona.attributes?.admissionDestination==='finished')return {...raw,choice:null,progress:{value:0,remaining:null,waiting:false,title:''}};
   if(raw.choice)return {...raw,progress:{value:1,remaining:0,waiting:true,title:raw.choice.title}};
   const eligible=scheduled(raw).filter(item=>choices.has(item.event.choice)&&choices.get(item.event.choice).blocksTime!==false&&choices.get(item.event.choice).progress!==false).sort((a,b)=>a.at-b.at)[0];
@@ -125,8 +125,13 @@ function create({persona,persist,onChange}){
  function storeStatus(){
   const s=timeline.snapshot(),last=s.persona.attributes?.storeLastTurn;
   const remaining=Number.isFinite(last)?Math.max(0,4-(s.runtime.turn-last)):0;
-  const blocked=s.persona.age<global.GukminData.schoolAges.elementary||(s.persona.stats.stress<=0&&(s.persona.stats.illness||0)<=0)||(s.persona.stats.illness||0)>=5||s.reviewPending||!!s.runtime.cinematic||s.persona.attributes?.admissionDestination==='finished';
-  return {remaining,blocked,items:global.GukminData.shopItems.map(item=>({...item,available:!blocked&&!remaining&&s.persona.stats.money>=item.price&&(!item.recovery||(s.persona.stats.illness||0)>0)&&(s.persona.stats.stress>0||!!item.recovery)}))};
+  const blockedReason=s.persona.age<global.GukminData.schoolAges.elementary?'보호자와 함께할 시기입니다':(s.persona.stats.illness||0)>=5||s.persona.attributes?.admissionDestination==='finished'?'이번 생애가 끝났습니다':s.runtime.cinematic?'현재 장면을 확인한 뒤 이용해 주세요':null;
+  const blocked=!!blockedReason;
+  const items=global.GukminData.shopItems.map(item=>{
+   const reason=blockedReason||(remaining?'다음 이용까지 '+remaining+'턴':s.persona.stats.money<item.price?'재산 부족':item.recovery&&!(s.persona.stats.illness>0)?'정신병 회복이 필요할 때 이용':!(s.persona.stats.stress>0)&&!item.recovery?'회복할 압박이 없어요':null);
+   return {...item,available:!reason,reason};
+  });
+  return {remaining,blocked,blockedReason,items};
  }
  function acknowledgePressure(){
   const s=timeline.snapshot(),a=s.persona.attributes||{},count=(a.pressureAdviceCount||0)+1,illness=s.persona.stats.illness||0;

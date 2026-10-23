@@ -13,6 +13,7 @@ const pledges=[
  {id:'lost',name:'분실물 찾아주기',copy:'이름 없는 물건도 주인에게 돌려준다.',scores:[0,1,2,0],difficulty:0,cost:2000,limit:'매주 물건을 정리하고 주인을 찾아야 해요',compromise:'금요일에만 분실물 상자를 정리한다'},
  {id:'holiday',name:'방학 두 배',copy:'우리의 여름은 두 배로 길어져야 한다.',scores:[3,-2,0,2],difficulty:3,cost:0,limit:'방학 날짜는 반장이 바꿀 수 없어요',compromise:'방학 숙제를 조금 줄여 달라고 부탁한다'}
 ];
+for(const pledge of pledges)pledge.feasibility=pledge.difficulty>=3?{id:'impossible',label:'이행불가',note:'원안은 지킬 수 없어요. 당선돼도 조정·철회로 친구들의 지지가 흔들릴 수 있어요.'}:pledge.difficulty>=2?{id:'adjust',label:'조정 필요',note:'선생님과 의논해 약속을 줄일 수 있어요. 처음 기대한 친구들은 아쉬워할 수 있어요.'}:{id:'possible',label:'이행가능',note:'시간과 필요한 비용을 들여 직접 지킬 수 있어요.'};
 const rivalTypes=[
  {id:'popular',name:'서준',title:'친구가 많은 인기쟁이',base:[3,0,1,3],pledges:['football','recess','lost']},
  {id:'model',name:'예린',title:'지킬 수 있는 약속만 하는 친구',base:[0,3,2,0],pledges:['library','quiet','lost']},
@@ -58,7 +59,7 @@ function ballot(p){const result=engine(p).count();result.rows.forEach((row,g)=>{
 function model(p){
  const config=parameters(p),a=p.attributes||{},core=global.GukminElectionEngine.create(config);
  return {id:config.id,playerId:config.playerId,title:'우리 반 반장 선거',active:p.phase==='elementary'&&((a.classElection==='ran'&&a.electionStage!=='finished')||(a.classElection==='elected'&&a.electionFulfillmentVersion===1&&!a.electionFulfilled)),
-  groups:groups.map((g,i)=>({...g,shortName:['급식·놀이','공부','조용','운동'][i],surveyCost:(a.electionRevision||0)>=3?core.surveyCost(g.id):1,firstStudyCost:g.id==='quiet'?1:0})),pledges,available:available(p).map(x=>({...x,feasibilityLabel:x.difficulty>=2?'선생님 허락이 필요해':'내가 해 볼 수 있어'})),chosen:chosen(p),maxPledges:3,revision:a.electionRevision||1,riskLabel:p.stats.illness>0?'정신병':'압박',riskMetric:p.stats.illness>0?'illness':'stress',
+  groups:groups.map((g,i)=>({...g,shortName:['급식·놀이','공부','조용','운동'][i],surveyCost:(a.electionRevision||0)>=3?core.surveyCost(g.id):1,firstStudyCost:g.id==='quiet'?1:0})),pledges,available:available(p).map(x=>({...x,feasibilityLabel:x.feasibility.label})),chosen:chosen(p),maxPledges:3,revision:a.electionRevision||1,riskLabel:p.stats.illness>0?'정신병':'압박',riskMetric:p.stats.illness>0?'illness':'stress',
   fulfillment:fulfillment(p),previewFulfillment:plans=>previewFulfillment(p,plans),forecast:ids=>forecast(p,ids),opinion:(group,id)=>opinion(p,group,id),wishes:id=>wishes(p,id),known:id=>knows(p,id),
   candidates:config.candidates.map((c,i)=>({...c,title:i===0?'우리 반의 변화를 약속합니다':c.title,portrait:{portraitStage:'elementary',portraitVariant:i===0?P.genderOf(p):c.id==='model'?'female':'male'},poster:{name:c.name,number:i+1,age:p.age,headerLabel:'우리 반 반장 선거',partyName:'무소속',stage:'반장 후보',phrase:i===0?'우리 반의\n다음 이야기':c.id==='popular'?'같이 놀자\n우리 모두':c.id==='model'?'작은 약속도\n끝까지':'약속은 크게\n학교는 즐겁게',portraitStage:'elementary',portraitVariant:i===0?P.genderOf(p):c.id==='model'?'female':'male',imageSrc:i===0?p.portraitSrc||null:null},
    pledges:c.pledges.map(id=>pledges.find(x=>x.id===id)),relations:i===0?[{label:'친구 사이',value:p.stats.relations,max:25},{label:'선생님 믿음',value:a.teacherTrust??12,max:25}]:[],copied:!!c.copied}))};
@@ -68,7 +69,7 @@ function billTarget(p,slot=0){const ordered=[...chosen(p)].sort((a,b)=>b.difficu
 // Per-pledge plans are validated and priced by the story adapter, never by DOM.
 function fulfillment(p){return chosen(p).map(pledge=>({...pledge,modes:[
  {id:'keep',label:'약속대로 이행',detail:pledge.difficulty>=2?'반장이 혼자 정할 수 없는 약속이에요.':pledge.cost?'준비 비용 '+pledge.cost.toLocaleString('ko-KR')+'원을 내고 직접 맡아요.':'시간을 내서 직접 맡아요.',available:pledge.difficulty<2,cost:pledge.cost,stats:{stress:1,study:-1,relations:2},trust:2},
- {id:'compromise',label:'가능한 만큼 조정',detail:pledge.compromise,available:true,cost:0,stats:{stress:P.hasTrait(p,'뻔뻔함')?0:1,relations:pledge.difficulty>=2?-1:1},trust:1},
+ {id:'compromise',label:'가능한 만큼 조정',detail:pledge.compromise,available:true,cost:0,stats:{stress:P.hasTrait(p,'뻔뻔함')?0:1,relations:pledge.difficulty>=3?-2:pledge.difficulty>=2?-1:1},trust:pledge.difficulty>=3?0:1},
  {id:'break',label:'사과하고 철회',detail:'부담은 줄지만, 약속을 기다린 친구들은 실망해요.',available:true,cost:0,stats:{stress:-1,relations:-3},trust:-2}
  ]}));}
 function fulfillmentResult(p,plans){

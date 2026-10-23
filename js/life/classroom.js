@@ -8,17 +8,15 @@ const classmates=[
  {id:'jiwoo',name:'지우',note:'쉬는 시간에도 퍼즐을 들고 다니는 친구',skill:'study',action:'지우의 퍼즐을 직접 풀고 풀이를 보내 준다'}
 ];
 function classNumber(persona){if(Number.isInteger(persona.attributes?.elementaryClass)&&persona.attributes.elementaryClass>=1&&persona.attributes.elementaryClass<=6)return persona.attributes.elementaryClass;return 1+[...persona.name].reduce((n,ch)=>n+ch.codePointAt(0),0)%6;}
-// Stable, limited race-day variance: roughly 15% headwind, 70% neutral, 15% tailwind.
-// The seed lives with the person; no Math.random at scene generation or settlement.
-function raceVariance(persona){
- const seed=String(persona.admissionSeed||persona.createdAt||persona.name)+'|classroom:relay';
- let hash=2166136261;
- for(const ch of seed){hash=Math.imul(hash^ch.charCodeAt(0),16777619)>>>0;}
- const bucket=hash%20;
- return bucket<3?-1:bucket>=17?1:0;
-}
 function fieldSeed(persona,key){let hash=2166136261;for(const c of String(persona.admissionSeed||persona.createdAt||persona.name)+'|relay-field|'+key)hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;return hash;}
 function raceField(persona){const number=classNumber(persona),others=[1,2,3,4,5,6].filter(n=>n!==number).sort((a,b)=>fieldSeed(persona,'team:'+a)-fieldSeed(persona,'team:'+b));return {teams:[number,...others.slice(0,2)],rivalOrder:fieldSeed(persona,'rival-order')%2};}
+// The frozen script holds one race-day draw. Preparation raises the chance of a
+// good finish against that same draw; neither reload nor changing roles rerolls it.
+function raceCondition(draw,base,slope,traitBonus,ceiling){
+ if(draw>=ceiling)return {any:[]};
+ const ability=bonus=>({stats:{athletics:{gte:Math.max(0,Math.floor((draw-base-bonus)/slope)+1)}}});
+ return {any:[ability(0),{all:[{traits:['체육']},ability(traitBonus)]}]};
+}
 function chat(peer,room){return {type:'chat',room,messages:[
  {sender:peer.name,text:peer.id==='doyun'?'내일 쉬는 시간에 운동장 올래? 바통 연습 같이 하자!':peer.id==='jiwoo'?'수학 숙제 4번, 난 답이 12인데 풀이가 다른 것 같아. 네 풀이랑 비교해 볼래?':'오늘 네가 해 준 이야기 생각나서 그림 그렸어!',time:'오후 4:12'},
  {sender:peer.name,text:'너는 뭐 하고 싶어?',time:'오후 4:13'}
@@ -55,8 +53,8 @@ global.GukminDirector.register({id:'classroom',when:{phase:'elementary'},generat
  jiwoo.presentation.playerMessages={join:'난 먼저 묶어서 풀었어. 너는 어떤 방법이었어?',practice:'사진 보면서 한 줄씩 같이 확인해 보자.',quiet:'오늘은 쉬고 내일 교실에서 같이 보자.'};
  jiwoo.presentation.responses={join:[{sender:'지우',text:'아 먼저 이렇게 묶는 거구나. 설명 고마워!'}],practice:[{sender:'지우',text:'여기서 계산 순서만 달랐네! 둘 다 맞는지 끝까지 확인해 보자.'}],quiet:[{sender:'지우',text:'응, 내일 공책 가져갈게. 푹 쉬어!'}]};
  const raceOptions=peer=>[
-  {id:'sprint',label:'전력 질주를 집중 연습하고 마지막 주자로 뛴다',tags:['sports'],risk:'연습 때문에 다른 과목 복습 시간이 줄어든다',effects:{...(peer.id==='doyun'?{}:{activate:{athletics:4}}),stats:{athletics:3,stress:2,study:-1},attributes:{sportsRole:'runner'}},detail:'출전 전 마지막 직선 주법을 연습했다. '+peer.name+'에게서 바통을 받아 마지막 코너를 돌았다. 결승선까지 시선을 놓지 않았다.'},
-  {id:'handoff',label:'바통 주고받기를 맞춰 중간 주자로 뛴다',tags:['team','sports'],effects:{...(peer.id==='doyun'?{}:{activate:{athletics:4}}),stats:{athletics:1,relations:1,stress:1},attributes:{sportsRole:'runner'}},detail:peer.name+'와 손을 뻗는 위치를 맞췄다. 바통은 떨어지지 않았지만 다른 반의 주자도 빠르게 따라왔다.'},
+  {id:'sprint',label:'전력 질주를 집중 연습하고 마지막 주자로 뛴다',tags:['sports'],risk:'연습 때문에 다른 과목 복습 시간이 줄어든다',effects:{stats:{athletics:3,stress:2,study:-1},attributes:{sportsRole:'runner'}},detail:'출전 전 마지막 직선 주법을 연습했다. '+peer.name+'에게서 바통을 받아 마지막 코너를 돌았다. 결승선까지 시선을 놓지 않았다.'},
+  {id:'handoff',label:'바통 주고받기를 맞춰 중간 주자로 뛴다',tags:['team','sports'],effects:{stats:{athletics:1,relations:1,stress:1},attributes:{sportsRole:'runner'}},detail:peer.name+'와 손을 뻗는 위치를 맞췄다. 바통은 떨어지지 않았지만 다른 반의 주자도 빠르게 따라왔다.'},
   {id:'cheer',label:'응원석에서 반 친구들을 응원한다',effects:{stats:{relations:1,stress:-1},attributes:{sportsRole:'cheer'}},detail:peer.name+'가 달릴 때 반 이름을 크게 불렀다. 주자 명단에는 없었지만 응원석에서 함께 웃었다.'}
  ];
  const prelude=S.notice('classroom:sports-prelude',37,'내일은 운동회','교문 앞에 운동회 안내장이 붙었다. 내일 반 대항 계주가 열린다. 운동장에 나갈 친구들이 방과 후 바통을 맞춰 보기 시작했다.');
@@ -65,16 +63,23 @@ global.GukminDirector.register({id:'classroom',when:{phase:'elementary'},generat
   id:peer.id,title:number+'반, 계주 출전!',when:{attributes:{seatmate:peer.name}},body:'운동장에 '+number+'반 깃발이 걸렸다. '+peer.name+'가 바통을 들고 손짓한다. "우리 반 이번엔 끝까지 가 보자!"\n\n짝꿍 연습과 체육 활동으로 쌓은 운동능력, 체육 특성이 주자 실력이다. 경기 당일의 작은 변수도 있어 준비에 따라 우승을 노릴 수 있다. 주자로 뛸지, 바통 연결을 맡을지, 응원석을 지킬지 정하자.',options:raceOptions(peer)
  })));
  sports.event.when={attributes:{classroomRevision:1}};
- const field=raceField(persona),otherWinner=field.teams[field.rivalOrder?2:1];
- sports.choice.presentation={type:'sports',classNumber:number,finishMs:8440,...field};
- const variance=raceVariance(persona),threshold=9-variance;
- sports.choice.presentation.winThreshold=threshold;
- const wins={all:[{attributes:{sportsRole:'runner'}},{any:[{stats:{athletics:{gte:threshold}}},{traits:['체육']}]}]};
+ const field=raceField(persona),otherWinner=field.teams[field.rivalOrder?2:1],draw=(fieldSeed(persona,'finish')%10000)/100;
+ sports.choice.presentation={type:'sports',classNumber:number,finishMs:8200,raceModel:'seeded-relay-v2',...field};
+ // Athletics is read after the chosen preparation, before any victory reward.
+ // Win chance: 18% + 2.7 points per ability + 12 for 체육, capped at 90%.
+ // Top-two chance: 65% + .9 points per ability + 5 for 체육, capped at 97%.
+ const runner={attributes:{sportsRole:'runner'}},wins=raceCondition(draw,18,2.7,12,90),topTwo=raceCondition(draw,65,.9,5,97);
+ const cheerPlace=draw<35?1:draw<75?2:3;
+ const finish=(place,cheering=false)=>({effects:{attributes:{sportsPlace:place},...(place===1?{stats:{money:10000,relations:3,...(cheering?{}:{athletics:2})}}:{})},history:{title:'반 대항 계주 · '+number+'반 '+place+'등',detail:place===1?(cheering?'응원석의 함성 속에서 우리 반 주자들이 가장 먼저 결승선을 통과했다.':'준비한 호흡이 끝까지 이어졌다. 우리 반이 가장 먼저 결승선을 통과했다.')+' 우승 상품권 1만 원과 함께 반 친구들의 신뢰가 쌓였다.':place===2?otherWinner+'반이 먼저 들어왔지만 우리 반도 끝까지 바통을 이어 2등으로 들어왔다.':otherWinner+'반이 먼저 들어왔다. 우리 반은 마지막 코너에서 밀렸지만 바통을 끝까지 전달했다.',...(place===1?{importance:'major'}:{})}});
  for(const script of [sports.choice,...sports.choice.variants])for(const option of script.options){
   option.result.conditional=[
-   {when:wins,result:{effects:{attributes:{sportsPlace:1},stats:{money:10000,relations:3,athletics:2}},history:{title:'반 대항 계주 · '+number+'반 1등',detail:'준비한 호흡이 끝까지 이어졌다. 우리 반이 가장 먼저 결승선을 통과했다. 우승 상품권 1만 원과 함께 반 친구들의 신뢰가 쌓였다.',importance:'major'}}},
-   {when:{all:[{not:wins},{attributes:{sportsRole:'runner'}}]},result:{effects:{attributes:{sportsPlace:3}},history:{title:'반 대항 계주 · '+number+'반 3등',detail:otherWinner+'반이 먼저 들어왔다. 우리 반은 마지막 코너에서 밀렸지만 바통을 끝까지 전달했다.'}}},
-   {when:{attributes:{sportsRole:'cheer'}},result:{effects:{attributes:{sportsPlace:2}},history:{title:'반 대항 계주 · '+number+'반 2등',detail:otherWinner+'반이 먼저 들어왔지만, 우리 반 주자들도 응원 소리에 힘을 내 막판에 한 반을 따라잡았다.'}}}
+   // Start the metric only for an actual first-time runner. A classmate choice
+   // must never reset ability gained after this content pack was generated.
+   ...(option.id==='cheer'?[]:[{before:true,when:{not:{stats:{athletics:{gte:0}}}},result:{effects:{activate:{athletics:4+option.result.effects.stats.athletics}}}}]),
+   {when:{all:[runner,{not:topTwo}]},result:finish(3)},
+   {when:{all:[runner,topTwo,{not:wins}]},result:finish(2)},
+   {when:{all:[runner,wins]},result:finish(1)},
+   {when:{attributes:{sportsRole:'cheer'}},result:finish(cheerPlace,true)}
   ];
  }
  return {...S.pack(seating,follow,prelude,sports),attributes:{classroomRevision:{label:'교실 이야기 연결',hidden:true},elementaryClass:{label:'초등학교 첫 반',hidden:true},seatmate:{label:'초등학교 짝꿍'},sportsRole:{label:'운동회 역할',hidden:true},sportsPlace:{label:'반 대항 계주 순위',hidden:true}}};

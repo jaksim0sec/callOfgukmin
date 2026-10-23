@@ -46,7 +46,7 @@ function apply(persona,result={},context={}){
   prepared.effects??={};prepared.effects.activate={...prepared.effects.activate,...global.GukminGrades.highEntry(persona,result.highEntry.track)};
   if(persona.attributes?.admissionResearch==='paid'&&!persona.attributes?.counselingUsed){prepared.effects.stats={...prepared.effects.stats,stress:(prepared.effects.stats?.stress||0)-1};prepared.effects.attributes={...prepared.effects.attributes,counselingUsed:true};}
  }
- if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};}
+ if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment,context);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};if(calculation.outcome&&prepared.history){const histories=Array.isArray(prepared.history)?prepared.history:[prepared.history];for(const history of histories)history.detail=(history.detail||'')+' 벼락치기 '+(calculation.outcome==='success'?'성공 · 집중한 범위에서 크게 점수를 얻었다.':'실패 · 컨디션 조절에 실패해 현재 점수의 10%를 잃었다.');}}
  const s=P.upgradeMental(persona),effects=prepared.effects||{},turn=context.turn??0;
  keys(effects,['activate','stats','attributes','schools','traits','deactivate'],'효과');
  s.metricActive??={};s.metricHistory??=[];s.attributeHistory??=[];s.traitSince??={};s.attributes??={};
@@ -83,7 +83,7 @@ function apply(persona,result={},context={}){
   if(id==='illness')continue;
   if((id==='exam'&&persona.attributes?.csatSubmitted&&!prepared.retryYear&&!context.finalizing)||(id==='schoolScore'&&persona.attributes?.highFinalSubmitted))continue;
   const raw=finite(s.stats[id]??0)+delta;
-  if(id==='stress'&&delta>0)overflow=Math.max(0,Math.round(raw)-25);
+  if(id==='stress'&&delta>0)overflow=Math.max(0,Math.round(raw)-P.metricDefinition('stress').max);
   s.stats[id]=bounded(raw,P.metricDefinition(id));
  }
  if(overflow||deltas.illness!==undefined)s.stats.illness=bounded((s.stats.illness||0)+overflow+(deltas.illness||0),P.metricDefinition('illness'));

@@ -316,7 +316,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
    const indicators=el('span','daily-choice-effects');
    // Ordinary choices show the exact projection. A declared uncertain outlook
    // reveals known costs, leaving conditional success/failure for the result.
-   const forecast=option.available===false&&option.result.electionDecision?{effects:{}}:option.outlook||choice.presentation?.type==='sports'?{...option.result,conditional:[]}:option.result;
+   const forecast=option.available===false&&option.result.electionDecision?{effects:{}}:option.outlook||choice.presentation?.type==='sports'?{...option.result,conditional:choice.presentation?.type==='sports'?(option.result.conditional||[]).filter(branch=>branch.before):[]}:option.result;
    const projected=global.GukminEffects.apply(persona,forecast,{turn:choice.openedAt||0,preview:true});
    for(const [id,next] of Object.entries(projected.stats||{})){
     if(Number.isFinite(next)&&!Number.isFinite(persona.stats?.[id])){indicators.append(S.createToken({type:'context',label:initialMetric(id,next),icon:P.metricDefinition(id).icon||'sparkle',classes:'daily-choice-effect'}));continue;}
@@ -364,7 +364,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
    list.append(button);
   }
   body.append(list);
-  global.GukminDailyScenes.decorate({dialog,body,list,choice,persona,state:sceneState,onSelect:selectOption});
+  global.GukminDailyScenes.decorate({dialog,body,list,choice,persona,state:sceneState,onSelect:selectOption,onCommit:confirmSelection});
   sync();
   startClock(); // Starts once per choice token; re-renders do not restart the countdown.
  }

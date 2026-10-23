@@ -3,7 +3,7 @@
 'use strict';
 const P=g.GukminPlayer,id='society:activity',A=p=>p.attributes||{},has=(p,t)=>P.hasTrait(p,t);
 const degree=p=>P.schoolsOf(p).some(s=>s.kind==='uni'&&s.status==='graduated');
-const currentCollege=p=>P.schoolsOf(p).find(s=>s.kind==='uni'&&s.status!=='graduated'&&s.status!=='dropout');
+const currentCollege=p=>!['졸업','중퇴'].includes(A(p).collegeStatus)&&!(A(p).collegeYears>0&&A(p).collegeCompleted>=A(p).collegeYears)&&P.schoolsOf(p).find(s=>s.kind==='uni'&&s.status!=='graduated'&&s.status!=='dropout');
 const legalAge=p=>Math.max(0,p.age-2); // No birthday in legacy saves: conservative completed-age lower bound.
 const employed=p=>A(p).employmentStatus==='재직';
 const serving=p=>A(p).militaryStatus==='복무 중';
@@ -13,13 +13,21 @@ const tuition=p=>{const a=A(p),gross=a.collegeYears===4?7000000:6000000,rate={so
 function salary(p,sector){return jobs[sector].income+(sector==='local'&&A(p).collegeYears===3&&degree(p)?300000:0);}
 function chance(p,sector){const a=A(p),academic=Math.floor((p.stats.study||p.stats.schoolScore||0)/5),training=Math.min(3,a.careerTraining||0)*8,gap=has(p,'경력 공백')?6:0;
  return Math.max(20,Math.min(90,(sector==='local'?65:sector==='public'?32:35)+(degree(p)?sector==='private'?16:8:0)+academic+training+(sector==='public'?(has(p,'꼼꼼함')?8:0)+(a.collegeMerit?6:0):Math.floor((p.stats.relations||0)/3)+(has(p,'리더십')?4:0)+(a.collegeNetwork?5:0))+(a.collegeWork?4:0)+Math.min(sector==='public'?4:10,Math.floor((a.careerMonths||0)/6)*2+(a.careerProjects||0))-gap));}
+function guidance(p,stage=A(p).societyStep||'hub'){
+ const a=A(p),years=Math.max(0,a.collegeYears||0),finished=a.collegeStatus==='졸업'||degree(p)||years>0&&a.collegeCompleted>=years,completed=finished?years:Math.min(years,Math.max(0,a.collegeCompleted||0));
+ const education=a.collegeName||currentCollege(p)||degree(p)?{completedSemesters:completed*2,totalSemesters:years*2,remainingSemesters:(years-completed)*2,remainingMonths:(years-completed)*12,label:finished?'대학 졸업 완료':a.collegeStatus==='중퇴'?'대학 중퇴 · 학적 보존':!years?'대학 과정 길이 선택 전':'대학 '+completed+'/'+years+'년 이수 · '+(years-completed)*2+'학기 분량 남음',detail:finished?'학업을 마쳤습니다. 취업·병역·정치 입문 중 다음 길을 선택하세요.':a.collegeStatus==='중퇴'?'이수 기간과 이전 학적은 인생 기록에 남습니다.':!years?'2년제·3년제 중 하나를 선택하세요.':'졸업까지 학업 '+(years-completed)*12+'개월'+(a.collegeStatus==='휴학'?' · 휴학 중에는 이수하지 않습니다.':' · 한 번의 연간 활동으로 2학기 분량을 이수합니다.')}:null;
+ const stages={hub:['사회 허브',currentCollege(p)?'대학 '+(completed+1)+'학년을 이어가거나, 바로 정치 입문 경로를 살펴보세요.':'취업·병역을 살펴보거나 바로 정치 입문 경로를 선택하세요.'],'college-program':['대학 · 과정 선택','과정 길이 → 등록금 마련 → 1년 활동 순서로 진행합니다.'],'college-funding':['대학 · '+(completed+1)+'학년 등록','등록금 마련 방법을 정하면 올해 12개월 활동을 선택합니다.'],'college-year':['대학 · '+(completed+1)+'학년 활동','활동 하나를 확정하면 12개월·2학기 분량을 이수합니다.'],military:['병역 · 판정과 입대','판정 후 군별 복무 경로를 정하거나 사회 허브로 돌아가세요.'],'military-service':['병역 · 복무 중','복무 활동을 확정하면 '+a.militaryDuration+'개월 후 전역합니다.'],'career-search':['취업 · 지원 준비','지원할 일자리를 고르면 준비 기간 뒤 채용 결과를 확인합니다.'],'job-offer':['취업 · 지원 결과',a.jobAccepted?'제안을 수락하면 근무 활동을 선택할 수 있습니다.':'다시 지원하거나 다른 경로를 선택하세요.'],work:['직장 · 반년 활동','활동 하나로 6개월 경력과 실제 수입·생활비를 정산합니다.'],business:['자영업 · 반년 활동','활동 하나로 6개월 영업과 실제 손익을 정산합니다.'],politics:['정치 · 입문 경로 선택','학위·취업과 관계없이 준비 경로 하나를 선택하세요.'],ready:['정치 · 입문 준비 완료','다음 장으로 이어가거나 사회에서 경험을 더 쌓으세요.']};
+ const [location,defaultNext]=stages[stage]||stages.hub;
+ const next=stage==='hub'&&employed(p)&&a.employmentSector==='public'?'공무원 신분입니다. 현재 일에서 퇴사한 뒤 정치 입문 경로를 선택하세요.':defaultNext;
+ return {location,next,education,goal:a.politicalEntryReady?'정치 입문 준비 완료':'목표 · 정치 입문',months:a.societyMonths||0};
+}
 function option(action,label,detail,{allowed=true,reason='',months=0,requiredMoney,requiredMental,...meta}={}){const conditions=[];if(!allowed)conditions.push({turn:{lte:-1}});if(requiredMoney!==undefined)conditions.push({stats:{money:{gte:requiredMoney}}});if(requiredMental!==undefined)conditions.push({stats:{illness:{lte:requiredMental}}});return {id:action,label,outlook:detail,requirement:reason,...(conditions.length?{when:{all:conditions}}:{}),result:{societyDecision:{action},tags:action.startsWith('politics-')?['initiative','public-speech']:action==='startup'?['initiative']:[]},society:{months,...meta}};}
 function choice(p){
  const a=A(p),stage=a.societyStep||'hub',money=p.stats.money||0,active=employed(p),college=currentCollege(p),opts=[];let title='',body='';
  const add=(...args)=>opts.push(option(...args));
  if(stage==='hub'){
-  title='사회 · 다음 행선지';body='어디서부터 시작할지는 네가 정한다. 학업과 일, 병역 사이를 오가며 쌓은 시간과 이력은 사라지지 않는다.';
-  if(college)add('college',a.collegeStatus==='휴학'?'대학으로 돌아가기':'대학생활 이어가기',a.collegeStatus==='휴학'?'복학한 뒤 남은 과정을 이어간다.':'등록금과 올해의 활동을 정한다.',{icon:'graduation'});
+  title='사회 · 다음 행선지';body='사회에 진입했다. 대학·일·병역의 순서는 직접 정한다. 정치 입문은 대학 졸업이나 취업 없이도 시작할 수 있다. 아래에서 경로를 살펴보는 동안에는 개월과 압박이 늘지 않는다.';
+  if(college)add('college',a.collegeStatus==='휴학'?'복학 · '+((a.collegeCompleted||0)+1)+'학년 이어가기':a.collegeYears?'대학 '+((a.collegeCompleted||0)+1)+'학년 이어가기':'대학 과정 시작하기',a.collegeStatus==='휴학'?'복학한 뒤 남은 과정을 이어간다.':a.collegeYears?'등록금을 마련하고 12개월 활동 하나로 올해를 이수한다.':'과정 길이와 등록금, 첫해 활동을 정한다.',{icon:'graduation'});
   add('military',P.genderOf(p)==='female'?'병역 · 자원복무 알아보기':'병역 · 판정과 복무',a.militaryStatus||'병역판정을 받고 복무 시기를 선택한다.',{allowed:!['복무 제외','복무 완료'].includes(a.militaryStatus),reason:'이미 병역 이력이 확정되었습니다.',icon:'flag'});
   add('career',active?'현재 일과 경력 이어가기':'취업과 생계 준비',active?'일하는 방식과 다음 경력을 선택한다.':'기업·공공 부문·지역 일자리와 자영업을 살펴본다.',{icon:'coin'});
   add('politics','정치에 뛰어들기',serving(p)?'복무 중에는 정치 활동에 참여할 수 없다.':active&&a.employmentSector==='public'?'공무원 신분을 정리해야 정치 입문이 가능하다.':'학위나 직업을 기다리지 않고 입문 경로를 고를 수 있다.',{allowed:!serving(p)&&!(active&&a.employmentSector==='public'),reason:'현역 복무·공무원 신분의 정치적 중립 제한',icon:'speech'});
@@ -33,13 +41,13 @@ function choice(p){
   add('program-2','2년제 실무과정','2년 뒤 전문학사 과정을 마친다.',{icon:'graduation'});add('program-3','3년제 실무과정','한 해의 시간·등록금을 더 쓰고 취업 준비 경험을 쌓는다.',{icon:'graduation'});
  }
  if(stage==='college-funding'){
-  const t=tuition(p);title='올해의 등록금';body=(a.collegeName||'대학교')+' · '+((a.collegeCompleted||0)+1)+'학년\n연간 등록금 '+t.gross.toLocaleString()+'원 중 가족 지원 '+t.aid.toLocaleString()+'원'+(t.scholarship?' · 장학 지원 '+t.scholarship.toLocaleString()+'원':'')+'. 내 부담은 '+t.due.toLocaleString()+'원이다. 생활비와 재수학원 지원 횟수는 별개다.';
+  const t=tuition(p);title='대학 '+((a.collegeCompleted||0)+1)+'학년 · 등록금';body=(a.collegeName||'대학교')+' · '+((a.collegeCompleted||0)+1)+'/'+a.collegeYears+'년차\n연간 등록금 '+t.gross.toLocaleString()+'원 중 가족 지원 '+t.aid.toLocaleString()+'원'+(t.scholarship?' · 장학 지원 '+t.scholarship.toLocaleString()+'원':'')+'. 내 부담은 '+t.due.toLocaleString()+'원이다. 납부 후 올해의 활동 하나를 정하면 12개월을 이수한다.';
   add('fund-cash','준비한 돈으로 등록','등록금을 납부한 뒤 올해의 활동을 정한다.',{requiredMoney:t.due,reason:'내 부담 등록금 '+t.due.toLocaleString()+'원이 필요합니다.',icon:'savings'});
   add('fund-loan','학자금대출로 등록','당장 돈 대신 상환할 원금을 남기고, 부담이 늘어난다. 이자·실제 대출 심사는 생략한 시연 규칙이다.',{allowed:t.due>0,reason:'현재 본인 부담이 없어 대출할 필요가 없습니다.',icon:'coin'});
   add('pause-college','이번에는 휴학하고 돈 마련하기','돈과 학업 진도를 함께 확보하는 선택은 아니다. 사회로 돌아가 일할 수 있다.',{icon:'clock'});
  }
  if(stage==='college-year'){
-  title='올해 대학에서 남길 것';body='수업 하나하나 대신 한 해의 방향을 정한다. 이수 기간은 같아도 사회로 가져갈 경험은 달라진다.';
+  title='대학 '+((a.collegeCompleted||0)+1)+'학년 · 1년 활동';body='올해의 활동 하나를 확정하면 12개월, 2학기 분량을 이수한다. '+((a.collegeCompleted||0)+1>=a.collegeYears?'이번 활동을 마치면 졸업이다.':'올해를 마치면 다음 학년으로 넘어간다.');
   add('study','학업과 결과물에 집중한다','학업 경험과 다음 해 장학 지원 기회를 남긴다. 교류에 쓸 시간은 줄어든다.',{months:12,icon:'book'});
   add('network','대외활동과 사람들에게 시간을 쓴다','관계와 협업 경험을 넓힌다. 장학 지원과 아르바이트 수입은 얻지 못한다.',{months:12,icon:'users'});
   add('part-time','수업과 아르바이트를 병행한다','한 해 300만 원의 여유 자금과 근로 경험을 남긴다. 사람을 만날 여유와 회복 시간을 줄여야 한다.',{months:12,icon:'coin'});
@@ -59,7 +67,7 @@ function choice(p){
  if(stage==='career-search'){
   title='일의 시작점';body='지원 준비에는 시간이 들고 합격은 보장되지 않는다. 학위뿐 아니라 학생 때 남긴 경험, 특성, 관계와 기존 경력도 영향을 준다.';
   for(const [sector,j] of Object.entries(jobs))add('apply-'+sector,j.title+' 지원',j.months+'개월의 준비 후 결과를 확인한다. '+(sector==='public'?'경쟁시험과 면접을 간소화했다. 재직 중에는 정치적 중립 의무가 따른다.':'고졸·중퇴자도 지원할 수 있으며 경험에 따라 기회가 달라진다.'),{requiredMoney:j.cost,reason:'지원 준비비 '+j.cost.toLocaleString()+'원이 필요합니다.',months:j.months,icon:'flag'});
-  add('training','일자리센터에서 실무 훈련을 받는다','비용 없이 3개월을 써 다음 지원을 준비한다. 수료가 채용을 보장하지 않으며, 준비 효과는 세 번까지만 쌓인다.',{months:3,icon:'book'});
+  add('training',(a.careerTraining||0)>=3?'실무 훈련 수료 완료 (3/3)':'실무 훈련 '+((a.careerTraining||0)+1)+'/3회','비용 없이 3개월을 써 다음 지원을 준비한다. 수료가 채용을 보장하지 않으며, 준비 효과는 세 번까지만 쌓인다.',{allowed:(a.careerTraining||0)<3,reason:'세 차례 훈련을 모두 수료했습니다. 일자리에 지원해 보세요.',months:3,icon:'book'});
   add('startup','작은 자영업을 시작한다','초기 자금 300만 원을 쓰고 직접 고객을 만든다. 매출이 생활비를 보장하지 않는다.',{requiredMoney:3000000,reason:'자기자본 300만 원이 필요합니다.',months:3,icon:'home'});
   add('back','사회로 돌아가기','진학·병역·지역 활동 등 다른 선택도 열려 있다.',{icon:'home'});
  }
@@ -120,7 +128,7 @@ function decision(p,{action},context={}){
    attrs.societyStep='college-year';detail='연간 등록금 '+t.gross.toLocaleString()+'원 · 가족 지원 '+t.aid.toLocaleString()+'원 · 장학 '+t.scholarship.toLocaleString()+'원 · 내 부담 '+t.due.toLocaleString()+'원'+(action==='fund-loan'?'을 대출 원금으로 기록했다.':'을 납부했다.');
   }
   if(['study','network','part-time'].includes(action)){
-   attrs.collegeCompleted=(a.collegeCompleted||0)+1;attrs.societyStep='hub';
+   attrs.collegeCompleted=(a.collegeCompleted||0)+1;attrs.societyStep='hub';detail+=' '+attrs.collegeCompleted+'/'+a.collegeYears+'년 이수 완료. 졸업까지 '+Math.max(0,(a.collegeYears-attrs.collegeCompleted)*2)+'학기 분량·'+Math.max(0,(a.collegeYears-attrs.collegeCompleted)*12)+'개월이 남았다.';
    if(action==='study'){stats.stress=2;stats.relations=-1;attrs.collegeMerit=true;}
    if(action==='network'){stats.stress=2;stats.relations=2;attrs.collegeNetwork=true;attrs.collegeMerit=false;}
    if(action==='part-time'){stats.stress=3;stats.relations=-1;stats.money=3000000;attrs.collegeWork=true;attrs.collegeMerit=false;}
@@ -179,9 +187,9 @@ function decision(p,{action},context={}){
 }
 const moneyOf=p=>Math.max(0,p.stats.money||0);
 const labels={careerPrivateMonths:'기업 근무 개월',careerPublicMonths:'공직 근무 개월',careerLocalMonths:'현장 근무 개월',careerBusinessMonths:'자영업 개월',societyActive:'사회 진입',societyComplete:'사회 장 종료',societyStep:'사회 진행',societyMonths:'성인기 경과 개월',societyAgeBase:'사회 진입 나이',collegeName:'대학',collegeYears:'학제',collegeCompleted:'이수 연수',collegeStatus:'학적',collegeMerit:'학업 경험',collegeNetwork:'대외활동 경험',collegeWork:'대학 근로 경험',studentDebt:'학자금 원금',militaryStatus:'병역',militaryReason:'병역 사유',militaryServed:'복무 여부',militaryAssessed:'판정 완료',militaryAssessedIllness:'판정 당시 상태',militaryBranch:'복무 군',militaryDuration:'복무 예정 개월',militaryCompletedMonths:'복무 개월',employmentStatus:'고용 상태',employmentSector:'직업 분야',careerCurrent:'최근 직업',careerMonths:'근무 개월',careerSectors:'경력 분야',careerLastReason:'최근 전환 사유',careerTraining:'직업훈련 경험',careerProjects:'업무 실적',workPeriods:'근무 회차',jobOfferIncome:'채용 제안 월 수입',jobAttempts:'지원 회차',jobTarget:'지원 분야',jobAccepted:'채용 결과',communityVisits:'지역 활동',politicalEntryReady:'정치 입문 준비',politicalRoute:'정치 입문 경로',politicalPathLabel:'입문 준비',politicalMilitaryServed:'입문 당시 복무 여부'};
-g.GukminSociety=Object.freeze({choice,decision,tuition,chance,legalAge});
+g.GukminSociety=Object.freeze({choice,decision,tuition,chance,legalAge,guidance});
 g.GukminDirector.register({id:'society',generate:()=>({attributes:Object.fromEntries(Object.entries(labels).map(([key,label])=>[key,{label,hidden:!['collegeStatus','militaryStatus','militaryReason','employmentStatus','politicalPathLabel'].includes(key),icon:key.startsWith('military')?'flag':'school'}])),choices:[{id,layer:'한방 선택',title:'사회',presentation:{type:'society'},options:[{id:'back',label:'사회로',result:{}}]}],events:[
- {id:'society:entry',at:0,layer:'소식 이벤트',title:'교문 밖, 사회로',when:{all:[{any:[{attributes:{admissionDestination:'college'}},{attributes:{admissionDestination:'employment'}}]},{not:{attributes:{societyActive:true}}}]},result:{societyDecision:{action:'start'}}},
+ {id:'society:entry',at:0,layer:'소식 이벤트',title:'교문 밖, 사회로',presentation:{kind:'graduation',when:{age:{lte:19}}},when:{all:[{any:[{attributes:{admissionDestination:'college'}},{attributes:{admissionDestination:'employment'}}]},{not:{attributes:{societyActive:true}}}]},result:{societyDecision:{action:'start'}}},
  {id:'society:activity',at:0,every:1,repeatFrom:'start',layer:'한방 이벤트',title:'사회 · 다음 행선지',choice:id,when:{all:[{attributes:{societyActive:true,societyComplete:false}},{not:{attributes:{admissionDestination:'finished'}}}]}}
 ]})});
 })(window);

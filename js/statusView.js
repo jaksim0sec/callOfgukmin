@@ -2,6 +2,7 @@
 (function(global){
 'use strict';
 const NS='http://www.w3.org/2000/svg';
+let renderedPersona=null;
 const ICONS=Object.freeze({
  running:'<circle cx="15" cy="5" r="2"/><path d="m8 10 5-2 3 4 4 1M13 8l-3 6 4 3-1 4M10 14l-4 5H3"/>',
  mind:'<path d="M8 18v3h8v-3l3-3V9A7 7 0 0 0 5 9v6Z"/><path d="M9 10c2-3 4 3 6 0M10 15h4"/>',
@@ -46,7 +47,7 @@ function icon(name){
 // Single DOM-returning factory for all visible semantic pills.
 // Screen renderers provide meaning and optional classes; geometry and SVG always stay identical.
 function createToken({type='context',label='',name='',id='',icon:iconName='',amount=null,
- classes='',state='',entry={}}={}){
+ classes='',state='',entry={},persona=renderedPersona}={}){
  const P=global.GukminPlayer;
  const el=node('span','token token-icon-pill');
  el.dataset.tokenKind=type;
@@ -54,7 +55,7 @@ function createToken({type='context',label='',name='',id='',icon:iconName='',amo
  let text=label,glyph=iconName||'sparkle';
  if(type==='metric'){
   const def=P.metricDefinition(id);
-  text=def.label;glyph=def.icon||'sparkle';
+  text=label||P.metricLabel(id,persona);glyph=def.icon||'sparkle';
   add.push('metric-impact','metric-'+id);
  }else if(type==='trait'){
   const def=P.traitDefinitions[name]||{};
@@ -345,6 +346,7 @@ function showTraits(root,s){
 }
 function render(root,persona){
   if(!root||!persona)return;
+  renderedPersona=persona;
   const job=root.querySelector('#job');
   if(job)job.textContent=persona.job||'미정';
   showAttributes(root,persona);

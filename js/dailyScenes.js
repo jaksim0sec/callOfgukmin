@@ -134,10 +134,10 @@ function raceReplay({body,presentation,attributes,stats,traits,onReady,restored}
  let playing=true,frame=0,last=0,elapsed=0,disposed=false;
  function finish(){
   if(!playing||disposed)return;playing=false;if(frame)cancelAnimationFrame(frame);frame=0;
-  race.paint([1,1,1]);race.view.classList.add('race-finish');race.title.textContent=number+'반 · '+place+'등';race.caption.textContent=place===1?'결승선을 가장 먼저 통과했다! 우승 상품권과 반 친구들의 신뢰를 얻었다.':'함께 준비한 결과가 기록에 남았다.';
+  race.paint([0,1,2].map(lane=>raceProgress(place,lane,8200,rivalOrder)));race.view.classList.add('race-finish');race.title.textContent=number+'반 · '+place+'등';race.caption.textContent=place===1?'결승선을 가장 먼저 통과했다! 우승 상품권과 반 친구들의 신뢰를 얻었다.':'함께 준비한 결과가 기록에 남았다.';
   const ordered=raceRanks(place,rivalOrder).map((rank,lane)=>({rank,lane})).sort((a,b)=>a.rank-b.rank),ranking=el('ol','sports-ranking');
   for(const row of ordered){const item=el('li',row.lane===0?'is-ours':'');item.append(el('b','',row.rank+'등'),el('span','',race.classes[row.lane]+'반'),el('small','',row.lane===0?'우리 반':''));ranking.append(item);}
-  race.live.replaceWith(ranking);const reason=el('p','race-result-reason',attributes.sportsRole==='cheer'?'응원 역할로 반 친구들과 함께했습니다. 주자는 짝꿍이며 내 운동능력으로 주자 기록을 계산하지 않습니다.':'운동능력 (경기 보상 포함) '+(stats?.athletics||0)+'/25'+(traits?.includes('체육')?' · 체육 특성 적용':' · 오늘 우승 기준 '+(presentation.winThreshold||9))+'. 이전 체육 활동·짝꿍 연습과 이번 출전 준비를 합산한 결과입니다.');ranking.after(reason);skip.remove();body.classList.remove('race-pending');onReady?.();
+  race.live.replaceWith(ranking);const reason=el('p','race-result-reason',attributes.sportsRole==='cheer'?'응원 역할로 반 친구들과 함께했습니다. 주자는 짝꿍이며 내 운동능력으로 주자 기록을 계산하지 않습니다.':'운동능력 (경기 보상 포함) '+(stats?.athletics||0)+'/25'+(traits?.includes('체육')?' · 체육 특성 적용':'')+'. 이전 체육 활동·짝꿍 연습과 이번 출전 준비가 승산을 높였습니다. 상대 반의 실력과 당일 컨디션도 순위에 반영됩니다.');ranking.after(reason);skip.remove();body.classList.remove('race-pending');onReady?.();
  }
  function tick(now){
   if(disposed||!playing)return;
@@ -145,38 +145,38 @@ function raceReplay({body,presentation,attributes,stats,traits,onReady,restored}
   const progress=[0,1,2].map(lane=>raceProgress(place,lane,elapsed,rivalOrder));race.paint(progress);
   race.title.textContent=elapsed<650?'탕! 계주 출발':number+'반 · 계주 진행 중';
   race.caption.textContent=elapsed<2200?'바깥 레인은 앞에서 출발! 모두 같은 거리를 달려.':elapsed<4800?'반마다 앞서거니 뒤서거니! 바통을 놓치지 말자.':'마지막 코너! 결승선까지 달린다.';
-  if(progress.every(p=>p===1)){finish();return;}frame=requestAnimationFrame(tick);
+  if(progress.some(p=>p===1)){finish();return;}frame=requestAnimationFrame(tick);
  }
  skip.addEventListener('click',finish);
  queueMicrotask(()=>{if(disposed)return;if(restored||matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else frame=requestAnimationFrame(tick);});
  return {get isPlaying(){return playing;},skip:finish,dispose(){disposed=true;if(frame)cancelAnimationFrame(frame);body.classList.remove('race-pending');}};
 }
-function studyApp(presentation,reaction,portrait={}){
+function studyApp(presentation,reaction,portrait={},state={}){
  const app=el('section','study-app');
  const avatar=()=>{const node=el('span','study-avatar');node.append(global.GukminPoster.portrait(portrait));return node;};
  const head=el('header','study-app-header');head.append(el('strong','',presentation.app||'열공타'),el('span','','공부방 · 오늘의 기록'));app.append(head);
  const profile=el('div','study-app-profile');profile.append(avatar(),el('strong','',(presentation.rival||'민호')+' · 같은 학년 라이벌'),el('small','','기말고사 준비 중 · 오늘 누적'));app.append(profile);
- const clock=el('div','study-app-clock');clock.append(el('small','','FOCUS TIME'),el('b','',(presentation.hours||27)+'시간 '+(presentation.minutes??9)+'분'),el('span','','오늘의 순공 시간'));app.append(clock);
+ const hours=presentation.hours??27,minutes=presentation.minutes??9,clock=el('div','study-app-clock'),time=el('time','study-measured-time'),digits=el('b','');time.dateTime='PT'+hours+'H'+minutes+'M';digits.append(el('span','study-time-number',hours),el('span','study-time-unit','시간 '),el('span','study-time-number',minutes),el('span','study-time-unit','분'));time.append(digits);clock.append(el('small','','FOCUS TIME · 오늘 누적'),time,el('span','study-time-state','측정 완료'));app.append(clock);
  app.append(el('p','study-app-caption','“기말고사까지 매일 한계를 넘는다.”'));
  const likes=el('div','study-likes'),controls=el('div','study-feed-controls');
  const like=el('button','study-like'),comment=el('button','study-comment-toggle','댓글 2');like.type=comment.type='button';comment.setAttribute('aria-expanded','false');controls.append(like,comment);app.append(controls,likes);
  const comments=el('div','study-comments');comments.append(el('p','','지우  ·  오늘도 열심히 했네'),el('p','','민서  ·  잠은 언제 자는 거야 ㅋㅋ'));app.append(comments);
- const composer=el('div','study-comment-composer');composer.inert=true;
+ const composer=el('div','study-comment-composer');composer.id='studyCommentComposer';composer.inert=true;comment.setAttribute('aria-controls',composer.id);
  const inner=el('div','study-comment-inner'),who=el('div','study-comment-author');who.append(avatar(),el('strong','',portrait.name||'나'));
  const draft=el('textarea','study-comment-draft');draft.value='하루가 27시간인 멋진 청년';draft.readOnly=true;draft.rows=2;draft.setAttribute('aria-label','이번 선택으로 게시할 댓글');
- const send=el('button','study-comment-send','이 댓글로 답하기');send.type='button';inner.append(who,draft,send);composer.append(inner);app.append(composer);
- const pending=el('small','study-action-status');app.append(pending);
+ const send=el('button','study-comment-send','보내기');send.type='button';inner.append(who,draft,send);composer.append(inner);if(!reaction)app.append(composer);
+ const pending=el('small','study-action-status');pending.setAttribute('aria-live','polite');app.append(pending);
  function sync(selected,preview=false){
   const liked=selected==='like';like.textContent=(liked?'♥':'♡')+' 좋아요';like.setAttribute('aria-pressed',String(liked));
   likes.textContent='♥ '+((presentation.likes??23)+(liked?1:0))+'명이 좋아합니다';
-  pending.textContent=preview&&selected?'아래에서 선택을 확정하면 기록에 반영됩니다.':reaction?'내 반응이 기록되었습니다.':'';
+  pending.textContent=preview&&selected?(selected==='comment'?'댓글을 선택했습니다. 보내기 또는 아래 댓글 게시하기를 눌러 주세요.':selected==='like'?'좋아요를 선택했습니다. 아래 좋아요 남기기를 누르면 기록됩니다.':'내 공부를 선택했습니다. 아래 버튼으로 확정해 주세요.'):reaction?'내 반응이 기록되었습니다.':'';
  }
- app.syncReaction=sync;app.openComposer=()=>{const open=composer.classList.toggle('is-open');composer.inert=!open;comment.setAttribute('aria-expanded',String(open));};
+ app.syncReaction=sync;app.openComposer=open=>{state.studyComposerOpen=open??!state.studyComposerOpen;composer.classList.toggle('is-open',state.studyComposerOpen);composer.inert=!state.studyComposerOpen;comment.setAttribute('aria-expanded',String(state.studyComposerOpen));};
  app.likeButton=like;app.commentButton=comment;app.sendButton=send;
  if(reaction){like.disabled=comment.disabled=true;if(reaction==='comment'){const own=el('div','study-own-comment');own.append(avatar(),el('p','',(portrait.name||'나')+'  ·  하루가 27시간인 멋진 청년'));comments.append(own);comment.textContent='댓글 3';}if(reaction==='focus')comments.append(el('p','study-app-comment','알림을 끄고 내 공부를 시작했습니다.'));}
- sync(reaction);return app;
+ if(!reaction)app.openComposer(!!state.studyComposerOpen);sync(reaction);return app;
 }
-function decorate({dialog,body,list,choice,persona,state={},onSelect}){
+function decorate({dialog,body,list,choice,persona,state={},onSelect,onCommit}){
  const art=artworkFor(choice);dialog.classList.toggle('is-illustrated',!!art);if(art){const figure=illustration(art,{title:choice.title}),situation=body.querySelector('.daily-scenario'),story=situation?.querySelector('.daily-choice-story');if(story)figure.querySelector('figcaption').append(story);situation?.remove();body.prepend(figure);}
  const kind=choice.presentation?.type;dialog.dataset.scene=['chat','seating','sports','study-app'].includes(kind)?kind:'';
  if(kind==='campaign'){
@@ -196,17 +196,19 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect}){
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){
   const situation=body.querySelector('.daily-scenario');body.prepend(raceView(choice.presentation.classNumber,choice.presentation));
-  const prep=el('div','sports-preparation');prep.append(el('strong','','나의 운동능력 '+(persona.stats.athletics||0)+'/25'),el('p','','짝꿍 연습과 체육 활동에서 쌓은 실력입니다. 선택의 준비 효과까지 합산해 오늘은 '+(choice.presentation.winThreshold||9)+' 이상이거나 체육 특성이 있으면 우승할 수 있습니다. 응원은 주자 기록을 바꾸지 않습니다.'));list.before(prep);
+  const prep=el('div','sports-preparation');prep.append(el('strong','','나의 운동능력 '+(persona.stats.athletics||0)+'/25'),el('p','','짝꿍 연습과 체육 활동, 이번 출전 준비와 체육 특성이 좋은 순위를 낼 가능성을 높입니다. 상대 반의 실력과 당일 컨디션에 따라 결과는 달라집니다. 응원을 고르면 짝꿍이 주자로 뛰며 내 운동능력은 반영되지 않습니다.'));list.before(prep);
   if(!state.introSeen){const intro=el('section','sports-day-intro');intro.append(el('span','','⚑  ⚑  ⚑'),el('small','','학교 운동장 · 아침'),el('h3','','오늘은 운동회!'),el('p','',choice.presentation.classNumber+'반 친구들이 반 깃발 아래 모였다. 짝꿍과 준비했던 계주가 곧 시작된다.'));const enter=el('button','','운동장으로 →');enter.type='button';intro.append(enter);const stage=el('div','sports-day-stage');stage.hidden=true;while(body.firstChild)stage.append(body.firstChild);body.append(intro,stage);enter.addEventListener('click',()=>{state.introSeen=true;intro.remove();stage.hidden=false;});}
   if(situation)situation.querySelector('.daily-scenario-kicker').textContent='작전 회의';
   list.before(el('strong','scene-choice-label','우리 반에서 맡을 역할'));
  }
  if(kind==='study-app'){
-  const app=studyApp(choice.presentation,null,global.GukminGame.posterData(persona));body.prepend(app);list.before(el('strong','scene-choice-label','이 기록을 보고 나는'));
-  const buttons=[...list.querySelectorAll('.inline-choice')],select=id=>buttons[choice.options.findIndex(o=>o.id===id)]?.click();
-  const sync=()=>{const index=buttons.findIndex(b=>b.getAttribute('aria-pressed')==='true');app.syncReaction(choice.options[index]?.id,true);};
-  app.likeButton.addEventListener('click',()=>{if(app.likeButton.getAttribute('aria-pressed')==='true')onSelect?.(null);else select('like');sync();});
-  app.commentButton.addEventListener('click',()=>app.openComposer());app.sendButton.addEventListener('click',()=>select('comment'));
+  const app=studyApp(choice.presentation,null,global.GukminGame.posterData(persona),state);body.prepend(app);list.before(el('strong','scene-choice-label','이 기록을 보고 나는'));
+  const buttons=[...list.querySelectorAll('.inline-choice')];
+  const selected=()=>choice.options[buttons.findIndex(b=>b.getAttribute('aria-pressed')==='true')]?.id;
+  const sync=()=>{const id=selected();app.syncReaction(id,true);if(id==='comment')app.openComposer(true);};
+  const select=id=>{const index=choice.options.findIndex(o=>o.id===id);if(index<0||buttons[index].disabled)return false;onSelect?.(id);sync();return true;};
+  app.likeButton.addEventListener('click',()=>{if(selected()==='like'){onSelect?.(null);sync();}else select('like');});
+  app.commentButton.addEventListener('click',()=>app.openComposer());app.sendButton.addEventListener('click',()=>{if(select('comment'))onCommit?.();});
   buttons.forEach(button=>button.addEventListener('click',sync));sync();
  }
 }

@@ -19,7 +19,7 @@ const SCHOOL_KINDS = [
 ];
 const METRIC_DEFS = {
   illness:{label:'정신병',type:'progress',tone:'negative',icon:'mind',min:0,max:5},
-  stress:{label:'압박',type:'progress',tone:'negative',icon:'pulse',min:0,max:25},
+  stress:{label:'압박',type:'progress',tone:'negative',icon:'pulse',min:0,max:50},
   money:{label:'재산',type:'currency',icon:'savings'},
   allowance:{label:'용돈',type:'currency',icon:'coin'},
   income:{label:'수입',type:'currency',icon:'coin'},

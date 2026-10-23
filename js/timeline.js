@@ -83,6 +83,8 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
    if(s.runtime.turn<r.nextAt)continue;
    r.status='pending';
    if(!E.matches(s.persona,e.when,s.runtime.turn))continue;
+   const presentation=e.presentation&&E.matches(s.persona,e.presentation.when||{},s.runtime.turn)?clone(e.presentation):null;
+   if(presentation)delete presentation.when;
    r.count++;r.status='running';r.startedAt=s.runtime.turn;
    settlement(s,`event:${id}:${r.count}:start`,{...e.result,...(e.history?{history:e.history}:{})},id);
    if(e.choice){
@@ -96,7 +98,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
       openedAt:s.runtime.turn,script:c.presentation?.type==='society'?{...global.GukminSociety.choice(s.persona),revision:2}:scriptOf(c,variant),...(variant?{scenarioId:variant.id}:{})};
     // Later events at this same turn open only after the player's decision.
     if(c.blocksTime!==false)break;
-   }else {finish(s,id);if(e.presentation&&pauseAfterChoice){const h=s.persona.history.at(-1);s.runtime.cinematic={...clone(e.presentation),eventId:id,title:h.title,detail:h.detail};break;}}
+   }else {finish(s,id);if(presentation&&pauseAfterChoice){const h=s.persona.history.at(-1);s.runtime.cinematic={...presentation,eventId:id,title:h.title,detail:h.detail};break;}}
   }
  }
  function periodic(s){

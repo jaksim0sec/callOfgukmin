@@ -52,7 +52,8 @@ function exam(stage,age,grade,at,name,type='school'){
  const id=stage+':'+grade+':'+name.replaceAll(/[^a-zA-Z0-9가-힣]/g,'-');
  const metric=type==='mock'?'exam':'schoolScore';
  return selection(id,at,age+'세 · '+grade+'학년 '+name,'시험 범위를 확인했다. 이번 평가에 쓸 시간은 한정되어 있다.\n\n복습과 휴식 사이에서 준비 강도를 정하자.',
-  efforts.map((effort,i)=>({id:'effort-'+i,label:effort.label,assessment:{metric,effort:i},detail:name+'을 치렀다. '+effort.outcome})),
+  [...efforts.map((effort,i)=>({id:'effort-'+i,label:effort.label,assessment:{metric,effort:i},detail:name+'을 치렀다. '+effort.outcome})),
+   {id:'cram',label:'불꽃 벼락치기',assessment:{metric,mode:'cram',key:id},detail:name+' 직전까지 몰아 공부했다. 성공하면 성적이 크게 오르지만 실패하면 현재 점수의 10%를 잃는다 (반올림·최소 1점). 압박 대비 효율은 낮다.'}],
   '한방 선택',{type:'exam',stage,grade,age,term:name,category:type});
 }
 // Alternative scripts share one event ID. The timeline selects exactly one at opening.
@@ -242,7 +243,7 @@ function legacyChoice(def,scenarioId,persona){
  const key=def.id+'|'+(scenarioId||''),n=(legacyLookup[persona.familyTier]||legacyLookup.bronze)[key];if(n===undefined)return null;
  const variant=(def.variants||[]).find(v=>v.id===scenarioId)||(def.variants||[]).find(v=>v.id===scenarioId?.replace(/-(harin|sea|jaeho)$/,''));
  const script={...clone(def),...(variant?clone(variant):{})};delete script.variants;delete script.priority;delete script.when;script.id=def.id;
- for(const [path,value] of legacyPatches[n]){const keys=path.split('.');let node=script;for(let i=0;i<keys.length-1;i++)node=node[keys[i]]??=(/^\d+$/.test(keys[i+1])?[]:{});const last=keys.at(-1);if(value===undefined)delete node[last];else {let restored=clone(value);const stat=path.match(/\.stats\.(stress|relations|study|schoolScore|exam|support|awareness)$/);if(stat&&typeof restored==='number')restored=global.GukminPlayer.scaleRules({effects:{stats:{[stat[1]]:restored}}}).effects.stats[stat[1]];else if(path.endsWith('.effects.stats'))restored=global.GukminPlayer.scaleRules({effects:{stats:restored}}).effects.stats;else if(restored&&typeof restored==='object')restored=global.GukminPlayer.scaleRules(restored);node[last]=restored;}}if(variant&&script.body===variant.body)script.title=variant.title;return script;
+ for(const [path,value] of legacyPatches[n]){const keys=path.split('.');let node=script;for(let i=0;i<keys.length-1;i++)node=node[keys[i]]??=(/^\d+$/.test(keys[i+1])?[]:{});const last=keys.at(-1);if(value===undefined)delete node[last];else {let restored=clone(value);const stat=path.match(/\.stats\.(stress|relations|study|schoolScore|exam|support|awareness)$/);if(stat&&typeof restored==='number')restored=global.GukminPlayer.scaleRules({effects:{stats:{[stat[1]]:restored}}}).effects.stats[stat[1]];else if(path.endsWith('.effects.stats'))restored=global.GukminPlayer.scaleRules({effects:{stats:restored}}).effects.stats;else if(restored&&typeof restored==='object')restored=global.GukminPlayer.scaleRules(restored);node[last]=restored;}}if(variant&&script.body===variant.body)script.title=variant.title;if(def.presentation?.type==='exam')script.options=script.options.filter(o=>o.result?.assessment?.mode!=='cram');return script;
 }
 global.GukminStory=Object.freeze({notice,selection,branch,paths,exam,examPrelude,pack,schoolwork,admissionGuide,legacyChoice,legacyChoice});
 })(window);

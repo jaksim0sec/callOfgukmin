@@ -25,18 +25,23 @@ function retry(p,result){
  if(reason){x.effects={attributes:{...(ageLimit?{age:30}:{}),admissionDestination:'finished',retryEndReason:reason,job:reason==='백수 엔딩'?'무직':'입시 종료'}};}
  else{
   const support=supportStatus(p),academy=support.remaining===null||support.remaining>0,nextAge=p.age+1,gap=nextAge>=25;
-  const pressure=2+(gap?1:0),illness=(p.stats.illness||0)+Math.max(0,p.stats.stress+pressure-25),ended=illness>=5?'정신병 한계':null;
+  const pressure=2+(gap?1:0),illness=p.stats.illness>0?p.stats.illness+pressure:Math.max(0,p.stats.stress+pressure-g.GukminPlayer.metricDefinition('stress').max),ended=illness>=5?'정신병 한계':null;
   x.effects={attributes:{age:nextAge,admissionAttempts:(a.admissionAttempts||1)+1,job:ended?'입시 종료':'N수생',roles:[],admissionDestination:ended?'finished':'retry',retryEndReason:ended,csatSubmitted:false,retakeMode:academy?'academy':'self',retakeSupportUsed:support.used+(academy?1:0),careerGapYears:gap?nextAge-24:0},stats:{stress:pressure,...(gap?{relations:-1}:{})},...(gap?{traits:{add:['경력 공백']}}:{}),schools:g.GukminPlayer.schoolsOf(p).some(s=>s.kind==='high'&&s.status==='enrolled')?[{kind:'high',status:'graduated'}]:[]};
  }
  const end=x.effects.attributes.retryEndReason,mode=x.effects.attributes.retakeMode;
  x.history={title:end?end==='백수 엔딩'?'서른, 백수 엔딩':'N수 준비 종료 · '+end:mode==='academy'?'가족의 지원으로 재수학원에 등록했다':'독학으로 다음 입시를 준비한다',detail:end?end==='백수 엔딩'?'여러 번의 사회 진출 기회를 뒤로하고 입시 준비만 이어 왔다. 서른이 되었지만 아직 첫 경력을 시작하지 못했다.':'새 수능 주기를 열지 않고 이번 장을 마친다. '+end+'에 도달했다.':(mode==='academy'?supportStatus(p).detail+' 학원비는 가족이 부담하며 내 재산에서 차감하지 않는다.':'학원 지원은 끝났지만 독학으로 도전할 수 있다. 기출문제와 공공 학습 자료로 계획을 세운다.')+' 나이가 한 살 늘고 압박 '+(x.effects.stats.stress)+'을 반영했다.'+(x.effects.attributes.careerGapYears?' 입시 준비가 길어지며 첫 경력의 공백이 쌓인다. 관계 −1.':''),importance:'major'};
  return x;
 }
-function probability(p,school,type){
+const schoolAdvantages={science:{label:'과학고',field:'science',early:12,regular:6},gifted:{label:'영재학교',field:'science',early:15,regular:8},foreign:{label:'외고',field:'humanities',early:10,regular:5},international:{label:'국제고',field:'humanities',early:10,regular:5}};
+function probabilityDetails(p,school,type,field=p.attributes?.admissionField||(g.GukminPlayer.hasTrait(p,'이과')?'science':'humanities')){
  const strategy=p.attributes?.preExamStrategy;
  const bonus=type==='early'?(strategy==='record'?1:0):0;
- return Math.max(5,Math.min(85,35+12*((p.stats[type==='early'?'schoolScore':'exam']||0)+bonus-school.target)));
+ const base=Math.max(5,Math.min(85,35+12*((p.stats[type==='early'?'schoolScore':'exam']||0)+bonus-school.target)));
+ const advantage=schoolAdvantages[p.attributes?.schoolTrack],matched=advantage?.field===field;
+ const probability=matched?Math.min(95,base+advantage[type]):base;
+ return {probability,base,schoolBonus:probability-base,schoolLabel:matched?advantage.label:null,field};
 }
+function probability(p,school,type,field){return probabilityDetails(p,school,type,field).probability;}
 function roll(p,key){
  const source=(p.admissionSeed||[p.createdAt,p.name,p.birthplaceId].join('|'))+'|'+key;
  let hash=2166136261;for(const ch of source){hash^=ch.charCodeAt(0);hash=Math.imul(hash,16777619);}
@@ -47,8 +52,8 @@ function decision(p,{cycle,type}){
  const entry=groups.flatMap(group=>group[type]).find(([risk,name])=>key===cycle+'-'+type+'-'+risk+'-'+name.replaceAll(/\s+/g,''));
  if(!entry)throw new Error('저장된 입시 지원처를 찾을 수 없음: '+key);
  const [,name,target,minimum=0]=entry,eligible=type!=='early'||p.stats.exam>=minimum;
- const accepted=eligible&&roll(p,cycle+'|'+type+'|'+name)<probability(p,{target},type);
  const field=p.attributes?.admissionField|| (g.GukminPlayer.hasTrait(p,'이과')?'science':'humanities');
+ const accepted=eligible&&roll(p,cycle+'|'+type+'|'+name)<probability(p,{target},type,field);
  const display=field==='science'?name.replace(/(?:인문사회|사회과학|인문|사회|실무)계열/,'자연·공학계열'):name;
  return {effects:{attributes:{[type+'Status']:accepted?'accepted':'failed',[type+'Offer']:accepted?display:null}},history:{title:display+(accepted?' 합격':' 불합격'),detail:accepted?'지원한 대학에서 합격 통보가 도착했다. 결과를 확인한 다음 등록 여부를 결정한다.':!eligible?'수능 최저 기준을 충족하지 못했다. 이번 수시 지원은 불합격이다.':'이번 지원은 불합격이었다. 합격 확률은 확정을 뜻하지 않는다.',importance:'major'}};
 }
@@ -86,7 +91,7 @@ function cycle(pack,n){
  const csat=add(pack,S.selection(pre+':csat',routeAt+3,'대학수학능력시험 성적표','응시한 수능의 확정 성적을 확인하자.',[option('submit','수능 점수 확인하기','수능 성적을 확정했다. 이후 생활은 이번 점수를 바꾸지 않는다.',{attributes:{csatSubmitted:true},stats:{stress:1}},{conditional:[
  {before:true,when:{attributes:{preExamStrategy:'exam'}},result:{effects:{stats:{exam:2,stress:2}}}},
  {before:true,when:{attributes:{preExamStrategy:'balanced'}},result:{effects:{stats:{exam:1}}}},
- {before:true,when:{all:[{stats:{stress:{gte:21}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-1}}}}
+ {before:true,when:{all:[{stats:{stress:{gte:42}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-1}}}}
  ]})],'한방 선택',{type:'grade-seal',category:'mock',term:'대학수학능력시험 성적표'}),studying);
  add(pack,S.selection(pre+':exam-evening',routeAt+3,'시험이 끝난 저녁','답안을 제출했다. 지금은 성적을 고칠 수 없다.\n\n발표까지 일상을 회복하고 다음 계획을 정하자.',[
  option('review','친구들과 지원 일정과 서류를 서로 점검한다','일정을 대조했지만 결과 걱정도 나눴다.',{stats:{relations:2,stress:2}}),
@@ -100,7 +105,7 @@ function cycle(pack,n){
  done.choice.variants=['early','regular'].map((type,i)=>({id:pre+'-offer-'+type,priority:30-i*10,when:{attributes:{[type+'Status']:'accepted'}},title:(type==='early'?'수시':'정시')+' 합격 이후의 선택',body:type==='early'?'수시에 합격했다. 등록하지 않아도 올해 정시에는 지원할 수 없다.':'정시에 합격했다. 등록 여부를 정하자.',options:S.selection('tmp',0,'진로','',[
  option('college','합격한 대학에 진학한다','합격 대학 진학으로 이번 장을 마친다.',{attributes:{admissionDestination:'college',job:'대학 입학 예정'}}),work,retryOption],'한방 선택').choice.options}));
 }
-g.GukminAdmissions=Object.freeze({probability,roll,decision,retry,retryReason,prefix,supportStatus});
+g.GukminAdmissions=Object.freeze({probability,probabilityDetails,roll,decision,retry,retryReason,prefix,supportStatus});
 g.GukminDirector.register({id:'admissions',when:{phase:'high'},generate:()=>{
  const pack={events:[],choices:[],attributes:Object.fromEntries(Object.entries(attributeNames).map(([id,label])=>[id,{label,hidden:true}]))};
  // Up to the age boundary; each yearly group has stable IDs, including historical first/second.

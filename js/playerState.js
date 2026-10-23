@@ -174,7 +174,7 @@ function activeMetrics(s) {
     metricDefinition(id);
     if(active)ids.add(id);else ids.delete(id);
   }
-  return [...ids].map(id=>({id,...metricDefinition(id),value:s.stats?.[id]??null}));
+  return [...ids].map(id=>({id,...metricDefinition(id,s),value:s.stats?.[id]??null}));
 }
 const ATTRIBUTE_DEFS={
  pressureGuideSeen:{label:'압박 안내 확인',custom:true,hidden:true},pressureCriticalSeen:{label:'정신병 4 경고 확인',custom:true,hidden:true},pressureNoticeBand:{label:'경고 확인 단계',custom:true,hidden:true},pressureAdviceCount:{label:'상태 안내 횟수',custom:true,hidden:true},
@@ -218,7 +218,8 @@ function registerAttribute(id,def){
  if(!def?.label)throw new Error('속성 정의 오류');
  register(ATTRIBUTE_DEFS,id,{...def,custom:true});
 }
-function metricDefinition(id){return definition(METRIC_DEFS,id,'스탯');}
+function metricLabel(id,persona){return id==='relations'&&persona&&(persona.age>=20||['university','adult','political'].includes(phaseOf(persona)))?'인맥':definition(METRIC_DEFS,id,'스탯').label;}
+function metricDefinition(id,persona){const def=definition(METRIC_DEFS,id,'스탯');return persona?{...def,label:metricLabel(id,persona)}:def;}
 function traitDefinition(id){return definition(TRAIT_DEFS,id,'특성');}
 function attributeDefinition(id){return definition(ATTRIBUTE_DEFS,id,'속성');}
 function hasTrait(s,id){return s.traits.some(t=>(typeof t==='string'?t:t.name)===id);}
@@ -238,6 +239,6 @@ global.GukminPlayer=Object.freeze({
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   birthContext,wealthTiers:DATA.wealthTiers,
-  registerMetric,registerTrait,registerAttribute,metricDefinition,traitDefinition,attributeDefinition,hasTrait
+  registerMetric,registerTrait,registerAttribute,metricLabel,metricDefinition,traitDefinition,attributeDefinition,hasTrait
 });
 })(window);

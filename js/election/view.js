@@ -81,6 +81,7 @@ function board(model,{compact=false,collapsible=false}={}){
  }
  update(E.chosen.map(p=>p.id));return {element,update};
 }
+function feasibilityToken(pledge){const state=pledge.feasibility||{id:pledge.difficulty>=3?'impossible':pledge.difficulty>=2?'adjust':'possible',label:pledge.difficulty>=3?'이행불가':pledge.difficulty>=2?'조정 필요':'이행가능'};return global.GukminStatus.createToken({label:state.label,icon:state.id==='possible'?'check':state.id==='adjust'?'speech':'flag',classes:'pledge-feasibility feasibility-'+state.id});}
 // The same two direct entries stay inside each election surface.
 function navigation(){
  const nav=make('nav','election-context-tools');nav.setAttribute('aria-label','선거 정보 바로 보기');
@@ -114,7 +115,7 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
    poster.append(global.GukminPoster.create(candidate.poster||{...candidate.portrait,name:candidate.name,number:i+1,stage:'후보',phrase:candidate.title}));
    const info=make('div','candidate-information'),identity=make('div','candidate-identity'),share=make('div','candidate-poll');
    identity.append(global.GukminStatus.createToken({label:'기호 '+(i+1)+(candidate.id===model.playerId?' · 나':''),icon:'flag',classes:'candidate-number'}),make('h3','candidate-person-name',candidate.name));share.append(identity,make('strong','',forecast.pollShares[i]+'%'));info.append(share);const support=make('progress','candidate-support-meter');support.max=100;support.value=forecast.pollShares[i];support.setAttribute('aria-label',candidate.name+' 현재 조사 지지');info.append(support,make('small','candidate-poll-note','현재 조사 지지 · 아직 고민 중 '+forecast.undecided+'%'));
-   const promises=make('ol','candidate-promises');candidate.pledges.forEach(p=>{const li=make('li');const line=make('div','candidate-promise-heading');line.append(make('strong','',p.name),global.GukminStatus.createToken({label:p.difficulty>=3?'권한 밖':p.difficulty>=2?'협의 필요':'직접 이행',icon:p.difficulty>=2?'speech':'check',classes:'candidate-feasibility'}));li.append(line,make('small','',p.limit));promises.append(li);});
+   const promises=make('ol','candidate-promises');candidate.pledges.forEach(p=>{const li=make('li');const line=make('div','candidate-promise-heading');line.append(make('strong','',p.name),feasibilityToken(p));li.append(line,make('small','',p.limit));promises.append(li);});
    info.append(make('h4','','내건 약속'),candidate.pledges.length?promises:make('p','candidate-empty','아직 공약을 고르는 중이에요.'));
    if(candidate.copied)info.append(make('p','candidate-copy-note','내 임시 공약과 겹치는 약속이 있어요. 같은 친구들에게 표를 부탁하고 있어요.'));
    if(candidate.relations?.length){const data=make('div','candidate-relations');candidate.relations.forEach(item=>{const row=make('label');row.append(make('span','',item.label),make('b','',item.value+'/'+item.max));const meter=make('progress');meter.max=item.max;meter.value=item.value;row.append(meter);data.append(row);});info.append(data);}
@@ -146,5 +147,5 @@ function mount({root,host,onOpen=()=>{},onClose=()=>{}}){
  return {open,update(next){model=next;trigger.hidden=!next?.active;if(!next?.active)close();else{const key=JSON.stringify([next.candidates,next.groups,next.chosen,next.forecast()]);if(key!==signature&&drawer.open)render();signature=key;}},isOpen:()=>drawer.open,
   dispose(){disposeSlides();trigger.removeEventListener('click',open);drawer.removeEventListener('cancel',cancel);drawer.removeEventListener('click',backdrop);drawer.removeEventListener('close',handleClose);close();drawer.remove();trigger.remove();}};
 }
-global.GukminElectionView=Object.freeze({board,bar,mount,navigation,population,runoffSummary,countScene});
+global.GukminElectionView=Object.freeze({board,bar,mount,navigation,feasibilityToken,population,runoffSummary,countScene});
 })(window);

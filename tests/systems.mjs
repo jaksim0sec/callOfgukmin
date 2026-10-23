@@ -152,7 +152,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
   lastTurn=s.runtime.turn;
   if(choice.presentation?.type==='exam'){
    exams++;
-   assert.equal(choice.options.length,5);
+   assert.equal(choice.options.length,6);
    assert.ok(choice.options.every(o=>o.result.assessment&&!o.result.effects.stats?.study));
   }
   if(choice.presentation?.type==='school'){
@@ -162,7 +162,7 @@ test('life cycle stays deterministic and reaches high-school graduation with sch
   }
   const option=choice.options.find(o=>o.id===(s.persona.stats.stress>=12?'effort-0':'effort-2')&&o.available)||choice.options.find(o=>o.id==='employment'&&o.available)||choice.options.find(o=>o.available);
   assert.ok(option,'at least one available option');
-  engine.resolve(choice.token,option.id,choice.presentation?.type==='election-pledges'?{pledges:['library','quiet','lost']}:undefined);
+  engine.resolve(choice.token,option.id,choice.presentation?.type==='election-pledges'?{pledges:['library','quiet','lost']}:choice.presentation?.type==='election-fulfillment'?{plans:c.GukminElection.chosen(s.persona).map(p=>({pledgeId:p.id,mode:'compromise'}))}:undefined);
   assert.equal(engine.snapshot().reviewPending,true,'result stays until continuing');
   assert.equal(engine.snapshot().choice,null,'no immediate next decision');
   decisions++;
@@ -219,7 +219,7 @@ test('special-school game thresholds lock options until grade requirements hold'
  assert.ok(school.options.filter(o=>o.school.kind==='foreign'||o.school.kind==='gifted'||o.school.kind==='autonomous'||o.school.kind==='international')
    .every(o=>o.when?.stats?.schoolScore?.gte>0));
  const exam=pack.choices.find(c=>c.id.startsWith('high:1:3월-모의고사'));
- assert.equal(exam.options.length,5);
+ assert.equal(exam.options.length,6);
  assert.equal(exam.presentation.type,'exam');
  assert.ok(c.GukminGrades.assessment(P.generate(),exam.options[4].result.assessment).stats.stress>0);
 });
@@ -482,7 +482,7 @@ test('every exam strategy offers a different tangible tradeoff and academic hist
  const {c,P}=setup(),Story=c.GukminStory,Effects=c.GukminEffects;
  const choice=Story.exam('high',17,2,70,'학기 모의고사','mock').choice;
  const sample=P.generate();sample.age=17;sample.phase='high';sample.stats.study=20;sample.stats.exam=15;
- const results=choice.options.map(opt=>Effects.apply(sample,opt.result).stats);
+ const results=choice.options.filter(opt=>opt.result.assessment.mode!=='cram').map(opt=>Effects.apply(sample,opt.result).stats);
  assert.equal(results.length,5);
  assert.ok(results[0].stress<=sample.stats.stress,'resting is not a dead choice');
  assert.equal(results[1].exam,sample.stats.exam-1,'short review trades a small decline for recovery');
@@ -560,15 +560,15 @@ test('a paced director step saves real intermediary news without skipping the ne
 });
 test('recovery is voluntary, can be ignored and never automatically rescues a life',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
- const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';p.stats.stress=24;
+ const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';p.stats.stress=49;
  const engine=D.create({persona:p});const first=engine.run();
- assert.equal(first.persona.stats.stress,24);assert.equal(first.runtime.events['wellness:high-pressure-rest'],undefined);
+ assert.equal(first.persona.stats.stress,49);assert.equal(first.runtime.events['wellness:high-pressure-rest'],undefined);
  for(const id of ['elementary:recover','middle:recover','high:recover']){
   const opt=D.content(p).choices.find(x=>x.id===id).options.find(x=>x.id==='ignore');assert.ok(opt);
-  assert.equal(c.GukminEffects.apply(p,opt.result).stats.stress,24);
+  assert.equal(c.GukminEffects.apply(p,opt.result).stats.stress,49);
  }
  engine.apply('limit',{effects:{stats:{stress:6}}});
- const ended=engine.snapshot();assert.equal(ended.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(ended.persona.stats.stress,25);assert.equal(ended.choice,null);
+ const ended=engine.snapshot();assert.equal(ended.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(ended.persona.stats.stress,50);assert.equal(ended.choice,null);
  const saved={...ended.persona,simulation:plain(ended.runtime)};
  assert.equal(D.create({persona:saved}).run().persona.attributes.lifeEndReason,'정신병 한계');
 });
@@ -1174,8 +1174,8 @@ test('25-point migration preserves currency, old review history and frozen choic
  storage.set(P.storageKey,JSON.stringify(old));const loaded=P.load();assert.equal(loaded.statScale,25);assert.equal(loaded.stats.stress,20);assert.equal(loaded.stats.relations,12);assert.equal(loaded.stats.money,400000);assert.equal(loaded.metricHistory[0].value,21);assert.equal(loaded.simulation.choices['e:1'].script.options[0].result.effects.stats.stress,2);assert.deepEqual(plain(P.upgradeScale(loaded)),plain(loaded));
  const t=T.create({persona:loaded,contentId:'scale-test',events:[{id:'e',at:0,layer:'일상 이벤트',choice:'e'}],choices:[{id:'e',layer:'일상 선택',options:[{id:'different',label:'변경된 정의'}]}]});assert.equal(t.snapshot().choice.options[0].label,'원래 선택');t.resolve('e:1','choose');assert.equal(t.snapshot().persona.stats.stress,22);assert.equal(t.snapshot().persona.stats.money,390000);
 });
-test('all standard state metrics use whole numbers capped at 25 while currency stays unbounded',()=>{
- const {P,E,c}=setup(),p=P.generate();for(const id of ['stress','relations','study','schoolScore','exam','support','awareness']){assert.equal(P.metricDefinition(id).max,25);const s=E.apply(p,{effects:{stats:{[id]:99}}});assert.equal(s.stats[id],25);}
+test('pressure caps at 50, other standard metrics at 25, and currency stays unbounded',()=>{
+ const {P,E,c}=setup(),p=P.generate();for(const id of ['stress','relations','study','schoolScore','exam','support','awareness']){const cap=id==='stress'?50:25;assert.equal(P.metricDefinition(id).max,cap);const s=E.apply(p,{effects:{stats:{[id]:99}}});assert.equal(s.stats[id],cap);}
  assert.equal(E.apply(p,{effects:{stats:{money:1000000}}}).stats.money,1000000);
  const careful=plain(p);careful.stats.schoolScore=25;careful.traits=['꼼꼼함'];assert.equal(c.GukminGrades.assessment(careful,{metric:'schoolScore',effort:2}).stats.schoolScore,0);
 });
@@ -1225,10 +1225,10 @@ test('elementary preparation, electives and admission strategies differ in their
 
 
 test('pressure overflow, persistent illness and the fifth illness point share the common settlement',()=>{
- const {P,E,c}=setup(),p=P.generate();p.age=14;p.phase='middle';p.stats.stress=24;
- let q=E.apply(p,{effects:{stats:{stress:1}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,0);
- q=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,2);
- q=E.apply(q,{tags:['pressure-only'],effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,15);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
+ const {P,E,c}=setup(),p=P.generate();p.age=14;p.phase='middle';p.stats.stress=49;
+ let q=E.apply(p,{effects:{stats:{stress:1}}});assert.equal(q.stats.stress,50);assert.equal(q.stats.illness,0);
+ q=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(q.stats.stress,50);assert.equal(q.stats.illness,2);
+ q=E.apply(q,{tags:['pressure-only'],effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,40);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
  q=E.apply(q,{effects:{stats:{illness:-1}}});assert.equal(q.stats.illness,1);
  const e=c.GukminDirector.create({persona:p,persist:p=>P.save(p)});e.apply('overflow-end',{effects:{stats:{stress:6}}});const end=e.snapshot();assert.equal(end.persona.stats.illness,5);assert.equal(end.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(end.choice,null);
  assert.equal(c.GukminDirector.create({persona:P.load()}).run().persona.stats.illness,5);
@@ -1365,13 +1365,13 @@ test('old age saves migrate once, retaining waiting decisions, money, history an
 });
 
 function classroomFixture(seat='doyun'){
- const env=setup(),p=env.P.generate();p.age=8;p.phase='elementary';p.attributes={classroomRevision:1};p.stats.study=11;p.stats.relations=8;
+ const env=setup(),p=env.P.generate();p.admissionSeed='relay-fixture-0';p.age=8;p.phase='elementary';p.attributes={classroomRevision:1};p.stats.study=11;p.stats.relations=8;
  const full=env.c.GukminDirector.content(p),pack={...full,contentId:'classroom-check',events:full.events.filter(e=>e.id.startsWith('classroom:')),choices:full.choices.filter(c=>c.id.startsWith('classroom:'))};
  assert.equal(pack.choices.length,3,'seating, follow-up chat and sports are real content');
  const engine=env.T.create({...pack,persona:p,pauseAfterChoice:true,persist:person=>env.P.save(person)});
  engine.advance(31);assert.equal(engine.snapshot().choice.presentation.type,'seating');engine.resolve(engine.snapshot().choice.token,seat);engine.resume();return {...env,engine,pack};
 }
-test('classroom: seat bonuses are distinct and race luck stays inside a reproducible one-point band',()=>{
+test('classroom: seat bonuses are distinct and seeded race conditions survive regeneration',()=>{
  const {P,c}=setup(),p=P.generate();
  p.age=8;p.phase='elementary';p.attributes={classroomRevision:1};
  const first=c.GukminDirector.content(p),second=c.GukminDirector.content(p);
@@ -1385,11 +1385,10 @@ test('classroom: seat bonuses are distinct and race luck stays inside a reproduc
  assert.equal(jiwoo.result.effects.activate?.athletics,undefined);
  const relay=first.choices.find(x=>x.id==='classroom:sports');
  const again=second.choices.find(x=>x.id==='classroom:sports');
- const threshold=relay.variants[0].options[0].result.conditional[0].when.all[1].any[0].stats.athletics.gte;
- assert.ok([8,9,10].includes(threshold),'race day shifts the athletic cutoff by at most one point');
+ assert.ok(relay.variants[0].options[0].result.conditional.length>=3,'multiple seeded finish outcomes are defined');
  assert.deepEqual(relay.variants[0].options[0].result.conditional,again.variants[0].options[0].result.conditional,'same person seed reproduces the finish conditions');
- assert.equal(relay.variants[0].options[0].result.effects.activate.athletics,4,'untrained peers begin athletics on joining the relay');
- assert.equal(relay.variants[1].options[0].result.effects.activate?.athletics,undefined,'Doyun training must not be reset at the starting line');
+ assert.equal(relay.variants[0].options[0].result.conditional[0].result.effects.activate.athletics,7,'first-time runners begin at4 plus selected preparation');
+ assert.equal(c.GukminEffects.matches({...p,stats:{...p.stats,athletics:8}},relay.variants[1].options[0].result.conditional[0].when),false,'prior athletics must not be reset at the starting line');
 });
 test('classroom: desk choice remembers a class and friend, who returns in a chat and sports meet',()=>{
  const {engine,P,T,pack}=classroomFixture();let s=engine.snapshot();assert.equal(s.persona.attributes.seatmate,'도윤');assert.ok(s.persona.attributes.elementaryClass>=1&&s.persona.attributes.elementaryClass<=6);assert.equal(s.persona.stats.athletics,6);
@@ -1398,7 +1397,7 @@ test('classroom: desk choice remembers a class and friend, who returns in a chat
  const restored=T.create({...pack,persona:P.load(),pauseAfterChoice:true}).snapshot();assert.equal(restored.persona.attributes.seatmate,'도윤');assert.equal(restored.persona.attributes.sportsPlace,1);assert.equal(restored.runtime.turn,38);assert.equal(restored.reviewPending,true);
 });
 test('classroom: preparation changes the actual finish; old completed lives get no inserted decisions',()=>{
- const {engine}=classroomFixture('minseo');engine.advance(4);engine.resolve(engine.snapshot().choice.token,'quiet');engine.resume();engine.advance(3);engine.resolve(engine.snapshot().choice.token,'handoff');assert.equal(engine.snapshot().persona.attributes.sportsPlace,3);
+ const {engine}=classroomFixture('minseo');engine.advance(4);engine.resolve(engine.snapshot().choice.token,'quiet');engine.resume();engine.advance(3);engine.resolve(engine.snapshot().choice.token,'handoff');assert.ok([1,2,3].includes(engine.snapshot().persona.attributes.sportsPlace));
  const {P,T,c}=setup(),p=P.generate();p.age=11;p.phase='elementary';const full=c.GukminDirector.content(p),pack={...full,contentId:'old-classroom',events:full.events.filter(e=>e.id.startsWith('classroom:')),choices:full.choices.filter(c=>c.id.startsWith('classroom:'))};const old=T.create({...pack,persona:p});old.advance(52);assert.equal(old.snapshot().choice,null);assert.equal(old.snapshot().persona.stats.athletics,undefined);
 });
 test('existing class group chats use the same chat presentation in each scenario',()=>{

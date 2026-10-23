@@ -20,7 +20,7 @@ function presentPledges({choice,resolve,root,model}){
  }
   for(const pledge of E.available){
   const card=make('button','pledge-card');card.type='button';card.dataset.pledge=pledge.id;card.setAttribute('aria-pressed','false');
-  card.append(make('small','pledge-feasibility',pledge.feasibilityLabel||(pledge.difficulty>=2?'권한·협의가 필요한 약속':'직접 실행할 수 있는 약속')),make('strong','',pledge.name));
+  card.append(global.GukminElectionView.feasibilityToken(pledge),make('strong','',pledge.name));
   const reactions=make('span','pledge-reactions');E.groups.forEach((group,g)=>{const n=E.opinion(group.id,pledge.id),reaction=make('span',n===null?'is-unknown':n>0?'is-positive':n<0?'is-negative':'is-neutral',(group.shortName||group.name)+' '+(n===null?'?':(n>0?'+':n<0?'−':'')+Math.abs(n)));reaction.title=group.name+' '+group.size+'명 · '+(n===null?'아직 안 물어봤어':'직접 들어 본 생각');reactions.append(reaction);});card.append(reactions,make('small','pledge-reality',pledge.limit));
   card.addEventListener('click',()=>{
    const existing=slots.indexOf(pledge.id);if(existing>=0){slots[existing]=null;activeSlot=existing;}
@@ -28,7 +28,7 @@ function presentPledges({choice,resolve,root,model}){
    paint();
   });cards.append(card);
  }
- const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','어떤 약속을 할까?'),make('small','','?는 아직 안 물어본 친구들 · +는 좋아해, −는 싫어해'));content.append(catalogHead,cards);
+ const catalogHead=make('div','pledge-catalog-heading');catalogHead.append(make('strong','','어떤 약속을 할까?'),make('small','','이행불가 공약은 당선 뒤 지지 하락 위험 · ?는 아직 못 들은 민심'));content.append(catalogHead,cards);
  footer.append(counts,confirm);head.insertBefore(global.GukminElectionView.navigation(),foldButton);sheet.append(head,dock,content,footer);dialog.replaceChildren(sheet);dialog.classList.add('is-pledges');paint();
  const mobile=global.matchMedia('(max-width:47.5em)'),eyebrow=content.querySelector('.campaign-eyebrow'),title=content.querySelector('.life-modal-title'),help=puzzle.querySelector('.pledge-slot-help');
  const syncDock=()=>{if(mobile.matches)dock.append(eyebrow,title,rack,help);else{content.prepend(eyebrow,title);puzzle.prepend(rack,help);}};
@@ -92,7 +92,7 @@ function presentFulfillment({choice,resolve,root,model}){
   for(const button of content.querySelectorAll('[data-mode]'))button.setAttribute('aria-pressed',String(plans.get(button.dataset.pledge)===button.dataset.mode));
  }
  model.fulfillment.forEach((pledge,i)=>{
-  const card=make('section','fulfillment-pledge'),heading=make('div','fulfillment-pledge-heading');heading.append(make('span','',String(i+1).padStart(2,'0')),make('h3','',pledge.name));card.append(heading,make('p','fulfillment-limit',pledge.limit));
+  const card=make('section','fulfillment-pledge'),heading=make('div','fulfillment-pledge-heading');heading.append(make('span','',String(i+1).padStart(2,'0')),make('h3','',pledge.name));heading.append(global.GukminElectionView.feasibilityToken(pledge));card.append(heading,make('p','fulfillment-limit',pledge.limit+' · '+pledge.feasibility.note));
   const modes=make('div','fulfillment-modes');modes.setAttribute('role','group');modes.setAttribute('aria-label',pledge.name+' 이행 방식');
   for(const mode of pledge.modes){const button=make('button','fulfillment-mode');button.type='button';button.dataset.pledge=pledge.id;button.dataset.mode=mode.id;button.disabled=!mode.available;button.setAttribute('aria-pressed','false');button.append(make('strong','',mode.label),make('small','',mode.detail));if(mode.available){const stats={...mode.stats,...(mode.cost?{money:-mode.cost}:{})};if(model.riskMetric==='illness'){stats.illness=stats.stress;delete stats.stress;}button.append(effectTokens(stats,mode.trust));}button.addEventListener('click',()=>{plans.set(pledge.id,mode.id);paint();});modes.append(button);}
   card.append(modes);content.append(card);
