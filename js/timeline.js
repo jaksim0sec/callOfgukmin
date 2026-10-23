@@ -95,7 +95,7 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
     // intentionally continues to use its legacy, unbranched options.
     const variant=selectScenario(c,s.persona,s.runtime.turn);
     s.runtime.choices[token]={token,eventId:id,choiceId:c.id,layer:c.layer,status:'waiting',
-      openedAt:s.runtime.turn,script:c.presentation?.type==='society'?{...global.GukminSociety.choice(s.persona),revision:2}:scriptOf(c,variant),...(variant?{scenarioId:variant.id}:{})};
+      openedAt:s.runtime.turn,script:c.presentation?.type==='society'?{...global.GukminSociety.choice(s.persona),revision:2}:c.presentation?.type==='society-line'?{...global.GukminSociety.lineChoice(s.persona),revision:2}:scriptOf(c,variant),...(variant?{scenarioId:variant.id}:{})};
     // Later events at this same turn open only after the player's decision.
     if(c.blocksTime!==false)break;
    }else {finish(s,id);if(presentation&&pauseAfterChoice){const h=s.persona.history.at(-1);s.runtime.cinematic={...presentation,eventId:id,title:h.title,detail:h.detail};break;}}
@@ -198,9 +198,11 @@ function create({persona,events=[],choices=[],metrics={},traits={},attributes={}
   const last=Object.values(s.runtime.choices).filter(c=>c.status==='closed').at(-1);
   if(!last||last.presentationAcknowledged)return false;last.presentationAcknowledged=true;
  });}
- function cancelPending(id,result){return transact(s=>{
+ function cancelPending(id,result,{readyEvent=null}={}){return transact(s=>{
+  if(readyEvent&&!eventDefs.get(readyEvent)?.choice)throw new Error('돌아갈 선택 이벤트가 없습니다');
   if(!settlement(s,'external:'+id,result,id))return false;
   for(const c of waiting(s)){c.status='closed';c.cancelled=true;const r=s.runtime.events[c.eventId];delete r.waitingToken;r.status='completed';}
+  if(readyEvent){s.runtime.events[readyEvent].nextAt=s.runtime.turn;s.runtime.awaitingContinuation=false;delete s.runtime.reviewBefore;pump(s);}
  });}
  function resume(){
   return transact(s=>{

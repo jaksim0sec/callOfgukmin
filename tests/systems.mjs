@@ -560,15 +560,15 @@ test('a paced director step saves real intermediary news without skipping the ne
 });
 test('recovery is voluntary, can be ignored and never automatically rescues a life',()=>{
  const {c,P}=setup(),D=c.GukminDirector;
- const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';p.stats.stress=49;
+ const p=P.generate();p.age=14;p.phase='middle';p.job='중학생';p.stats.stress=24;
  const engine=D.create({persona:p});const first=engine.run();
- assert.equal(first.persona.stats.stress,49);assert.equal(first.runtime.events['wellness:high-pressure-rest'],undefined);
+ assert.equal(first.persona.stats.stress,24);assert.equal(first.runtime.events['wellness:high-pressure-rest'],undefined);
  for(const id of ['elementary:recover','middle:recover','high:recover']){
   const opt=D.content(p).choices.find(x=>x.id===id).options.find(x=>x.id==='ignore');assert.ok(opt);
-  assert.equal(c.GukminEffects.apply(p,opt.result).stats.stress,49);
+  assert.equal(c.GukminEffects.apply(p,opt.result).stats.stress,24);
  }
  engine.apply('limit',{effects:{stats:{stress:6}}});
- const ended=engine.snapshot();assert.equal(ended.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(ended.persona.stats.stress,50);assert.equal(ended.choice,null);
+ const ended=engine.snapshot();assert.equal(ended.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(ended.persona.stats.stress,25);assert.equal(ended.choice,null);
  const saved={...ended.persona,simulation:plain(ended.runtime)};
  assert.equal(D.create({persona:saved}).run().persona.attributes.lifeEndReason,'정신병 한계');
 });
@@ -1174,8 +1174,8 @@ test('25-point migration preserves currency, old review history and frozen choic
  storage.set(P.storageKey,JSON.stringify(old));const loaded=P.load();assert.equal(loaded.statScale,25);assert.equal(loaded.stats.stress,20);assert.equal(loaded.stats.relations,12);assert.equal(loaded.stats.money,400000);assert.equal(loaded.metricHistory[0].value,21);assert.equal(loaded.simulation.choices['e:1'].script.options[0].result.effects.stats.stress,2);assert.deepEqual(plain(P.upgradeScale(loaded)),plain(loaded));
  const t=T.create({persona:loaded,contentId:'scale-test',events:[{id:'e',at:0,layer:'일상 이벤트',choice:'e'}],choices:[{id:'e',layer:'일상 선택',options:[{id:'different',label:'변경된 정의'}]}]});assert.equal(t.snapshot().choice.options[0].label,'원래 선택');t.resolve('e:1','choose');assert.equal(t.snapshot().persona.stats.stress,22);assert.equal(t.snapshot().persona.stats.money,390000);
 });
-test('pressure caps at 50, other standard metrics at 25, and currency stays unbounded',()=>{
- const {P,E,c}=setup(),p=P.generate();for(const id of ['stress','relations','study','schoolScore','exam','support','awareness']){const cap=id==='stress'?50:25;assert.equal(P.metricDefinition(id).max,cap);const s=E.apply(p,{effects:{stats:{[id]:99}}});assert.equal(s.stats[id],cap);}
+test('students cap at 25 while currency stays unbounded',()=>{
+ const {P,E,c}=setup(),p=P.generate();for(const id of ['stress','relations','study','schoolScore','exam','support','awareness']){const cap=25;assert.equal(P.metricDefinition(id).max,cap);const s=E.apply(p,{effects:{stats:{[id]:99}}});assert.equal(s.stats[id],cap);}
  assert.equal(E.apply(p,{effects:{stats:{money:1000000}}}).stats.money,1000000);
  const careful=plain(p);careful.stats.schoolScore=25;careful.traits=['꼼꼼함'];assert.equal(c.GukminGrades.assessment(careful,{metric:'schoolScore',effort:2}).stats.schoolScore,0);
 });
@@ -1225,10 +1225,10 @@ test('elementary preparation, electives and admission strategies differ in their
 
 
 test('pressure overflow, persistent illness and the fifth illness point share the common settlement',()=>{
- const {P,E,c}=setup(),p=P.generate();p.age=14;p.phase='middle';p.stats.stress=49;
- let q=E.apply(p,{effects:{stats:{stress:1}}});assert.equal(q.stats.stress,50);assert.equal(q.stats.illness,0);
- q=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(q.stats.stress,50);assert.equal(q.stats.illness,2);
- q=E.apply(q,{tags:['pressure-only'],effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,40);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
+ const {P,E,c}=setup(),p=P.generate();p.age=14;p.phase='middle';p.stats.stress=24;
+ let q=E.apply(p,{effects:{stats:{stress:1}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,0);
+ q=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(q.stats.stress,25);assert.equal(q.stats.illness,2);
+ q=E.apply(q,{tags:['pressure-only'],effects:{stats:{stress:-10}}});assert.equal(q.stats.stress,15);assert.equal(q.stats.illness,2,'pressure relief does not silently cure illness');
  q=E.apply(q,{effects:{stats:{illness:-1}}});assert.equal(q.stats.illness,1);
  const e=c.GukminDirector.create({persona:p,persist:p=>P.save(p)});e.apply('overflow-end',{effects:{stats:{stress:6}}});const end=e.snapshot();assert.equal(end.persona.stats.illness,5);assert.equal(end.persona.attributes.lifeEndReason,'정신병 한계');assert.equal(end.choice,null);
  assert.equal(c.GukminDirector.create({persona:P.load()}).run().persona.stats.illness,5);

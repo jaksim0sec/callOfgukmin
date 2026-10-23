@@ -50,7 +50,10 @@ function upgradeMental(persona){
   s.stats.illness=s.attributes?.lifeEndReason==='정신병 한계'||s.attributes?.retryEndReason==='정신병 한계'?5:0;
   s.mentalModel=2;
  }
- s.stats.illness??=0;s.gender=genderOf(s);s.portraitVariant=s.gender;
+ s.stats.illness??=0;
+ // Correct the accidentally global50 release without retroactive illness or rescaling history.
+ if(Number.isFinite(s.stats.stress))s.stats.stress=Math.max(0,Math.min(pressureMax(s),s.stats.stress));
+ s.gender=genderOf(s);s.portraitVariant=s.gender;
  return s;
 }
 function generate() {
@@ -218,8 +221,9 @@ function registerAttribute(id,def){
  if(!def?.label)throw new Error('속성 정의 오류');
  register(ATTRIBUTE_DEFS,id,{...def,custom:true});
 }
+function pressureMax(persona){return persona&&(persona.attributes?.societyActive||persona.attributes?.admissionAttempts>1||['university','adult','political'].includes(phaseOf(persona))||(persona.schoolHistory||[]).some(record=>record.kind==='high'&&record.status==='graduated'))?50:25;}
 function metricLabel(id,persona){return id==='relations'&&persona&&(persona.age>=20||['university','adult','political'].includes(phaseOf(persona)))?'인맥':definition(METRIC_DEFS,id,'스탯').label;}
-function metricDefinition(id,persona){const def=definition(METRIC_DEFS,id,'스탯');return persona?{...def,label:metricLabel(id,persona)}:def;}
+function metricDefinition(id,persona){const def=definition(METRIC_DEFS,id,'스탯');return persona?{...def,label:metricLabel(id,persona),...(id==='stress'?{max:pressureMax(persona)}:{})}:def;}
 function traitDefinition(id){return definition(TRAIT_DEFS,id,'특성');}
 function attributeDefinition(id){return definition(ATTRIBUTE_DEFS,id,'속성');}
 function hasTrait(s,id){return s.traits.some(t=>(typeof t==='string'?t:t.name)===id);}
@@ -239,6 +243,6 @@ global.GukminPlayer=Object.freeze({
   lifeStages:LIFE_STAGES,birthDefaults:BIRTH_DEFAULTS,phaseDefinition,nextPhases,
   schoolKinds:SCHOOL_KINDS,traitDefinitions:TRAIT_DEFS,attributeDefinitions:ATTRIBUTE_DEFS,
   birthContext,wealthTiers:DATA.wealthTiers,
-  registerMetric,registerTrait,registerAttribute,metricLabel,metricDefinition,traitDefinition,attributeDefinition,hasTrait
+  registerMetric,registerTrait,registerAttribute,pressureMax,metricLabel,metricDefinition,traitDefinition,attributeDefinition,hasTrait
 });
 })(window);

@@ -48,10 +48,12 @@ function apply(persona,result={},context={}){
  }
  if(result.assessment){const calculation=global.GukminGrades.assessment(persona,result.assessment,context);prepared.effects??={};prepared.effects.stats={...prepared.effects.stats,...calculation.stats};if(calculation.outcome&&prepared.history){const histories=Array.isArray(prepared.history)?prepared.history:[prepared.history];for(const history of histories)history.detail=(history.detail||'')+' 벼락치기 '+(calculation.outcome==='success'?'성공 · 집중한 범위에서 크게 점수를 얻었다.':'실패 · 컨디션 조절에 실패해 현재 점수의 10%를 잃었다.');}}
  const s=P.upgradeMental(persona),effects=prepared.effects||{},turn=context.turn??0;
+ const pressureLimit=P.pressureMax({...s,phase:effects.attributes?.phase??s.phase,attributes:{...s.attributes,...effects.attributes},schoolHistory:[...(s.schoolHistory||[]),...(effects.schools||[])]});
+ const metric=id=>id==='stress'?{...P.metricDefinition(id,s),max:pressureLimit}:P.metricDefinition(id,s);
  keys(effects,['activate','stats','attributes','schools','traits','deactivate'],'효과');
  s.metricActive??={};s.metricHistory??=[];s.attributeHistory??=[];s.traitSince??={};s.attributes??={};
  for(const [id,value] of Object.entries(effects.activate||{})){
-  const def=P.metricDefinition(id);s.metricActive[id]=true;s.stats[id]=bounded(value,def);
+  const def=metric(id);s.metricActive[id]=true;s.stats[id]=bounded(value,def);
  }
  const deltas={...effects.stats};
  for(const [id,value] of Object.entries(deltas)){P.metricDefinition(id);finite(value);}
@@ -83,8 +85,8 @@ function apply(persona,result={},context={}){
   if(id==='illness')continue;
   if((id==='exam'&&persona.attributes?.csatSubmitted&&!prepared.retryYear&&!context.finalizing)||(id==='schoolScore'&&persona.attributes?.highFinalSubmitted))continue;
   const raw=finite(s.stats[id]??0)+delta;
-  if(id==='stress'&&delta>0)overflow=Math.max(0,Math.round(raw)-P.metricDefinition('stress').max);
-  s.stats[id]=bounded(raw,P.metricDefinition(id));
+  if(id==='stress'&&delta>0)overflow=Math.max(0,Math.round(raw)-pressureLimit);
+  s.stats[id]=bounded(raw,metric(id));
  }
  if(overflow||deltas.illness!==undefined)s.stats.illness=bounded((s.stats.illness||0)+overflow+(deltas.illness||0),P.metricDefinition('illness'));
  for(const [id,value] of Object.entries(effects.attributes||{})){

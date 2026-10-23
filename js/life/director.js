@@ -133,6 +133,12 @@ function create({persona,persist,onChange}){
   });
   return {remaining,blocked,blockedReason,items};
  }
+ function returnToSociety(){
+  const s=timeline.snapshot();
+  if(s.runtime.cinematic||!global.GukminSociety?.canReturn(s.persona))return false;
+  const id='society-return:'+s.runtime.turn+':'+Object.keys(s.runtime.choices).length;
+  return timeline.cancelPending(id,{societyDecision:{action:'return-hub'}},{readyEvent:'society:activity'});
+ }
  function acknowledgePressure(){
   const s=timeline.snapshot(),a=s.persona.attributes||{},count=(a.pressureAdviceCount||0)+1,illness=s.persona.stats.illness||0;
   return timeline.apply('pressure-advice:'+count,{effects:{attributes:{pressureGuideSeen:true,pressureCriticalSeen:!!a.pressureCriticalSeen||illness===4,pressureAdviceCount:count}}});
@@ -145,7 +151,7 @@ function create({persona,persist,onChange}){
   return timeline.apply('store:'+s.runtime.turn,{tags:['pressure-only'],effects:{stats:{money:-item.price,stress:-item.relief,...(item.recovery?{illness:-item.recovery}:{})},attributes:{storeLastTurn:s.runtime.turn}},history:{title:'편의점 · '+item.name,detail:item.price.toLocaleString('ko-KR')+'원을 쓰고 잠시 쉬었다.',importance:'minor'}});
  }
  return Object.freeze({
-   storeStatus,buy,acknowledgePressure,step,snapshot:()=>decorate(timeline.snapshot()),
+   storeStatus,buy,acknowledgePressure,returnToSociety,step,snapshot:()=>decorate(timeline.snapshot()),
    advance:turns=>{const result=timeline.advance(turns);run();return result;},
    acknowledge:()=>timeline.acknowledge(),
    resolve:(token,optionId,input)=>{if(limit())return false;const applied=timeline.resolve(token,optionId,input);if(applied)limit();return applied;},

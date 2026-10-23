@@ -192,6 +192,10 @@ function decorate({dialog,body,list,choice,persona,state={},onSelect,onCommit}){
   }
  }
  if(kind==='campaign'&&global.GukminElection.model(persona).active)body.prepend(global.GukminElectionView.navigation());
+ if(kind==='society-line'){
+  const guide=global.GukminSociety.guidance(persona,choice.presentation.stage),tools=el('div','society-line-tools'),copy=el('div','society-line-route');copy.append(el('strong','',guide.location),el('small','',guide.education?.label||guide.next));
+  const back=el('button','society-line-menu','메뉴 · 사회로 ↗');back.type='button';back.addEventListener('click',()=>global.GukminGame.session?.returnToSociety());tools.append(copy,back);body.prepend(tools);
+ }
  if(kind==='chat')decorateChat(body,list,choice);
  if(kind==='seating')decorateSeats(body,list,choice);
  if(kind==='sports'){

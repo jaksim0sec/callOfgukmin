@@ -7,12 +7,18 @@ function setup(){
  for(const name of ['data/base','data/regions','data/schools','data/grades','playerState','effects','timeline','life/director','life/story','life/infant','life/elementary','life/middle','life/high','life/admissions','life/society','election/engine','life/election'])vm.runInContext(readFileSync('js/'+name+'.js','utf8'),c);
  return {c,P:c.GukminPlayer,E:c.GukminEffects,T:c.GukminTimeline};
 }
-test('adult network label preserves metric identity and accumulated values; pressure is50 without save rescale',()=>{
- const {P,E}=setup(),p=P.generate();p.age=19;p.phase='high';p.stats.relations=17;p.stats.stress=24;
- assert.equal(P.metricDefinition('relations',p).label,'관계');const next=E.apply(p,{effects:{attributes:{age:20,phase:'adult'}}});
- assert.equal(P.activeMetrics(next).find(m=>m.id==='relations').label,'인맥');assert.equal(next.stats.relations,17);assert.equal(next.stats.stress,24);assert.equal(P.metricDefinition('stress').max,50);assert.equal(P.upgradeMental(next).stats.stress,24);
- assert.equal(E.apply(p,{effects:{stats:{stress:25}}}).stats.illness,0);const overflow=E.apply(p,{effects:{stats:{stress:28}}});assert.equal(overflow.stats.stress,50);assert.equal(overflow.stats.illness,2);
+test('pressure capacity increases at graduation while network labels preserve the same metric',()=>{
+ const {P,E,c}=setup(),p=P.generate();c.GukminTimeline.create({...c.GukminDirector.content(p),persona:p});p.age=19;p.phase='high';p.stats.relations=17;p.stats.stress=24;
+ assert.equal(P.metricDefinition('relations',p).label,'관계');assert.equal(P.pressureMax(p),25);
+ const overflow=E.apply(p,{effects:{stats:{stress:3}}});assert.equal(overflow.stats.stress,25);assert.equal(overflow.stats.illness,2);
+ const next=E.apply(p,{effects:{attributes:{age:20,phase:'adult'},schools:[{id:'grad-high',kind:'high',name:'검증고',status:'graduated'}]}});
+ assert.equal(P.activeMetrics(next).find(m=>m.id==='relations').label,'인맥');assert.equal(next.stats.relations,17);assert.equal(next.stats.stress,24);assert.equal(P.metricDefinition('stress',next).max,50);
+ const adultOverflow=E.apply(next,{effects:{stats:{stress:28}}});assert.equal(adultOverflow.stats.stress,50);assert.equal(adultOverflow.stats.illness,2);
+ const mistaken={...p,stats:{...p.stats,stress:40}},corrected=P.upgradeMental(mistaken);assert.equal(corrected.stats.stress,25);assert.equal(corrected.stats.illness,0);assert.equal(mistaken.stats.stress,40);
+ assert.equal(P.upgradeMental({...next,stats:{...next.stats,stress:40}}).stats.stress,40);
+ const retake=E.apply(p,{effects:{stats:{stress:3},attributes:{admissionAttempts:2},schools:[{id:'grad-high',kind:'high',name:'검증고',status:'graduated'}]}});assert.equal(retake.stats.stress,27);assert.equal(retake.stats.illness,0);
 });
+
 test('GU permits recovery during saved choice review and keeps a strict four-turn purchase cooldown',()=>{
  const {c,P,T}=setup(),p=P.generate();p.age=12;p.phase='elementary';p.attributes={pressureGuideSeen:true};Object.assign(p.stats,{stress:20,illness:0,money:100000});
  const content=c.GukminDirector.content(p),saved=T.create({...content,persona:p}).snapshot();for(const event of content.events)saved.runtime.events[event.id]={status:'completed',count:1,nextAt:event.at||0};

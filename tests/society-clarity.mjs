@@ -14,8 +14,8 @@ function setup({college=true}={}){
 
 test('annual college choices expose a finite route and update remaining semesters and months',()=>{
  const {c,p,choose}=setup();let guide=c.GukminSociety.guidance(p);assert.equal(guide.education.remainingSemesters,8);assert.equal(guide.education.remainingMonths,48);assert.match(guide.next,/대학/);
- choose('college');assert.match(c.GukminSociety.choice(p).title,/1학년/);choose('fund-cash');assert.match(c.GukminSociety.choice(p).title,/1학년/);choose('study');guide=c.GukminSociety.guidance(p);assert.equal(guide.education.completedSemesters,2);assert.equal(guide.education.remainingMonths,36);assert.match(c.GukminSociety.choice(p).options.find(o=>o.id==='college').label,/2학년/);
- for(let i=1;i<4;i++){choose('college');choose('fund-cash');choose('study');}
+ choose('college');assert.match(c.GukminSociety.choice(p).title,/1학년/);choose('fund-cash');assert.match(c.GukminSociety.choice(p).title,/1학년/);choose('study');guide=c.GukminSociety.guidance(p);assert.equal(guide.education.completedSemesters,2);assert.equal(guide.education.remainingMonths,36);assert.match(c.GukminSociety.choice(p).title,/2학년/);
+ for(let i=1;i<4;i++){choose('fund-cash');choose('study');}
  guide=c.GukminSociety.guidance(p);assert.equal(guide.education.remainingMonths,0);assert.match(guide.education.label,/졸업 완료/);assert.equal(c.GukminSociety.choice(p).options.some(o=>o.id==='college'),false);assert.throws(()=>c.GukminSociety.decision(p,{action:'study'}));
 });
 

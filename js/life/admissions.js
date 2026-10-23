@@ -25,7 +25,7 @@ function retry(p,result){
  if(reason){x.effects={attributes:{...(ageLimit?{age:30}:{}),admissionDestination:'finished',retryEndReason:reason,job:reason==='백수 엔딩'?'무직':'입시 종료'}};}
  else{
   const support=supportStatus(p),academy=support.remaining===null||support.remaining>0,nextAge=p.age+1,gap=nextAge>=25;
-  const pressure=2+(gap?1:0),illness=p.stats.illness>0?p.stats.illness+pressure:Math.max(0,p.stats.stress+pressure-g.GukminPlayer.metricDefinition('stress').max),ended=illness>=5?'정신병 한계':null;
+  const pressure=2+(gap?1:0),illness=p.stats.illness>0?p.stats.illness+pressure:Math.max(0,p.stats.stress+pressure-g.GukminPlayer.pressureMax({...p,attributes:{...a,admissionAttempts:(a.admissionAttempts||1)+1}})),ended=illness>=5?'정신병 한계':null;
   x.effects={attributes:{age:nextAge,admissionAttempts:(a.admissionAttempts||1)+1,job:ended?'입시 종료':'N수생',roles:[],admissionDestination:ended?'finished':'retry',retryEndReason:ended,csatSubmitted:false,retakeMode:academy?'academy':'self',retakeSupportUsed:support.used+(academy?1:0),careerGapYears:gap?nextAge-24:0},stats:{stress:pressure,...(gap?{relations:-1}:{})},...(gap?{traits:{add:['경력 공백']}}:{}),schools:g.GukminPlayer.schoolsOf(p).some(s=>s.kind==='high'&&s.status==='enrolled')?[{kind:'high',status:'graduated'}]:[]};
  }
  const end=x.effects.attributes.retryEndReason,mode=x.effects.attributes.retakeMode;
@@ -91,7 +91,7 @@ function cycle(pack,n){
  const csat=add(pack,S.selection(pre+':csat',routeAt+3,'대학수학능력시험 성적표','응시한 수능의 확정 성적을 확인하자.',[option('submit','수능 점수 확인하기','수능 성적을 확정했다. 이후 생활은 이번 점수를 바꾸지 않는다.',{attributes:{csatSubmitted:true},stats:{stress:1}},{conditional:[
  {before:true,when:{attributes:{preExamStrategy:'exam'}},result:{effects:{stats:{exam:2,stress:2}}}},
  {before:true,when:{attributes:{preExamStrategy:'balanced'}},result:{effects:{stats:{exam:1}}}},
- {before:true,when:{all:[{stats:{stress:{gte:42}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-1}}}}
+ {before:true,when:{all:[{stats:{stress:{gte:n===1?21:42}}},{withoutTraits:['인내심']}]},result:{effects:{stats:{exam:-1}}}}
  ]})],'한방 선택',{type:'grade-seal',category:'mock',term:'대학수학능력시험 성적표'}),studying);
  add(pack,S.selection(pre+':exam-evening',routeAt+3,'시험이 끝난 저녁','답안을 제출했다. 지금은 성적을 고칠 수 없다.\n\n발표까지 일상을 회복하고 다음 계획을 정하자.',[
  option('review','친구들과 지원 일정과 서류를 서로 점검한다','일정을 대조했지만 결과 걱정도 나눴다.',{stats:{relations:2,stress:2}}),

@@ -29,7 +29,7 @@ function mount({navigate,renderPoster}){
  if(destination==='college'&&offer)facts.push(['다음 목적지',offer]);
  else if(destination==='employment')facts.push(['다음 목적지','사회 진출 준비']);
  if((a.admissionAttempts||1)>1)facts.push(['입시 재도전',(a.admissionAttempts-1)+'회'],['재수학원 지원',(a.retakeSupportUsed||0)+'회'],['경력 공백',(a.careerGapYears||0)+'년']);
- facts.push(['압박',persona.stats.stress+'/'+global.GukminPlayer.metricDefinition('stress').max],['정신병',(persona.stats.illness||0)+'/5'],[global.GukminPlayer.metricLabel('relations',persona),persona.stats.relations+'/25']);
+ facts.push(['압박',persona.stats.stress+'/'+global.GukminPlayer.pressureMax(persona)],['정신병',(persona.stats.illness||0)+'/5'],[global.GukminPlayer.metricLabel('relations',persona),persona.stats.relations+'/25']);
  for(const [id,label,submitted] of [['schoolScore','최종 내신',a.highFinalSubmitted],['exam','수능',a.csatSubmitted]])if(Number.isFinite(persona.stats[id]))facts.push([label,submitted?global.GukminGrades.report(id,persona.stats[id],'high').display:'아직 확정되지 않음']);
  const career=document.getElementById('resultCareer');
  for(const entry of schools.slice(-3)){const line=node('div','');line.className='result-career-entry';line.append(global.GukminStatus.createToken({type:'school',label:(entry.status==='graduated'?'졸업 · ':entry.status==='dropout'?'지난 학교 · ':entry.status==='leave'?'휴학 · ':'재학 · ')+entry.name}));career.append(line);}
@@ -38,7 +38,7 @@ function mount({navigate,renderPoster}){
  if(!career.childElementCount)career.append(global.GukminStatus.createToken({label:'아직 입학 전',icon:'sparkle'}));
  if(a.societyActive){if(a.careerCurrent)career.append(global.GukminStatus.createToken({label:a.careerCurrent+' · '+(a.careerMonths||0)+'개월',icon:'flag'}));career.append(global.GukminStatus.createToken({label:a.militaryStatus,icon:'flag'}));if(a.politicalPathLabel)career.append(global.GukminStatus.createToken({label:a.politicalPathLabel,icon:'speech'}));}
  const cardStats=document.getElementById('resultCardStats');
- for(const [label,icon] of [[persona.stats.money.toLocaleString('ko-KR')+'원','savings'],[global.GukminPlayer.metricLabel('relations',persona)+' '+persona.stats.relations+'/25','users'],[(persona.stats.illness?'정신병 '+persona.stats.illness+'/5':'압박 '+persona.stats.stress+'/'+global.GukminPlayer.metricDefinition('stress').max),'pulse']])cardStats.append(global.GukminStatus.createToken({label,icon}));
+ for(const [label,icon] of [[persona.stats.money.toLocaleString('ko-KR')+'원','savings'],[global.GukminPlayer.metricLabel('relations',persona)+' '+persona.stats.relations+'/25','users'],[(persona.stats.illness?'정신병 '+persona.stats.illness+'/5':'압박 '+persona.stats.stress+'/'+global.GukminPlayer.pressureMax(persona)),'pulse']])cardStats.append(global.GukminStatus.createToken({label,icon}));
  for(const [key,value] of facts){const item=node('div','');item.append(node('small',key),node('strong',value));document.getElementById('resultFacts').append(item);}
  const shownTraits=[];
  for(const trait of persona.traits||[]){
@@ -129,7 +129,7 @@ async function compose({persona,title,reason,offer,schools,traits}){
  if(offer&&y<780){text('다음 목적지',542,y,22,'#8b7c90',476);y+=38;y+=lines(offer,542,y,466,28,2)+16;}
  for(const role of (persona.roles||[]).slice(-2)){if(y>835)break;const value=typeof role==='string'?role:role.label||role.name;pill(value,542,y,466,'#86748e',48,23);y+=58;}
  if(!schools.length)text('아직 입학 전 · 가능성의 시작',542,420,25,'#8b7c90',466);
- const stats=[['남은 재산',persona.stats.money.toLocaleString('ko-KR')+'원'],[global.GukminPlayer.metricLabel('relations',persona),persona.stats.relations+'/25'],[persona.stats.illness?'정신병':'압박',persona.stats.illness?persona.stats.illness+'/5':persona.stats.stress+'/'+global.GukminPlayer.metricDefinition('stress').max],['최종 내신',persona.attributes?.highFinalSubmitted?global.GukminGrades.report('schoolScore',persona.stats.schoolScore,'high').display:'미확정']];
+ const stats=[['남은 재산',persona.stats.money.toLocaleString('ko-KR')+'원'],[global.GukminPlayer.metricLabel('relations',persona),persona.stats.relations+'/25'],[persona.stats.illness?'정신병':'압박',persona.stats.illness?persona.stats.illness+'/5':persona.stats.stress+'/'+global.GukminPlayer.pressureMax(persona)],['최종 내신',persona.attributes?.highFinalSubmitted?global.GukminGrades.report('schoolScore',persona.stats.schoolScore,'high').display:'미확정']];
  stats.forEach(([label,value],i)=>{const x=60+(i%2)*490,top=904+Math.floor(i/2)*80;box(x,top,466,64,'#e5dce9',22);text(label,x+20,top+41,23,'#76647f',165);text(value,x+184,top+42,28,'#3f2f49',262,800);});
  let x=60;y=1112;for(const name of traits.slice(0,8)){ctx.font='700 25px system-ui';const width=Math.min(440,ctx.measureText(name).width+44);if(x+width>1020){x=60;y+=66;}if(y>1212)break;pill(name,x,y,width,global.GukminPlayer.traitDefinition(name).color||'#655175');x+=width+14;}
  text('THE PEOPLE CALL',60,1300,22,'#7c6d83',430);text('나의 선택으로 남은 삶',650,1300,24,'#7c6d83',370);

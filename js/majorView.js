@@ -15,7 +15,7 @@ function effectList(option,person,turn,labels={}){
  for(const [id,next] of Object.entries(projected.stats)){
   const n=Number.isFinite(next)&&Number.isFinite(person.stats[id])?next-person.stats[id]:0;
   if(!n)continue;
-  span.append(labels[id]?global.GukminStatus.createToken({label:labels[id]+' '+(n>0?'+':'−')+Math.abs(n),icon:global.GukminPlayer.metricDefinition(id).icon||'graduation',classes:'metric-impact metric-'+id+' life-delta'}):global.GukminStatus.createToken({type:'metric',id,amount:n,classes:'life-delta'}));
+  span.append(labels[id]?global.GukminStatus.createToken({label:labels[id]+' '+(n>0?'+':'−')+Math.abs(n),icon:global.GukminPlayer.metricDefinition(id,person).icon||'graduation',classes:'metric-impact metric-'+id+' life-delta'}):global.GukminStatus.createToken({type:'metric',id,amount:n,persona:person,classes:'life-delta'}));
  }
  for(const entry of projected.traits||[]){
   const name=typeof entry==='string'?entry:entry.name;
@@ -31,12 +31,12 @@ function effectList(option,person,turn,labels={}){
 function examOutcomes(option,person,metric,turn,effort,label){
  const wrap=make('div','exam-outcomes');
  const cram=option.result?.assessment?.mode==='cram';
- wrap.append(global.GukminStatus.createToken({label:cram?'불꽃 도전 · 높은 압박':'노력 '+effort+' / 4',icon:cram?'sparkle':'book',classes:'exam-effort-label'}));
+ wrap.append(global.GukminStatus.createToken({label:cram?'벼락치기 · 높은 압박':'노력 '+effort+' / 4',icon:cram?'sparkle':'book',classes:'exam-effort-label'}));
  if(cram){
   const forecast=global.GukminGrades.cramOutcomes(person,option.result.assessment);
   const outcomes=make('span','exam-cram-outcomes');
   for(const [outcome,name] of [['success','성공'],['failure','실패']])outcomes.append(make('strong','exam-cram-'+outcome,name+' '+forecast[outcome+'Chance']+'% · '+label+' '+forecast.current+' → '+forecast[outcome]+' / 25'));
-  wrap.append(outcomes,make('small','exam-cram-warning','실패 시 현재 점수의 10% 감소 (반올림·최소 1점). 압박 대비 효율이 낮습니다.'));
+  wrap.append(outcomes,make('small','exam-cram-warning','성공 시 +6점 (최대 25점). 실패 시 현재 점수의 10% 감소 (반올림·최소 1점). 압박 대비 효율이 낮습니다.'));
  }else{
   const after=global.GukminEffects.apply(person,option.result,{turn,preview:true,source:'estimate'});
   wrap.append(make('strong','exam-score-transition',label+' '+person.stats[metric]+' → '+after.stats[metric]+' / 25'));
@@ -158,7 +158,7 @@ function presentAdmission({choice,resolve,root}){
 
 
 function present({choice,resolve,root}){
- let selected=null,closed=false;
+ let selected=null,closed=false,settled=false,cramPopup=null;
  const person=global.GukminGame.session?.snapshot().persona||global.GukminPlayer.load();
  const p=choice.presentation||{};
  if(p.type==='society')return global.GukminSocietyView.present({choice,resolve,root});
@@ -209,12 +209,13 @@ function present({choice,resolve,root}){
  const confirm=make('button','life-submit',isSchool?'선택한 학교에 지원':'선택한 준비 수준 확정');
  confirm.type='button';confirm.disabled=true;
  const effortOf=option=>option.result?.assessment?.effort??Number(/^effort-(\d)$/.exec(option.id)?.[1]??-1);
- const displayOptions=isSchool?choice.options:[...choice.options].sort((a,b)=>effortOf(b)-effortOf(a));
+ const examName=p.term||choice.title;
+ const cramOption=isSchool?null:choice.options.find(option=>option.result?.assessment?.mode==='cram');
+ const displayOptions=isSchool?choice.options:choice.options.filter(option=>option.result?.assessment?.mode!=='cram').sort((a,b)=>effortOf(b)-effortOf(a));
  displayOptions.forEach((option,index)=>{
-  const cram=option.result?.assessment?.mode==='cram';
-  const row=make('button','life-answer'+(option.available===false?' life-answer-locked':'')+(cram?' exam-cram-option':''));row.type='button';row.dataset.choice=option.id;
+  const row=make('button','life-answer'+(option.available===false?' life-answer-locked':''));row.type='button';row.dataset.choice=option.id;
   row.disabled=option.available===false;
-  const letter=make('span','life-answer-letter',isSchool?'':cram?'🔥':String.fromCharCode(9312+index));
+  const letter=make('span','life-answer-letter',isSchool?'':String.fromCharCode(9312+index));
   if(isSchool){
    const crest=make('span','life-school-crest');crest.append(schoolLogo());
    row.append(crest);
@@ -256,7 +257,7 @@ function present({choice,resolve,root}){
    }
   }
   if(isSchool){const outcome=make('span','school-option-outcome');outcome.append(effectList(option,person,choice.openedAt||0));copy.append(outcome);}
-  else copy.append(examOutcomes(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),p.category==='mock'?'모의고사':'교과 성취'));
+  else copy.append(examOutcomes(option,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,effortOf(option),examName));
   if(isSchool&&['science','gifted'].includes(option.school?.kind))copy.append(make('small','','학교 시작 효과 · 모의고사 1등급 · 이후 준비에 따라 변동'));
   if(!isSchool&&global.GukminGrades){
    const metric=p.category==='mock'?'exam':'schoolScore';
@@ -268,8 +269,7 @@ function present({choice,resolve,root}){
       {turn:candidate.simulation?.turn||0,preview:true,source:'estimate'});
     const before=global.GukminGrades.report(metric,current,p.stage||'high').display;
     const after=global.GukminGrades.report(metric,projection.stats[metric],p.stage||'high').display;
-    const forecast=cram?global.GukminGrades.cramOutcomes(candidate,option.result.assessment):null;
-    copy.append(make('small','life-paper-estimate',forecast?'성공 '+global.GukminGrades.report(metric,forecast.success,p.stage||'high').display+' / 실패 '+global.GukminGrades.report(metric,forecast.failure,p.stage||'high').display+' (예상)':before+' → '+after+' (예상)'));
+    copy.append(make('small','life-paper-estimate',before+' → '+after+' (예상)'));
    }
   }
   if(!isSchool){const sources=appliedSources(person,option.result);sources.classList.add('is-compact');copy.append(sources);}
@@ -302,27 +302,67 @@ function present({choice,resolve,root}){
   content.append(formTop,title,sub,desc,question,options);
   body.append(content,footer);
  }
- if(!isSchool&&choice.options.some(option=>option.result?.assessment?.mode==='cram')){const jump=make('button','exam-cram-shortcut','🔥 벼락치기 보기');jump.type='button';jump.addEventListener('click',()=>{const target=options.querySelector('.exam-cram-option');target?.scrollIntoView({block:'start',behavior:global.matchMedia('(prefers-reduced-motion:reduce)').matches?'instant':'smooth'});target?.focus({preventScroll:true});});head.insertBefore(jump,collapse);}
+ function dismissCram(restoreFocus=true){
+  const popup=cramPopup;if(!popup)return;
+  cramPopup=null;
+  if(popup.open)popup.close();
+  popup.remove();
+  if(restoreFocus&&!closed&&dialog.open)cramTrigger?.focus({preventScroll:true});
+ }
+ function submit(id){
+  if(!id||closed||settled)return;
+  settled=true;confirm.disabled=true;
+  dismissCram(false);
+  if(dialog.open)dialog.close();
+  resolve(id);
+ }
+ const cramTrigger=cramOption?make('button','exam-cram-shortcut','벼락치기'):null;
+ if(cramTrigger){
+  cramTrigger.type='button';cramTrigger.disabled=cramOption.available===false;
+  cramTrigger.setAttribute('aria-haspopup','dialog');
+  cramTrigger.addEventListener('click',()=>{
+   if(closed||settled||cramPopup||!dialog.open)return;
+   const popup=make('dialog','exam-cram-dialog');cramPopup=popup;
+   popup.setAttribute('aria-labelledby','examCramTitle');
+   popup.setAttribute('aria-describedby','examCramDescription');
+   const popupHead=make('header','exam-cram-head');
+   const popupTitle=make('h2','','벼락치기');popupTitle.id='examCramTitle';
+   const close=make('button','exam-cram-close','닫기');close.type='button';close.autofocus=true;
+   close.addEventListener('click',()=>dismissCram());popupHead.append(popupTitle,close);
+   const content=make('div','exam-cram-content');
+   const description=make('p','',examName+' · 한 번의 도전으로 이번 시험을 준비합니다.');description.id='examCramDescription';
+   content.append(description,examOutcomes(cramOption,person,p.category==='mock'?'exam':'schoolScore',choice.openedAt||0,null,examName));
+   const forecast=global.GukminGrades.cramOutcomes(person,cramOption.result.assessment),metric=p.category==='mock'?'exam':'schoolScore';
+   content.append(make('small','life-paper-estimate','예상 성적 · 성공 '+global.GukminGrades.report(metric,forecast.success,p.stage||'high').display+' / 실패 '+global.GukminGrades.report(metric,forecast.failure,p.stage||'high').display));
+   const foot=make('footer','exam-cram-foot');
+   const cancel=make('button','exam-cram-cancel','준비 수준으로 돌아가기');cancel.type='button';cancel.addEventListener('click',()=>dismissCram());
+   const accept=make('button','exam-cram-confirm','벼락치기로 확정');accept.type='button';accept.addEventListener('click',()=>submit(cramOption.id));
+   foot.append(cancel,accept);popup.append(popupHead,content,foot);
+   popup.addEventListener('cancel',event=>{event.preventDefault();dismissCram();});
+   popup.addEventListener('close',()=>{if(cramPopup===popup)dismissCram();});
+   let backdropPointer=false;
+   const outside=event=>{const r=popup.getBoundingClientRect();return event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom;};
+   popup.addEventListener('pointerdown',event=>{backdropPointer=event.target===popup&&outside(event);});
+   popup.addEventListener('click',event=>{if(backdropPointer&&event.target===popup&&outside(event))dismissCram();backdropPointer=false;});
+   document.body.append(popup);popup.showModal();
+  });
+  head.insertBefore(cramTrigger,collapse);
+ }
  dialog.replaceChildren(body);
  const headerReopen=root.querySelector('#resumeMajorChoice');
- function sync(){if(headerReopen)headerReopen.hidden=closed||dialog.open;}
- function open(){if(!closed&&!dialog.open){dialog.showModal();sync();}}
- function fold(){dialog.close();sync();headerReopen?.focus({preventScroll:true});}
+ function sync(){if(!dialog.open)dismissCram(false);if(headerReopen)headerReopen.hidden=closed||settled||dialog.open;}
+ function open(){if(!closed&&!settled&&!dialog.open){dialog.showModal();sync();}}
+ function fold(){dismissCram(false);dialog.close();sync();headerReopen?.focus({preventScroll:true});}
  headerReopen?.addEventListener('click',open);
  collapse.addEventListener('click',fold);
  const handleCancel=e=>{e.preventDefault();fold();};
  dialog.addEventListener('cancel',handleCancel);
  dialog.addEventListener('close',sync);
- confirm.addEventListener('click',()=>{
-  if(!selected||closed)return;
-  const id=selected;
-  dialog.close();
-  resolve(id);
- });
+ confirm.addEventListener('click',()=>submit(selected));
  dialog.showModal();
  sync();
  return ()=>{
-  closed=true;dialog.removeEventListener('cancel',handleCancel);
+  closed=true;dismissCram(false);dialog.removeEventListener('cancel',handleCancel);
   dialog.removeEventListener('close',sync);headerReopen?.removeEventListener('click',open);sync();
   if(dialog.open)dialog.close();
   dialog.replaceChildren();

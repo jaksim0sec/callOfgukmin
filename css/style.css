@@ -1955,16 +1955,8 @@ body[data-screen=result]{background:radial-gradient(ellipse at 85% 0,#29203166,t
 @media(max-width:47.5em){.life-cinematic-card.is-graduation{padding:1rem 1.1rem;max-height:80dvh}.is-graduation .life-cinematic-title{font-size:1.35rem}.graduation-changes{grid-template-columns:1fr;gap:.4rem}.graduation-changes>div{padding:.65rem .8rem}.graduation-changes p{margin:.2rem 0 0;font-size:.65rem}.graduation-diploma{padding:.85rem .2rem;margin:.7rem 0}.graduation-seal{margin:.65rem 0}}
 /* Exact exam scores, separate orange cramming choice and school admissions bonus. */
 .exam-score-transition{font-size:.84rem;line-height:1.5;color:#443626;font-variant-numeric:tabular-nums}
-.life-exam-paper .exam-effort-options .life-answer.exam-cram-option{margin-top:.45rem;border:.125rem solid #d55a0a;background:linear-gradient(125deg,#fff2db,#ffe2bf);box-shadow:inset .24rem 0 #e76a12}
-.life-exam-paper .exam-effort-options .life-answer.exam-cram-option[aria-pressed=true]{border-color:#af3c00;background:#ffd69f;box-shadow:inset .24rem 0 #b74200,0 0 0 .125rem #e57a2b33}
-.exam-cram-option .life-answer-copy>strong{color:#a83d05;font-weight:850}
-.exam-cram-option .exam-effort-label{background:#b84408;color:#fff}
-.exam-cram-outcomes{display:flex;flex-direction:column;gap:.3rem;font-size:.82rem;line-height:1.5;font-variant-numeric:tabular-nums}
-.exam-cram-success{color:#805000}.exam-cram-failure{color:#a02e17}
-.exam-cram-warning{font-size:.72rem;line-height:1.6;color:#793d1e}
 .admission-school-bonus{display:block;margin-top:.2rem;color:#265e42;font-size:.72rem;line-height:1.5;font-weight:750}
 .admission-school-bonus[hidden]{display:none}
-@media(max-width:47.5em){.exam-cram-outcomes{font-size:.78rem}.exam-score-transition{font-size:.8rem}}
 /* Measured study record: hours/minutes stay readable on the existing dark feed. */
 .study-measured-time{display:block;max-width:100%}
 .study-app-clock .study-measured-time b{display:flex;align-items:baseline;gap:.2rem;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -1982,10 +1974,41 @@ body[data-screen=result]{background:radial-gradient(ellipse at 85% 0,#29203166,t
 @media(max-width:47.5em) and (max-height:40em){.society-intro{padding-top:.2rem;padding-bottom:.6rem}.society-route{padding:.5rem 0}.society-education{margin:.5rem 0}.society-paper .life-modal-title{margin:.5rem 0}.society-meta{gap:.3rem}}
 @media(max-width:47.5em) and (max-height:40em){.society-route{grid-template-columns:auto minmax(0,1fr);gap:.2rem .4rem}.society-route-location{font-size:.72rem}.society-route-goal{text-align:right;font-size:.65rem}.society-route-next{font-size:.68rem;line-height:1.55}.society-education small{font-size:.64rem}.society-group-label{margin-top:.1rem}.society-meta .token{font-size:.55rem}}
 
-:root .exam-cram-option .token.token-icon-pill.exam-effort-label{--token-fill:#b84408}
 :root .graduation-seal .token.token-icon-pill{--token-fill:#9c7a3c}
 @media(max-width:47.5em) and (max-height:38em){.is-pledges .pledge-card{gap:.3rem;padding:.5rem}.is-pledges .support-board{padding:.6rem}}
 
-.exam-cram-shortcut{margin-left:auto;border:.0625rem solid #e5a66d;border-radius:2rem;padding:.35rem .65rem;background:#ffead1;color:#9e430d;font:750 .7rem/1.5 system-ui,sans-serif;cursor:pointer;white-space:nowrap}.exam-cram-shortcut:focus-visible{outline:.15rem solid #cf691c;outline-offset:.12rem}@media(max-width:47.5em){.exam-cram-shortcut{font-size:.6rem;padding:.3rem .5rem}}
 
 .is-graduation .life-cinematic-kicker{color:#8c744c}
+/* Compact cram risk dialog. Normal exam paper retains its five preparation rows. */
+.exam-cram-shortcut{margin-left:auto;min-height:2.75rem;padding:.35rem .65rem;border:.0625rem solid #c6aa91;border-radius:.45rem;background:#faf5ed;color:#995320;font:700 .72rem/1.4 system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.exam-cram-shortcut:focus-visible{outline:.15rem solid #ad6936;outline-offset:.12rem}
+.exam-cram-dialog{width:min(26rem,calc(100% - 1.5rem));max-height:calc(100dvh - 2rem);margin:auto;border:.0625rem solid #c9bba9;border-radius:.8rem;background:#faf7f0;color:#39332e;box-shadow:0 1rem 3rem #0005;font-family:system-ui,sans-serif}
+.exam-cram-dialog[open]{animation:none}
+.exam-cram-dialog::backdrop{background:#211b1766;backdrop-filter:blur(.1rem)}
+.exam-cram-head{display:flex;justify-content:space-between;align-items:center;gap:.6rem;flex:none;padding:.85rem 1rem;border-bottom:.0625rem solid #ded5c8}
+.exam-cram-head h2{margin:0;color:#985622;font-size:1.05rem;font-weight:800}
+.exam-cram-close,.exam-cram-cancel{min-height:2.75rem;border:.0625rem solid #d4cbbf;border-radius:.4rem;background:transparent;color:#66594c;font:650 .75rem/1.4 system-ui,sans-serif;padding:.45rem .6rem;cursor:pointer}
+.exam-cram-content{min-height:0;overflow:auto;overscroll-behavior:contain;padding:1rem;font-size:.8rem;line-height:1.65}
+.exam-cram-content>p{margin:0 0 .8rem;color:#75695e}
+.exam-cram-content .exam-outcomes{display:flex;flex-direction:column;align-items:flex-start;gap:.7rem}
+.exam-cram-content .exam-cram-outcomes{display:flex;flex-direction:column;gap:.45rem;font-size:.82rem;font-variant-numeric:tabular-nums}
+.exam-cram-content .exam-cram-success{color:#4f6250}.exam-cram-content .exam-cram-failure{color:#945542}
+.exam-cram-content .exam-cram-warning{color:#7e6a58;font-size:.72rem;line-height:1.6}
+.exam-cram-content .exam-effect-tokens{display:flex;flex-wrap:wrap;gap:.35rem}
+.exam-cram-content .life-paper-estimate{display:block;margin-top:.75rem;font-size:.74rem;color:#75695e}
+.exam-cram-foot{display:flex;justify-content:space-between;gap:.55rem;flex:none;padding:.8rem 1rem;border-top:.0625rem solid #ded5c8}
+.exam-cram-confirm{min-height:2.75rem;border:.0625rem solid #975c30;border-radius:.4rem;background:#a86b39;color:#fff;font:750 .77rem/1.4 system-ui,sans-serif;padding:.5rem .7rem;cursor:pointer}
+.exam-cram-dialog button:focus-visible{outline:.15rem solid #ad6936;outline-offset:.12rem}
+@media(max-width:47.5em){.exam-cram-shortcut{font-size:.65rem;padding-inline:.5rem}.exam-cram-foot{flex-wrap:wrap}.exam-cram-foot button{flex:1}.exam-cram-content .exam-cram-outcomes{font-size:.78rem}}
+
+/* The hub is a menu; route scenes keep the ordinary history/daily-sheet rhythm. */
+.playback-controls .society-return-button{color:#d6c3e7;border-color:#80618e;background:#403347}
+.society-line-tools{display:flex;gap:.65rem;align-items:center;padding:.6rem 0 .85rem;margin-bottom:.65rem;border-bottom:.0625rem solid #d7ccdd;font-family:system-ui,sans-serif}
+.society-line-route{min-width:0;flex:1;display:flex;flex-direction:column;gap:.25rem}.society-line-route strong{font-size:.8rem;color:#624975}.society-line-route small{font-size:.65rem;line-height:1.6;color:#897493}
+.society-line-menu{flex:none;border:.0625rem solid #bca9c9;border-radius:.55rem;background:#f0e9f4;color:#715382;min-height:2.5rem;padding:.4rem .6rem;font:700 .68rem/1.5 system-ui,sans-serif;cursor:pointer}.society-line-menu:focus-visible{outline:.15rem solid #b99ad0;outline-offset:.12rem}
+@media(max-width:47.5em){.society-line-tools{align-items:flex-start;gap:.4rem}.society-line-route strong{font-size:.72rem}.society-line-route small{font-size:.6rem}.society-line-menu{font-size:.62rem;padding:.35rem .45rem}.exam-score-transition{font-size:.8rem}}
+/* Society is a route menu; route actions continue on the shared daily paper. */
+.society-hub-help{margin:.65rem 0 0;color:#766a80;font-size:.8rem;line-height:1.6}
+.society-card-resume{font-size:.72rem;font-weight:700;color:#725781}
+.society-return-hub{min-height:2.75rem;padding:.4rem .65rem;border:.0625rem solid #bca9c9;border-radius:.4rem;background:transparent;color:inherit;font:inherit;font-size:.75rem;cursor:pointer}
+@media(max-width:47.5em){.society-hub-help{font-size:.76rem;line-height:1.5}.society-paper:has(.society-return-hub) .life-modal-serial{display:none}.society-return-hub{padding:.35rem .45rem;font-size:.7rem}}

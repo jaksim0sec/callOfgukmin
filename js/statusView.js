@@ -54,7 +54,7 @@ function createToken({type='context',label='',name='',id='',icon:iconName='',amo
  const add=classes.split(/\s+/).filter(Boolean);
  let text=label,glyph=iconName||'sparkle';
  if(type==='metric'){
-  const def=P.metricDefinition(id);
+  const def=P.metricDefinition(id,persona);
   text=label||P.metricLabel(id,persona);glyph=def.icon||'sparkle';
   add.push('metric-impact','metric-'+id);
  }else if(type==='trait'){

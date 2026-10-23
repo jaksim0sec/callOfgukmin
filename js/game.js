@@ -122,8 +122,8 @@ function mount(root,navigate,content=global.GukminContent){
  let tutorialActive=!verificationMode&&!tutorialHidden,lifeDeferred=false,tutorialPage=0;
  const tutorial=$('gameTutorial');
  const guide=[
-  {title:'스탯은 선택의 방향을 보여 줍니다',body:'압박은 0~50, 관계와 학업 역량은 0~25입니다. 관계가 오르면 친구들의 지지를 얻기 쉽지만, 압박이 오르면 위험이 커집니다. 같은 ▲라도 모두 보상은 아니에요. 선택 아래 토큰에서 얻는 것과 잃는 것을 함께 읽어 보세요.',stats:[{label:'압박',value:16,max:50,color:'#d65b62',note:'높을수록 부담'},{label:'관계',value:12,max:25,color:'#8769d8',note:'친구와 주변의 지지'}]},
-  {title:'압박 50을 넘으면 정신병으로 바뀝니다',body:'압박 49에서 +3이면 초과한 2가 정신병이 됩니다. 그때부터 선택의 부담·회복도 정신병부터 적용됩니다. 정신병 5는 게임오버예요. GU는 4턴에 한 번 이용할 수 있고, 압박만 줄이는 상품과 정신병도 낮추는 상품이 다릅니다. 자동으로 쉬어 주지는 않아요.',stats:[{label:'압박 한계',value:50,max:50,color:'#d65b62',note:'초과한 만큼 다음 단계'},{label:'정신병',value:2,max:5,color:'#9556bf',note:'5에 도달하면 생애 종료'}]},
+  {title:'스탯은 선택의 방향을 보여 줍니다',body:'졸업 전 압박은 0~25, 졸업 후에는 한계가 50으로 늘어납니다. 관계와 학업 역량은 0~25입니다. 관계가 오르면 친구들의 지지를 얻기 쉽지만, 압박이 오르면 위험이 커집니다. 같은 ▲라도 모두 보상은 아니에요. 선택 아래 토큰에서 얻는 것과 잃는 것을 함께 읽어 보세요.',stats:[{label:'압박',value:8,max:25,color:'#d65b62',note:'높을수록 부담'},{label:'관계',value:12,max:25,color:'#8769d8',note:'친구와 주변의 지지'}]},
+  {title:'압박 한계를 넘으면 정신병으로 바뀝니다',body:'졸업 전에는 압박 24에서 +3이면 초과한 2가 정신병이 됩니다. 졸업 후 한계는 50입니다. 그때부터 선택의 부담·회복도 정신병부터 적용됩니다. 정신병 5는 게임오버예요. GU는 4턴에 한 번 이용할 수 있고, 압박만 줄이는 상품과 정신병도 낮추는 상품이 다릅니다. 자동으로 쉬어 주지는 않아요.',stats:[{label:'졸업 전 압박 한계',value:25,max:25,color:'#d65b62',note:'초과한 만큼 다음 단계'},{label:'정신병',value:2,max:5,color:'#9556bf',note:'5에 도달하면 생애 종료'}]},
   {title:'공부한 능력과 시험 등급은 다릅니다',body:'학업 역량은 초등 시기의 공부 기반이고 운동능력은 계주에 쓰입니다. 중학교 교과 성취는 A~E, 고교 내신은 1~5등급, 모의고사·수능은 1~9등급이에요. 등급 숫자는 작을수록 좋습니다. 시험에서는 노력의 비용과 예상 성적을 함께 비교하세요.',stats:[{label:'학업 역량',value:15,max:25,color:'#6f82ba',note:'초등 시기의 공부 기반'},{label:'운동능력',value:8,max:25,color:'#5f9270',note:'연습으로 키워 계주에 활용'}]},
   {title:'재산은 돈, 특성은 행동을 바꾸는 힘',body:'용돈은 학생 시기에 받는 금액이고, 재산은 실제로 쓸 수 있는 돈입니다. 특성은 별도의 버프·디버프로, 관련 사건이나 시험의 결과에 영향을 줍니다. 토큰을 누르면 효과를 읽을 수 있어요. 재학·졸업 같은 학교 이력도 별도로 보존됩니다.',money:true,trait:'꼼꼼함'},
   {title:'진행은 언제나 같은 다음 버튼으로',body:'기록 아래의 다음 버튼 하나로 이야기를 넘기거나 대기 중인 선택을 엽니다. 자동은 이야기를 이어 주고 준비된 일상 선택을 5초 뒤 열어요. 수동은 누를 때만 진행하고, 일시정지는 시간을 멈춥니다. 선택은 직접 고르며 결과는 자동 저장됩니다.',art:[['→','다음'],['Ⅱ','일시정지'],['?','다시 도움말']]}
@@ -189,12 +189,22 @@ function mount(root,navigate,content=global.GukminContent){
  }
  function continueJourney(){if(playbackMode==='manual'&&!userPaused)nextMoment();else startJourney();}
  $('systemTools').hidden=!verificationMode;
+ const societyReturn=el('button','society-return-button','사회로 ↗');societyReturn.type='button';societyReturn.id='returnToSociety';societyReturn.hidden=true;$('playbackControls').append(societyReturn);
+ function returnToSociety(){
+  if(disposed||!engine?.returnToSociety)return false;
+  stopJourney();
+  const returned=engine.returnToSociety();
+  if(returned){dailyUI.reset();clearMajor();renderProgress();}
+  return returned;
+ }
+ societyReturn.addEventListener('click',()=>safely(returnToSociety)());
  $('playbackControls').hidden=verificationMode;
  function text(id,value){const target=$(id);if(target)target.textContent=String(value??'');}
  function render(){
   if(!verificationMode&&(persona.attributes?.lifeEndReason||persona.attributes?.retryEndReason||persona.attributes?.societyComplete)){if(!resultRouted){resultRouted=true;stopJourney();clearCinematics();clearMajor();dailyUI?.reset();navigate('result');}return;}
   global.GukminStatus.render(root,persona);
   electionHub.update(global.GukminElection.model(persona));
+  societyReturn.hidden=verificationMode||!global.GukminSociety?.canReturn(persona);
   renderStore();
   const headline=$('lifeHeadline'),label=headlineFor(persona);
   if(headline.textContent!==label){
@@ -360,15 +370,16 @@ function mount(root,navigate,content=global.GukminContent){
   const dialog=$('pressureAdvice');if(dialog.open)return true;
   if(verificationMode||snapshot?.runtime.contentId!==global.GukminDirector.contentId||persona.age<schoolAges.elementary||snapshot.reviewPending||cinematicShown||persona.attributes?.admissionDestination==='finished'||(persona.stats.illness||0)>=5)return false;
   if(root.querySelector('dialog[open]'))return false;
-  const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=Math.ceil(global.GukminPlayer.metricDefinition('stress').max/2);
+  const guide=!persona.attributes?.pressureGuideSeen&&persona.stats.stress>=Math.ceil(global.GukminPlayer.pressureMax(persona)/2);
   const critical=persona.stats.illness===4&&!persona.attributes?.pressureCriticalSeen;
   if(!guide&&!critical)return false;
   const pressure=persona.stats.stress||0,illness=persona.stats.illness||0;
   text('pressureAdviceTitle',critical?'정신병 4 · 한계까지 1 남았습니다':'압박이 절반에 닿았습니다');
   text('pressureAdviceLead',critical?'정신병이 5가 되면 이번 인생이 끝납니다. 다음 선택 전에 회복할 수 있는지 확인해 보세요.':'부담이 쌓이면 압박이 오릅니다. 두 수치의 차이와 회복 방법을 한 번만 알려드릴게요.');
-  text('advicePressureValue',pressure+'/'+global.GukminPlayer.metricDefinition('stress').max);text('adviceIllnessValue',illness+'/5');
-  $('advicePressureProgress').max=global.GukminPlayer.metricDefinition('stress').max;$('advicePressureProgress').value=pressure;$('adviceIllnessProgress').value=illness;
-  $('advicePressureFill').style.transform='scaleX('+pressure/global.GukminPlayer.metricDefinition('stress').max+')';
+  const limit=global.GukminPlayer.pressureMax(persona);text('advicePressureLimit','압박은 '+limit+'까지 쌓입니다');text('advicePressureRule',limit+'를 넘은 만큼 정신병으로 바뀝니다. 예: 압박 '+(limit-1)+'에서 +3 → 정신병 +2');
+  text('advicePressureValue',pressure+'/'+global.GukminPlayer.pressureMax(persona));text('adviceIllnessValue',illness+'/5');
+  $('advicePressureProgress').max=global.GukminPlayer.pressureMax(persona);$('advicePressureProgress').value=pressure;$('adviceIllnessProgress').value=illness;
+  $('advicePressureFill').style.transform='scaleX('+pressure/global.GukminPlayer.pressureMax(persona)+')';
   $('adviceIllnessFill').style.transform='scaleX('+illness/5+')';
   const status=engine.storeStatus();text('adviceStoreNote',status.remaining?'다음 편의점 이용까지 '+status.remaining+'턴 남았습니다.':'편의점은 4턴에 한 번 이용할 수 있습니다. 한계에 닿기 전에 틈틈이 쉬어 가세요.');
   dialog.dataset.guide=String(guide);dialog.dataset.critical=String(critical);dailyUI.suspend();$('choiceTiming').hidden=true;dialog.showModal();return true;
@@ -385,7 +396,7 @@ function mount(root,navigate,content=global.GukminContent){
   if(status)open.textContent=status.remaining?'편의점 · '+status.remaining+'턴 후 이용 ↗':'편의점 ↗';
   if(!dialog.open)return;
   text('storeBalance','사용 가능한 재산 '+persona.stats.money.toLocaleString('ko-KR')+'원');
-  const vitals=$('storeVitals');vitals.replaceChildren(global.GukminStatus.createToken({label:'압박 '+stress+'/'+global.GukminPlayer.metricDefinition('stress').max,icon:'pulse',classes:'metric-impact metric-stress'}));
+  const vitals=$('storeVitals');vitals.replaceChildren(global.GukminStatus.createToken({label:'압박 '+stress+'/'+global.GukminPlayer.pressureMax(persona),icon:'pulse',classes:'metric-impact metric-stress'}));
   if(illness)vitals.append(global.GukminStatus.createToken({label:'정신병 '+illness+'/5',icon:'mind',classes:'metric-impact metric-illness'}));
   const availability=$('storeAvailability');availability.dataset.waiting=String(status.remaining>0);
   text('storeAvailabilityTitle',status.remaining?'다음 이용까지 '+status.remaining+'턴':status.blocked?'이용 안내':status.items.some(item=>item.available)?'지금 이용할 수 있어요':'회복이 필요한 상품을 골라 주세요');
@@ -537,7 +548,7 @@ function mount(root,navigate,content=global.GukminContent){
     const id=choice.presentation.category==='mock'?'exam':'schoolScore',phase=global.GukminPlayer.phaseOf(before);
     const old=global.GukminGrades.report(id,before.stats[id],phase).display;
     const next=global.GukminGrades.report(id,s.persona.stats[id],phase).display;
-    const names={[id]:id==='schoolScore'&&phase==='middle'?'교과 성취':global.GukminPlayer.metricDefinition(id).label,stress:global.GukminPlayer.metricDefinition('stress').label};
+    const names={[id]:choice.presentation.term||choice.title,stress:global.GukminPlayer.metricDefinition('stress',before).label};
     const changes=Object.entries(names).map(([key,label])=>{
      const delta=(s.persona.stats[key]??0)-(before.stats[key]??0);
      return delta?label+' '+(delta>0?'+':'−')+Math.abs(delta).toLocaleString('ko-KR',{maximumFractionDigits:1}):'';
@@ -753,9 +764,9 @@ function mount(root,navigate,content=global.GukminContent){
  ];
  for(const subscription of subscriptions){subscription[2]=safely(subscription[2]);const [node,event,handler]=subscription;node.addEventListener(event,handler);}
  function requireEngine(){if(disposed)throw new Error('종료된 세션');if(!engine)throw new Error('콘텐츠가 연결되지 않음');return engine;}
- function dispose(){if(disposed)return;disposed=true;disposeFulfillmentResult?.();disposeFulfillmentResult=null;electionHub.dispose();if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
+ function dispose(){if(disposed)return;disposed=true;societyReturn.remove();disposeFulfillmentResult?.();disposeFulfillmentResult=null;electionHub.dispose();if(tutorial.open)tutorial.close();stopJourney();dailyUI.dispose();lifeSheet.dispose();clearCinematics();clearMajor();refreshMounted=null;resetMajorPresentation=null;mountedSession=null;for(const [node,event,handler] of subscriptions)node.removeEventListener(event,handler);}
  mountedSession=Object.freeze({
-  openElection:tab=>electionHub.open(tab),snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
+  returnToSociety:()=>safely(returnToSociety)(),openElection:tab=>electionHub.open(tab),snapshot:()=>requireEngine().snapshot(),advance:turns=>requireEngine().advance(turns),
   resolve:(token,id,input)=>requireEngine().resolve(token,id,input),run:()=>requireEngine().run?.(),apply:(id,result)=>requireEngine().apply(id,result),buy:id=>requireEngine().buy?.(id),storeStatus:()=>requireEngine().storeStatus?.(),dispose
  });
  render();

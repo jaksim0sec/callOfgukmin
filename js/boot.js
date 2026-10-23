@@ -4,7 +4,7 @@
 (function(global){
 'use strict';
 const PAGES=new Set(['waiting','game','result']);
-const RELEASE='life-choice-20261023';
+const RELEASE='society-routes-20261023';
 const screen=document.body.dataset.screen;
 const reduceMotion=global.matchMedia('(prefers-reduced-motion: reduce)').matches;
 let navigating=false;

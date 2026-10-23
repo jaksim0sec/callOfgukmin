@@ -41,7 +41,7 @@ function differences(before,after){
   const old=before.stats?.[id];
   if(!Number.isFinite(value))continue;
   if(id==='study'&&(phase==='middle'||phase==='high'))continue;
-  const def=P.metricDefinition(id);
+  const def=P.metricDefinition(id,after);
   if(!Number.isFinite(old)){result.push({text:initialMetric(id,value),icon:def.icon||'sparkle',tone:'neutral'});continue;}
   if(old===value)continue;
   const delta=value-old;
@@ -278,6 +278,7 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
    cancelClock();token=choice.token;folded=true;review=false;delta=[];selectedId=null;reward=null;
    dialog.classList.remove('is-reward');autoReady=true;autoRemaining=AUTO_OPEN_MS;
   }
+  if(selectedId&&!choice.options.some(option=>option.id===selectedId&&option.available))selectedId=null;
   currentChoice=choice;dialog.dataset.choiceKind=choice.presentation?.type||'daily';
   heading.textContent=choice.title;body.replaceChildren();
   const stage=P.phaseOf(persona),labels={infant:'유년기',elementary:'초등학교',middle:'중학교',high:'고등학교'};
@@ -303,20 +304,20 @@ function create({dialog,body,heading,resumeButton,resolve,proceed,onCountdown=()
    const text=el('span','daily-choice-copy');
    text.append(rich('strong','daily-choice-title',option.label));
    if(option.available===false){
-    const needed=option.when?.stats?.money?.gte,held=persona.stats.money;
+    const needed=option.when?.stats?.money?.gte??option.when?.all?.find(rule=>rule.stats?.money?.gte!==undefined)?.stats.money.gte,held=persona.stats.money;
     text.append(el('small','daily-choice-locked',
      Number.isFinite(needed)&&Number.isFinite(held)&&held<needed
       ?'재산 부족 · '+held.toLocaleString('ko-KR')+'원 / '+needed.toLocaleString('ko-KR')+'원 필요'
       :option.requirement?'필요 · '+option.requirement:'현재 조건에서는 선택할 수 없음'));
    }
    if(option.available&&option.requirement)
-    text.append(S.createToken({type:'context',label:'활용 · '+option.requirement,icon:'sparkle',
+    text.append(S.createToken({type:'context',label:(choice.presentation?.type==='society-line'?'필요 · ':'활용 · ')+option.requirement,icon:'sparkle',
      classes:'daily-choice-advantage'}));
    if(stage!=='infant'){
    const indicators=el('span','daily-choice-effects');
    // Ordinary choices show the exact projection. A declared uncertain outlook
    // reveals known costs, leaving conditional success/failure for the result.
-   const forecast=option.available===false&&option.result.electionDecision?{effects:{}}:option.outlook||choice.presentation?.type==='sports'?{...option.result,conditional:choice.presentation?.type==='sports'?(option.result.conditional||[]).filter(branch=>branch.before):[]}:option.result;
+   const forecast=option.available===false&&(option.result.electionDecision||option.result.societyDecision)?{effects:{}}:option.outlook||choice.presentation?.type==='sports'?{...option.result,conditional:choice.presentation?.type==='sports'?(option.result.conditional||[]).filter(branch=>branch.before):[]}:option.result;
    const projected=global.GukminEffects.apply(persona,forecast,{turn:choice.openedAt||0,preview:true});
    for(const [id,next] of Object.entries(projected.stats||{})){
     if(Number.isFinite(next)&&!Number.isFinite(persona.stats?.[id])){indicators.append(S.createToken({type:'context',label:initialMetric(id,next),icon:P.metricDefinition(id).icon||'sparkle',classes:'daily-choice-effect'}));continue;}
