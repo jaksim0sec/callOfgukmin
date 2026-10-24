@@ -30,7 +30,8 @@ function lineChoice(p){
  const stage=A(p).societyStep||'hub';
  if(['hub','ready'].includes(stage))throw new Error('현재 사회 경로가 아님');
  const c=choice(p);
- return {...c,id:'society:line',layer:'일상 선택',presentation:{type:'society-line',stage},options:c.options.filter(x=>x.id!=='back')};
+ const event=story.select(p,stage);
+ return {...c,id:'society:line',layer:'일상 선택',presentation:{type:'society-line',stage,interaction:story.presentation(p,stage,event)},options:c.options.filter(x=>x.id!=='back')};
 }
 function findRow(p,actionId){
  const e=story.select(p,A(p).societyStep||'hub');
@@ -66,19 +67,21 @@ function decision(p,order,ctx={}){
    const months=r.id===story.active(p).id?0:1;
    if(months&&money(p)<100000)throw new Error('지역 이동 준비비 부족');
    const total=(a.societyMonths||0)+months;
+   const oldRegion=story.active(p).id,oldKey='adultIssue'+oldRegion[0].toUpperCase()+oldRegion.slice(1),newKey='adultIssue'+r.id[0].toUpperCase()+r.id.slice(1);
    return effectResult(r.name+' 활동 시작',r.issue+' · '+(months?'이동 준비 1개월·10만 원을 사용했다.':'현재 지역의 활동을 이어간다.'),
-     {adultActivityRegionId:r.id,societyStep:'hub',societyNarrativePending:false,...(months?{societyMonths:total,age:(a.societyAgeBase||p.age)+Math.floor(total/12)}:{})},
+     {[oldKey]:Number.isFinite(a[oldKey])?a[oldKey]:(a.adultCommunityIssueStage||0),[newKey]:Number.isFinite(a[newKey])?a[newKey]:0,adultActivityRegionId:r.id,societyStep:'hub',societyNarrativePending:false,...(months?{societyMonths:total,age:(a.societyAgeBase||p.age)+Math.floor(total/12)}:{})},
      months?{money:-100000}:{});
  }
  if(!row)return core.decision(p,order,ctx); // old frozen scripts and all existing paths.
  if(actionId.startsWith('j-'))return effectResult(row.label,row.outlook,{...row.attributes,societyStep:'career-search',societyNarrativePending:true},row.stats);
  if(actionId.startsWith('i-'))return effectResult(row.label,row.outlook,{...row.attributes,societyStep:'politics',societyNarrativePending:true},row.stats);
  if(actionId.startsWith('c-')){
-   if(!(a.collegeScenePhase||0))return effectResult(row.label,row.outlook,{...row.attributes,collegeScenePhase:1,societyStep:'college-year',societyNarrativePending:true},row.stats);
+   const rel=(a.adultRelHarin||0)+(actionId==='c-team-talk'||actionId==='c-eval-talk'?2:actionId==='c-team-proof'||actionId==='c-eval-proof'?-1:0);
+   if(!(a.collegeScenePhase||0))return effectResult(row.label,row.outlook,{...row.attributes,adultRelHarin:Math.max(-3,Math.min(3,rel)),collegeScenePhase:1,societyStep:'college-year',societyNarrativePending:true},row.stats);
    // The second event of each year settles the original one-year academic unit exactly once.
    const baseAction=/(talk|share|arrange)/.test(actionId)?'network':/(reduce|pass)/.test(actionId)?'part-time':'study';
    const result=core.decision(p,{action:baseAction},ctx);
-   merge(result,row,{collegeScenePhase:0});
+   merge(result,row,{collegeScenePhase:0,adultRelHarin:Math.max(-3,Math.min(3,rel))});
    result.history={title:result.effects.attributes.collegeStatus==='졸업'?(a.collegeName||'대학')+' 졸업':row.label,
      detail:row.outlook+' '+(result.effects.attributes.collegeCompleted||0)+'/'+(a.collegeYears||0)+'년 이수. '+(result.history?.detail||''),importance:result.effects.attributes.collegeStatus==='졸업'?'major':'normal'};
    return result;
@@ -86,7 +89,9 @@ function decision(p,order,ctx={}){
  if(actionId.startsWith('w-')||actionId.startsWith('b-')){
    const old=actionId.startsWith('w-')?'work-'+(row.mode||'team'):'business-'+(row.mode==='expand'?'expand':'local');
    const result=core.decision(p,{action:old},ctx);
-   merge(result,row,actionId==='b-road-group'?{adultRegionFlags:story.flags(p)|8}:{},row.bonus?{money:row.bonus}:{});
+   const relation=actionId==='w-credit-talk'||actionId==='w-pay-flex'?1:actionId==='w-credit-proof'?-1:0;
+   const extra={...(actionId==='b-road-group'?{adultRegionFlags:story.flags(p)|8}:{}),...(actionId.startsWith('w-')?{adultRelMinjae:Math.max(-3,Math.min(3,(a.adultRelMinjae||0)+relation))}:{})};
+   merge(result,row,extra,row.bonus?{money:row.bonus}:{});
    if(result.effects.attributes.employmentStatus==='계약 종료'||result.effects.attributes.employmentStatus==='폐업'){
      result.history={...result.history,detail:row.outlook+' '+result.history.detail};
    }else result.history={title:row.label,detail:row.outlook+' '+result.history.detail,importance:'normal'};
@@ -95,9 +100,12 @@ function decision(p,order,ctx={}){
  if(actionId.startsWith('l-')){
    if(actionId.endsWith('defer'))return effectResult(row.label,row.outlook,{societyStep:'hub',societyNarrativePending:false},row.stats);
    const result=core.decision(p,{action:'community-work'},ctx);
-   const stageNo=Math.min(3,(a.adultCommunityIssueStage||0)+1);
+   const current=story.active(p).id,regionalKey='adultIssue'+current[0].toUpperCase()+current.slice(1);
+   const regional=Number.isFinite(a[regionalKey])?a[regionalKey]:(a.adultActivityRegionId===current?a.adultCommunityIssueStage||0:0);
+   const stageNo=Math.min(3,regional+1),overall=Math.max(a.adultCommunityIssueStage||0,stageNo);
    const unlock=actionId==='l-begin-field'?2:actionId==='l-end-track'?4:0;
-   merge(result,row,{adultCommunityIssueStage:stageNo,...(unlock?{adultRegionFlags:story.flags(p)|unlock}:{})});
+   const relation=actionId.endsWith('defer')?-1:actionId.endsWith('track')||actionId.endsWith('meet')||actionId.endsWith('field')?2:1;
+   merge(result,row,{adultCommunityIssueStage:overall,[regionalKey]:stageNo,adultRelResident:Math.max(-3,Math.min(3,(a.adultRelResident||0)+relation)),...(unlock?{adultRegionFlags:story.flags(p)|unlock}:{})});
    result.history={title:row.label,detail:story.active(p).npc+' · '+row.outlook+' '+result.history.detail,importance:stageNo===3?'major':'normal'};
    return result;
  }
@@ -124,6 +132,6 @@ function settledDecision(p,order,ctx={}){
 g.GukminSociety=Object.freeze({...core,choice,lineChoice,decision:settledDecision,chance,narrative:p=>{
   const e=story.select(p,A(p).societyStep||'hub');return e?{title:e.title,body:e.teaser}:core.narrative(p);
 }});
-const names={adultRegionFlags:'열린 활동 지역',adultActivityRegionId:'현재 활동 거점',collegeScenePhase:'대학 사건 진행',adultCampusEntry:'수강신청 선택',adultTeamHistory:'팀 프로젝트 대응',adultTeamReview:'동료평가 선택',adultInterviewAnswer:'채용 답변',adultWorkCredit:'업무 공로 대응',adultWorkIssue:'직장 지역 문제',adultShopReview:'가게 악평 대응',adultShopRoad:'상인 공동 대응',adultCommunityIssueStage:'지역 문제 진행',adultCommunityOutcome:'지역 문제 결과',adultPoliticalInvitation:'정치 포럼 초청'};
+const names={adultRegionFlags:'열린 활동 지역',adultActivityRegionId:'현재 활동 거점',collegeScenePhase:'대학 사건 진행',adultCampusEntry:'수강신청 선택',adultTeamHistory:'팀 프로젝트 대응',adultTeamReview:'동료평가 선택',adultInterviewAnswer:'채용 답변',adultWorkCredit:'업무 공로 대응',adultWorkIssue:'직장 지역 문제',adultShopReview:'가게 악평 대응',adultShopRoad:'상인 공동 대응',adultCommunityIssueStage:'지역 문제 진행',adultCommunityOutcome:'지역 문제 결과',adultPoliticalInvitation:'정치 포럼 초청',adultRelHarin:'하린 관계',adultRelMinjae:'민재 관계',adultRelResident:'지역 주민 관계',adultIssueMapo:'마포 지역 사건',adultIssueBundang:'분당 지역 사건',adultIssueYuseong:'유성 지역 사건',adultIssueHaeundae:'해운대 지역 사건'};
 g.GukminDirector.register({id:'society-story-attributes',generate:()=>({attributes:Object.fromEntries(Object.entries(names).map(([id,label])=>[id,{label,hidden:true}]))})});
 })(window);

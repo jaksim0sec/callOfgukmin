@@ -24,7 +24,7 @@ function model(stage,p){
 }
 function skin(dialog,presentation){
  const stage=presentation?.type==='society-line'?presentation.stage:null;
- if(stage){dialog.dataset.adultSurface=stage;}else{delete dialog.dataset.adultSurface;delete dialog.dataset.adultMode;delete dialog.querySelector('#dailyPaperConfirm').dataset.adultLabel;}
+ if(stage){dialog.dataset.adultSurface=stage;delete dialog.dataset.adultInteraction;}else{delete dialog.dataset.adultSurface;delete dialog.dataset.adultMode;delete dialog.dataset.adultInteraction;delete dialog.querySelector('#dailyPaperConfirm').dataset.adultLabel;}
 }
 function fields(rows,cls='adult-facts'){
  const dl=el('dl',cls);for(const [label,value] of rows){const item=el('div','');item.append(el('dt','',label),el('dd','',value));dl.append(item);}return dl;
@@ -41,7 +41,7 @@ function decorate({dialog,body,list,choice,persona}){
  const storyText=body.querySelector('.daily-scenario');
   if(storyText){hero.querySelector('p')?.remove();storyText.classList.add('adult-main-story');hero.append(storyText);}
   shell.append(mast,hero,fields(m.fields));
-  if(stage==='region-map'){
+  if(stage==='region-map'&&!choice.presentation.interaction){
     const map=el('section','adult-region-map');map.setAttribute('aria-label','대한민국 활동 거점 지도');
     const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 260 360');svg.setAttribute('aria-hidden','true');svg.classList.add('adult-korea-outline');
     const land=document.createElementNS('http://www.w3.org/2000/svg','path');
@@ -83,6 +83,7 @@ function decorate({dialog,body,list,choice,persona}){
   if(meta.childElementCount)button.querySelector('.daily-choice-copy').prepend(meta);
  }
  group.append(list);shell.append(group);body.append(shell);
+ if(g.GukminAdultInteractions)g.GukminAdultInteractions.decorate({dialog,body,list,choice,persona,shell,group});
  // The shared sheet still owns the single confirm button and selected state.
  dialog.querySelector('#dailyPaperConfirm').dataset.adultLabel=m.submit;
 }
@@ -92,6 +93,7 @@ function reward({dialog,body,presentation,label,attributes,stats,portrait}){
  const receipt=el('header','adult-receipt');receipt.append(el('span','adult-receipt-check','✓'),el('div',''));
  const milestone=presentation.stage==='college-year'&&attributes.collegeStatus==='졸업'?'대학 졸업 완료':presentation.stage==='job-offer'&&label==='제안을 받아들인다'?'첫 출근 확정':presentation.stage==='community'&&attributes.adultCommunityIssueStage===3?'지역 문제 회신 완료':null;
   receipt.lastChild.append(el('small','',m.brand+' · 처리 결과'),el('strong','',milestone||'선택이 기록되었습니다'),el('span','',label));body.prepend(receipt);
+ if(g.GukminAdultInteractions)g.GukminAdultInteractions.reward({body,presentation,label});
 }
 g.GukminAdultScenes=Object.freeze({skin,decorate,reward});
 })(window);

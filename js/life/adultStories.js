@@ -88,7 +88,8 @@ function select(p,stage){
     row('b-regular-rest','영업 일정을 줄인다','관계 일부를 줄이고 부담을 회복한다.',{stress:-2,relations:-1},{},'local')]);
  }
  if(stage==='community'){
-  const n=a.adultCommunityIssueStage||0;
+  const key='adultIssue'+site.id[0].toUpperCase()+site.id.slice(1);
+  const n=Number.isFinite(a[key])?a[key]:(a.adultActivityRegionId===site.id?a.adultCommunityIssueStage||0:0);
   if(n===0)return scene(site.name+' · 주민 제보',site.npc+'이 '+site.issue+'에 관한 의견을 모아 달라고 했다.',3,[
     row('l-begin-field','현장 의견을 직접 듣는다','이동비와 부담을 써서 관계를 쌓는다.',{money:-150000,stress:2,relations:2}),
     row('l-begin-online','온라인으로 자료를 모은다','돈은 아끼지만 만남은 적다.',{stress:1,relations:1}),
@@ -111,5 +112,61 @@ function select(p,stage){
    row('i-later','이번 초대는 보류한다','생활을 지키고 가능성은 남긴다.',{stress:-1},{adultPoliticalInvitation:'later'})]);
  return null;
 }
-g.GukminAdultStories=Object.freeze({regions,active,flags,select});
+
+/* Adult-only, frozen presentation metadata; no shared renderer or save schema changes. */
+function presentation(p,stage,event){
+ const a=A(p),site=active(p),ids=event?.options?.map(o=>o.id)||[];
+ const first=ids[0]||'',labels=Object.fromEntries((event?.options||[]).map(o=>[o.id,o.label]));
+ const common=(kind,data)=>({kind,labels,...data});
+ const msg=(sender,text,time)=>({sender,text,time});
+ if(stage==='region-map')return common('map',{title:'활동 지역 선택',current:site.id,regions:regions.map(r=>({id:r.id,name:r.name,npc:r.npc,issue:r.issue,x:r.x,y:r.y}))});
+ if(first==='c-time-ask')return common('course',{title:'수강신청',slots:[
+  {column:1,time:'09:00',title:'전공 필수',note:'신청 0석',conflict:true},
+  {column:2,time:'11:00',title:'교양 세미나',note:'신청 완료'},
+  {column:3,time:'09:00',title:'근로 일정',note:'시간 충돌',conflict:true},
+  {column:4,time:'14:00',title:'학과 모임',note:'참석 가능'},
+  {column:5,time:'10:00',title:'공강',note:'조정 가능'}]});
+ if(first==='c-team-solo')return common('chat',{title:'대학 팀플',actor:'하린',room:'전공 프로젝트 3조',subtitle:'하린 · 조원 2명 미응답',date:'발표 전날 22:41',
+  messages:[msg('하린','다른 두 명은 아직 읽지도 않았어.', '22:41'),msg('하린','자료 수정 내역은 일단 캡처해 뒀는데 어떻게 할까?', '22:42')],
+  playerMessages:{'c-team-solo':'내가 발표 자료 마무리할게.','c-team-proof':'기여도부터 정리해서 제출하자.','c-team-talk':'우선 역할부터 다시 나누자.'},
+  responses:{'c-team-solo':[msg('하린','고마워. 대신 다음엔 이렇게 떠맡지 말자.','22:43')],'c-team-proof':[msg('하린','응, 자료는 내가 모아볼게. 다만 팀 분위기는 걱정돼.','22:43')],'c-team-talk':[msg('하린','좋아. 내가 다른 조원들한테도 연락할게.','22:43')]}});
+ if(first==='c-eval-talk'||first==='c-eval-proof'){
+  const previous=a.adultTeamHistory==='proof'?'지난번에 남긴 기여도 캡처 있잖아.':a.adultTeamHistory==='talk'?'작년엔 네가 역할 다시 나누자고 했었지.':'지난번 발표 혼자 준비하느라 힘들었지.';
+  return common('chat',{title:'동료평가',actor:'하린',room:'하린 · 개인 대화',subtitle:'지난 학기 프로젝트 동료',date:'새 학기 18:12',messages:[msg('하린',previous,'18:12'),msg('하린','이번 동료평가에는 어떻게 쓸 생각이야?','18:13')],
+    playerMessages:{'c-eval-proof':'기여도 증빙을 공식 제출할게.','c-eval-talk':'우리 따로 얘기하고 작성하자.','c-eval-pass':'짧게 쓰고 넘어갈게.'},
+    responses:{'c-eval-proof':[msg('하린','알겠어. 내 기록도 찾아볼게.','18:14')],'c-eval-talk':[msg('하린','응, 이번엔 서로 정리하고 제출하자.','18:14')],'c-eval-pass':[msg('하린','그렇게 정했다면 존중할게.','18:14')]}});
+ }
+ if(first==='j-detail')return common('chat',{title:'채용 면접',actor:'면접관',room:'지원자 면접',subtitle:'질문 1 · 자기소개 및 경험',date:'면접 진행 중',
+  messages:[msg('면접관',a.careerGapYears?'공백 기간에 어떤 활동을 했는지 구체적으로 들려주세요.':'지금까지의 경험 중 지원 업무와 연결되는 사례를 이야기해 주세요.','질문 01')],
+  playerMessages:{'j-detail':'준비 과정에서 실제로 맡았던 일과 결과를 말씀드리겠습니다.','j-short':'중요한 계기만 간단히 설명하겠습니다.','j-change':'진로를 바꿔 도전하게 된 이유부터 말씀드리겠습니다.'},
+  responses:{'j-detail':[msg('면접관','구체적인 사례는 참고하겠습니다.','답변 기록')],'j-short':[msg('면접관','감사합니다. 다음 질문으로 넘어가겠습니다.','답변 기록')],'j-change':[msg('면접관','변경 이유는 이해했습니다. 경험도 함께 검토하겠습니다.','답변 기록')]}});
+ if(first==='w-credit-proof')return common('evidence',{title:'업무 공로 이의 신청',subtitle:'사내 인사 평가 · 증빙 자료',instruction:'최종 보고서에 내 이름이 빠졌습니다. 자료 2개를 함께 확인하면 공식 증빙으로 처리할 수 있습니다.',
+  documents:[{id:'draft',title:'작업 초안',detail:'최초 작성자와 작성 시점이 기록되어 있음'},{id:'version',title:'버전 수정 기록',detail:'내가 변경한 항목과 승인 흐름'},{id:'partner',title:'민재의 확인 메시지',detail:'동료와 협의해 공동 요청 가능'}],
+  required:['draft','version'],partner:'partner',mapping:{proof:'w-credit-proof',collab:'w-credit-talk',pass:'w-credit-pass'}});
+ if(first==='w-pay-proof')return common('chat',{title:'연봉 협상',actor:'민재',room:'민재 · 업무 대화',subtitle:'지난 프로젝트의 동료',date:'인사평가 공지 후',
+  messages:[msg('민재',a.adultWorkCredit==='proof'?'네가 낸 작업 기록, 이번 인사평가 때 다시 확인할 수 있을 거야.':a.adultWorkCredit==='talk'?'지난번에 우리가 같이 고친 보고서 기억하지?':'지난 보고서 이후에 네 업무는 좀 나아졌어?','17:30'),msg('민재','이번 조건, 어떻게 할 생각이야?','17:31')],
+  playerMessages:{'w-pay-proof':'실적을 근거로 다시 협상해 볼게.','w-pay-flex':'급여보다 근무 조건부터 조정할게.','w-pay-accept':'이번 조건은 수용할게.'},
+  responses:{'w-pay-proof':[msg('민재','증빙 정리 필요하면 내가 도울게.','17:32')],'w-pay-flex':[msg('민재','업무 분담도 같이 이야기하자.','17:32')],'w-pay-accept':[msg('민재','알겠어. 이후 평가에도 기록 남겨두자.','17:32')]}});
+ if(first==='w-issue-report')return common('chat',{title:'지역 문제 제보',actor:'민재',room:'민재 · 업무 대화',subtitle:'동료와 지역 이야기',date:'근무 중',
+  messages:[msg('민재','이 동네 '+site.issue+' 얘기가 계속 올라와.','12:05'),msg('민재','회사 안에서만 처리할까, 주민에게도 알릴까?','12:06')],
+  playerMessages:{'w-issue-report':'자료 모아서 주민에게도 알려보자.','w-issue-team':'회사 안에서 개선을 요청하자.','w-issue-pass':'우선 담당 업무부터 마무리하자.'}});
+ if(first==='l-begin-field')return common('chat',{title:'주민 연락',actor:site.npc,room:site.name+' 주민 모임',subtitle:site.npc+' 외 참여자',date:'활동 제안',
+  messages:[msg(site.npc,site.issue+' 문제에 관해 의견을 모으고 있어요.','10:08'),msg(site.npc,'직접 만날 수 있을까요? 온라인으로도 도움 받을 수 있어요.','10:09')],
+  playerMessages:{'l-begin-field':'현장에 가서 직접 이야기를 들어볼게요.','l-begin-online':'온라인으로 자료와 의견을 모아볼게요.','l-begin-defer':'지금은 일정 때문에 참여하기 어려워요.'}});
+ if(first==='l-file-data')return common('evidence',{title:site.name+' 민원 보완',subtitle:site.npc+' · 서류 반려 후 재접수',instruction:'접수한 민원이 반려됐습니다. 빠진 자료를 확인해 보완 제출하거나 주민 회의로 근거를 보강할 수 있습니다.',
+  documents:[{id:'time',title:'혼잡 시간대 기록',detail:'언제 문제가 반복됐는지 확인'},{id:'count',title:'이용 인원 집계',detail:'현장 이용자 자료 보완'},{id:'partner',title:'주민 의견서',detail:'참여자의 공동 의견을 모음'}],
+  required:['time','count'],partner:'partner',mapping:{proof:'l-file-data',collab:'l-file-meet',pass:'l-file-defer'}});
+ if(first==='l-end-track')return common('chat',{title:'지역 민원 회신',actor:site.npc,room:site.name+' 주민 모임',subtitle:site.npc+' · 진행 상황',date:'이전 접수 이후',
+  messages:[msg(site.npc,'보완했던 민원에 답변이 왔어요.','14:20'),msg(site.npc,'일부 개선은 가능하대요. 그런데 실행 일정은 아직 없네요.','14:21')],
+  playerMessages:{'l-end-track':'실제 시행 시점까지 확인해 봐요.','l-end-share':'주민들에게 진행 상황을 공유해요.','l-end-close':'부분 개선이라도 확인된 점은 정리하죠.'}});
+ if(first==='i-speech')return common('chat',{title:'지역 포럼 초청',actor:site.npc,room:site.npc+' · 개인 대화',subtitle:'지역 문제 활동의 후속 연락',date:'민원 회신 이후',
+  messages:[msg(site.npc,'지난번에 함께 다룬 일 때문에 지역 포럼에서 연락이 왔어요.','19:11'),msg(site.npc,'발언을 맡아도 되고 자료만 도와도 돼요. 참석 안 해도 괜찮습니다.','19:12')],
+  playerMessages:{'i-speech':'공개 발언을 준비해 볼게요.','i-docs':'무대 밖에서 자료를 정리할게요.','i-later':'이번 모임은 보류할게요.'}});
+ if(first.startsWith('b-review-'))return common('chat',{title:'가게 후기 알림',actor:'고객',room:'우리가게 · 리뷰 관리',subtitle:'방문 고객의 공개 후기',date:'새 리뷰 · ★☆☆☆☆',
+  messages:[msg('고객','주문했던 내용과 실제 받은 게 달랐어요. 다시는 안 갈 것 같아요.','새로 등록됨')],
+  playerMessages:Object.fromEntries((event.options||[]).map(o=>[o.id,o.label]))});
+ return null;
+}
+
+g.GukminAdultStories=Object.freeze({regions,active,flags,select,presentation});
 })(window);

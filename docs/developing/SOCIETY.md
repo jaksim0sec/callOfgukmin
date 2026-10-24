@@ -58,3 +58,8 @@ societyStep은 hub/college-program/college-funding/college-year/military/militar
 정치 입문은 실제 입당·출마가 아니라 party/local/independent 준비 경로를 기록한 경계다. 지방행정직 공무원은 퇴사 전 정치 입문이 차단된다. 일반 공공기관 전체를 금지 신분으로 취급하지 않는다. 병역 미이행/제외/복무 완료와 정신건강 사유를 구분하며, 미래 미필 꼬리표를 위해 militaryServed와 입문 시점의 복무 여부도 남긴다.
 
 검사: node tests/smoke.mjs, node --test tests/systems.mjs, node tests/society.mjs, CHROMIUM_PATH=/usr/bin/chromium node tests/society-browser.mjs. 새 브라우저 검사는320×568/390×844/1365×900에서 실제 선택→학자금대출→대학1년→육군18개월→저장/복원→복학·졸업→지원·근무→정치 입문→결과를 검증하고 편의점 구매 뒤 같은 선택의 비용 버튼 갱신을 확인한다.
+
+
+## 2026-10-24 성인기 인터랙션 후속 확장
+
+성인 사건은 `adultStories.presentation(p,stage,event)`에서 `interaction.kind = chat|course|evidence|map`와 화면에 표시할 동결 데이터를 정의한다. `adultFlow.lineChoice`는 공용 `presentation.type:'society-line'`을 유지한 채 interaction payload를 추가한다. `adultScenes`에서 성인 전용 `GukminAdultInteractions.decorate`를 호출하며 UI에서 최종 선택은 기존 `.inline-choice` 한 개로 위임한다. 실제 정산, 12개월 대학 이수, 6개월 직장 경력, 3개월 지역 사건, 저장 키, 동결 선택 ID는 유지한다. 하린/민재/주민 관계와 지역별 지역 사건 진행은 scalar 속성으로 등록해 이전 결정을 후속 대화 및 옵션에 반영한다. 지도 위치는 개략도이며 선거구 자료로 취급하지 않는다. 변경된 파일은 성인 전용 구현과 HTML의 에셋 로드 참조, 이 문서뿐이다.
