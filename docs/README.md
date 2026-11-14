@@ -1,36 +1,38 @@
-# 국민의 부름 — 문서 안내
+# 대학의 부름 — 문서 안내
 
-**현행 동작은 실제 소스가 기준**입니다. `developing/`은 현행 계약과 날짜별 구현 기록이 함께 있으므로 각 문서의 **맨 앞 현행 설명이 아래 과거 기록보다 우선**합니다. `notes/`는 이전 논의·미확정 구상이며 `archive/`는 과거 판본입니다.
+**프로젝트는 2026-11-14부터 입시 풍자 미니게임으로 방향을 바꾼다.** **기획 전환과 코드 전환은 별개다.** 현재 GitHub Pages에서 실행되는 것은 옛 이름 「국민의 부름」의 출생~입시/N수~성인기 프로토타입이며, 신규 게임을 구현/배포한 상태가 아니다.
 
-현재 구현 범위: **출생~학생기·대입/N수·사회 허브·대학·병역·취업·정치 입문 준비**. 본격적인 정당 활동·선거·대통령 경로는 미구현입니다.
+## 읽는 순서와 권위
 
-| 문서 | 책임 |
+1. [../AGENTS.md](../AGENTS.md): 작업 전 필독 개발·보존 원칙
+2. [VISION.md](VISION.md): **새 게임 확정 방향**
+3. [GAME_DESIGN.md](GAME_DESIGN.md): **새 게임의 초안, 기존 시스템 활용, 이행 단계, 미확정 사항**
+4. [../README.md](../README.md): 현재 실행물과 전환 상태
+5. 실제 변경에 해당하는 `developing/` 문서 + 소스/테스트 확인
+
+**구분:** `GAME_DESIGN.md`의 확정 방향은 신작 기획 기준이다. 그 안의 '가설/미확정'은 구현 지시가 아니다. `developing/`의 '현행'은 **현재 남아 있는 구판 코드의 실행 계약**이다. 코드와 충돌하면 실제 코드를 우선 확인한다. `notes/`·`archive/`는 기록이며 새 기획의 확정 규칙이 아니다.
+
+## 문서별 역할
+
+| 경로 | 현 시점의 역할 |
 |---|---|
-| [../README.md](../README.md) | 플레이 범위·실행·검증 |
-| [../AGENTS.md](../AGENTS.md) | 개발 지침·파일 책임·작업 절차 |
-| [VISION.md](VISION.md) | 장기 목표 **(구현 명세 아님)** |
-| [developing/SEO.md](developing/SEO.md) | 검색 대표 주소·메타데이터·사이트맵·Search Console 등록 |
-| [developing/RUNTIME.md](developing/RUNTIME.md) | 독립 페이지·로드 순서·화면/복원 흐름 |
-| [developing/ELECTION.md](developing/ELECTION.md) | 선거 엔진·전용 UI·스토리 경계와 파라미터 |
-| [developing/SYSTEMS.md](developing/SYSTEMS.md) | 이벤트 3종·선택 2종·정산·조건·턴·복구 |
-| [developing/SOCIETY.md](developing/SOCIETY.md) | 사회 허브·대학·병역·직업·정치 입문 경계와 개월/저장 |
-| [developing/LIFE.md](developing/LIFE.md) | 출생/생애·학생 플레이·대입/재도전 |
-| [developing/STORY.md](developing/STORY.md) | 인과·기회비용·조건 분기·현재 사건 |
-| [developing/UI.md](developing/UI.md) | 종이 일상 선택/보상·시험/원서·포스터 |
-| [developing/CSS.md](developing/CSS.md) | **CSS 수정 전 필독**: 단위·반응형·공통 토큰·시트 |
-| [notes/PLAYER_STATE.md](notes/PLAYER_STATE.md) | 상태 분류와 아직 구현되지 않은 후속 규칙 |
-| [notes/GAMEPLAY_IDEAS.md](notes/GAMEPLAY_IDEAS.md) | 초기 기획 아이디어 |
-| [notes/STATS.md](notes/STATS.md) | 구형 8스탯 제안 **(현행 아님)** |
-| [notes/UI_TOKENS.md](notes/UI_TOKENS.md) | 초기 SVG 토큰 논의 **(현행 생성기는 `statusView.js`)** |
-| [notes/REGION_CATALOG.md](notes/REGION_CATALOG.md) | 지역 후보 데이터 원본 |
-| [RESEARCH.md](RESEARCH.md) | 제도·출처 조사와 미구현 구분 |
-| [archive/](archive/) | v3~v4 설계 기록 **(현행 아님)** |
+| `VISION.md`, `GAME_DESIGN.md` | 새 이름·장르·풍자 강도·개편 설계 |
+| `developing/LIFE.md` | **구판 구현:** 생애·고교·입시/N수. 새 게임에서 재사용 후보 |
+| `developing/STORY.md` | **구판 구현:** 선택 후폭풍·학생/성인 사건. 학생 부분 재검토 |
+| `developing/SYSTEMS.md` | **구판 구현:** 이벤트·선택·정산·저장. 우선 재사용 후보 |
+| `developing/UI.md`, `developing/CSS.md` | **구판 구현:** 시험지·원서·일상 종이·디자인과 스타일 계약 |
+| `developing/RUNTIME.md` | **구판 구현:** 페이지·스크립트·PWA·저장 복구 |
+| `developing/SOCIETY.md` | **구판 구현:** 성인기 허브. 신작 본편 범위 밖 |
+| `developing/ELECTION.md` | **구판 구현:** 반장 선거 모듈. 새 게임은 학생 활동 사건으로만 재검토 |
+| `developing/STUDENT_REVISION.md` | 2026-10 학생기 작업·검증 기록. 새 기준 아님 |
+| `developing/SEO.md` | **구판 배포 설정:** 새 게임 출시 전 함께 변경 필요 |
+| `RESEARCH.md` | 당시 교육·정치 제도 조사. 신규 입시 사실 검증에는 재확인 필요 |
+| `notes/` | 구상·지역·스탯·UI 토큰 기록. 미확정·구판 |
+| `archive/`, `superpowers/plans/` | 과거 설계/계획 기록. 삭제·소급 수정하지 않음 |
 
-### 개발 전 순서
+## 개편 시 작업 원칙
 
-1. `AGENTS.md` → `docs/README.md` → 요청에 해당하는 `developing/`.
-2. 해당 `html/`·`js/`·`css/`와 테스트에서 실제 구현 확인.
-3. CSS 작업 전 [developing/CSS.md](developing/CSS.md) 확인 후 **같은 커밋에 문서 갱신**.
-4. 기획/옛 날짜별 기록을 현재 계약으로 취급하거나 미구현 기능을 구현했다고 적지 않기.
-
-- [학생 생애 개정 검증표](developing/STUDENT_REVISION.md): 2026-10-21 실행 기본안·G/S별 근거·분기/옵션 점검.
+- 새 게임명을 문서에 확정하더라도 HTML/PWA/SEO를 변경하지 않은 상태라면 **실제 게임까지 바뀐 것처럼 보고하지 않는다.**
+- 정치·성인기 코드를 당장 제거하지 않는다. 먼저 의존 관계, 저장 복구, 학생기 유입 경로를 확인한다.
+- 시스템/스타일 수정 전 해당 `developing/` 문서와 코드·테스트를 검토하고 필요한 최소 변경만 한다.
+- 예전 제도/입시 확률/학교 이름이 곧 최신 실제 입학 규정이라고 주장하지 않는다.
